@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * Implements hook_account_limit_classes()
+ */
+function bank_account_limit_classes(){
+  return array('AbsoluteCreditLimit', 'AbsoluteDebitLimit');
+}
+
+/**
+ * Implements hook_decorated_transaction_classes()
+ */
+function bank_decorated_transaction_classes(){
+  return array('InterExchangeTransaction', 'LevyedTransaction');
+}
+
+/**
+ * Implements hook_menu()
+ */
+function bank_menu(){
+  $menu = array();
+  $menu['ces/bank/exchange/new'] = array(
+    'title' => 'New Exchange Community',
+    'description' => 'Create a new exchange community.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_exchange_form', 3),
+    'access arguments' => array('create exchange'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+  );
+  $menu['ces/bank/exchange/view']   = array(
+    'title' => 'View exchange community settings',
+    'description' => 'View exchange community settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_exchange_form',3,4),
+    'access arguments' => array('view exchange'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+  );
+  $menu['ces/bank/exchange/edit']   = array(
+    'title' => 'Edit exchange community settings',
+    'description' => 'Edit exchange community settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_exchange_form',3,4),
+    'access arguments' => array('edit exchange'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+  );
+  $menu['ces/bank/account/new'] = array(
+    'title' => 'New Account',
+    'description' => 'Create a new banking account.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_account_form', 3, 4),
+    'access arguments' => array('create account'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+  );
+  $menu['ces/bank/account/edit'] = array(
+    'title' => 'Edit Account',
+    'description' => 'Edit a banking account.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_account_form', 3, 4),
+    'access arguments' => array('edit account'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+  );
+  $menu['ces/bank/account/view'] = array(
+    'title' => 'View Account',
+    'description' => 'View banking account properties.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_account_form', 3, 4),
+    'access arguments' => array('view account'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+  );
+  return $menu;
+}

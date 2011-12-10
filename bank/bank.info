@@ -1,0 +1,7 @@
+name = CES Bank
+description = Social Currency Exchange Banking System
+files[] = bank.logic.inc
+dependencies[] = ces
+core = 7.x
+package = ces 
+
