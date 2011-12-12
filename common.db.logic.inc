@@ -46,7 +46,7 @@ class Serializer {
     $record['decoration'] = $decoration;
     
     $record['modified'] = time();
-    if($this->id !== NULL){
+    if(empty($record['id'])){
       $record['created'] = time();
       drupal_write_record($this->table, $record);
     }else{

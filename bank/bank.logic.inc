@@ -20,7 +20,8 @@ class Bank{
    * Exchange object accessors
    */
   public function createExchange(array $record){
-    return $this->updateObject('Exchange', $record);
+    unset($record['id']);
+    return $this->updateExchange($record);
   }
   public function updateExchange(array $record){
     return $this->updateObject('Exchange', $record);
@@ -36,6 +37,7 @@ class Bank{
    * Transaction object accessors
    */
   public function createTransaction(array $record){
+    unset($record['id']);
     return $this->updateTransaction($record);
   }
   public function updateTransaction(array $record){
@@ -49,7 +51,8 @@ class Bank{
    * Account object accessors
    */
   public function createAccount(array $record){
-    return $this->updateTransaction($record);
+    unset($record['id']);
+    return $this->updateAccount($record);
   }
   public function updateAccount(array $record){
     return $this->updateObject('LocalAccount', $record);
@@ -64,6 +67,20 @@ class Bank{
   /**
    * LimitChain object accessors
    */
+  public function createLimitChain(array $record){
+    unset($record['id']);
+    return $this->updateLimitChain($record);
+  }
+  public function updateLimitChain(array $record){
+    return $this->updateObject('LimitChain', $record);
+  }
+  public function getLimitChain($id){
+    return $this->getObjectRecord('LimitChain', $id);
+  }
+  public function deleteLimitChain($id){
+    //TODO: implement this
+    throw new Exception('Not implemented yet');
+  }
   
   
   public function getDefaultExchange(){
@@ -110,6 +127,8 @@ class Bank{
   }
   private function getObjectRecord($className, $id){
     $object = $this->getObject($className, $id);
+    if($object === FALSE) 
+      throw new Exception(t('Object of type %classname with id %id does not exist.', array('%classname'=>$className, '%id'=>$id)));
     return $object->getRecord();
   }
   private function updateObject($className, $record){

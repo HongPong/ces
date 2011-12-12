@@ -22,15 +22,17 @@ function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
     '#type' => 'vertical_tabs'
   );
 
-  $form['exchange']['op'] = array(
+  $form['exchange']['operation'] = array(
     '#type' => 'value',
     '#value' => $op
   );
   
-  $form['exchange']['id'] = array(
-    '#type' => 'value',
-    '#value' => $exchange['id']
-  );
+  if($op != 'new'){
+    $form['exchange']['id'] = array(
+      '#type' => 'value',
+      '#value' => $exchange['id'],
+    );
+  }
   
   $form['exchange']['general'] = array(
     '#type' => 'fieldset',
@@ -215,7 +217,7 @@ function bank_exchange_form_validate($form, &$form_state){
 
 function bank_exchange_form_submit($form, &$form_state){
   $bank = new Bank();
-  $op = $form_state['values']['op'];
+  $op = $form_state['values']['operation'];
   try{
     if( $op == 'new'){
       $bank->createExchange($form_state['values']);
@@ -229,7 +231,7 @@ function bank_exchange_form_submit($form, &$form_state){
   }
 }
 
-function bank_limitchain_form($form, &$form_state, $op, $exchangeId, $id){
+function bank_limitchain_form($form, &$form_state, $op, $exchangeId, $id = NULL){
   $bank = new Bank();
 
   $form = array();
@@ -252,7 +254,7 @@ function bank_limitchain_form($form, &$form_state, $op, $exchangeId, $id){
     '#required' => TRUE
   );
 
-  $form['op'] = array(
+  $form['operation'] = array(
     '#type'=>'value',
     '#value'=>$op
   );
@@ -341,7 +343,7 @@ function bank_limitchain_form_submit_downlimit($form, &$form_state){
   //TODO
 }
 function bank_limitchain_form_submit($form, &$form_state){
-  $op = $form_state['values']['op'];
+  $op = $form_state['values']['operation'];
   try{
     if( $op == 'new'){
       $bank->createLimitChain($form_state['values']);
@@ -374,13 +376,14 @@ function bank_account_form($form, &$form_state, $op, $exchangeId, $accountId){
     '#value' => $account['exchange']
       
   );
-  $form['account']['codenumber'] = array(
+  $form['account']['name'] = array(
     '#type' => 'textfield',
     '#description' => t('Four digits code.'),
     '#title' => t('name'),
-    '#default_value' => substr($account['code'],4),
+    '#default_value' => substr($account['name'],4),
     '#required' => TRUE    
   );
+  return $form;
   
 }
 function bank_account_form_validate($form, &$form_state){
@@ -388,7 +391,7 @@ function bank_account_form_validate($form, &$form_state){
 }
 function bank_account_form_submit($form, &$form_state){
   $record = $form_state['values'];
-  $op = $record['op'];
+  $op = $record['operation'];
   
   $bank = new Bank();
   if($op == 'new'){
