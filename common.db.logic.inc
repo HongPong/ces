@@ -16,6 +16,12 @@ class Serializer {
     return $this->loadFromRecord($record);
   }
   
+  public function count($key, $value){
+    $query = db_select($this->table, 't')->condition($key, $value)->countQuery();
+    $result = $query->execute()->fetchField();
+    return $result;
+  }
+  
   public function loadFromRecord($record){
     $obj = new $this->className($record);
     if(!empty($record['decoration']) && is_array($record['decoration'])){//load decorator pattern

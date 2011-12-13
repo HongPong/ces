@@ -33,6 +33,18 @@ class Bank{
     //TODO: implement this
     throw new Exception('Not implemented yet');
   }
+  public function getAllExchanges(){
+    $s = new Serializer('Exchange');
+    $exchanges = $s->loadCollection('active', 1);
+    $records = array();
+    $as = new Serializer('LocalAccount');
+    foreach($exchanges as $exchange){
+      $record = $exchange->getRecord();
+      $record['accounts'] = $as->count('exchange', $exchange->id);
+      $records[] = $record;
+    }
+    return $records;
+  }
   /**
    * Transaction object accessors
    */

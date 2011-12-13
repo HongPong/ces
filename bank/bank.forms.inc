@@ -221,7 +221,7 @@ function bank_exchange_form_submit($form, &$form_state){
   try{
     if( $op == 'new'){
       $bank->createExchange($form_state['values']);
-      drupal_set_message(t('Exchange %code successfully created. You must wait for the system administrator to set up the exchange before it is operative. You will recive an e-mail notification within the next few days.'), array('%code'=>$form_state['values']['code']));
+      drupal_set_message(t('Exchange %code successfully created. You must wait for the system administrator to set up the exchange before it is operative. You will recive an e-mail notification within the next few days.', array('%code'=>$form_state['values']['code'])));
     }else if( $op == 'edit'){
       $bank->updateExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully updated.',array('%code'=>$form_state['values']['code'])));

@@ -1,6 +1,20 @@
 <?php
 
 /**
+ * Implements hook_theme
+ */
+function bank_theme(){
+  return array(
+   /*  
+      'exchange_list' => array(
+      'template' => 'exchange-list',
+      'path' => drupal_get_path('module', 'bank'),
+      'variables' => array('exchanges'=>NULL),
+    ),
+   */
+  );
+}
+/**
  * Implements hook_account_limit_classes()
  */
 function bank_account_limit_classes(){
@@ -19,33 +33,48 @@ function bank_decorated_transaction_classes(){
  */
 function bank_menu(){
   $menu = array();
+  
+  $menu['ces/bank/exchange/list'] = array(
+    'title' => 'List exchanges',
+    'description'=>'List of active exchanges',
+    'page callback' => 'bank_exchange_list_page',
+    'file'=>'bank.pages.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+    'access arguments' => array('view exchange'),
+  );
+  
   $menu['ces/bank/exchange/new'] = array(
-    'title' => 'New Exchange Community',
-    'description' => 'Create a new exchange community.',
+    'title' => 'New exchange',
+    'description' => 'Create a new exchange',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_exchange_form', 3),
     'access arguments' => array('create exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
   );
+  
   $menu['ces/bank/exchange/view']   = array(
-    'title' => 'View exchange community settings',
-    'description' => 'View exchange community settings.',
+    'title' => 'View exchange',
+    'description' => 'View exchange',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_exchange_form',3,4),
     'access arguments' => array('view exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
+    'type' => MENU_CALLBACK,
   );
+  
   $menu['ces/bank/exchange/edit']   = array(
-    'title' => 'Edit exchange community settings',
-    'description' => 'Edit exchange community settings.',
+    'title' => 'Edit exchange',
+    'description' => 'Edit exchange',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_exchange_form',3,4),
     'access arguments' => array('edit exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
+    'type' => MENU_CALLBACK,
   );
+
   $menu['ces/bank/account/new'] = array(
     'title' => 'New Account',
     'description' => 'Create a new banking account.',
@@ -54,7 +83,9 @@ function bank_menu(){
     'access arguments' => array('create account'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
+    'type'=> MENU_CALLBACK,
   );
+  
   $menu['ces/bank/account/edit'] = array(
     'title' => 'Edit Account',
     'description' => 'Edit a banking account.',
@@ -63,7 +94,9 @@ function bank_menu(){
     'access arguments' => array('edit account'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
+    'type'=> MENU_CALLBACK,
   );
+  
   $menu['ces/bank/account/view'] = array(
     'title' => 'View Account',
     'description' => 'View banking account properties.',
@@ -72,6 +105,7 @@ function bank_menu(){
     'access arguments' => array('view account'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
+    'type'=> MENU_CALLBACK,
   );
   return $menu;
 }
