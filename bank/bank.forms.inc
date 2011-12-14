@@ -358,7 +358,10 @@ function bank_limitchain_form_submit($form, &$form_state){
 }
 
 function bank_account_form($form, &$form_state, $op, $exchangeId, $accountId){
+  // TODO: Acess control to some fields.
   $bank = new Bank();
+  $exchange = $bank->getExchange($exchangeId);
+  
   $form = array();
   if($op == 'new') {
     $account = $bank->getDefaultAccount($exchangeId);
@@ -373,16 +376,76 @@ function bank_account_form($form, &$form_state, $op, $exchangeId, $accountId){
   );
   $form['account']['exchange'] = array(
     '#type' => 'value',
-    '#value' => $account['exchange']
-      
+    '#value' => $account['exchange'],
   );
+  
+  $form['account']['exchangename'] = array(
+    '#type' => 'item',
+    '#title' => t('Exchange'),
+    '#markup' => $exchange['code']. ' - ' .$exchange['name'],
+  );
+  
   $form['account']['name'] = array(
     '#type' => 'textfield',
     '#description' => t('Four digits code.'),
     '#title' => t('name'),
-    '#default_value' => substr($account['name'],4),
-    '#required' => TRUE    
+    '#default_value' => $account['name'],
+    '#required' => TRUE,
   );
+  
+  //users
+  $accuser = reset($account['users']);
+  $accdrupaluser = user_load($accuser['user']);
+  
+  $form['account']['username'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Username'),
+    '#description' => t('Account administrator'),
+    '#autocomplete' => 'user/autocomplete',
+    '#default_value' => $accdrupaluser->name
+  );
+  
+  $form['account']['kind'] = array(
+    '#type'=>'select',
+    '#title'=>t('Type'),
+    '#description'=>t('Select "Individual" for personal use, "Shared" if several people share this account, "Organization" for a non-profit organization, "Company" for a profit-pursuing company and "Public" for a public account.'),
+    '#options'=>array(
+      0 => t('Individual'), 
+      1 => t('Shared'), 
+      2 => t('Organization'), 
+      3 => t('Company'), 
+      4 => t('Public')),
+    '#required'=>TRUE,
+    '#default_value' => $account['kind'],
+  );
+  
+  $form['account']['state'] = array(
+    '#type'=>'select',
+    '#title'=>t('State'),
+    '#description'=>t('Active is the common state.'),
+    '#options'=>array(
+      0 => t('Hidden'),
+      1 => t('Active'),
+      2 => t('Closed'),
+      3 => t('Locked'),
+    ),
+    '#default_value' => $account['state'],
+  );
+  
+  $limitchains = $bank->getAllLimitChains($exchangeId);
+  $options = array();
+  foreach($limitchains as $id=>$limit){
+    $options[$id] = $limit['name'];
+  }
+  
+  $form['account']['limitchain'] = array(
+    '#type'=>'select',
+    '#title'=> t('Limit chain'),
+    '#description'=>t('The limit chain to apply to this account'),
+    '#options'=> $options,
+    '#default_value' => $account['limitchain'],
+  );
+  
   return $form;
   
 }

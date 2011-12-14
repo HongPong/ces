@@ -325,7 +325,7 @@ function bank_schema() {
 	'not null'	=> TRUE,
 	'default'	=> 0
       ),
-      'active'          => array(
+      'state'          => array(
         'type' => 'int',
         'unsigned'      => TRUE,
         'not null'      => TRUE,
@@ -337,12 +337,19 @@ function bank_schema() {
 	'not null'	=> TRUE,
 	'default'	=> 0
       ),
-      'modified'	=> array(
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
-      )
+      'modified' => array(
+	'type' => 'int',
+	'unsigned' => TRUE,
+	'not null' => TRUE,
+	'default' => 0
+      ),
+      'kind' => array(
+        'description'=>'One of INDIVIDUAL (0), SHARED (1), ORGANIZATION (2), COMPANY (3), PUBLIC (4)',
+        'type' => 'int',
+        'unsigned'=> TRUE,
+        'not null'=> TRUE,
+        'default' => 0
+      ),
     ),
     'primary key'	=> array ('id'),
     'unique keys'	=> array (

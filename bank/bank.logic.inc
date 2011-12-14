@@ -41,7 +41,7 @@ class Bank{
     foreach($exchanges as $exchange){
       $record = $exchange->getRecord();
       $record['accounts'] = $as->count('exchange', $exchange->id);
-      $records[] = $record;
+      $records[$exchange->id] = $record;
     }
     return $records;
   }
@@ -109,6 +109,16 @@ class Bank{
     $exchange = $this->getObject('Exchange',$exchangeId);
     $account  = $exchange->getDefaultAccount();
     return $account->getLimitChain()->getRecord();
+  }
+  
+  public function getAllLimitChains($exchangeId){
+    $s = new Serializer('LimitChain');
+    $limits = $s->loadCollection('exchange', $exchangeId);
+    $records = array();
+    foreach($limits as $limit){
+      $records[$limit->id] = $limit->getRecord();
+    }
+    return $records;
   }
   
   public function applyTransaction($transactionId){
@@ -262,13 +272,17 @@ class Exchange extends DBObject{
       throw new Exception(t('Default exchange ( id = %id ) not found', array('%id'=>self::DEFAULT_EXCHANGE_ID)));
     return $default;
   }
+  /**
+   * @return LocalAccount to be used as a prototype for new accounts.
+   */
   public function getDefaultAccount(){
     $record = array();
     $record['id']=NULL;
     $record['exchange'] = $this->id;
     $record['name'] = $this->getFreeAccountName();
     $record['balance'] = 0.0;
-    $record['active'] = 0;
+    $record['state'] = 0;
+    $record['kind'] = 0;
     $record['limitchain'] = $this->limitchain;
     $record['create'] = time();
     $record['modified'] = time();
@@ -285,7 +299,7 @@ class Exchange extends DBObject{
     $accounts = $s->loadCollection($this->id, $this->id, 'name');
     
     if(empty($accounts)){
-      return $this->code + '0000';
+      return $this->code . '0000';
     }
     $start = floor(count($accounts) / 2); //This is a bit tricky.
     $code = $accounts[$start]->getCode();
@@ -375,8 +389,27 @@ class LocalAccount extends DBObject implements Account {
    */
   public $modified;
   
+  /**
+   * @var array of users related to this account. Tipically this array is a 
+   * singleton with the account's administrator user. Each entry is again an
+   * AccountUser object.
+   */
+  private $users;
+  
   public static $table = 'ces_account';
   
+  public function loadRecord(){
+    $s = new Serializer('AccountUser');
+    $this->users = $s->loadCollection('account', $this->id);
+  }
+  
+  public function getRecord(){
+    $record = parent::getRecord();
+    $record['users'] = array();
+    foreach($this->users as $useraccount){
+      $record['users'][] = $useraccount->getRecord();
+    }
+  }
   
   public function getLimitChain(){
     $s = new Serializer('LimitChain');
@@ -423,6 +456,13 @@ class LocalAccount extends DBObject implements Account {
   }
 }
 
+class AccountUser extends DBObject{
+  public static $table = 'ces_accountuser';
+  
+  public $user;
+  public $account;
+  public $role;
+}
 /**
  * A chain of account limits. It is used by account.
  */

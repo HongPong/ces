@@ -1,4 +1,19 @@
 <?php
+/**
+ * @ingroup ces.common.db
+ * @{
+ */
+
+/**
+ * @file
+ * This file contains the "active record" (approximately) pattern for loading 
+ * and saving objects.
+ */
+
+// Note:
+// I've now realized the existence of a Drupal 7 feature that could replace this 
+// whole file with additional features (at least caching).
+// This is the Entity CRUD API with the hook_entity_info() and related functions.
 
 class Serializer {
     
@@ -135,3 +150,6 @@ abstract class DBObject{
   }
 }
 
+/**
+ * @} End of "ingroup ces.common.db".
+ */
