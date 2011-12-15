@@ -49,7 +49,7 @@ class Serializer {
     return $obj;
   }
 
-  public function save(DBObject $object){
+  public function save(DBObject &$object){
     $parent = $object->getParent();
     $decoration = array();
     while($parent != NULL && ($parent instanceof DBObject)){
@@ -70,6 +70,8 @@ class Serializer {
     if(empty($record['id'])){
       $record['created'] = time();
       drupal_write_record($this->table, $record);
+      //should the entire object be updated with $object->loadRecord($record)?
+      $object->id = $record['id'];
     }else{
       drupal_write_record($this->table, $record, 'id');
     }
@@ -97,6 +99,12 @@ class Serializer {
     $record = $result->fetchAssoc();
     if($record === FALSE) return FALSE;
     return $this->loadFromRecord($record);
+  }
+  /**
+   * @return DBTransaction 
+   */
+  public static function DBTransaction(){
+    return db_transaction();
   }
     
 }
@@ -148,6 +156,10 @@ abstract class DBObject{
   public function getParent(){
     return NULL;
   }
+}
+
+interface DBTransaction{
+  public function rollback();
 }
 
 /**

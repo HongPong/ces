@@ -13,18 +13,37 @@
  * The controller for all the banking logic. This is the only accessible class from outside this package.
  */
 class Bank{
-  
-  
-  
   /**
    * Exchange object accessors
    */
-  public function createExchange(array $record){
-    unset($record['id']);
-    return $this->updateExchange($record);
+  public function createExchange(array &$record){
+    $t = Serializer::DBTransaction();
+    try{
+      //create exchange record
+      unset($record['id']);
+      $this->updateObject('Exchange', $record);
+      //create default limit chain for this new exchange.
+      $deflimit = $this->getDefaultLimitChain(Exchange::DEFAULT_EXCHANGE_ID);
+      unset($deflimit['id']);
+      $deflimit['exchange'] = $record['id'];
+      $this->createLimitChain($deflimit);
+      //update exchange record with the new limitchain
+      $record['limitchain'] = $deflimit['id'];
+      $this->updateObject('Exchange', $record); 
+      
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
   }
-  public function updateExchange(array $record){
-    return $this->updateObject('Exchange', $record);
+  public function updateExchange(array &$record){
+    $t = Serializer::DBTransaction();
+    try{
+      return $this->updateObject('Exchange', $record);
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
   }
   public function getExchange($id){
     return $this->getObjectRecord('Exchange', $id);
@@ -48,12 +67,25 @@ class Bank{
   /**
    * Transaction object accessors
    */
-  public function createTransaction(array $record){
-    unset($record['id']);
-    return $this->updateTransaction($record);
+  public function createTransaction(array &$record){
+    $t = Serializer::DBTransaction();
+    try{
+      unset($record['id']);
+      return $this->updateObject('BasicTransaction', $record);
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
+    
   }
-  public function updateTransaction(array $record){
-    return $this->updateObject('BasicTransaction', $record);
+  public function updateTransaction(array &$record){
+    $t = Serializer::DBTransaction();
+    try{
+      return $this->updateObject('BasicTransaction', $record);
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
   }
   public function getTransaction($id){
     return $this->getObjectRecord('BasicTransaction', $id);
@@ -62,12 +94,24 @@ class Bank{
   /**
    * Account object accessors
    */
-  public function createAccount(array $record){
-    unset($record['id']);
-    return $this->updateAccount($record);
+  public function createAccount(array &$record){
+    $t = Serializer::DBTransaction();
+    try{
+      unset($record['id']);
+      return $this->updateObject('LocalAccount', $record);
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
   }
-  public function updateAccount(array $record){
-    return $this->updateObject('LocalAccount', $record);
+  public function updateAccount(array &$record){
+    $t = Serializer::DBTransaction();
+    try{
+      return $this->updateObject('LocalAccount', $record);
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
   }
   public function getAccount($id){
     return $this->getObjectRecord('LocalAccount', $id);
@@ -79,12 +123,24 @@ class Bank{
   /**
    * LimitChain object accessors
    */
-  public function createLimitChain(array $record){
-    unset($record['id']);
-    return $this->updateLimitChain($record);
+  public function createLimitChain(array &$record){
+    $t = Serializer::DBTransaction();
+    try{
+      unset($record['id']);
+      return $this->updateObject('LimitChain', $record);
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
   }
-  public function updateLimitChain(array $record){
-    return $this->updateObject('LimitChain', $record);
+  public function updateLimitChain(array &$record){
+    $t = Serializer::DBTransaction();
+    try{
+      return $this->updateObject('LimitChain', $record);
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
   }
   public function getLimitChain($id){
     return $this->getObjectRecord('LimitChain', $id);
@@ -122,8 +178,14 @@ class Bank{
   }
   
   public function applyTransaction($transactionId){
-    $transaction = $this->getObject('BasicTransaction', $transactionId);
-    return $transaction->apply();
+    $t = Serializer::DBTransaction();
+    try{
+      $transaction = $this->getObject('BasicTransaction', $transactionId);
+      return $transaction->apply();
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
   }
   
   public function getAccountLimitClasses(){
@@ -153,10 +215,11 @@ class Bank{
       throw new Exception(t('Object of type %classname with id %id does not exist.', array('%classname'=>$className, '%id'=>$id)));
     return $object->getRecord();
   }
-  private function updateObject($className, $record){
+  private function updateObject($className, &$record){
     $s = new Serializer($className);
     $object = $s->loadFromRecord($record);
     $s->save($object);
+    $record['id'] = $object->id;
   }
   
   
@@ -180,7 +243,7 @@ class Exchange extends DBObject{
   /**
   @var int
   */
-  public $active;
+  public $state;
   /**
   @var Currency
   */
@@ -254,7 +317,7 @@ class Exchange extends DBObject{
   * All fields must be set. If the exchange in not stored yet in the DB the field id must be 
   * set to NULL.
   */
-  public function loadRecord($record){
+  public function loadRecord(&$record){
     parent::loadRecord($record);
     $this->currency = new Currency($record);
   }
@@ -276,17 +339,23 @@ class Exchange extends DBObject{
    * @return LocalAccount to be used as a prototype for new accounts.
    */
   public function getDefaultAccount(){
+    global $user;
     $record = array();
     $record['id']=NULL;
     $record['exchange'] = $this->id;
     $record['name'] = $this->getFreeAccountName();
     $record['balance'] = 0.0;
-    $record['state'] = 0;
-    $record['kind'] = 0;
+    $record['state'] = LocalAccount::STATE_HIDDEN;
+    $record['kind'] = LocalAccount::TYPE_INDIVIDUAL;
     $record['limitchain'] = $this->limitchain;
     $record['create'] = time();
     $record['modified'] = time();
-    
+    $record['users'] = array(
+      array(
+        'account' => NULL,
+        'user' => $user->uid, 
+        'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR),
+    );
     $account = new LocalAccount($record);
     return $account;
   }
@@ -347,8 +416,8 @@ class Currency extends DBObject{
 interface Account {
   
   public function getName();
-  public function applyTransaction(Transaction $transaction);
-  public function checkTransaction(Transaction $transaction);
+  public function applyTransaction(Transaction &$transaction);
+  public function checkTransaction(Transaction &$transaction);
   
 }
 
@@ -388,6 +457,14 @@ class LocalAccount extends DBObject implements Account {
    * @var int
    */
   public $modified;
+  /**
+   * @var int
+   */
+  public $kind;
+  /**
+   * @var int
+   */
+  public $state;
   
   /**
    * @var array of users related to this account. Tipically this array is a 
@@ -398,17 +475,38 @@ class LocalAccount extends DBObject implements Account {
   
   public static $table = 'ces_account';
   
-  public function loadRecord(){
-    $s = new Serializer('AccountUser');
-    $this->users = $s->loadCollection('account', $this->id);
+  const STATE_HIDDEN = 0;
+  const STATE_ACTIVE = 1;
+  const STATE_LOCKED = 2;
+  const STATE_CLOSED = 3;
+  
+  const TYPE_INDIVIDUAL = 0;
+  const TYPE_SHARED = 1;
+  const TYPE_ORGANIZATION = 2;
+  const TYPE_COMPANY = 3;
+  const TYPE_PUBLIC = 4;
+  
+  public function loadRecord(&$record){
+    parent::loadRecord($record);
+    if(isset($record['users']) && is_array($record['users'])){
+      $this->users = array();
+      foreach($record['users'] as $accuser){
+        $this->users[] = new AccountUser($accuser);
+      }
+    }else{
+      $s = new Serializer('AccountUser');
+      $this->users = $s->loadCollection('account', $this->id);
+    }
   }
   
   public function getRecord(){
     $record = parent::getRecord();
     $record['users'] = array();
     foreach($this->users as $useraccount){
-      $record['users'][] = $useraccount->getRecord();
+      $uarecord = $useraccount->getRecord();
+      $record['users'][$uarecord['user']] = $uarecord;
     }
+    return $record;
   }
   
   public function getLimitChain(){
@@ -419,7 +517,7 @@ class LocalAccount extends DBObject implements Account {
    * This function updates the amount of this account with this transaction if
    * it is accepted.
    */
-  public function applyTransaction(Transaction $transaction){
+  public function applyTransaction(Transaction &$transaction){
     
     $s = new LockSerializer('LocalAccount');
     //work with updated data and lock this account in database.
@@ -438,7 +536,7 @@ class LocalAccount extends DBObject implements Account {
     $s->save($this->id);
   }
    
-  public function checkTransaction(Transaction $transaction){
+  public function checkTransaction(Transaction &$transaction){
     return $this->getLimitChain()->checkTransaction();
   }
   
@@ -462,6 +560,8 @@ class AccountUser extends DBObject{
   public $user;
   public $account;
   public $role;
+  
+  const ROLE_ACCOUNT_ADMINISTRATOR = 0;
 }
 /**
  * A chain of account limits. It is used by account.
@@ -492,7 +592,7 @@ class LimitChain extends DBObject{
   /**
    * @override
    */
-  public function loadRecord($record) {
+  public function loadRecord(&$record) {
     //load fields
     parent::loadRecord($record);
     //load limits
@@ -526,7 +626,7 @@ class LimitChain extends DBObject{
     }
   }
   
-  public function checkAccount(LocalAccount $account){
+  public function checkAccount(LocalAccount &$account){
     $messages = array();
     foreach($this->limits as $limit){
       if($limit->checkAccount($account)!==TRUE){
@@ -540,7 +640,7 @@ class LimitChain extends DBObject{
     }
   }
   
-  public function checkTransaction(LocalAccount $account, Transaction $transaction){
+  public function checkTransaction(LocalAccount &$account, Transaction &$transaction){
     $messages = array();
     foreach($this->limits as $limit){
       if(!$limit->checkTransaction($account, $transaction)){
@@ -596,14 +696,14 @@ abstract class AccountLimit extends DBObject{
    * for pass and FALSE for fail.
    */
   
-  public function checkAccount(LocalAccount $account){
+  public function checkAccount(LocalAccount &$account){
     return ($this->getAccountValue($account) > $this->getLimit());
   }
   /**
    * @return int. The state of this account when this transaction is performed. 
    * The account can be the seller or the buyer.
    * **/
-  public function checkTransaction(LocalAccount $account, Transaction $transaction){
+  public function checkTransaction(LocalAccount &$account, Transaction &$transaction){
     if(!$this->block) 
        return TRUE; //non-blocking limits always approve transactions
     else{
@@ -631,13 +731,13 @@ abstract class AccountLimit extends DBObject{
   /**
    * @return double. The amount of this account.
    */
-  public abstract function getAccountValue(Account $account);
+  public abstract function getAccountValue(Account &$account);
   /**
    * @return double. The amount of this transaction.
    */
-  public abstract function getTransactionValue(Transaction $transaction);
+  public abstract function getTransactionValue(Transaction &$transaction);
   
-  public abstract function getFailMessage(Account $account);
+  public abstract function getFailMessage(Account &$account);
   
   public static abstract function getName();
   
@@ -648,13 +748,13 @@ abstract class AccountLimit extends DBObject{
  */
 class AbsoluteDebitLimit extends AccountLimit {
     
-  public function getAccountValue(Account $account){
+  public function getAccountValue(Account &$account){
     return $account->getAmount();
   }
-  public function getTransactionValue(Transaction $transaction){
+  public function getTransactionValue(Transaction &$transaction){
     return $transaction->getAmount();  
   }
-  public function getFailMessage(Account $account){
+  public function getFailMessage(Account &$account){
     return t('Account %account exceeds the debit limit of %limit.', 
             array('%limit'=> $this->getLimit(),'%account'=> $account->getName()));
   }
@@ -668,16 +768,16 @@ class AbsoluteDebitLimit extends AccountLimit {
  */
 class AbsoluteCreditLimit extends AccountLimit {
     
-  public function getAccountValue(Account $account){
+  public function getAccountValue(Account &$account){
     return - $account->getAmount();
   }
-  public function getTransactionValue(Transaction $transaction){
+  public function getTransactionValue(Transaction &$transaction){
     return - $transaction->getAmount();  
   }
   public function getLimit(){
     return - $this->limit;
   }
-  public function getFailMessage(Account $account){
+  public function getFailMessage(Account &$account){
     return t('Account %account exceeds the credit limit of %limit.', 
             array('%limit'=> $this->limit,'%account'=> $account->getName()));
   }
