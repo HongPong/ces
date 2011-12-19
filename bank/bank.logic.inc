@@ -98,7 +98,14 @@ class Bank{
     $t = Serializer::DBTransaction();
     try{
       unset($record['id']);
-      return $this->updateObject('LocalAccount', $record);
+      $account = new LocalAccount($record);
+      $s = new Serializer('LocalAccount');
+      $s->save($account);
+      
+      //saveExtraData() after create account record because we need the new 
+      //account id in order to create the UserAccount record(s).
+      $account->saveExtraData(); 
+      
     }catch(Exception $e){
       $t->rollback();
       throw $e;
@@ -113,8 +120,18 @@ class Bank{
       throw $e;
     }
   }
+  
   public function getAccount($id){
     return $this->getObjectRecord('LocalAccount', $id);
+  }
+  /**
+   * @return array the account record or FALSE if account does not exist.
+   * **/
+  public function getAccountByName($name){
+    $s = new Serializer('LocalAccount');
+    $account = $s->loadFromUniqueKey('name', $name);
+    if($account === FALSE) return FALSE;
+    return $account->getRecord();
   }
   public function deleteAccount($id){
     //TODO: implement this
@@ -448,10 +465,6 @@ class LocalAccount extends DBObject implements Account {
   /**
    * @var int
    */
-  public $active;
-  /**
-   * @var int
-   */
   public $created;
   /**
    * @var int
@@ -507,6 +520,16 @@ class LocalAccount extends DBObject implements Account {
       $record['users'][$uarecord['user']] = $uarecord;
     }
     return $record;
+  }
+  
+  public function saveExtraData(){
+    if(!empty($this->id)){
+      foreach($this->users as $accuser){
+        $accuser->account = $this->id;
+        $s = new Serializer('AccountUser');
+        $s->save($accuser);
+      }
+    }
   }
   
   public function getLimitChain(){

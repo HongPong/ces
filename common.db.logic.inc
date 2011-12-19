@@ -71,7 +71,9 @@ class Serializer {
       $record['created'] = time();
       drupal_write_record($this->table, $record);
       //should the entire object be updated with $object->loadRecord($record)?
-      $object->id = $record['id'];
+      if(isset($record['id'])){
+        $object->id = $record['id'];
+      }
     }else{
       drupal_write_record($this->table, $record, 'id');
     }

@@ -227,7 +227,7 @@ function bank_exchange_form_submit($form, &$form_state){
       drupal_set_message(t('Exchange %code successfully updated.',array('%code'=>$form_state['values']['code'])));
     }
   }catch(Exception $e){
-    drupal_set_message(t('An error ocurred while saving the record. Details:') ."\n". $e->getMessage(), 'error');
+    drupal_set_message(t('An error ocurred while saving the exchange record. Details:') ."\n". $e->getMessage(), 'error');
   }
 }
 
@@ -374,11 +374,18 @@ function bank_account_form($form, &$form_state, $op, $exchangeId, $accountId){
     '#type' => 'value',
     '#value' => $account['id']
   );
+  $form['account']['operation'] = array(
+    '#type' => 'value',
+    '#value' => $op
+  );
   $form['account']['exchange'] = array(
     '#type' => 'value',
     '#value' => $account['exchange'],
   );
-  
+  $form['account']['balance'] = array(
+    '#type' => 'value',
+    '#value' => $account['balance'],
+  );
   $form['account']['exchangename'] = array(
     '#type' => 'item',
     '#title' => t('Exchange'),
@@ -393,7 +400,7 @@ function bank_account_form($form, &$form_state, $op, $exchangeId, $accountId){
     '#required' => TRUE,
   );
   
-  //users
+  //TODO: multiple users
   $accuser = reset($account['users']);
   $accdrupaluser = user_load($accuser['user']);
   
@@ -446,22 +453,58 @@ function bank_account_form($form, &$form_state, $op, $exchangeId, $accountId){
     '#default_value' => $account['limitchain'],
   );
   
+  $form['account']['submit'] = array(
+    '#type'=>'submit',
+    '#value' => t('Submit'),
+  );
+  
   return $form;
   
 }
 function bank_account_form_validate($form, &$form_state){
   //TODO
+  $record = &$form_state['values'];
+  $username = $record['username'];
+  $op = $record['op'];
+  $accuser = user_load_by_name($username);
+  if($accuser === FALSE){
+    form_set_error('username', t('Username %name does not exist.', array('%name'=>$username)));
+  }
+  $name = $record['name'];
+  $bank = new Bank();
+  $account = $bank->getAccountByName($name);
+  if($op == 'new'){
+    if($account != FALSE){
+      form_set_error('name', t('Account number %name already exists.', array('%name'=>$name)));
+    }
+  }
 }
+
 function bank_account_form_submit($form, &$form_state){
   $record = $form_state['values'];
   $op = $record['operation'];
-  
   $bank = new Bank();
-  if($op == 'new'){
-    $bank->createAccount($record);
-  }else if($op == 'edit'){
-    $bank->updateAccount($record);
-  }else if($op == 'delete'){
-    $bank->deleteAccount($record['id']);
+  $username = $record['username'];
+  $accuser = user_load_by_name($username);
+  $record['users'] = array(
+    array(
+      'user' => $accuser->uid,
+      'role' => 0,
+      'account' => $record['id'],
+    ),
+  );
+  
+  try{
+    if($op == 'new'){
+      $bank->createAccount($record);
+      drupal_set_message(t('Account successfully created. The account will not be available until it is being activated by this exchange\'s administrator. You will recieve an email when this is done.'));
+    }else if($op == 'edit'){
+      $bank->updateAccount($record);
+      drupal_set_message(t('Account sucessfully updated.'));
+    }else if($op == 'delete'){
+      $bank->deleteAccount($record['id']);
+    }
+  }catch(Exception $e){
+    drupal_set_message(t('An error occurred while saving the account record. Details: '."\n".$e->getMessage()), 'error');
   }
 }

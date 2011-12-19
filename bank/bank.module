@@ -79,7 +79,7 @@ function bank_menu(){
     'title' => 'New Account',
     'description' => 'Create a new banking account.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('bank_account_form', 3, 4),
+    'page arguments' => array('bank_account_form', 3, 4, 5),
     'access arguments' => array('create account'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
