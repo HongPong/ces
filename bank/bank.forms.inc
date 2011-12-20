@@ -356,17 +356,22 @@ function bank_limitchain_form_submit($form, &$form_state){
     drupal_set_message(t('An error ocurred while saving the record. Details:') ."\n". $e->getMessage(), 'error');
   }
 }
-
-function bank_account_form($form, &$form_state, $op, $exchangeId, $accountId){
+/**
+ * @param id either the id of an exchange (if $op == new) or the id of an account
+ * otherwise.
+ */
+function bank_account_form($form, &$form_state, $op, $id){
   // TODO: Acess control to some fields.
   $bank = new Bank();
-  $exchange = $bank->getExchange($exchangeId);
+  
   
   $form = array();
   if($op == 'new') {
-    $account = $bank->getDefaultAccount($exchangeId);
+    $exchange = $bank->getExchange($id);
+    $account = $bank->getDefaultAccount($id);
   }else if($op == 'edit' || $op == 'view'){
-    $account = $bank->getAccount($accountId);
+    $account = $bank->getAccount($id);
+    $exchange = $bank->getExchange($account['exchange']);
   }
   
   
@@ -439,7 +444,7 @@ function bank_account_form($form, &$form_state, $op, $exchangeId, $accountId){
     '#default_value' => $account['state'],
   );
   
-  $limitchains = $bank->getAllLimitChains($exchangeId);
+  $limitchains = $bank->getAllLimitChains($exchange['id']);
   $options = array();
   foreach($limitchains as $id=>$limit){
     $options[$id] = $limit['name'];
@@ -507,4 +512,10 @@ function bank_account_form_submit($form, &$form_state){
   }catch(Exception $e){
     drupal_set_message(t('An error occurred while saving the account record. Details: '."\n".$e->getMessage()), 'error');
   }
+}
+
+function bank_transaction_form($form, &$form_state, $toAccountId = NULL, $fromAccountId = NULL){
+  $form = array();
+  
+  return $form;
 }

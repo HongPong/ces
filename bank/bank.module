@@ -79,7 +79,7 @@ function bank_menu(){
     'title' => 'New Account',
     'description' => 'Create a new banking account.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('bank_account_form', 3, 4, 5),
+    'page arguments' => array('bank_account_form', 3, 4),
     'access arguments' => array('create account'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
@@ -107,5 +107,26 @@ function bank_menu(){
     'file path' => drupal_get_path('module', 'bank'),
     'type'=> MENU_CALLBACK,
   );
+  
+  $menu['ces/bank/account/list'] = array(
+    'title' => 'List accounts' ,
+    'description' => 'List and info of user banking accounts',
+    'page callback' => 'bank_account_list_page',
+    'file' => 'bank.pages.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+    'access arguments' => array('view account'),
+  );
+  
+  $menu['ces/bank/transaction'] = array(
+    'title' => 'Enter single transaction',
+    'description' => 'Enter single transaction your account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_transaction_form', 3, 4),
+    'access arguments' => array('create transaction'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+    'type'=> MENU_CALLBACK,
+  );
+  
   return $menu;
 }

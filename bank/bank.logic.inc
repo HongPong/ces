@@ -133,6 +133,19 @@ class Bank{
     if($account === FALSE) return FALSE;
     return $account->getRecord();
   }
+  /**
+   * @return array of this user accounts.
+   */
+  public function getUserAccounts($uid){
+    $s = new Serializer('AccountUser');
+    $useraccounts = $s->loadCollection('user', $uid);
+    $accounts = array();
+    foreach($useraccounts as $useracc){
+      $accounts[] = $this->getAccount($useracc->account);
+    }
+    return $accounts;
+  }
+  
   public function deleteAccount($id){
     //TODO: implement this
     throw new Exception('Not implemented yet');
