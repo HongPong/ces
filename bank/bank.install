@@ -435,8 +435,8 @@ function bank_schema() {
 	'default'	=> 0
       ),
       'concept'		=> array(
-	'type'		=> 'varchar',
-	'length' 	=> '255',
+	'type'		=> 'text',
+	'length' 	=> 'normal',
 	'not null' 	=> TRUE,
 	'default' 	=> ''
       ),

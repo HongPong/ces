@@ -5,7 +5,6 @@ Exchange form. Create, view and edit forms.
 **/
 function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
   $bank = new Bank();
-  $form = array();
 
   if($op == 'edit' || $op == 'view'){
     try{
@@ -234,7 +233,6 @@ function bank_exchange_form_submit($form, &$form_state){
 function bank_limitchain_form($form, &$form_state, $op, $exchangeId, $id = NULL){
   $bank = new Bank();
 
-  $form = array();
   if($op == 'edit' || $op == 'view'){
     try{
       $limitchain = $bank->getLimitChain($id);
@@ -365,7 +363,6 @@ function bank_account_form($form, &$form_state, $op, $id){
   $bank = new Bank();
   
   
-  $form = array();
   if($op == 'new') {
     $exchange = $bank->getExchange($id);
     $account = $bank->getDefaultAccount($id);
@@ -514,8 +511,120 @@ function bank_account_form_submit($form, &$form_state){
   }
 }
 
+/**
+ * Single transaction form
+ */
 function bank_transaction_form($form, &$form_state, $toAccountId = NULL, $fromAccountId = NULL){
-  $form = array();
   
+  if (!empty($form_state['page_num']) && $form_state['page_num'] == 2) {
+    return bank_transaction_confirm_form($form, $form_state);
+  }
+
+  //TODO
+  // 1: Set the currency according the toaccount exchage currency.
+  // 2: Make an easy system to find account names by exchange/username.
+  global $user;
+  
+  $bank = new Bank();
+  if($toAccountId == NULL){
+    $accounts = $bank->getUserAccounts($user->uid);
+    $toaccount = reset($accounts);
+  }else{
+    $toaccount = $bank->getAccount($toAccountId);
+  }
+  
+  $exchange = $bank->getExchange($toaccount['exchange']);
+  
+  $form['toaccountname'] = array(
+      '#title' => t('Seller account'),
+      '#description' => t('The recipient of the transaction. The Exchange four letters code plus four numbers.'),
+  );
+  if($toAccountId != NULL){
+    $form['toaccountname']['#type'] = 'item';
+    $form['toaccountname']['#markup'] = $toaccount['name'];
+  }else{
+    $form['toaccountname']['#type'] = 'textfield';
+    $form['toaccountname']['#defalut_value'] = $toaccount['name'];
+  }
+  
+  $form['fromaccountname'] = array(
+      '#title' => t('Buyer account'),
+      '#description' => t('The payer of the transaction. The Exchange four letters code plus four numbers.'),
+  );
+  if($fromAccountId != NULL){
+    $fromaccount = $bank->getAccount($fromAccountId);
+    $form['fromaccountname']['#type'] = 'item';
+    $form['fromaccountname']['#markup'] = $fromaccount['name'];
+  }else{
+    $form['fromaccountname']['#type'] = 'textfield';
+    $form['fromaccountname']['#default_value'] = '';
+  }
+  $form['concept']= array(
+    '#type'  => 'textfield',
+    '#title' => t('Description'),
+    '#description' => t('Enter the concept of the transference.'),
+    '#default_value' => !empty($form_state['values']['concept'])?$form_state['values']['concept']:'',
+  );
+  $form['amount'] = array(
+      '#type'=>'textfield',
+      '#size'=>'5',
+      '#title'=>t('Amount in ').$exchange['currenciesname'],
+      '#description'=>t('The amount to be transferred.'),
+      '#default_value' => !empty($form_state['values']['amount'])?$form_state['values']['amount']:'',
+  );
+  
+  $form['user'] = array(
+      '#type'=>'value',
+      '#value'=>$user->uid,
+  );
+  $form['submit'] = array(
+      '#type'=>'submit',
+      '#value'=>t('Submit'),
+  );
   return $form;
+}
+
+function bank_transaction_form_submit($form, &$form_state){
+  $form_state['page_values'][1] = $form_state['values'];
+
+  if (!empty($form_state['page_values'][2])) {
+    $form_state['values'] = $form_state['page_values'][2];
+  }
+
+  $form_state['page_num'] = 2;
+  $form_state['rebuild'] = TRUE;
+}
+
+function bank_transaction_confirm_form($form, &$form_state){
+  $values = $form_state['page_values'][1];
+  $form['accountname'] = array(
+      '#type'=>'item',
+      '#title'=>t('Seller account'),
+      '#markup'=>$values['toaccountname'],
+  );
+  $form['fromaccountname'] = array(
+      '#type'=>'item',
+      '#title'=>t('Buyer account'),
+      '#markup'=>$values['fromaccountname'],
+  );
+}
+
+function bank_transaction_form_validate($form, &$form_state){
+  //TODO
+  $record = $form_state['values'];
+  $amount = $record['amount'];
+  if(!is_numeric($amount)){
+    form_set_error('amount', t('The amount entered is not a numeric value. Use the dot "." character for the decimal point and do not use any thousands separator.'));
+  }
+  
+  
+  
+}
+
+
+function bank_transaction_form_submit($form, &$form_state){
+  $bank = new Bank();
+  $transaction = array();
+  
+  $bank->createTransaction($transaction);
 }
