@@ -535,16 +535,19 @@ function bank_transaction_form($form, &$form_state, $toAccountId = NULL, $fromAc
   
   $exchange = $bank->getExchange($toaccount['exchange']);
   
-  $form['toaccountname'] = array(
+  
+  if($toAccountId != NULL){
+    $form['toaccountname'] = array(
+      '#type' => 'value',
+      '#value' => $toaccount['name'],
+    );
+  }else{
+    $form['toaccountname'] = array(
       '#title' => t('Seller account'),
       '#description' => t('The recipient of the transaction. The Exchange four letters code plus four numbers.'),
-  );
-  if($toAccountId != NULL){
-    $form['toaccountname']['#type'] = 'item';
-    $form['toaccountname']['#markup'] = $toaccount['name'];
-  }else{
-    $form['toaccountname']['#type'] = 'textfield';
-    $form['toaccountname']['#defalut_value'] = $toaccount['name'];
+      '#type' => 'textfield',
+      '#defalut_value' => $toaccount['name'],
+    );
   }
   
   $form['fromaccountname'] = array(
@@ -557,7 +560,7 @@ function bank_transaction_form($form, &$form_state, $toAccountId = NULL, $fromAc
     $form['fromaccountname']['#markup'] = $fromaccount['name'];
   }else{
     $form['fromaccountname']['#type'] = 'textfield';
-    $form['fromaccountname']['#default_value'] = '';
+    $form['fromaccountname']['#default_value'] = !empty($form_state['values']['fromaccountname'])?$form_state['values']['fromaccountname']:'';
   }
   $form['concept']= array(
     '#type'  => 'textfield',
@@ -597,34 +600,98 @@ function bank_transaction_form_submit($form, &$form_state){
 
 function bank_transaction_confirm_form($form, &$form_state){
   $values = $form_state['page_values'][1];
-  $form['accountname'] = array(
+  $form['itemtoaccountname'] = array(
       '#type'=>'item',
       '#title'=>t('Seller account'),
       '#markup'=>$values['toaccountname'],
   );
-  $form['fromaccountname'] = array(
+  $form['itemfromaccountname'] = array(
       '#type'=>'item',
       '#title'=>t('Buyer account'),
       '#markup'=>$values['fromaccountname'],
   );
+  $form['itemamount'] = array(
+      '#type'=>'item',
+      '#title'=>t('Amount'),
+      '#markup'=>$values['amount'],
+  );
+  $form['itemconcept'] = array(
+      '#type'=>'item',
+      '#title'=>t('Description'),
+      '#markup'=>$values['concept'],
+  );
+  $form['back'] = array(
+      '#type'=>'submit',
+      '#value'=>t('Back'),
+      '#submit' => array('bank_transaction_confirm_form_back'),
+      '#limit_validation_errors' => array(),
+  );
+  
+  $form['submit'] = array(
+      '#type'=>'submit',
+      '#value'=>t('Submit'),
+      '#submit'=> array('bank_transaction_confirm_form_submit'),
+  );
+  
+  return $form;
+}
+
+function bank_transaction_confirm_form_back($form, &$form_state){
+  $form_state['values'] = $form_state['page_values'][1];
+  $form_state['page_num'] = 1;
+  $form_state['rebuild'] = TRUE;
 }
 
 function bank_transaction_form_validate($form, &$form_state){
-  //TODO
+  if(!empty($form_state['page_num']) && $form_state['page_num'] == 2) return;
+  
+  $bank = new Bank();
   $record = $form_state['values'];
+  
   $amount = $record['amount'];
   if(!is_numeric($amount)){
     form_set_error('amount', t('The amount entered is not a numeric value. Use the dot "." character for the decimal point and do not use any thousands separator.'));
+    if(! $amount > 0.0 ){
+      form_set_error('amount', t('The amount must be positive.'));
+    }
   }
-  
-  
+  $account1 = $record['toaccountname'];
+  if($bank->getAccountByName($account1) === FALSE){
+    form_set_error('toaccountname', t('Seller account %acc is incorrect.', array('%acc'=>$account1)));    
+  }
+  $account2 = $record['fromaccountname'];
+  if($bank->getAccountByName($account2) === FALSE){
+    form_set_error('fromaccountname', t('Buyer account %acc is incorrect.', array('%acc'=>$account2)));    
+  }
+  if($account1 == $account2){
+    form_set_error('fromaccountname', t('Buyer account cannot be the same as seller account.'));
+  }
   
 }
 
 
-function bank_transaction_form_submit($form, &$form_state){
+function bank_transaction_confirm_form_submit($form, &$form_state){
   $bank = new Bank();
-  $transaction = array();
+  $record = $form_state['page_values'][1];
+  $transaction = array(
+    'user' => $record['user'],
+    'fromaccountname' => $record['fromaccountname'],
+    'toaccountname' => $record['toaccountname'],
+    'amount' => $record['amount'],
+    'concept' => $record['concept'],
+  );
   
   $bank->createTransaction($transaction);
+  $messages = $bank->applyTransaction($transaction['id']);
+  if($messages === TRUE) {
+    drupal_set_message(t('Transaction successfully applied.'));
+  }else{
+    $text = t('The transaction has NOT been applied');
+    $text .= "\n".t('Details:')."\n";
+    foreach($messages as $message){
+      $text .= $message . "\n";
+    }
+    drupal_set_message($text, 'warning');
+  }
+  
 }

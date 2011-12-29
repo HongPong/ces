@@ -71,7 +71,10 @@ class Bank{
     $t = Serializer::DBTransaction();
     try{
       unset($record['id']);
-      return $this->updateObject('BasicTransaction', $record);
+      $transaction = $this->newTransaction($record);
+      $s = new Serializer(get_class($transaction));
+      $s->save($transaction);
+      $record['id'] = $transaction->id;
     }catch(Exception $e){
       $t->rollback();
       throw $e;
@@ -245,13 +248,54 @@ class Bank{
       throw new Exception(t('Object of type %classname with id %id does not exist.', array('%classname'=>$className, '%id'=>$id)));
     return $object->getRecord();
   }
-  private function updateObject($className, &$record){
+  private function updateObject($className, array &$record){
     $s = new Serializer($className);
     $object = $s->loadFromRecord($record);
     $s->save($object);
     $record['id'] = $object->id;
   }
   
+  /**
+   * Creates a new transacion object based on the record array.
+   * @return Transaction
+   */
+  private function newTransaction(array &$record){
+    unset($record['id']);
+    //load accounts
+    if(isset($record['toaccount'])){
+      $toaccount = $this->getAccount($record['toaccount']);
+    }else if(isset($record['toaccountname'])){
+      $toaccount = $this->getAccountByName($record['toaccountname']);
+    }else{
+      throw new Exception(t('Seller account not set.'));
+    }
+    
+    if(isset($record['fromaccount'])){
+      $fromaccount = $this->getAccount($record['fromaccount']);
+    }else if(isset($record['fromaccountname'])){
+      $fromaccount = $this->getAccountByName($record['fromaccountname']);
+    }else{
+      throw new Exception(t('Seller account not set.'));
+    }
+    
+    if($toaccount === FALSE) 
+      throw new Exception(t('Error loading seller account.'));
+    if($fromaccount === FALSE)
+      throw new Exception(t('Error loading buyer account.'));
+      
+    
+    //set up acocunt id's 
+    $record['toaccount'] = $toaccount['id'];
+    $record['fromaccount'] = $fromaccount['id'];
+    $transaction = new BasicTransaction($record);
+    
+    if($toaccount['exchange'] != $fromaccount['exchange']) {
+      //basic transaction
+      $transaction = new InterExchangeTransaction($transaction, array());
+    }
+    
+    return $transaction;
+  }
   
   
 }
@@ -411,7 +455,9 @@ class Exchange extends DBObject{
         $code = $acccode;
       }
     }
-    return $this->code . ($code +1) ;
+    $code =  ''. ($code +1) ;
+    while(strlen($code)<4) $code = '0'.$code;
+    return $this->code . $code;
   }
   
 }
@@ -554,30 +600,30 @@ class LocalAccount extends DBObject implements Account {
    * it is accepted.
    */
   public function applyTransaction(Transaction &$transaction){
-    
     $s = new LockSerializer('LocalAccount');
     //work with updated data and lock this account in database.
     $account = $s->load($this->id);
-    
+    $amount = $transaction->getAmount();
     if($transaction->getFromAccountName() == $this->name){
-      $account->amount = $account->amount - $transaction->getAmount();
-      $this->setMessage(t('Your account has been debited by %amount.', array('%amount', $transaction->getAmount())));
+      $account->balance = $account->balance - $amount;
+      $this->setMessage(t('Your account has been debited by %amount.', array('%amount'=> $amount)));
     }
     if($transaction->getToAccountName() == $this->name){
-      $account->amount = $account->amount + $transaction->getAmount();
-      $this->setMessage(t('Your account has been credited by %amount.', array('%amount', $transaction->getAmount())));
+      $account->balance = $account->balance + $amount;
+      $this->setMessage(t('Your account has been credited by %amount.', array('%amount'=> $amount)));
     }
-    $this->amount = $account->amount; //update actual object amount because it can be reused.
+    $this->balance = $account->balance; //update actual object amount because it could be reused.
     
-    $s->save($this->id);
+    $s->updateField($account, 'balance');
   }
    
   public function checkTransaction(Transaction &$transaction){
-    return $this->getLimitChain()->checkTransaction();
+    return $this->getLimitChain()->checkTransaction($this, $transaction);
   }
   
   public function setMessage($message){
     //TODO
+    drupal_set_message(t('Debug message for account ') . $this->name . ': ' . $message);
   }
   public function getMessages($message){
     //TODO
@@ -886,6 +932,8 @@ class BasicTransaction extends DBObject implements Transaction{
   public $state;
   public $created;
   public $modified;
+  
+  public static $table = 'ces_transaction';
     
   public function getAmount(){
     return $this->amount;
@@ -897,15 +945,22 @@ class BasicTransaction extends DBObject implements Transaction{
     return $this->concept;
   }
   public function getFromAccountName(){
-    return $this->fromaccount;
+    $s = new Serializer('LocalAccount');
+    $acc = $s->load($this->fromaccount);
+    return $acc->name;
   }
   public function getToAccountName(){
-    return $this->toaccount;
+    $s = new Serializer('LocalAccount');
+    $acc = $s->load($this->toaccount);
+    return $acc->name;
+  }
+  public function getState(){
+    return $this->state;
   }
   public function apply(){
     $s = new Serializer('LocalAccount');
-    $accountFrom = $s->loadFromUniqueKey('name',$this->fromaccount);
-    $accountTo   = $s->loadFromUniqueKey('name',$this->toaccount);
+    $accountFrom = $s->load($this->fromaccount);
+    $accountTo = $s->load($this->toaccount);
     
     $messagesFrom = $accountFrom->checkTransaction($this);
     $messagesTo   = $accountTo->checkTransaction($this);
@@ -954,6 +1009,12 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
     }
     public function getToAccountName() {
       return $this->parent->getToAccountName();
+    }
+    public function getParent(){
+      return $this->parent;
+    }
+    public function getState(){
+      return $this->parent->getState();
     }
     public function __construct($parent, $record){
       parent::__construct($record);
@@ -1010,7 +1071,6 @@ class LevyedTransaction extends DecoratedTransaction{
    */
   public $levy;
   
-  
   public function apply(){
     $fromAccountName = $this->getFromAccountName();
     $s = new Serializer('LocalAccount');
@@ -1029,7 +1089,7 @@ class LevyedTransaction extends DecoratedTransaction{
         'user'        => $this->getUser(),
     ));
     
-    
+    //TODO: finish this!
   }
 }
 

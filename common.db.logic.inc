@@ -78,7 +78,11 @@ class Serializer {
       drupal_write_record($this->table, $record, 'id');
     }
   }
-  
+  public function updateField(DBObject &$object, $key){
+    $id = $object->id;
+    $value = $object->{$key};
+    return db_update($this->table)->condition('id', $id)->fields(array($key => $value))->execute();
+  }
   /**
    * @return array Objects with attribute $key = $value ordered by $order field.
    */
@@ -118,12 +122,34 @@ class LockSerializer extends Serializer{
   public function loadFromUniqueKey($key, $value){
     throw new Exception('Not implemented');
   }
+  /**
+   * Load object and acquires lock
+   */
   public function load($id){
-    lock_acquire($this->table . ' ' . $id);
+    $lockname = $this->table . ' ' . $id;
+    $times = 0;
+    while(!lock_acquire($lockname)){
+      $times++;
+      if($times > 5) 
+        throw new Exception(t('Impossible to get the database lock %lock', array('%lock'=>$lockname)));
+      lock_wait($lockname);
+    }
+    
     return parent::load($id);
   }
+  /**
+   * Saves object and releases lock
+   */
   public function save(DBObject $object){
-    $res = parent::save($id);
+    $res = parent::save($object);
+    lock_release($this->table . ' ' . $object->id);
+    return $res;
+  }
+  /**
+   * updates field and releases lock
+   */
+  public function updateField(DBObject $object, $key){
+    $res = parent::updateField($object, $key);
     lock_release($this->table . ' ' . $object->id);
     return $res;
   }
