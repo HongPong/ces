@@ -14,28 +14,24 @@
  */
 class Bank{
   /**
-   * Exchange object accessors
+   * Create exchange. This exchange is not functional yet. It must be activated.
    */
   public function createExchange(array &$record){
     $t = Serializer::DBTransaction();
     try{
       //create exchange record
       unset($record['id']);
+      $record['state'] = Exchange::STATE_INACTIVE;
       $this->updateObject('Exchange', $record);
-      //create default limit chain for this new exchange.
-      $deflimit = $this->getDefaultLimitChain(Exchange::DEFAULT_EXCHANGE_ID);
-      unset($deflimit['id']);
-      $deflimit['exchange'] = $record['id'];
-      $this->createLimitChain($deflimit);
-      //update exchange record with the new limitchain
-      $record['limitchain'] = $deflimit['id'];
-      $this->updateObject('Exchange', $record); 
       
     }catch(Exception $e){
       $t->rollback();
       throw $e;
     }
   }
+  /**
+   * Updates the exchange record.
+   */
   public function updateExchange(array &$record){
     $t = Serializer::DBTransaction();
     try{
@@ -45,16 +41,25 @@ class Bank{
       throw $e;
     }
   }
+  /**
+   * Gets the exchange from its id
+   */
   public function getExchange($id){
     return $this->getObjectRecord('Exchange', $id);
   }
+  /**
+   * Deletes an exchange
+   */
   public function deleteExchange($id){
     //TODO: implement this
     throw new Exception('Not implemented yet');
   }
+  /**
+   * @return array with all exchanges in this server.
+   */
   public function getAllExchanges(){
     $s = new Serializer('Exchange');
-    $exchanges = $s->loadCollection('active', 1);
+    $exchanges = $s->loadCollection(array('active'=> 1));
     $records = array();
     $as = new Serializer('LocalAccount');
     foreach($exchanges as $exchange){
@@ -65,7 +70,8 @@ class Bank{
     return $records;
   }
   /**
-   * Transaction object accessors
+   * Creates transaction. The transaction is not made effective until it is 
+   * applied.
    */
   public function createTransaction(array &$record){
     $t = Serializer::DBTransaction();
@@ -79,8 +85,10 @@ class Bank{
       $t->rollback();
       throw $e;
     }
-    
   }
+  /**
+   * Updates the transaction record.
+   */
   public function updateTransaction(array &$record){
     $t = Serializer::DBTransaction();
     try{
@@ -90,12 +98,15 @@ class Bank{
       throw $e;
     }
   }
+  /**
+   * @return a transaction record given its id.
+   */
   public function getTransaction($id){
     return $this->getObjectRecord('BasicTransaction', $id);
   }
   
   /**
-   * Account object accessors
+   * creates a banking account
    */
   public function createAccount(array &$record){
     $t = Serializer::DBTransaction();
@@ -114,6 +125,9 @@ class Bank{
       throw $e;
     }
   }
+  /**
+   * updates a banking account
+   */
   public function updateAccount(array &$record){
     $t = Serializer::DBTransaction();
     try{
@@ -123,12 +137,14 @@ class Bank{
       throw $e;
     }
   }
-  
+  /**
+   * @return array an account given its id
+   */
   public function getAccount($id){
     return $this->getObjectRecord('LocalAccount', $id);
   }
   /**
-   * @return array the account record or FALSE if account does not exist.
+   * @return array an account given its name
    * **/
   public function getAccountByName($name){
     $s = new Serializer('LocalAccount');
@@ -141,20 +157,22 @@ class Bank{
    */
   public function getUserAccounts($uid){
     $s = new Serializer('AccountUser');
-    $useraccounts = $s->loadCollection('user', $uid);
+    $useraccounts = $s->loadCollection(array('user'=> $uid));
     $accounts = array();
     foreach($useraccounts as $useracc){
       $accounts[] = $this->getAccount($useracc->account);
     }
     return $accounts;
   }
-  
+  /**
+   * deletes an account.
+   */
   public function deleteAccount($id){
     //TODO: implement this
     throw new Exception('Not implemented yet');
   }
   /**
-   * LimitChain object accessors
+   * creates a limit chain.
    */
   public function createLimitChain(array &$record){
     $t = Serializer::DBTransaction();
@@ -166,6 +184,9 @@ class Bank{
       throw $e;
     }
   }
+  /**
+   * updates a limit chain.
+   */
   public function updateLimitChain(array &$record){
     $t = Serializer::DBTransaction();
     try{
@@ -175,41 +196,57 @@ class Bank{
       throw $e;
     }
   }
+  /**
+   * @return array a limit chain given its id.
+   */
   public function getLimitChain($id){
     return $this->getObjectRecord('LimitChain', $id);
   }
+  /**
+   * deletes a limit chain
+   */
   public function deleteLimitChain($id){
     //TODO: implement this
     throw new Exception('Not implemented yet');
   }
-  
-  
+  /**
+   * @return array the default exchange. To be used as a model for new exchanges.
+   */
   public function getDefaultExchange(){
     $exchange = Exchange::getDefaultExchange();
     return $exchange->getRecord();
   }
-  
+  /**
+   * @return array the exchange's default account. To be used as a model for new.
+   * accounts for this exchange.
+   */
   public function getDefaultAccount($exchangeId){
     $exchange = $this->getObject('Exchange',$exchangeId);
     return $exchange->getDefaultAccount()->getRecord();
   }
-  
+  /**
+   * @return array the exchange's default limit chain.
+   */
   public function getDefaultLimitChain($exchangeId){
     $exchange = $this->getObject('Exchange',$exchangeId);
     $account  = $exchange->getDefaultAccount();
     return $account->getLimitChain()->getRecord();
   }
-  
+  /**
+   * @return array all defined limit chains for this exchange.
+   */
   public function getAllLimitChains($exchangeId){
     $s = new Serializer('LimitChain');
-    $limits = $s->loadCollection('exchange', $exchangeId);
+    $limits = $s->loadCollection(array('exchange'=> $exchangeId));
     $records = array();
     foreach($limits as $limit){
       $records[$limit->id] = $limit->getRecord();
     }
     return $records;
   }
-  
+  /**
+   * applies a transaction given its id.
+   */
   public function applyTransaction($transactionId){
     $t = Serializer::DBTransaction();
     try{
@@ -220,7 +257,9 @@ class Bank{
       throw $e;
     }
   }
-  
+  /**
+   * @return array the names of classes that implement the AccountLimit interface.
+   */
   public function getAccountLimitClasses(){
     $classes = module_invoke_all('account_limit_classes');
     $limits = array();
@@ -231,7 +270,9 @@ class Bank{
     }
     return $limits;
   }
-  
+  /**
+   * @return array the names of classes that implement the DecoratedTransaction interface.
+   */
   public function getDecoratedTransactionClasses(){
     $classes = module_invoke_all('decorated_transaction_classes');
     return $classes;
@@ -384,13 +425,9 @@ class Exchange extends DBObject{
   */
   const DEFAULT_EXCHANGE_ID = 1;
   
-  /**
-  * Builds a new Exchange from an object following the structure of the table 'ces_exchange'.
-  * This is used both from Exchange::load() function with actual data comming from the DB 
-  * and from the visual layer, getting the data from a form.
-  * All fields must be set. If the exchange in not stored yet in the DB the field id must be 
-  * set to NULL.
-  */
+  const STATE_INACTIVE = 0;
+  const STATE_ACTIVE = 1;
+  
   public function loadRecord(&$record){
     parent::loadRecord($record);
     $this->currency = new Currency($record);
@@ -401,7 +438,10 @@ class Exchange extends DBObject{
     unset($record['currency']);
     return $record;
   }
-  
+  /**
+   * @return Exchange The default exchange. To be used as a model for new 
+   * exchanges. It is the exchange stored with id Exchange::DEFAULT_EXCHANGE_ID.
+   */
   public static function getDefaultExchange(){
     $s = new Serializer('Exchange');
     $default = $s->load(Exchange::DEFAULT_EXCHANGE_ID);
@@ -436,28 +476,70 @@ class Exchange extends DBObject{
   
   private function getFreeAccountName(){
     //NOTE: this function is highly inefficient. It can be changed with a
-    //specific DB query if causes performance problems.
+    //single specific DB query if causes performance problems.
     $s = new Serializer('LocalAccount');
     
-    $accounts = $s->loadCollection($this->id, $this->id, 'name');
+    $accounts = $s->loadCollection(array($this->id => $this->id), 'name');
     
-    if(empty($accounts)){
-      return $this->code . '0000';
-    }
     $start = floor(count($accounts) / 2); //This is a bit tricky.
     $code = $accounts[$start]->getCode();
     
+    if(!is_numeric($code)) $code = 0;
+      
     for($i=$start+1; $i<count($accounts); $i++){
       $acccode = $accounts[$i]->getCode();
-      if($acccode - $code > 1){
-        break;
-      }else{
-        $code = $acccode;
+      if(is_numeric($acccode)){
+        if($acccode - $code > 1){
+          break;
+        }else{
+          $code = $acccode;
+        }
       }
     }
     $code =  ''. ($code +1) ;
     while(strlen($code)<4) $code = '0'.$code;
     return $this->code . $code;
+  }
+  
+  /**
+   * Activates a newly created exchange. Creates all the additional structures an
+   * exchange needs in order to be operative. This includes:
+   *  - default limit chain
+   *  - virtual account
+   * And sets up the active flag to this exchange.
+   */
+  public function activate(){
+    $es = new Serializer('Exchange');
+    if(empty($this->limitchain)){
+      //create default limit chain copying from the default exchange
+      $defExchange = Exchange::getDefaultExchange();
+      $defLimitChain = $defExchange->getDefaultAccount()->getLimitChain();
+      $defLimitChain->id = NULL;
+      $defLimitChain->exchange = $this->id;
+      $ls = new Serializer('LimitChain');
+      $ls->save($defLimitChain);
+      $this->limitchain = $defLimitChain->id;
+      $es->updateField($this, 'limitchain');
+    }
+    $virtAccount = $this->getVirtualAccount();
+    if(empty($virtAccount)){
+      //create virtual account
+      $virtAccount = $this->getDefaultAccount();
+      $virtAccount->kind = LocalAccount::TYPE_VIRTUAL;
+      $virtAccount->state = LocalAccount::STATE_HIDDEN;
+      $virtAccount->name = $this->code . 'VIRT';
+      $as = new Serializer('LocalAccount');
+      $as->save($virtAccount);
+    }
+    $this->state = Exchange::STATE_ACTIVE;
+    $s->updateField($this, 'state');
+  }
+  /**
+   * @return Account the virtual account for this exchange.
+   */
+  public function getVirtualAccount(){
+    $s = new Serializer('LocalAccount');
+    return $s->loadFromUniqueKey('name', $this->code . 'VIRT');
   }
   
 }
@@ -557,6 +639,7 @@ class LocalAccount extends DBObject implements Account {
   const TYPE_ORGANIZATION = 2;
   const TYPE_COMPANY = 3;
   const TYPE_PUBLIC = 4;
+  const TYPE_VIRTUAL = 5;
   
   public function loadRecord(&$record){
     parent::loadRecord($record);
@@ -567,7 +650,7 @@ class LocalAccount extends DBObject implements Account {
       }
     }else{
       $s = new Serializer('AccountUser');
-      $this->users = $s->loadCollection('account', $this->id);
+      $this->users = $s->loadCollection(array('account'=> $this->id));
     }
   }
   
@@ -590,7 +673,9 @@ class LocalAccount extends DBObject implements Account {
       }
     }
   }
-  
+  /**
+   * @return LimitChain The limit chain associated to this account.
+   */
   public function getLimitChain(){
     $s = new Serializer('LimitChain');
     return $s->load($this->limitchain);      
@@ -686,7 +771,7 @@ class LimitChain extends DBObject{
         $this->limits[] = $s->loadFromRecord($limitRecord);
       }
     }else{
-      $this->limits = $s->loadCollection('limitchain', $this->id);
+      $this->limits = $s->loadCollection(array('limitchain'=> $this->id));
     }
   }
   public function getRecord(){

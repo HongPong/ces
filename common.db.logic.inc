@@ -12,8 +12,10 @@
 
 // Note:
 // I've now realized the existence of a Drupal 7 feature that could replace this 
-// whole file with additional features (at least caching).
+// whole file with additional features.
 // This is the Entity CRUD API with the hook_entity_info() and related functions.
+// See also the Entity API contrib module documentation http://drupal.org/node/878784.
+//
 
 class Serializer {
     
@@ -30,13 +32,17 @@ class Serializer {
     if($record === FALSE) return FALSE;
     return $this->loadFromRecord($record);
   }
-  
+  /**
+   * @return int
+   */
   public function count($key, $value){
     $query = db_select($this->table, 't')->condition($key, $value)->countQuery();
     $result = $query->execute()->fetchField();
     return $result;
   }
-  
+  /**
+   * @return DBObject
+   */
   public function loadFromRecord($record){
     $obj = new $this->className($record);
     if(!empty($record['decoration']) && is_array($record['decoration'])){//load decorator pattern
@@ -84,10 +90,16 @@ class Serializer {
     return db_update($this->table)->condition('id', $id)->fields(array($key => $value))->execute();
   }
   /**
+   * @param $conditions array Associative array with field names as keys.
+   * @param $order string
    * @return array Objects with attribute $key = $value ordered by $order field.
    */
-  public function loadCollection($key, $value, $order = NULL){
-    $query = db_select($this->table, 't')->fields('t')->condition($key, $value);
+  public function loadCollection(array $conditions, $order = NULL){
+    
+    $query = db_select($this->table, 't')->fields('t');
+    foreach($conditions as $key=>$value){
+      $query = $query->condition($key, $value);
+    }
     if($order != NULL){
       $query->orderBy($order);
     }
@@ -98,7 +110,9 @@ class Serializer {
     }
     return $loads;
   }
-  
+  /**
+   * @return DBObject
+   */
   public function loadFromUniqueKey($key, $value){
     $query = db_select($this->table, 't')->fields('t')->condition($key, $value)->range(0,1);
     $result = $query->execute();
@@ -107,7 +121,7 @@ class Serializer {
     return $this->loadFromRecord($record);
   }
   /**
-   * @return DBTransaction 
+   * @return object 
    */
   public static function DBTransaction(){
     return db_transaction();
@@ -116,7 +130,7 @@ class Serializer {
 }
 
 class LockSerializer extends Serializer{
-  public function loadCollection($key, $value){
+  public function loadCollection(array $conditions, $order = NULL){
     throw new Exception('Not implemented');
   }
   public function loadFromUniqueKey($key, $value){

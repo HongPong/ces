@@ -1,31 +1,21 @@
 <?php
+/**
+ * @file
+ * Implements the drupal hooks for this module.
+ */
 
 /**
  * Implements hook_theme
  */
 function bank_theme(){
   return array(
-   /*  
-      'exchange_list' => array(
+   /* 'exchange_list' => array(
       'template' => 'exchange-list',
       'path' => drupal_get_path('module', 'bank'),
       'variables' => array('exchanges'=>NULL),
     ),
    */
   );
-}
-/**
- * Implements hook_account_limit_classes()
- */
-function bank_account_limit_classes(){
-  return array('AbsoluteCreditLimit', 'AbsoluteDebitLimit');
-}
-
-/**
- * Implements hook_decorated_transaction_classes()
- */
-function bank_decorated_transaction_classes(){
-  return array('InterExchangeTransaction', 'LevyedTransaction');
 }
 
 /**
@@ -130,3 +120,72 @@ function bank_menu(){
   
   return $menu;
 }
+
+
+/**
+ * Implements hook_account_limit_classes()
+ */
+function bank_account_limit_classes(){
+  return array('AbsoluteCreditLimit', 'AbsoluteDebitLimit');
+}
+
+/**
+ * Implements hook_decorated_transaction_classes()
+ */
+function bank_decorated_transaction_classes(){
+  return array('InterExchangeTransaction', 'LevyedTransaction');
+}
+
+function bank_ces_notify_messages($key, $langcode){
+  $a = array();
+  $b = array('langcode' => $langcode);
+  switch ($key){
+    case 'new exchange': 
+      return array(
+        'subject' => t('New Exchange [exchange:code] - [exchange:shortname] request',$a,$b),
+        'body' => t('A new exchange has been registered.
+
+Visit the CES administrative interface at [url:absolute]/admin/ces to activate or discard it. See some details below:
+
+Code: [exchange:code]
+Short name: [exchange:shortname]
+Full name: [exchange:name]  
+Country: [exchange:country]
+Location: [exchange:town] ([exchange:region])
+Web site: [exchange:website]
+Currency: [exchange:currencysymbol] ( [exchange:currencyname] ), value [exchange:currencyvalue]
+User: [exchange:admin:name] <[exchange:admin:mail]>
+
+', $a, $b)
+      );
+    case 'new account': 
+      return array(
+        'subject' => t('New account request for [exchange:code] - [exchange:shortname]',$a,$b),
+        'body' => t('Another account request for [exchange:name]. Go to the administrative interface at [url:absolute]/ces/bank/exchange/admin to activate or discard it.
+
+See registration details below:
+
+Exchange: [exchange:code]
+Account name: [account:name]
+Account type: [account:kind]
+User: [account:user]', $a, $b)
+      );
+    case 'account debited':
+      return array(
+        'subject' => t('Your account has been debited'),
+        'body' => t('Your account [account:name] has been debited.
+
+...', $a, $b),
+      );
+    case 'account credited':
+      return array(
+        'subject' => t('Your account has been credited'),
+        'body' => t('Your account [account:name] has been credited.
+
+...', $a, $b),
+      );
+  }
+  return FALSE;
+}
+
+

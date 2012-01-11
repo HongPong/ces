@@ -1,7 +1,8 @@
 name = CES Bank
-description = Social Currency Exchange Banking System
+description = Community Exchange System Banking
 files[] = bank.logic.inc
 dependencies[] = ces
+dependencies[] = ces_notify
 core = 7.x
 package = ces 
 
