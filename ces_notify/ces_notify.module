@@ -15,7 +15,7 @@ function ces_notify_mail($key, &$message, $params){
   if(isset($message['from']) && (($sender = user_load_by_mail($message['from']))!==FALSE)){
     $record['sender'] = $sender->uid;
   }
-  if(isset($message['to']) && (($recipient = user_load_by_mail($message['recipient']))!==FALSE)){
+  if(isset($message['to']) && (($recipient = user_load_by_mail($message['to']))!==FALSE)){
     $record['recipient'] = $recipient->uid;
   }
   

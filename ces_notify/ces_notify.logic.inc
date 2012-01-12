@@ -70,17 +70,18 @@ class Notifier{
   public function getMessageTemplate(&$record){
     $module = $record['module'];
     $name = $record['name'];
+    $sender = isset($record['sender'])?$record['sender']:1;
     
     if(isset($record['lang'])){//1
       $message = $this->loadMessageTemplate($module, $name, $record['lang'], $sender);
     }
     if(empty($message) && isset($record['recipient'])){//2
       $recipientlang = user_load($record['recipient'])->language;
-      $message = $this->loadMessageTemplate($module, $name, $lang, $sender);
+      $message = $this->loadMessageTemplate($module, $name, $recipientlang, $sender);
     }
     if(empty($message) && isset($record['sender'])){//3
       $senderlang = user_load($record['sender'])->language;
-      $message = $this->loadMessageTemplate($module, $name, $lang, $sender);
+      $message = $this->loadMessageTemplate($module, $name, $senderlang, $sender);
     }
     
     if(!empty($message)){
@@ -125,7 +126,7 @@ class Notifier{
     if($lang == 'en'){
       $res = $default_eng;
     }else{
-      $default_aux = module_invoke($record['module'], 'ces_notify_messages', $record['name'], $record['lang']);
+      $default_aux = module_invoke($module, 'ces_notify_messages', $name, $lang);
       if($default_aux != $default_eng){//depth array comparison
         $res = $default_aux;
         $res['lang'] = $lang;

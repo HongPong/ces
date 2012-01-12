@@ -6,16 +6,16 @@ Exchange form. Create, view and edit forms.
 function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
   $bank = new Bank();
 
-  if($op == 'edit' || $op == 'view'){
+  if($op == 'new'){
+    $exchange = $bank->getDefaultExchange();
+  }else{
     try{
       $exchange = $bank->getExchange($exchangeId);
     }catch(Exception $e){
       drupal_set_message(t('Exchange id @id does not exist.', array('@id'=>$exchangeId)),'error');
       return $form;
     }
-  }else if($op == 'new'){
-    $exchange = $bank->getDefaultExchange();
-  }
+  } 
   
   $form['exchange'] = array(
     '#type' => 'vertical_tabs'
@@ -36,6 +36,11 @@ function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
   $form['exchange']['general'] = array(
     '#type' => 'fieldset',
     '#title' => t('General')
+  );
+  
+  $form['exchange']['admin'] = array(
+    '#type' => 'value',
+    '#value' => $exchange['admin'],
   );
 
   $form['exchange']['general']['code'] = array(
@@ -115,7 +120,7 @@ function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
     '#required' => TRUE,
   );
 
-  if($op!='new'){
+  if($exchange['state'] != 0){ //exchange has been activated
     $form['exchange']['limitchain'] = array(
       '#type' => 'fieldset',
       '#title' =>  t('Default limit chain'),
@@ -181,7 +186,7 @@ function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
 
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Submit'),
+    '#value' => $op == 'activate'?t('Activate'):t('Submit'),
   );
 
   return $form;
@@ -225,6 +230,10 @@ function bank_exchange_form_submit($form, &$form_state){
       $bank->updateExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully updated.',array('%code'=>$form_state['values']['code'])));
     }
+    if($op == 'activate'){
+      $bank->activateExchange($form_state['values']);
+      drupal_set_message(t('Exchange %code successfully activated. There has been sent an email to the new exchange administrator.', array('%code'=>$form_state['values']['code'])));
+    }
   }catch(Exception $e){
     drupal_set_message(t('An error ocurred while saving the exchange record. Details:') ."\n". $e->getMessage(), 'error');
   }
@@ -233,16 +242,16 @@ function bank_exchange_form_submit($form, &$form_state){
 function bank_limitchain_form($form, &$form_state, $op, $exchangeId, $id = NULL){
   $bank = new Bank();
 
-  if($op == 'edit' || $op == 'view'){
+  if($op == 'new'){
+    $limitchain = $bank->getDefaultLimitChain($exchangeId);
+  }else{
     try{
       $limitchain = $bank->getLimitChain($id);
     }catch(Exception $e){
       drupal_set_message(t('Limit chain id @id does not exist.', array('@id'=>$id)),'error');
       return $form;
     }
-  }else if($op == 'new'){
-    $limitchain = $bank->getDefaultLimitChain($exchangeId);
-  }
+  } 
   
   $form['name'] = array(
     '#type' => 'textfield',

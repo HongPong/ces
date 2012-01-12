@@ -23,6 +23,15 @@ function bank_theme(){
  */
 function bank_menu(){
   $menu = array();
+  $menu['ces/bank/admin'] = array(
+    'title' => 'Administer CES Bank',
+    'description' => 'Top administer interface for CES Bank',
+    'page callback' => 'bank_admin_page',
+    'file' => 'bank.pages.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+    'access arguments' => array('admin ces'),
+    
+  );
   
   $menu['ces/bank/exchange/list'] = array(
     'title' => 'List exchanges',
@@ -38,9 +47,9 @@ function bank_menu(){
     'description' => 'Create a new exchange',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_exchange_form', 3),
-    'access arguments' => array('create exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
+    'access arguments' => array('create exchange'),
   );
   
   $menu['ces/bank/exchange/view']   = array(
@@ -64,6 +73,18 @@ function bank_menu(){
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_CALLBACK,
   );
+  
+  $menu['ces/bank/exchange/activate']   = array(
+    'title' => 'Activate exchange',
+    'description' => 'Activate exchange',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_exchange_form',3,4),
+    'access arguments' => array('edit exchange'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+    'type' => MENU_CALLBACK,
+  );
+  
 
   $menu['ces/bank/account/new'] = array(
     'title' => 'New Account',

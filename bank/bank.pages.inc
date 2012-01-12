@@ -147,3 +147,33 @@ function bank_account_list_page(){
 
   return $page;
 }
+
+function bank_admin_page(){
+  $bank = new Bank();
+  
+  $page = array();
+  $page['new_exchanges'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Exchange requests'),
+  );
+  
+  $exchanges = $bank->getAllExchanges(array('state'=>0));
+  if(!empty($exchanges)){
+    $list = array(
+      '#theme' => 'item_list',
+      '#items' => array(),
+      
+    );
+    foreach($exchanges as $exchange){
+      $list['#items'][] = l($exchange['code'].' - '.$exchange['name'], 'ces/bank/exchange/activate/'.$exchange['id']);
+    }
+    $page['new_exchanges']['new_exchanges_list'] = $list;
+  }else{
+    $page['new_exchanges']['text'] = array(
+      '#type'=>'item',
+      '#title'=>t('No requests for new exchanges.'),
+    );
+  }
+  return $page;
+  
+}

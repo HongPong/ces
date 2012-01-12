@@ -1,6 +1,6 @@
 <?php
 
-function notify_schema(){
+function ces_notify_schema(){
   $schema = array();
   $schema['ces_messages'] = array(
     'description' => 'Customized message texts.',
@@ -42,13 +42,13 @@ function notify_schema(){
         'description' => 'Message subject',
         'type' => 'text',
         'not null' => TRUE,
-        'default' => '',
+        'size' => 'big',
       ),
       'body' => array(
         'description' => 'Message body',
         'type' => 'text',
         'not null' => TRUE,
-        'default' => '',    
+        'size' => 'big',
       ),
     ),
     'primary key' => array ('id'),
@@ -56,4 +56,5 @@ function notify_schema(){
       'modulenamelangsender' => array ('module','name', 'lang', 'sender'),
     ),
   );
+  return $schema;
 }

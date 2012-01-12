@@ -17,11 +17,13 @@ class Bank{
    * Create exchange. This exchange is not functional yet. It must be activated.
    */
   public function createExchange(array &$record){
+    global $user;
     $t = Serializer::DBTransaction();
     try{
       //create exchange record
       unset($record['id']);
       $record['state'] = Exchange::STATE_INACTIVE;
+      $record['admin'] = $user->uid;
       $this->updateObject('Exchange', $record);
       
     }catch(Exception $e){
@@ -42,6 +44,24 @@ class Bank{
     }
   }
   /**
+   * Updates and activates an exchange
+   */
+  public function activateExchange(array &$record){
+    $t = Serializer::DBTransaction();
+    global $user;
+    try{
+      $s = new Serializer('Exchange');
+      $exchange = $s->loadFromRecord($record);
+      $exchange->activate();
+      $s->save($exchange);
+      $notifier = new Notifier();
+      $notifier->notify('bank', 'new exchange', $exchange->admin, $user->uid, array('exchange'=>$exchange));
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
+  }
+  /**
    * Gets the exchange from its id
    */
   public function getExchange($id){
@@ -55,11 +75,13 @@ class Bank{
     throw new Exception('Not implemented yet');
   }
   /**
-   * @return array with all exchanges in this server.
+   * @return array with all exchanges in this server that satisfy certain conditions.
+   * @param $conditions array conditions filter on the fields of exchange records. 
+   *                          By default return the active ones.
    */
-  public function getAllExchanges(){
+  public function getAllExchanges(array $conditions = array('state'=>1)){
     $s = new Serializer('Exchange');
-    $exchanges = $s->loadCollection(array('active'=> 1));
+    $exchanges = $s->loadCollection($conditions);
     $records = array();
     $as = new Serializer('LocalAccount');
     foreach($exchanges as $exchange){
@@ -117,7 +139,7 @@ class Bank{
       $s->save($account);
       
       //saveExtraData() after create account record because we need the new 
-      //account id in order to create the UserAccount record(s).
+      //account id in order to create the AccountUser record(s).
       $account->saveExtraData(); 
       
     }catch(Exception $e){
@@ -481,8 +503,8 @@ class Exchange extends DBObject{
     
     $accounts = $s->loadCollection(array($this->id => $this->id), 'name');
     
-    $start = floor(count($accounts) / 2); //This is a bit tricky.
-    $code = $accounts[$start]->getCode();
+    $start = floor((count($accounts) -1) / 2); //This is a bit tricky.
+    $code = !empty($accounts)?$accounts[$start]->getCode():0;
     
     if(!is_numeric($code)) $code = 0;
       
@@ -506,7 +528,8 @@ class Exchange extends DBObject{
    * exchange needs in order to be operative. This includes:
    *  - default limit chain
    *  - virtual account
-   * And sets up the active flag to this exchange.
+   * And sets up the active flag to this exchange. 
+   * Exchange needs to be saved after this call so the state flag persists.
    */
   public function activate(){
     $es = new Serializer('Exchange');
@@ -532,7 +555,6 @@ class Exchange extends DBObject{
       $as->save($virtAccount);
     }
     $this->state = Exchange::STATE_ACTIVE;
-    $s->updateField($this, 'state');
   }
   /**
    * @return Account the virtual account for this exchange.

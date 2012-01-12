@@ -76,8 +76,8 @@ function bank_schema() {
 	'not null'	=> TRUE,
 	'default'	=> ''
       ),
-      'active'	  => array(
-	'description'	=> 'whether this exchange is active',
+      'state'	  => array(
+	'description'	=> 'the state of this exchange',
 	'type'		=> 'int',
 	'unsigned'	=> TRUE,
 	'not null'	=> TRUE,
@@ -436,9 +436,8 @@ function bank_schema() {
       ),
       'concept'		=> array(
 	'type'		=> 'text',
-	'length' 	=> 'normal',
+        'size'          => 'big',
 	'not null' 	=> TRUE,
-	'default' 	=> ''
       ),
       'state'	=> array(
 	'type'		=> 'int',
