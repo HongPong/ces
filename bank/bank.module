@@ -157,6 +157,162 @@ function bank_decorated_transaction_classes(){
   return array('InterExchangeTransaction', 'LevyedTransaction');
 }
 
+/**
+ * Implements hook_token_info().
+ */
+function bank_token_info(){
+  return array(
+    'types' => array(
+      'exchange' => array(
+        'name' => t('Exchange'),
+        'description' => t('Tokens for bank exchanges'),
+      ),
+      'account' => array(
+        'name'  =>t('Account'),
+        'description' => t('Tokens for bank accounts')
+      )
+    ),
+    'tokens' => array(
+      'exchange'=> array(
+        'code' => array(
+          'name'   => t('Exchange code'),
+          'description' => t('The 4 letter exchange code.'),
+        ),
+        'shortname' => array(
+          'name'   => t('Exchange short name'),
+          'description' => t('Exchange short name.'),
+        ),
+        'name' => array(
+          'name'   => t('Exchange full name'),
+          'description' => t('Exchange full name.'),
+        ),
+        'country' => array(
+          'name'   => t('Exchange country'),
+          'description' => t('Exchange country.'),
+        ),
+        'town' => array(
+          'name'   => t('Exchange town'),
+          'description' => t('Exchange town.'),
+        ),
+        'region' => array(
+          'name'   => t('Exchange region'),
+          'description' => t('Exchange region within the country.'),
+        ),
+        'website' => array(
+          'name'   => t('Exchange website'),
+          'description' => t('Exchange website.'),
+        ),
+        'currencysymbol' => array(
+          'name'   => t('Currency symbol'),
+          'description' => t('Exchange currency symbol.'),
+        ),
+        'currencyname' => array(
+          'name'   => t('Currency name'),
+          'description' => t('Exchange currency name.'),
+        ),
+        'currenciesname' => array(
+          'name'   => t('Currency name plural'),
+          'description' => t('Exchange currency name in plural.'),
+        ),
+        'currencyvalue' => array(
+          'name'   => t('Currency value'),
+          'description' => t('Exchange currency value in hours of work.'),
+        ),
+        'admin' => array(
+          'name'   => t('Exchange administrator'),
+          'description' => t('Exchange administrator user.'),
+          'type' => 'user',
+        )
+      ),
+      'account' => array(
+        'name' => array(
+          'name' => t('Account identifier'),
+          'description' => t('4 letter exchange identifier plus 4 number account code.'),
+        ),
+        'kind' => array(
+          'name' => t('Type'),
+          'description' => t('Account type'),
+        ),
+        'user' => array(
+          'name' => t('Account user'),
+          'description' => t('Account user'),
+          'type' => 'user',
+        )
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function bank_tokens($type, $tokens, array $data = array(), array $options = array()){
+  $replacements = array();
+  $sanitize = !empty($options['sanitize']);
+  
+  if($type == 'exchange' && !empty($data['exchange'])){
+    $exchange = $data['exchange'];
+    foreach($tokens as $name => $original){
+      switch($name){
+        case 'code':
+          $replacements[$original] = $sanitize?check_plain($exchange['code']):$exchange['code'];
+          break;
+        case 'shortname':
+          $replacements[$original] = $sanitize?check_plain($exchange['shortname']):$exchange['shortname'];
+          break;
+        case 'name':
+          $replacements[$original] = $sanitize?check_plain($exchange['name']):$exchange['name'];
+          break;
+        case 'country':
+          $replacements[$original] = $sanitize?check_plain($exchange['country']):$exchange['country'];
+          break;
+        case 'town':
+          $replacements[$original] = $sanitize?check_plain($exchange['town']):$exchange['town'];
+          break;
+        case 'region':
+          $replacements[$original] = $sanitize?check_plain($exchange['region']):$exchange['region'];
+          break;
+        case 'website':
+          $replacements[$original] = $sanitize?check_plain($exchange['website']):$exchange['website'];
+          break;
+        case 'currencysymbol':
+          $replacements[$original] = $sanitize?check_plain($exchange['currencysymbol']):$exchange['currencysymbol'];
+          break;
+        case 'currencyname':
+          $replacements[$original] = $sanitize?check_plain($exchange['currencyname']):$exchange['currencyname'];
+          break;
+        case 'currenciesname':
+          $replacements[$original] = $sanitize?check_plain($exchange['currenciesname']):$exchange['currenciesname'];
+          break;
+        case 'currencyvalue':
+          $replacements[$original] = $sanitize?check_plain($exchange['currencyvalue']):$exchange['currencyvalue'];
+          break;
+        
+      }
+    }
+    if ($admin_tokens = token_find_with_prefix($tokens, 'admin')){
+      $replacements += token_generate('user', $admin_tokens, array('user' => user_load($exchange['admin'])), $options);
+    }
+  }
+  if($type == 'account' && !empty($data['account'])){
+    $account = $data['account'];
+    foreach($tokens as $name => $original){
+      switch($name){
+        case 'name':
+          $replacements[$original] = $sanitize?check_plain($account['name']):$account['name'];
+          break;
+        case 'kind':
+          $replacements[$original] = $sanitize?check_plain($account['kind']):$account['kind'];
+          break;
+      }
+    }
+    if ($user_tokens = token_find_with_prefix($tokens, 'user')){
+      $replacements += token_generate('user', $admin_tokens, array('user' => user_load($account['user'])), $options);
+    }
+  }
+  return $replacements;
+}
+
 function bank_ces_notify_messages($key, $langcode){
   $a = array();
   $b = array('langcode' => $langcode);
@@ -189,7 +345,7 @@ See registration details below:
 Exchange: [exchange:code]
 Account name: [account:name]
 Account type: [account:kind]
-User: [account:user]', $a, $b)
+User: [account:user:name]', $a, $b)
       );
     case 'account debited':
       return array(

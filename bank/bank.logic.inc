@@ -55,7 +55,7 @@ class Bank{
       $exchange->activate();
       $s->save($exchange);
       $notifier = new Notifier();
-      $notifier->notify('bank', 'new exchange', $exchange->admin, $user->uid, array('exchange'=>$exchange));
+      $notifier->notify('bank', 'new exchange', $exchange->admin, $user->uid, array('exchange'=>$exchange->getRecord()));
     }catch(Exception $e){
       $t->rollback();
       throw $e;
@@ -273,7 +273,14 @@ class Bank{
     $t = Serializer::DBTransaction();
     try{
       $transaction = $this->getObject('BasicTransaction', $transactionId);
-      return $transaction->apply();
+      $res = $transaction->apply();
+      if($res === TRUE){//transaction were applied
+        //$this->notifyTransaction();
+      }else{
+        //Notify something?
+      }
+      return $res;
+      
     }catch(Exception $e){
       $t->rollback();
       throw $e;
@@ -360,7 +367,10 @@ class Bank{
     return $transaction;
   }
   
-  
+  private function notifyTransaction(Transaction $transaction){
+    $accountFrom = $transaction->getFromAccountName();
+    
+  }
 }
 
 /**
@@ -713,11 +723,9 @@ class LocalAccount extends DBObject implements Account {
     $amount = $transaction->getAmount();
     if($transaction->getFromAccountName() == $this->name){
       $account->balance = $account->balance - $amount;
-      $this->setMessage(t('Your account has been debited by %amount.', array('%amount'=> $amount)));
     }
     if($transaction->getToAccountName() == $this->name){
       $account->balance = $account->balance + $amount;
-      $this->setMessage(t('Your account has been credited by %amount.', array('%amount'=> $amount)));
     }
     $this->balance = $account->balance; //update actual object amount because it could be reused.
     
