@@ -5,17 +5,15 @@ Exchange form. Create, view and edit forms.
 **/
 function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
   $bank = new Bank();
-
-  if($op == 'new'){
-    $exchange = $bank->getDefaultExchange();
+  if(isset($form_state['values'])){//form rebuild
+    $exchange = $form_state['values'];
   }else{
-    try{
-      $exchange = $bank->getExchange($exchangeId);
-    }catch(Exception $e){
-      drupal_set_message(t('Exchange id @id does not exist.', array('@id'=>$exchangeId)),'error');
-      return $form;
-    }
-  } 
+    if($op == 'new'){
+      $exchange = $bank->getDefaultExchange();
+    }else{
+      $exchange = $bank->getExchange($exchangeId);      
+    } 
+  }
   
   $form['exchange'] = array(
     '#type' => 'vertical_tabs'
@@ -24,6 +22,11 @@ function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
   $form['exchange']['operation'] = array(
     '#type' => 'value',
     '#value' => $op
+  );
+  
+  $form['exchange']['state'] = array(
+    '#type' => 'value',
+    '#value' => $exchange['state'],
   );
   
   if($op != 'new'){
@@ -119,16 +122,6 @@ function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
     '#default_value' => $exchange['map'], 
     '#required' => TRUE,
   );
-
-  if($exchange['state'] != 0){ //exchange has been activated
-    $form['exchange']['limitchain'] = array(
-      '#type' => 'fieldset',
-      '#title' =>  t('Default limit chain'),
-      '#tree' => TRUE,
-    );
-
-    $form['exchange']['limitchain']['values'] = bank_limitchain_form($form, $form_state, $op, $exchange['id'], $exchange['limitchain']);  
-  }
   
   $form['exchange']['currency'] = array(
     '#type' => 'fieldset',
@@ -184,10 +177,32 @@ function bank_exchange_form($form, &$form_state, $op, $exchangeId = NULL){
     '#required' => TRUE
   );
 
+  if($exchange['state'] != 0){ //exchange has been activated
+    $form['exchange']['limits'] = array(
+      '#type'=>'fieldset',
+      '#title'=>t('Limits'),
+    );
+    
+    $limitchains = $bank->getAllLimitChains($exchange['id']);
+    $options = array();
+    foreach($limitchains as $id=>$limit){
+      $options[$id] = $limit['name'];
+    }
+    $form['exchange']['limits']['limitchain'] = array(
+      '#type'=>'select',
+      '#title'=>t('Default limit chain'),
+      '#description'=>t('The limit chain for new accounts.'),
+      '#options'=> $options,
+    );
+  }
+  
+  
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => $op == 'activate'?t('Activate'):t('Submit'),
   );
+  
+  
 
   return $form;
 }
@@ -215,7 +230,8 @@ function bank_exchange_form_validate($form, &$form_state){
   if(!is_numeric($currencyvalue))
     form_set_error('currencyvalue', t('Currency value %value is invalid. Enter a numeric value like 0.1, 0.0666666667 or 1', array('%value'=>$currencyvalue)));
   
-  bank_limitchain_form_validate($form, $form_state);
+  
+  _bank_limitchain_fieldset_validate($form, $form_state['values']['limitchain']);
   
 }
 
@@ -239,117 +255,207 @@ function bank_exchange_form_submit($form, &$form_state){
   }
 }
 
-function bank_limitchain_form($form, &$form_state, $op, $exchangeId, $id = NULL){
+function bank_limitchain_form($form, &$form_state, $op, $id){
+  
   $bank = new Bank();
-
-  if($op == 'new'){
-    $limitchain = $bank->getDefaultLimitChain($exchangeId);
-  }else{
-    try{
-      $limitchain = $bank->getLimitChain($id);
-    }catch(Exception $e){
-      drupal_set_message(t('Limit chain id @id does not exist.', array('@id'=>$id)),'error');
-      return $form;
+  if(!empty($form_state['values'])){//Form rebuild. Take values from last user input.
+    $values = &$form_state['values'];
+    $op = $values['operation'];
+  }else{//First build. Take values from logic layer.
+    if($op == 'new'){
+      $values = $bank->getDefaultLimitChain($id);
+    }else{
+      $values = $bank->getLimitChain($id);
     }
-  } 
+  }
+
+  $form = array(
+    '#type' => 'fieldset',
+    '#title' =>  t('Limit chain'),
+    '#tree' => TRUE,
+  );
+  
+  //save values: operation, exchange and id.
+  $form['operation'] = array(
+    '#type' => 'value',
+    '#value' => $op
+  );
+
+  $form['exchange'] = array(
+    '#type' => 'value',
+    '#value' => $values['exchange'],
+  );
+  
+  if($op != 'new'){
+    $form['id'] = array(
+      '#type' => 'value',
+      '#value' => $values['id'],
+    );
+  }
   
   $form['name'] = array(
     '#type' => 'textfield',
     '#description' => t('Name for this account limit'),
     '#title' => t('name'),
-    '#default_value' => $limitchain['name'],
+    '#default_value' => $values['name'],
     '#required' => TRUE
   );
-
-  $form['operation'] = array(
-    '#type'=>'value',
-    '#value'=>$op
-  );
-
-  $form['exchange'] = array(
-    '#type' => 'value',
-    '#value' => $limitchain['exchange']
-  );
+  // Limits list
   $form['limits'] = array(
     '#type'=> 'fieldset',
     '#title' => t('Account limits'),
-    '#description' => t('List of account limits currently belonging to this chain.')
+    '#description' => t('List of account limits currently belonging to this chain.'),
+    
   );
-  foreach($limitchain['limits'] as $index=>$limit){
-    $form['limits'][$index] = array(
-      '#type'=>'fieldset',
-      '#title'=> $limit['limitclass'],
-      '#tree' => TRUE,
-    );
-    $form['limits'][$index]['limitclass'] = array(
-      '#type'=>'value',
-      '#value'=>$limit['limitclass']
-    );
-    $form['limits'][$index]['limit'] = array(
-      '#type'=>'text',
-      '#title'=>t('Limit value'),
-      '#description'=>t('Value for this limit class'),
-      '#default_value'=>$limit['limit'],
-      
-    );
-    $form['limits'][$index]['block'] = array(
-      '#type'=>'checkbox',
-      '#title'=>t('Block'),
-      '#description'=>t('Block transactions when account reaches the limit vaule.'),
-      '#default_value'=>$limit['block'],
-    );
-    $form['limits'][$index]['up'] = array(
-      '#type'=>'submit',
-      '#title'=>t('Up'),
-      '#submit'=>array('bank_limitchain_form_submit_uplimit'),
-    );
-    $form['limits'][$index]['down'] = array(
-      '#type'=>'submit',
-      '#title'=>t('Down'),
-      '#submit'=>array('bank_limitchain_form_submit_downlimit')
-    );
-    $form['limits'][$index]['delete'] = array(
-      '#type'=>'submit',
-      '#title'=>t('Delete'),
-      '#submit'=>array('bank_limitchain_form_submit_deletelimit')
-    );
+  
+  if(isset($values['limits'])){
+    foreach($values['limits'] as $key => $value){
+      $form['limits'][$key] = _bank_limitchain_limit_fieldset(array(),$values['limits'][$key]);
+    }
   }
+  //Add new limit to the chain
   $form['newlimit'] = array(
     '#type'=>'fieldset',
     '#title'=>t('Add account limit'),
     '#description'=>t('Add a new account limit to this limit chain.')
   );
-  $form['newlimit']['newlimitclass'] = array(
+  $form['newlimit']['classname'] = array(
     '#type'=>'select',
     '#title'=>t('Limit class'),
     '#options'=>$bank->getAccountLimitClasses(),
     '#description' => t('The type of limit to add. Each class limites a different aspect of the account balance or in a different way. Once added you will be able to configure its parameters.')
   );
+  $form['newlimit']['value'] = array(
+    '#type' => 'value',
+    '#value' => '0',
+  );
+  $form['newlimit']['block'] = array(
+    '#type' => 'value',
+    '#value' => FALSE,
+  );
+  $form['newlimit']['operation'] = array(
+    '#type' => 'value',
+    '#value' => 'new',
+  );
+  
   $form['newlimit']['addlimit'] = array(
     '#type'=>'submit',
     '#value'=>t('Add limit'),
-    '#submit'=>array('bank_limitchain_form_submit_addlimit')
+    '#submit'=>array('bank_limitchain_form_addlimit'),
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
   );
 
   return $form;
 }
 
+/**
+ * Helper function.
+ */
+function _bank_limitchain_limit_fieldset($form, &$form_values){
+  if(!isset($form_values['operation']))
+    $form_values['operation'] = 'edit';
+  
+  $bank = new Bank();
+  $options = $bank->getAccountLimitClasses(); 
+  $limit = array(
+    '#type' => 'fieldset',
+    '#title' => $options[$form_values['classname']],
+    '#description' => $options[$form_values['classname']],
+  );
+  $limit['classname'] = array(
+    '#type'=>'value',
+    '#value'=>$form_values['classname'],
+  );
+  $limit['operation'] = array(
+    '#type'=>'value',
+    '#value'=>$form_values['operation'],
+  );
+  if($form_values['operation']!='new'){
+    $limit['id'] = array(
+      '#type'=>'value',
+      '#value'=>$form_values['id'],
+    );  
+  }
+  $limit['block'] = array(
+    '#type'=>'checkbox',
+    '#title'=>t('Block'),
+    '#description'=>t('Block transactions when account reaches the limit vaule.'),
+    '#default_value'=>$form_values['block'],
+    
+  );
+  $limit['value'] = array(
+    '#type'=>'textfield',
+    '#title'=>t('Limit value'),
+    '#description'=>t('Value for this limit class'),
+    '#default_value'=>$form_values['value'], 
+    '#required'=>TRUE,
+  );
+  $limit['deletelimit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete'),
+    '#submit'=>array('bank_limitchain_form_deletelimit'),
+  );
+  
+  return $limit;
+}
+
+function bank_limitchain_form_addlimit($form, &$form_state){
+  $form_state['rebuild'] = TRUE;
+  
+  $parents = $form_state['clicked_button']['#parents'];
+  $value = &$form_state['values'];
+  for($i=0;$i<count($parents)-2;$i++){
+    $value = &$value[$parents[$i]];
+  }
+  
+  $value['limits'][] = $value['newlimit'];
+  
+}
+
+function bank_limitchain_form_deletelimit($form, &$form_state){
+  $form_state['rebuild'] = TRUE;
+  $parents = $form_state['clicked_button']['#parents'];
+  //go to the parent element of the clicked button and unset it!
+  $value = &$form_state['values'];
+  for($i=0;$i<count($parents)-2;$i++){
+    $value = &$value[$parents[$i]];
+    $key = $parents[$i+1];
+  }
+  unset($value[$key]);
+}
+
 function bank_limitchain_form_validate($form, &$form_state){
-  //TODO
+  $values = $form_state['values'];
+  if(!empty($values['limits'])){
+    foreach($values['limits'] as $key=>$limit){
+      $amount = $limit['value'];
+      if(!is_numeric($amount)){
+        form_set_error('value', t('The limit amount must be numeric'));
+      }
+    }
+  }
 }
-function bank_limitchain_form_submit_addlimit($form, &$form_state){
-  //TODO
+
+function bank_limitchain_fieldset_submit($form, &$form_state){
+  $values = $form_state['values'];
+  try{
+    $bank = new Bank();
+    if($form_values['operation'] == 'new'){//create new limit chain
+      $bank->createLimitChain($values);
+    }else if($form_values['operation'] == 'edit'){
+      $bank->updateLimitChain($values);
+    }
+  }catch(Exception $e){
+    drupal_set_message(t('Error occurred while updating the limit chain. Details: ')."\n".$e->getMessage(), 'error');
+  }
 }
-function bank_limitchain_form_submit_deletelimit($form, &$form_state){
-  //TODO
-}
-function bank_limitchain_form_submit_uplimit($form, &$form_state){
-  //TODO
-}
-function bank_limitchain_form_submit_downlimit($form, &$form_state){
-  //TODO
-}
+
 function bank_limitchain_form_submit($form, &$form_state){
+  $bank = new Bank();
   $op = $form_state['values']['operation'];
   try{
     if( $op == 'new'){

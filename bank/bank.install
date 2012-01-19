@@ -223,14 +223,14 @@ function bank_schema() {
 	'not null'	=> TRUE,
 	'default'	=> 0
       ),
-      'limitclass' => array(
+      'classname' => array(
 	'description' 	=> 'Limit type. The name of the class implementing it.',
 	'type' 		=> 'varchar',
 	'length' 	=> '31',
 	'not null' 	=> TRUE,
 	'default' 	=> ''
       ),
-      'limit' => array(
+      'value' => array(
 	'description' 	=> 'A value from which the account is in warning',
 	'type' 		=> 'numeric',
 	'precision' 	=> 31,

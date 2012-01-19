@@ -44,7 +44,11 @@ class Serializer {
    * @return DBObject
    */
   public function loadFromRecord($record){
-    $obj = new $this->className($record);
+    if(isset($record['classname']) && class_exists($record['classname']) && is_subclass_of($record['classname'], $this->className)){
+      $obj = new $record['classname']($record);
+    }else{
+      $obj = new $this->className($record);
+    }
     if(!empty($record['decoration']) && is_array($record['decoration'])){//load decorator pattern
       foreach($record['decoration'] as $value){
         if(isset($value['classname']) && class_exists($value['classname'])){

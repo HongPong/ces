@@ -795,7 +795,7 @@ class LimitChain extends DBObject{
     //load limits
     $this->limits = array();
     $s = new Serializer('AccountLimit');
-    if(isset($record['limits'])){//record comes with limits. This is because it comes from
+    if(isset($record['limits'])){//record comes with limits. This is because it comes from UI
       foreach($record['limits'] as $limitRecord){
         $limitRecord['limitchain'] = $this->id;
         $this->limits[] = $s->loadFromRecord($limitRecord);
@@ -808,7 +808,7 @@ class LimitChain extends DBObject{
     $record = parent::getRecord();
     $record['limits'] = array();
     foreach($this->limits as $limit){
-      $record['limits'][] = $limits->getRecord();
+      $record['limits'][] = $limit->getRecord();
     }
     return $record;
   }
@@ -863,10 +863,16 @@ class LimitChain extends DBObject{
 abstract class AccountLimit extends DBObject{
   
   public static $table = 'ces_limit';
+  
+  /**
+   * @var int
+   */
+  public $id;
+  
   /**
    * @var double
    */
-  public $limit;
+  public $value;
   
   /**
    * @var boolean
@@ -881,7 +887,7 @@ abstract class AccountLimit extends DBObject{
   /**
    * @var string
    */
-  public $limitclass;
+  public $classname;
   
   /**
    * @var array
@@ -923,7 +929,7 @@ abstract class AccountLimit extends DBObject{
     }
   }
   public function getLimit(){
-    return $this->limit;
+    return $this->value;
   }
   /**
    * @return double. The amount of this account.

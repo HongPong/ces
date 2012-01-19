@@ -24,12 +24,12 @@ function bank_theme(){
 function bank_menu(){
   $menu = array();
   $menu['ces/bank/admin'] = array(
-    'title' => 'Administer CES Bank',
+    'title' => 'Administer CES bank',
     'description' => 'Top administer interface for CES Bank',
     'page callback' => 'bank_admin_page',
     'file' => 'bank.pages.inc',
     'file path' => drupal_get_path('module', 'bank'),
-    'access arguments' => array('admin ces'),
+    'access arguments' => array('admin ces bank'),
     
   );
   
@@ -68,7 +68,7 @@ function bank_menu(){
     'description' => 'Edit exchange',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_exchange_form',3,4),
-    'access arguments' => array('edit exchange'),
+    'access arguments' => array('admin exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_CALLBACK,
@@ -79,7 +79,7 @@ function bank_menu(){
     'description' => 'Activate exchange',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_exchange_form',3,4),
-    'access arguments' => array('edit exchange'),
+    'access arguments' => array('admin ces bank'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_CALLBACK,
@@ -87,7 +87,7 @@ function bank_menu(){
   
 
   $menu['ces/bank/account/new'] = array(
-    'title' => 'New Account',
+    'title' => 'New account',
     'description' => 'Create a new banking account.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_account_form', 3, 4),
@@ -98,7 +98,7 @@ function bank_menu(){
   );
   
   $menu['ces/bank/account/edit'] = array(
-    'title' => 'Edit Account',
+    'title' => 'Edit account',
     'description' => 'Edit a banking account.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_account_form', 3, 4),
@@ -109,7 +109,7 @@ function bank_menu(){
   );
   
   $menu['ces/bank/account/view'] = array(
-    'title' => 'View Account',
+    'title' => 'View account',
     'description' => 'View banking account properties.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_account_form', 3, 4),
@@ -127,6 +127,29 @@ function bank_menu(){
     'file path' => drupal_get_path('module', 'bank'),
     'access arguments' => array('view account'),
   );
+  
+  $menu['ces/bank/limitchain/new'] = array(
+    'title' => 'New limit chain',
+    'description' => 'Create a new limit chain.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_limitchain_form', 3, 4),
+    'access arguments' => array('admin exchange'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+    'type'=> MENU_CALLBACK,
+  );
+  
+  $menu['ces/bank/limitchain/edit'] = array(
+    'title' => 'Edit limit chain',
+    'description' => 'Edit a limit chain.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_limitchain_form', 3, 4),
+    'access arguments' => array('edit limitchain'),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+    'type'=> MENU_CALLBACK,
+  );
+  
   
   $menu['ces/bank/transaction'] = array(
     'title' => 'Enter single transaction',
