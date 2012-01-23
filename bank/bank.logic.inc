@@ -818,8 +818,24 @@ class LimitChain extends DBObject{
    */
   public function saveExtraData(){
     $s = new Serializer('AccountLimit');
+    $newids = array();
+    //create/update limits
     foreach($this->limits as $limit){
       $s->save($limit);
+      $newids[] = $limit->id;
+    }
+    
+    //delete unused limits. 
+    //This is inefficient (it could be done in a single DB query), 
+    //but it doesn't matter since this is a very occasional operation.
+    
+    $limits = $s->loadCollection(array('limitchain'=>$this->id));
+    foreach($limits as $limit){
+      $allids[] = $limit->id;
+    }
+    $oldids = array_diff($allids, $newids);
+    foreach($oldids as $id){
+      $s->delete($id);
     }
   }
   

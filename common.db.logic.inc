@@ -124,6 +124,15 @@ class Serializer {
     if($record === FALSE) return FALSE;
     return $this->loadFromRecord($record);
   }
+  
+  /**
+   * Deletes a database record
+   * @param id int the record id.
+   */
+  public function delete($id){
+    $query = db_delete($this->table)->condition('id', $id);
+    return $query->execute();
+  }
   /**
    * @return object 
    */
