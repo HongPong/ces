@@ -188,11 +188,15 @@ function bank_token_info(){
     'types' => array(
       'exchange' => array(
         'name' => t('Exchange'),
-        'description' => t('Tokens for bank exchanges'),
+        'description' => t('Tokens for bank exchanges.'),
       ),
       'account' => array(
         'name'  =>t('Account'),
-        'description' => t('Tokens for bank accounts')
+        'description' => t('Tokens for bank accounts.')
+      ),
+      'transaction' => array(
+        'name' => t('Transaction'),
+        'description' => t('Tokens for bank transactions.')
       )
     ),
     'tokens' => array(
@@ -254,13 +258,33 @@ function bank_token_info(){
         ),
         'kind' => array(
           'name' => t('Type'),
-          'description' => t('Account type'),
+          'description' => t('Account type.'),
         ),
         'user' => array(
           'name' => t('Account user'),
-          'description' => t('Account user'),
+          'description' => t('Account user.'),
           'type' => 'user',
         )
+      ),
+      'transaction' => array(
+        'fromaccount' => array(
+          'name' => t('Buyer account'),
+          'description' => t('The buyer account object.'),
+          'type' => 'account',
+        ),
+        'toaccount' => array(
+          'name' => t('Seller account'),
+          'description' => t('The seller account object.'),
+          'type' => 'account',
+        ),
+        'amount' => array(
+          'name' => t('Amount'),
+          'description' => t('The transaction amount.'),
+        ),
+        'concept' => array(
+          'name' => t('Description'),
+          'description' => t('The concept of the transaction.')
+        ),
       ),
     ),
   );
@@ -333,6 +357,27 @@ function bank_tokens($type, $tokens, array $data = array(), array $options = arr
       $replacements += token_generate('user', $admin_tokens, array('user' => user_load($account['user'])), $options);
     }
   }
+  if($type == 'transaction' && !empty($data['transaction'])){
+    $transaction = $data['transaction'];
+    foreach($tokens as $name => $original){
+      switch($name){
+        case 'amount':
+          $replacements[$original] = $sanitize?check_plain($transaction['amount']):$transaction['amount'];
+          break;
+        case 'concept':
+          $replacements[$original] = $sanitize?check_plain($transaction['concept']):$transaction['concept'];
+          break;
+      }
+      if ($fromaccount_tokens = token_find_with_prefix($tokens, 'fromaccount')){
+        $bank = new Bank();
+        $replacements += token_generate('account', $fromaccount_tokens, array('account' => $bank->getAccountByName($transaction['fromaccount'])), $options);
+      }
+      if ($toaccount_tokens = token_find_with_prefix($tokens, 'toaccount')){
+        $bank = new Bank();
+        $replacements += token_generate('account', $toaccount_tokens, array('account' => $bank->getAccountByName($transaction['toaccount'])), $options);
+      }
+    }
+  }
   return $replacements;
 }
 
@@ -373,16 +418,39 @@ User: [account:user:name]', $a, $b)
     case 'account debited':
       return array(
         'subject' => t('Your account has been debited'),
-        'body' => t('Your account [account:name] has been debited.
+        'body' => t(
+'[transaction:fromaccount:exchange:name]: Your account [transaction:fromaccount:name] has been debited.
 
-...', $a, $b),
+See transaction details below:
+
+Seller account: [transaction:toaccount:name]
+Seller name: [transaction:toaccount:user:name] <[transaction:toaccount:user:mail]>
+Description: [transaction:concept]
+Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
+Ordered by: [transaction:user:name] <[transaction:user:mail]>
+
+If you were satisfied with this purchase please <a href="">leave a recommendation</a> for the seller.
+
+View your current <a href="">statement of account</a>.
+
+If this debit is incorrect contact the seller within 10 days to have it corrected.
+
+', $a, $b),
       );
     case 'account credited':
       return array(
-        'subject' => t('Your account has been credited'),
-        'body' => t('Your account [account:name] has been credited.
+        'subject' => t('Your account [transaction:toaccount:name] has been credited'),
+        'body' => t('[transaction:toaccount:exchange:name]:Your account [transaction:toaccount:name] has been credited.
 
-...', $a, $b),
+See transaction details below:
+
+Buyer account: [transaction:fromaccount:name]
+Buyer name: [transaction:fromaccount:user:name] <[transaction:fromaccount:user:mail]>
+Description: [transaction:concept]
+Amount: [transaction:amount][transaction:toaccount:exchange:currencysymbol]
+Ordered by: [transaction:user:name] <[transaction:user:mail]>
+
+', $a, $b),
       );
   }
   return FALSE;

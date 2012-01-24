@@ -275,10 +275,8 @@ class Bank{
       $transaction = $this->getObject('BasicTransaction', $transactionId);
       $res = $transaction->apply();
       if($res === TRUE){//transaction were applied
-        //$this->notifyTransaction();
-      }else{
-        //Notify something?
-      }
+        $this->notifyTransaction($transaction);
+      }else
       return $res;
       
     }catch(Exception $e){
@@ -368,8 +366,34 @@ class Bank{
   }
   
   private function notifyTransaction(Transaction $transaction){
-    $accountFrom = $transaction->getFromAccountName();
+    $notifier = new Notifier();
+    $accountFromName = $transaction->getFromAccountName();
+    $accountToName = $transaction->getToAccountName();
+    $transactionUser = $transaction->getUser();
+    $params = array(
+      'transaction' => array(
+        'amount' => $transaction->getAmount(),
+        'concept' => $transaction->getConcept(),
+        'fromaccount' => $accountFromName,
+        'toaccount' => $accountToName,
+      )
+    );
+    $this->notifyTransactionAccount('account debited', $accountFromName, $transactionUser, $params);
+    $this->notifyTransactionAccount('account creadited', $accountToName, $transactionUser, $params);    
+  }
+  /**
+   * @
+   */
+  private function notifyTransactionAccount($messageKey, $accountName, $transactionUser, $params){
+    $s = new Serializer('LocalAccount');
+    $account = $s->loadFromUniqueKey('name', $accountName);
+    $accountUsers = $accountFrom->getUsers();
     
+    foreach($users as $accountUser){
+      if($transactionUser != $accountUser->user){ //don't notify the transaction user
+        $notifier->notify('bank', $messageKey, $accountUser->user, $transactionUser, $params);
+      }
+    }
   }
 }
 
@@ -654,7 +678,7 @@ class LocalAccount extends DBObject implements Account {
   
   /**
    * @var array of users related to this account. Tipically this array is a 
-   * singleton with the account's administrator user. Each entry is again an
+   * singleton with the account's administrator user. Each entry is an
    * AccountUser object.
    */
   private $users;
@@ -736,18 +760,22 @@ class LocalAccount extends DBObject implements Account {
     return $this->getLimitChain()->checkTransaction($this, $transaction);
   }
   
-  public function setMessage($message){
+  /*public function setMessage($message){
     //TODO
     drupal_set_message(t('Debug message for account ') . $this->name . ': ' . $message);
   }
   public function getMessages($message){
     //TODO
-  }
+  }*/
+  
   public function getName(){
     return $this->name;
   }
   public function getCode(){
     return substr($this->name, 4);
+  }
+  public function getUsers(){
+    return $this->users;
   }
 }
 
@@ -950,13 +978,13 @@ abstract class AccountLimit extends DBObject{
   /**
    * @return double. The amount of this account.
    */
-  public abstract function getAccountValue(Account &$account);
+  public abstract function getAccountValue(LocalAccount &$account);
   /**
    * @return double. The amount of this transaction.
    */
   public abstract function getTransactionValue(Transaction &$transaction);
   
-  public abstract function getFailMessage(Account &$account);
+  public abstract function getFailMessage(LocalAccount &$account);
   
   public static abstract function getName();
   
@@ -967,13 +995,13 @@ abstract class AccountLimit extends DBObject{
  */
 class AbsoluteDebitLimit extends AccountLimit {
     
-  public function getAccountValue(Account &$account){
-    return $account->getAmount();
+  public function getAccountValue(LocalAccount &$account){
+    return $account->balance;
   }
   public function getTransactionValue(Transaction &$transaction){
     return $transaction->getAmount();  
   }
-  public function getFailMessage(Account &$account){
+  public function getFailMessage(LocalAccount &$account){
     return t('Account %account exceeds the debit limit of %limit.', 
             array('%limit'=> $this->getLimit(),'%account'=> $account->getName()));
   }
@@ -987,8 +1015,8 @@ class AbsoluteDebitLimit extends AccountLimit {
  */
 class AbsoluteCreditLimit extends AccountLimit {
     
-  public function getAccountValue(Account &$account){
-    return - $account->getAmount();
+  public function getAccountValue(LocalAccount &$account){
+    return - $account->balance;
   }
   public function getTransactionValue(Transaction &$transaction){
     return - $transaction->getAmount();  
@@ -996,7 +1024,7 @@ class AbsoluteCreditLimit extends AccountLimit {
   public function getLimit(){
     return - $this->limit;
   }
-  public function getFailMessage(Account &$account){
+  public function getFailMessage(LocalAccount &$account){
     return t('Account %account exceeds the credit limit of %limit.', 
             array('%limit'=> $this->limit,'%account'=> $account->getName()));
   }
@@ -1107,7 +1135,13 @@ class BasicTransaction extends DBObject implements Transaction{
       $accountFrom->applyTransaction($this);
       return TRUE;
     }else{
-      $messages = array_merge($messagesFrom, $messagesTo);
+      if($messagesFrom === TRUE){
+        $messages = $messagesTo;
+      }else if($messagesTo === TRUE ){
+        $messages = $messagesFrom;
+      }else{
+        $messages = array_merge($messagesFrom, $messagesTo);
+      }
       return $messages;
     }
   }

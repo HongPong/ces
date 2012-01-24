@@ -802,10 +802,12 @@ function bank_transaction_confirm_form_submit($form, &$form_state){
     drupal_set_message(t('Transaction successfully applied.'));
   }else{
     $text = t('The transaction has NOT been applied');
-    $text .= "\n".t('Details:')."\n";
+    $text .= '<br/>'.t('Details:').'<br/>';
+    $text .= '<ul>';
     foreach($messages as $message){
-      $text .= $message . "\n";
+      $text .= '<li>'.$message . '</li>';
     }
+    $text .= '</ul>';;
     drupal_set_message($text, 'warning');
   }
   
