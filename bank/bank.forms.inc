@@ -231,7 +231,7 @@ function bank_exchange_form_validate($form, &$form_state){
     form_set_error('currencyvalue', t('Currency value %value is invalid. Enter a numeric value like 0.1, 0.0666666667 or 1', array('%value'=>$currencyvalue)));
   
   
-  _bank_limitchain_fieldset_validate($form, $form_state['values']['limitchain']);
+  //_bank_limitchain_fieldset_validate($form, $form_state['values']['limitchain']);
   
 }
 
@@ -811,4 +811,126 @@ function bank_transaction_confirm_form_submit($form, &$form_state){
     drupal_set_message($text, 'warning');
   }
   
+}
+
+/**
+ * @return array page where to find the last transactions with this account.
+ * @see bank_account_statement_form_submit()
+ */
+function bank_account_statement_form($form, &$form_state, $accountId){
+  $bank = new Bank();
+  $account = $bank->getAccount($accountId); //throws exception
+  
+  $form = array();
+  //filter controls
+  $form['controls'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Controls'),
+  );
+  if(isset($form_state['values']['from']) && isset($form_state['values']['to'])){
+    $from = $form_state['values']['from'];
+    $to = $form_state['values']['to'];
+  }else{
+    $lastmonth = mktime(0, 0, 0, date('m')-1, date('d'), date('Y'));
+    $from = array(
+      'year' => date('Y',$lastmonth),
+      'month' => date('m', $lastmonth),
+      'day' => date('d',$lastmonth),
+    );
+    $to = array(
+      'year' => date('Y'),
+      'month' => date('m'),
+      'day' => date('d'),
+    );
+  }
+  $form['controls']['from'] = array(
+      '#type'=>'date',
+      '#default_value' => $from,
+      '#title'=>t('From'),
+  );
+  
+  $form['controls']['to'] = array(
+      '#type'=>'date',
+      '#default_value' => $to,
+      '#title'=>t('To'),
+  );
+  $form['controls']['submit'] = array(
+      '#type'=>'submit',
+      '#value'=>t('Submit'),
+  );
+  $timefrom = mktime(0,0,0,$from['month'], $from['day'], $from['year']);
+  $timeto = mktime(0,0,0,$to['month'], $to['day'], $to['year']);
+  
+  //transaction table
+  $form['transactions'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Transactions from %datefrom to %dateto', 
+        array(
+          '%datefrom'=>format_date($timefrom, $type = 'short'),
+          '%dateto'=>format_date($timeto, $type = 'short'),
+        )
+      ),
+  );
+  
+  $form['transactions']['table'] = array(
+    '#theme' => 'table',
+    '#header' => array(
+      array(
+        'data'=>t('Date'),
+        'field'=>'created',
+        'sort'=>'asc'
+      ),
+      array(
+        'data' => t('Account'),
+      ),
+      array(
+        'data' => t('Description'),
+      ),
+      array(
+        'data' => t('Credit'),
+      ),
+      array(
+        'data' => t('Debit'),
+      ),
+      array(
+        'data' => t('Balance'),
+      ),
+      array(
+        'data' => t('Actions')
+      ),
+    ),
+    '#rows' => array(),
+  );
+  
+  $transactions = $bank->getTransactions(array('account'=>$account['id'], 'createdsince'=> $timefrom, 'createduntil'=> $timeto));
+  
+  foreach($transactions as $transaction){
+    $row = array();
+    $row[] = format_date($transaction['created']);
+    
+    if($transaction['fromaccount'] != $account['id']){
+      $otherAccount = $bank->getAccount($transaction['fromaccount']);
+      $type = 0;
+    }else if($transaction['toaccount']!=$account['id']){
+      $otherAccount = $bank->getAccount($transaction['toaccount']);
+      $type = 1;
+    }else{//This is impossible, but just in case.
+      $otherAccount = $account;
+      $type = 2;
+    }
+    $row[] = $otherAccount['name'];
+    $row[] = check_plain($transaction['concept']);
+    $row[] = $type==0?$transaction['amount']:'';
+    $row[] = $type==1?$transaction['amount']:'';
+    $row[] = ' - ';
+    $row[] = l(t('Edit'), 'ces/bank/transaction/edit/'.$transaction['id']);
+    
+    $form['transactions']['table']['#rows'][] = $row;
+  }
+  
+  return $form;
+}
+
+function bank_account_statement_form_submit($form, &$form_state){
+  $form_state['rebuild'] = TRUE;
 }

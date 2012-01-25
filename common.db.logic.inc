@@ -94,13 +94,25 @@ class Serializer {
     return db_update($this->table)->condition('id', $id)->fields(array($key => $value))->execute();
   }
   /**
-   * @param $conditions array Associative array with field names as keys.
+   * @param $conditions array 
+   * Associative array with field names as keys. There are two special conditions
+   * for those objects having the created [time] field:
+   * - createdsince: the smaller created time to return.
+   * - createduntil: the largest created time to return.
    * @param $order string
+   * A field to order by.
    * @return array Objects with attribute $key = $value ordered by $order field.
    */
   public function loadCollection(array $conditions, $order = NULL){
-    
     $query = db_select($this->table, 't')->fields('t');
+    if(isset($conditions['createdsince'])){
+      $query = $query->condition('created', $conditions['createdsince'], '>=');
+      unset($conditions['createdsince']);
+    }
+    if(isset($conditions['createduntil'])){
+      $query = $query->condition('created', $conditions['createduntil'], '<=');
+      unset($conditions['createduntil']);
+    }
     foreach($conditions as $key=>$value){
       $query = $query->condition($key, $value);
     }

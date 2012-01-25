@@ -128,6 +128,42 @@ class Bank{
   }
   
   /**
+   * @param $conditions array
+   * Associative array with conditions to be met by the returned transaction 
+   * records. Possible values include:
+   * - account: id. Get transactions from or to the specified account id. If this
+   * parameter is set then the following two must not be set. 
+   * - fromaccount: id. Get transactions where specified account id is the buyer.
+   * - toaccount: id. Get transactions where the specified account id is the seller.
+   * - createdsince: time. Get transactions created after this timestamp in seconds.
+   * - createduntil: time. Get transactions created before this timestamp in seconds.
+   *  
+   * @return array
+   * transaction records meeting all conditions specified by $conditions parameter.
+   */
+  public function getTransactions(array $conditions){
+    $s = new Serializer('BasicTransaction');
+    if(isset($conditions['account'])){
+      //Shall we improve Serializer so it can directly handle 'or' conditions?
+      $account = $conditions['account'];
+      unset($conditions['account']);
+      $conditions['fromaccount'] = $account;
+      $transactions1 = $s->loadCollection($conditions, 'created');
+      unset($conditions['fromaccount']);
+      $conditions['toaccount'] = $account;
+      $transactions2 = $s->loadCollection($conditions, 'created');
+      $transactions = array_merge($transactions1, $transactions2);
+    }else{
+      $transactions = $s->loadCollection($conditions, 'created');
+    }
+    $records = array();
+    foreach($transactions as $t){
+      $records[]=$t->getRecord();
+    }
+    return $records;
+  }
+  
+  /**
    * creates a banking account
    */
   public function createAccount(array &$record){
@@ -212,6 +248,9 @@ class Bank{
   public function updateLimitChain(array &$record){
     $t = Serializer::DBTransaction();
     try{
+      if(!isset($record['limits']))
+        $record['limits'] = array();
+      
       return $this->updateObject('LimitChain', $record);
     }catch(Exception $e){
       $t->rollback();
@@ -276,7 +315,7 @@ class Bank{
       $res = $transaction->apply();
       if($res === TRUE){//transaction were applied
         $this->notifyTransaction($transaction);
-      }else
+      }
       return $res;
       
     }catch(Exception $e){
@@ -387,9 +426,9 @@ class Bank{
   private function notifyTransactionAccount($messageKey, $accountName, $transactionUser, $params){
     $s = new Serializer('LocalAccount');
     $account = $s->loadFromUniqueKey('name', $accountName);
-    $accountUsers = $accountFrom->getUsers();
+    $accountUsers = $account->getUsers();
     
-    foreach($users as $accountUser){
+    foreach($accountUsers as $accountUser){
       if($transactionUser != $accountUser->user){ //don't notify the transaction user
         $notifier->notify('bank', $messageKey, $accountUser->user, $transactionUser, $params);
       }
@@ -738,7 +777,7 @@ class LocalAccount extends DBObject implements Account {
   }
   /**
    * This function updates the amount of this account with this transaction if
-   * it is accepted.
+   * it is accepted. The updated account is safely saved to the DB.
    */
   public function applyTransaction(Transaction &$transaction){
     $s = new LockSerializer('LocalAccount');
@@ -1040,7 +1079,7 @@ class AbsoluteCreditLimit extends AccountLimit {
  * 
  * Transactions
  * ============
- * A transaction is an amount of currency to be transferred from one account to 
+ * A transaction is an amount of money to be transferred from one account to 
  * another account. The basic transaction moves certanin quantity of money through
  * two accounts within the same exchange. There are other king of transactions
  * moving currency between servers or third party applications. In each echange 
@@ -1080,6 +1119,8 @@ interface Transaction {
    */
   public function revoke();
   
+  const STATE_NEW = 0;
+  const STATE_APPLIED = 1;
   
 }
 
@@ -1133,6 +1174,10 @@ class BasicTransaction extends DBObject implements Transaction{
     if($messagesFrom === TRUE && $messagesTo === TRUE){
       $accountTo->applyTransaction($this);
       $accountFrom->applyTransaction($this);
+      
+      $st = new Serializer('BasicTransaction');
+      $this->state = Transaction::STATE_APPLIED;
+      $st->updateField($this, 'state');
       return TRUE;
     }else{
       if($messagesFrom === TRUE){

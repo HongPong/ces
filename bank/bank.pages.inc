@@ -130,6 +130,12 @@ function bank_account_list_page(){
       '#title' => t('Balance'),
       '#markup' => $account['balance'],
     );
+    
+    $accform['statement'] = array(
+      '#type' => 'item',
+      '#markup' => l(t('Statement'), 'ces/bank/account/statement/'.$account['id']),
+    );
+    
     $accform['edit'] = array(
       '#type' => 'item',
       '#markup' => l(t('Edit'), 'ces/bank/account/edit/'.$account['id']),

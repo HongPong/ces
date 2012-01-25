@@ -126,6 +126,18 @@ function bank_menu(){
     'file' => 'bank.pages.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'access arguments' => array('view account'),
+      
+  );
+  
+  $menu['ces/bank/account/statement'] = array(
+    'title' => 'Account statement' ,
+    'description' => 'Last transactions with this account.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_account_statement_form', 4),
+    'file' => 'bank.forms.inc',
+    'file path' => drupal_get_path('module', 'bank'),
+    'access arguments' => array('view account statement'),
+    'type'=> MENU_CALLBACK,
   );
   
   $menu['ces/bank/limitchain/new'] = array(
