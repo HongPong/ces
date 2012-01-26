@@ -427,7 +427,7 @@ class Bank{
     $s = new Serializer('LocalAccount');
     $account = $s->loadFromUniqueKey('name', $accountName);
     $accountUsers = $account->getUsers();
-    
+    $notifier = new Notifier();
     foreach($accountUsers as $accountUser){
       if($transactionUser != $accountUser->user){ //don't notify the transaction user
         $notifier->notify('bank', $messageKey, $accountUser->user, $transactionUser, $params);
@@ -897,6 +897,7 @@ class LimitChain extends DBObject{
     //but it doesn't matter since this is a very occasional operation.
     
     $limits = $s->loadCollection(array('limitchain'=>$this->id));
+    $allids = array();
     foreach($limits as $limit){
       $allids[] = $limit->id;
     }

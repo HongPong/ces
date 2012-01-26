@@ -17,6 +17,44 @@ function bank_theme(){
    */
   );
 }
+/**
+ * Implements hook_permission
+ *
+ * @todo This permissions system is temporary. It must be done. This is just to 
+ * keep developing ahead without disturbing. 
+ */
+function bank_permission(){
+  return array(
+    'admin ces bank' => array(
+      'title' => t('Global bank administrator'),
+    ),
+    'view exchange' => array(
+      'title' => t('View exchange'),
+    ), 
+    'create exchange' => array(
+      'title' => t('Create (inactive) exchanges'),
+    ), 
+    'admin exchange' => array(
+      'title' => t('Administer own exchange'),
+    ),
+    'create account' => array(
+      'title' => t('Create account'),
+    ), 
+    'edit account' => array(
+      'title' => t('Edit account'),
+    ), 
+    'view account' => array(
+      'title' => t('View account'),
+    ), 
+    'view account statement' => array(
+      'title' => t('View account statement'),
+    ),
+    'create transaction' => array(
+      'title' => t('Create transaction'),
+    ),
+  );
+}
+
 
 /**
  * Implements hook_menu()
@@ -156,7 +194,7 @@ function bank_menu(){
     'description' => 'Edit a limit chain.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_limitchain_form', 3, 4),
-    'access arguments' => array('edit limitchain'),
+    'access arguments' => array('admin exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'type'=> MENU_CALLBACK,
@@ -366,7 +404,9 @@ function bank_tokens($type, $tokens, array $data = array(), array $options = arr
       }
     }
     if ($user_tokens = token_find_with_prefix($tokens, 'user')){
-      $replacements += token_generate('user', $admin_tokens, array('user' => user_load($account['user'])), $options);
+      $accountUser = reset($account['users']);
+      $uid = $accountUser['user'];
+      $replacements += token_generate('user', $user_tokens, array('user' => user_load($uid)), $options);
     }
   }
   if($type == 'transaction' && !empty($data['transaction'])){
