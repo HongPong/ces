@@ -1,0 +1,135 @@
+<?php
+/**
+ * Tests the functionality bank module.
+ */
+class BankTestCase extends DrupalWebTestCase {
+  /**
+   * @var user
+   * The site administrator
+   */
+  protected $globalAdminUser;
+  /**
+   * @var user
+   * The exchange1 creator and administrator 
+   */
+  protected $exchange1AdminUser;
+  /**
+   * @var user
+   * exchange1 first user
+   */
+  protected $exchange1User1;
+  /**
+   * @var user
+   * exchange1 second user
+   */
+  protected $exchange1User2;
+  
+  /**
+   * @var exchange1 record
+   */
+  protected $exchange1;
+  
+  
+  public static function getInfo() {
+    return array(
+      'name' => 'bank',
+      'description' => 'Test bank module features. Create exchange, create accounts, do transactions...',
+      'group' => 'CES',
+    );
+  }
+  
+  public function setUp() {
+    // Enable any modules required for the test. It also enables dependences.
+    parent::setUp('bank');
+    // Create global administrator.
+    $this->globalAdminUser = $this->drupalCreateUser(array('admin ces bank'));
+    // Create exchange creator and administrator.
+    $this->exchange1AdminUser = $this->drupalCreateUser(array('create exchange', 'admin exchange', 'view exchange'));
+    // Create two standard users
+    $perms = array('create account','edit account','view account','view account statement','create transaction');
+    $this->exchange1User1 = $this->drupalCreateUser($perms);
+    $this->exchange1User2 = $this->drupalCreateUser($perms);
+    $this->exchange1 = array(
+      'code'=>'HORA',
+      'shortname'=>'EX Bages',
+      'name' => 'A bona hora - Ecoxarxa del Bages',
+      'website' => 'http://abonahora.wordpress.com',
+      'country' => 'ES',
+      'region' => 'Bages',
+      'town' => 'Manresa',
+      'map' => 'http://maps.google.com/?ll=41.723796,1.832142&spn=0.083663,0.145912&hnear=Manresa,+Province+of+Barcelona,+Catalonia,+Spain&t=m&z',
+      'currencysymbol' => 'ℏ',
+      'currencyname' => 'hora',
+      'currenciesname' => 'hores',
+      'currencyvalue' => '1.0',
+      'currencyscale' => '2',
+    ); 
+  }
+  
+  public function testBank(){
+    $this->createExchange();
+    $this->activateExchange();
+    $this->createAccount($this->exchange1User1);
+    $this->createAccount($this->exchange1User2);
+    $this->createTransaction();
+  }
+  
+  protected function createExchange(){
+    $this->drupalLogin($this->exchange1AdminUser);
+    $this->drupalGet('ces/bank/exchange/new');
+    $this->assertText(t('General'));
+    $this->assertText(t('Location'));
+    $this->assertText(t('Currency'));
+    $this->assertNoText(t('Limits'));
+    
+    $this->drupalPost(NULL,$this->exchange1, t('Submit'));
+    $this->assertRaw(t('Exchange %code successfully created.', array('%code'=>$this->exchange1['code'])));
+    $this->exchange1['id'] = '2';
+  }
+  
+  protected function activateExchange(){
+    $this->drupalLogin($this->globalAdminUser);
+    $this->drupalGet('ces/bank/admin');
+    $this->assertText($this->exchange1['code'].' - '.$this->exchange1['name']);
+    $this->drupalGet('ces/bank/exchange/activate/'.$this->exchange1['id']);
+    $this->assertFieldByName('code',$this->exchange1['code']);
+    $this->assertFieldByName('name', $this->exchange1['name']);
+    $this->drupalPost(NULL, array(), t('Activate'));
+    $this->assertRaw(t('Exchange %code successfully activated.', array('%code'=>$this->exchange1['code'])));
+    $this->assertText(t('Limits'));
+    //$this->assertOptionSelected('edit-limitchain','default');
+  }
+  
+  protected function createAccount($account){
+    $this->drupalLogin($account);
+    $this->drupalGet('ces/bank/account/new/'.$this->exchange1['id']);
+    $this->assertRaw($this->exchange1['code'].'00');
+    $this->assertFieldByName('username',$account->name);
+    $edit = array(
+      'state' => '1'
+    );
+    $this->drupalPost(NULL, $edit, t('Submit'));
+    $this->assertText(t('Account successfully created.'));
+  }
+  
+  protected function createTransaction(){
+    $this->drupalLogin($this->exchange1User1);
+    $this->drupalGet('ces/bank/account/list');
+    $this->clickLink(t('Transaction'));
+    $edit = array(
+        'fromaccountname'=>'HORA0002',
+        'concept'=>'Test transaction',
+        'amount' => '1.5',
+    );
+    $this->drupalPost(NULL, $edit, t('Submit'));
+    $this->assertText('HORA0001');
+    $this->assertText('HORA0002');
+    $this->assertText('1.5');
+    $this->assertText('Test transaction');
+    $this->drupalPost(NULL, array(), t('Submit'));
+    $this->assertText(t('Transaction successfully applied.'));
+    
+  }
+
+}
+
