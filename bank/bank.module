@@ -5,9 +5,9 @@
  */
 
 /**
- * Implements hook_theme
+ * Implements hook_theme().
  */
-function bank_theme(){
+function bank_theme() {
   return array(
    /* 'exchange_list' => array(
       'template' => 'exchange-list',
@@ -18,34 +18,34 @@ function bank_theme(){
   );
 }
 /**
- * Implements hook_permission
+ * Implements hook_permission().
  *
- * @todo This permissions system is temporary. It must be done. This is just to 
- * keep developing ahead without disturbing. 
+ * @todo This permissions system is temporary. It must be done. This is just to
+ * keep developing ahead without disturbing.
  */
-function bank_permission(){
+function bank_permission() {
   return array(
     'admin ces bank' => array(
       'title' => t('Global bank administrator'),
     ),
     'view exchange' => array(
       'title' => t('View exchange'),
-    ), 
+    ),
     'create exchange' => array(
       'title' => t('Create (inactive) exchanges'),
-    ), 
+    ),
     'admin exchange' => array(
       'title' => t('Administer own exchange'),
     ),
     'create account' => array(
       'title' => t('Create account'),
-    ), 
+    ),
     'edit account' => array(
       'title' => t('Edit account'),
-    ), 
+    ),
     'view account' => array(
       'title' => t('View account'),
-    ), 
+    ),
     'view account statement' => array(
       'title' => t('View account statement'),
     ),
@@ -57,9 +57,9 @@ function bank_permission(){
 
 
 /**
- * Implements hook_menu()
+ * Implements hook_menu().
  */
-function bank_menu(){
+function bank_menu() {
   $menu = array();
   $menu['ces/bank/admin'] = array(
     'title' => 'Administer CES bank',
@@ -68,18 +68,17 @@ function bank_menu(){
     'file' => 'bank.pages.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'access arguments' => array('admin ces bank'),
-    
   );
-  
+
   $menu['ces/bank/exchange/list'] = array(
     'title' => 'List exchanges',
-    'description'=>'List of active exchanges',
+    'description' => 'List of active exchanges',
     'page callback' => 'bank_exchange_list_page',
-    'file'=>'bank.pages.inc',
+    'file' => 'bank.pages.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'access arguments' => array('view exchange'),
   );
-  
+
   $menu['ces/bank/exchange/new'] = array(
     'title' => 'New exchange',
     'description' => 'Create a new exchange',
@@ -89,40 +88,39 @@ function bank_menu(){
     'file path' => drupal_get_path('module', 'bank'),
     'access arguments' => array('create exchange'),
   );
-  
-  $menu['ces/bank/exchange/view']   = array(
+
+  $menu['ces/bank/exchange/view'] = array(
     'title' => 'View exchange',
     'description' => 'View exchange',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('bank_exchange_form',3,4),
+    'page arguments' => array('bank_exchange_form', 3, 4),
     'access arguments' => array('view exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_CALLBACK,
   );
-  
-  $menu['ces/bank/exchange/edit']   = array(
+
+  $menu['ces/bank/exchange/edit'] = array(
     'title' => 'Edit exchange',
     'description' => 'Edit exchange',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('bank_exchange_form',3,4),
+    'page arguments' => array('bank_exchange_form', 3, 4),
     'access arguments' => array('admin exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_CALLBACK,
   );
-  
-  $menu['ces/bank/exchange/activate']   = array(
+
+  $menu['ces/bank/exchange/activate'] = array(
     'title' => 'Activate exchange',
     'description' => 'Activate exchange',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('bank_exchange_form',3,4),
+    'page arguments' => array('bank_exchange_form', 3, 4),
     'access arguments' => array('admin ces bank'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_CALLBACK,
   );
-  
 
   $menu['ces/bank/account/new'] = array(
     'title' => 'New account',
@@ -132,9 +130,9 @@ function bank_menu(){
     'access arguments' => array('create account'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
-    'type'=> MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
-  
+
   $menu['ces/bank/account/edit'] = array(
     'title' => 'Edit account',
     'description' => 'Edit a banking account.',
@@ -143,9 +141,9 @@ function bank_menu(){
     'access arguments' => array('edit account'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
-    'type'=> MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
-  
+
   $menu['ces/bank/account/view'] = array(
     'title' => 'View account',
     'description' => 'View banking account properties.',
@@ -154,9 +152,9 @@ function bank_menu(){
     'access arguments' => array('view account'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
-    'type'=> MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
-  
+
   $menu['ces/bank/account/list'] = array(
     'title' => 'List accounts' ,
     'description' => 'List and info of user banking accounts',
@@ -164,9 +162,8 @@ function bank_menu(){
     'file' => 'bank.pages.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'access arguments' => array('view account'),
-      
   );
-  
+
   $menu['ces/bank/account/statement'] = array(
     'title' => 'Account statement' ,
     'description' => 'Last transactions with this account.',
@@ -175,9 +172,9 @@ function bank_menu(){
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'access arguments' => array('view account statement'),
-    'type'=> MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
-  
+
   $menu['ces/bank/limitchain/new'] = array(
     'title' => 'New limit chain',
     'description' => 'Create a new limit chain.',
@@ -186,9 +183,9 @@ function bank_menu(){
     'access arguments' => array('admin exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
-    'type'=> MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
-  
+
   $menu['ces/bank/limitchain/edit'] = array(
     'title' => 'Edit limit chain',
     'description' => 'Edit a limit chain.',
@@ -197,10 +194,9 @@ function bank_menu(){
     'access arguments' => array('admin exchange'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
-    'type'=> MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
-  
-  
+
   $menu['ces/bank/transaction'] = array(
     'title' => 'Enter single transaction',
     'description' => 'Enter single transaction your account',
@@ -209,31 +205,30 @@ function bank_menu(){
     'access arguments' => array('create transaction'),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
-    'type'=> MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
-  
+
   return $menu;
 }
 
-
 /**
- * Implements hook_account_limit_classes()
+ * Implements hook_account_limit_classes().
  */
-function bank_account_limit_classes(){
+function bank_account_limit_classes() {
   return array('AbsoluteCreditLimit', 'AbsoluteDebitLimit');
 }
 
 /**
- * Implements hook_decorated_transaction_classes()
+ * Implements hook_decorated_transaction_classes().
  */
-function bank_decorated_transaction_classes(){
+function bank_decorated_transaction_classes() {
   return array('InterExchangeTransaction', 'LevyedTransaction');
 }
 
 /**
  * Implements hook_token_info().
  */
-function bank_token_info(){
+function bank_token_info() {
   return array(
     'types' => array(
       'exchange' => array(
@@ -241,7 +236,7 @@ function bank_token_info(){
         'description' => t('Tokens for bank exchanges.'),
       ),
       'account' => array(
-        'name'  =>t('Account'),
+        'name'  => t('Account'),
         'description' => t('Tokens for bank accounts.')
       ),
       'transaction' => array(
@@ -250,25 +245,25 @@ function bank_token_info(){
       )
     ),
     'tokens' => array(
-      'exchange'=> array(
+      'exchange' => array(
         'code' => array(
           'name'   => t('Exchange code'),
           'description' => t('The 4 letter exchange code.'),
         ),
         'shortname' => array(
-          'name'   => t('Exchange short name'),
+          'name' => t('Exchange short name'),
           'description' => t('Exchange short name.'),
         ),
         'name' => array(
-          'name'   => t('Exchange full name'),
+          'name' => t('Exchange full name'),
           'description' => t('Exchange full name.'),
         ),
         'country' => array(
-          'name'   => t('Exchange country'),
+          'name' => t('Exchange country'),
           'description' => t('Exchange country.'),
         ),
         'town' => array(
-          'name'   => t('Exchange town'),
+          'name' => t('Exchange town'),
           'description' => t('Exchange town.'),
         ),
         'region' => array(
@@ -276,11 +271,11 @@ function bank_token_info(){
           'description' => t('Exchange region within the country.'),
         ),
         'website' => array(
-          'name'   => t('Exchange website'),
+          'name' => t('Exchange website'),
           'description' => t('Exchange website.'),
         ),
         'currencysymbol' => array(
-          'name'   => t('Currency symbol'),
+          'name' => t('Currency symbol'),
           'description' => t('Exchange currency symbol.'),
         ),
         'currencyname' => array(
@@ -343,14 +338,14 @@ function bank_token_info(){
 /**
  * Implements hook_tokens().
  */
-function bank_tokens($type, $tokens, array $data = array(), array $options = array()){
+function bank_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $replacements = array();
   $sanitize = !empty($options['sanitize']);
-  
-  if($type == 'exchange' && !empty($data['exchange'])){
+
+  if ($type == 'exchange' && !empty($data['exchange'])) {
     $exchange = $data['exchange'];
-    foreach($tokens as $name => $original){
-      switch($name){
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
         case 'code':
           $replacements[$original] = $sanitize?check_plain($exchange['code']):$exchange['code'];
           break;
@@ -384,17 +379,16 @@ function bank_tokens($type, $tokens, array $data = array(), array $options = arr
         case 'currencyvalue':
           $replacements[$original] = $sanitize?check_plain($exchange['currencyvalue']):$exchange['currencyvalue'];
           break;
-        
       }
     }
-    if ($admin_tokens = token_find_with_prefix($tokens, 'admin')){
+    if ($admin_tokens = token_find_with_prefix($tokens, 'admin')) {
       $replacements += token_generate('user', $admin_tokens, array('user' => user_load($exchange['admin'])), $options);
     }
   }
-  if($type == 'account' && !empty($data['account'])){
+  if ($type == 'account' && !empty($data['account'])) {
     $account = $data['account'];
-    foreach($tokens as $name => $original){
-      switch($name){
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
         case 'name':
           $replacements[$original] = $sanitize?check_plain($account['name']):$account['name'];
           break;
@@ -403,16 +397,16 @@ function bank_tokens($type, $tokens, array $data = array(), array $options = arr
           break;
       }
     }
-    if ($user_tokens = token_find_with_prefix($tokens, 'user')){
+    if ($user_tokens = token_find_with_prefix($tokens, 'user')) {
       $accountUser = reset($account['users']);
       $uid = $accountUser['user'];
       $replacements += token_generate('user', $user_tokens, array('user' => user_load($uid)), $options);
     }
   }
-  if($type == 'transaction' && !empty($data['transaction'])){
+  if ($type == 'transaction' && !empty($data['transaction'])) {
     $transaction = $data['transaction'];
-    foreach($tokens as $name => $original){
-      switch($name){
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
         case 'amount':
           $replacements[$original] = $sanitize?check_plain($transaction['amount']):$transaction['amount'];
           break;
@@ -420,11 +414,11 @@ function bank_tokens($type, $tokens, array $data = array(), array $options = arr
           $replacements[$original] = $sanitize?check_plain($transaction['concept']):$transaction['concept'];
           break;
       }
-      if ($fromaccount_tokens = token_find_with_prefix($tokens, 'fromaccount')){
+      if ($fromaccount_tokens = token_find_with_prefix($tokens, 'fromaccount')) {
         $bank = new Bank();
         $replacements += token_generate('account', $fromaccount_tokens, array('account' => $bank->getAccountByName($transaction['fromaccount'])), $options);
       }
-      if ($toaccount_tokens = token_find_with_prefix($tokens, 'toaccount')){
+      if ($toaccount_tokens = token_find_with_prefix($tokens, 'toaccount')) {
         $bank = new Bank();
         $replacements += token_generate('account', $toaccount_tokens, array('account' => $bank->getAccountByName($transaction['toaccount'])), $options);
       }
@@ -432,21 +426,23 @@ function bank_tokens($type, $tokens, array $data = array(), array $options = arr
   }
   return $replacements;
 }
-
-function bank_ces_notify_messages($key, $langcode){
+/**
+ * Implements ces_motify_messages().
+ */
+function bank_ces_notify_messages($key, $langcode) {
   $a = array();
   $b = array('langcode' => $langcode);
-  switch ($key){
-    case 'new exchange': 
+  switch ($key) {
+    case 'new exchange':
       return array(
-        'subject' => t('New Exchange [exchange:code] - [exchange:shortname] request',$a,$b),
+        'subject' => t('New Exchange [exchange:code] - [exchange:shortname] request', $a, $b),
         'body' => t('A new exchange has been registered.
 
 Visit the CES administrative interface at [url:absolute]/admin/ces to activate or discard it. See some details below:
 
 Code: [exchange:code]
 Short name: [exchange:shortname]
-Full name: [exchange:name]  
+Full name: [exchange:name]
 Country: [exchange:country]
 Location: [exchange:town] ([exchange:region])
 Web site: [exchange:website]
@@ -455,9 +451,9 @@ User: [exchange:admin:name] <[exchange:admin:mail]>
 
 ', $a, $b)
       );
-    case 'new account': 
+    case 'new account':
       return array(
-        'subject' => t('New account request for [exchange:code] - [exchange:shortname]',$a,$b),
+        'subject' => t('New account request for [exchange:code] - [exchange:shortname]', $a, $b),
         'body' => t('Another account request for [exchange:name]. Go to the administrative interface at [url:absolute]/ces/bank/exchange/admin to activate or discard it.
 
 See registration details below:
@@ -507,5 +503,3 @@ Ordered by: [transaction:user:name] <[transaction:user:mail]>
   }
   return FALSE;
 }
-
-

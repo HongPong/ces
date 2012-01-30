@@ -1,6 +1,9 @@
 <?php
-
-function ces_notify_schema(){
+/**
+ * @file
+ * Install, update and uninstall functions for the ces_notify module.
+ */
+function ces_notify_schema() {
   $schema = array();
   $schema['ces_messages'] = array(
     'description' => 'Customized message texts.',
@@ -9,34 +12,34 @@ function ces_notify_schema(){
         'description' => 'Unique message id.',
         'type' => 'serial',
         'unsigned' => TRUE,
-	'not null' => TRUE,
+        'not null' => TRUE,
       ),
       'module' => array(
         'description' => 'Module name that defines this key',
         'type' => 'varchar',
         'length' => '255',
-	'not null' => TRUE,
-	'default' => '',
+        'not null' => TRUE,
+        'default' => '',
       ),
       'name' => array(
         'description' => 'Message key',
         'type' => 'varchar',
         'length' => '255',
-	'not null' => TRUE,
-	'default' => '',
+        'not null' => TRUE,
+        'default' => '',
       ),
       'lang' => array(
         'description' => 'Language code',
         'type' => 'varchar',
         'length' => '10',
-	'not null' => TRUE,
-	'default' => '',  
+        'not null' => TRUE,
+        'default' => '',
       ),
       'sender' => array(
         'description' => 'Sender user identifier',
         'type' => 'int',
         'not null' => TRUE,
-	'default' => 0,
+        'default' => 0,
       ),
       'subject' => array(
         'description' => 'Message subject',
@@ -51,9 +54,9 @@ function ces_notify_schema(){
         'size' => 'big',
       ),
     ),
-    'primary key' => array ('id'),
-    'unique keys' => array (
-      'modulenamelangsender' => array ('module','name', 'lang', 'sender'),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'modulenamelangsender' => array('module', 'name', 'lang', 'sender'),
     ),
   );
   return $schema;

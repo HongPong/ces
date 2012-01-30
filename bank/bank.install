@@ -1,10 +1,8 @@
 <?php
-
 /**
  * @file
  * Install, update and uninstall functions for the ces bank module.
  */
-
 /**
  * Implements hook_install().
  */
@@ -13,48 +11,45 @@ function bank_install() {
   $record = array(
     'code' => '0000',
     'active' => 0,
-    'shortname'=> '',
+    'shortname' => '',
     'name' => '',
     'country' => '',
-    'region'=>'',
-    'town'=>'',
-    'website'=>'',
-    'map'=>'',
-    'admin'=>1,
-    'limitchain'=>1,
-    'currencysymbol'=>'',
-    'currencyname'=>'',
-    'currenciesname'=>'',
-    'currencyvalue'=>'1',
-    'currencyscale'=>2,
-    'created'=>time(),
-    'modified'=>time()
+    'region' => '',
+    'town' => '',
+    'website' => '',
+    'map' => '',
+    'admin' => 1,
+    'limitchain' => 1,
+    'currencysymbol' => '',
+    'currencyname' => '',
+    'currenciesname' => '',
+    'currencyvalue' => '1',
+    'currencyscale' => 2,
+    'created' => REQUEST_TIME,
+    'modified' => REQUEST_TIME,
   );
   $ok1 = drupal_write_record('ces_exchange', $record);
-  if($ok1 === FALSE)
-    drupal_set_message(t('Error installing default exchange.'), 'error');
+  if ($ok1 === FALSE)
+    drupal_set_message(st('Error installing default exchange.'), 'error');
   //create default limit chain
   $record = array(
-    'name'=>'default',
-    'exchange'=> 1
+    'name' => 'default',
+    'exchange' => 1
   );
   $ok2 = drupal_write_record('ces_limitchain', $record);
-  if($ok2 === FALSE)
-    drupal_set_message(t('Error installing default limit chain.'), 'error');
-  if($ok1!== FALSE && $ok2!=FALSE)
-    drupal_set_message(t('Initial records created.'));
+  if ($ok2 === FALSE)
+    drupal_set_message(st('Error installing default limit chain.'), 'error');
+  if ($ok1!== FALSE && $ok2!=FALSE)
+    drupal_set_message(st('Initial records created.'));
 }
-
 /**
  * Implements hook_enable().
  */
 function bank_enable() {}
-
 /**
  * Implements hook_uninstall().
  */
 function bank_uninstall() {}
-
 /**
  * Implements hook_schema().
  */
@@ -62,424 +57,422 @@ function bank_schema() {
   $schema = array();
   $schema['ces_exchange'] = array(
     'description' => '',
-    'fields'	  => array(
+    'fields' => array(
       'id' => array(
-	'description' 	=> 'ID of this exchange',
-	'type' 		=> 'serial',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
+        'description' => 'ID of this exchange',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
-      'code'	  => array(
-	'description'	=> '4 letter id for the exchange',
-	'type'		=> 'varchar',
-	'length'	=> '4',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'code' => array(
+        'description' => '4 letter id for the exchange',
+        'type' => 'varchar',
+        'length' => '4',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'state'	  => array(
-	'description'	=> 'the state of this exchange',
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'state' => array(
+        'description' => 'the state of this exchange',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'shortname'	=> array(
-	'description'	=> 'Exchange short name',
-	'type'		=> 'varchar',
-	'length'	=> '31',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'shortname' => array(
+        'description' => 'Exchange short name',
+        'type' => 'varchar',
+        'length' => '31',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'name'	  	=> array(
-	'description'	=> 'Exchange name',
-	'type'		=> 'varchar',
-	'length'	=> '255',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'name' => array(
+        'description' => 'Exchange name',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'country'	  	=> array(
-	'description'	=> 'Exchange country',
-	'type'		=> 'varchar',
-	'length'	=> '255',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'country' => array(
+        'description' => 'Exchange country',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'region'	  	=> array(
-	'description'	=> 'Exchange region',
-	'type'		=> 'varchar',
-	'length'	=> '255',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'region' => array(
+        'description' => 'Exchange region',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'town'	  	=> array(
-	'description'	=> 'Exchange town',
-	'type'		=> 'varchar',
-	'length'	=> '255',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'town' => array(
+        'description' => 'Exchange town',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'website'	  	=> array(
-	'description'	=> 'Exchange website',
-	'type'		=> 'varchar',
-	'length'	=> '255',
-	'not null'	=> TRUE,   
-	'default'	=> ''
+      'website' => array(
+        'description' => 'Exchange website',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'map'	  	=> array(
-	'description'	=> 'Exchange map',
-	'type'		=> 'varchar',
-	'length'	=> '255',
-	'not null'	=> TRUE, 
-	'default'	=> ''
+      'map' => array(
+        'description' => 'Exchange map',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'admin'  		=> array(
-	'description'	=> 'UID of the exchange administrator.',
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'admin' => array(
+        'description' => 'UID of the exchange administrator.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'limitchain'  		=> array(
-	'description'   => 'ID of the default limit chain for this exchange.',
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'limitchain' => array(
+        'description' => 'ID of the default limit chain for this exchange.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'currencysymbol'	=> array(
-	'type'	=>	'varchar',
-	'length'=>	'7',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'currencysymbol' => array(
+        'type' => 'varchar',
+        'length' => '7',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'currencyname'	=> array(
-	'type'	=>	'varchar',
-	'length'=>	'31',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'currencyname' => array(
+        'type' => 'varchar',
+        'length' => '31',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'currenciesname'	=> array(
-	'type'	=>	'varchar',
-	'length'=>	'31',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'currenciesname' => array(
+        'type' => 'varchar',
+        'length' => '31',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'currencyvalue'	=> array(
-	'description'	=> 'Value of this currency.',
-	'type' 		=> 'numeric',
-	'precision' 	=> 31,
-	'scale' 	=> 4,
-	'not null' 	=> TRUE,
-	'default' 	=> 1
+      'currencyvalue' => array(
+        'description' => 'Value of this currency.',
+        'type' => 'numeric',
+        'precision' => 31,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 1
       ),
-      'currencyscale'	=> array(
-	'description'	=> 'How many decimals use for this currency. Between 0 and 4.',
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'currencyscale' => array(
+        'description' => 'How many decimals use for this currency. Between 0 and 4.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'created'		=> array(
-	 'type'		=> 'int',
-	 'unsigned'	=> TRUE,
-	 'not null'	=> TRUE,
-	 'default'	=> 0
+      'created' => array(
+         'type' => 'int',
+         'unsigned' => TRUE,
+         'not null' => TRUE,
+         'default' => 0
       ),
-      'modified'	=> array(
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'modified' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       )
     ),
     'primary key' => array('id'),
-    'unique keys' => array( 
-      'code' 	  => array('code') 
+    'unique keys' => array(
+      'code' => array('code')
     ),
-    'foreign keys'=> array(
-      'limitchain'=> array(
-	'table'		=> 'ces_limitchain',
-	'columns'	=> array('limitchain'=>'id')
+    'foreign keys' => array(
+      'limitchain' => array(
+        'table' => 'ces_limitchain',
+        'columns' => array('limitchain' => 'id')
       ),
-      'admin'=> array(
-	'table'		=> 'user',
-	'columns'	=> array('admin'=>'uid')
+      'admin' => array(
+        'table' => 'user',
+        'columns' => array('admin' => 'uid')
       )
     )
   );
   $schema['ces_limit'] = array(
-    'description'  => 'Acount limit objects',
+    'description' => 'Acount limit objects',
     'fields' => array(
       'id' => array(
-	'description' 	=> 'ID of this account limit',
-	'type' 		=> 'serial',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
+        'description' => 'ID of this account limit',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
       'limitchain' => array(
-	'description' 	=> 'Chain limit ID where this limit belongs.',
-	'type' 		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+        'description' => 'Chain limit ID where this limit belongs.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
       'classname' => array(
-	'description' 	=> 'Limit type. The name of the class implementing it.',
-	'type' 		=> 'varchar',
-	'length' 	=> '31',
-	'not null' 	=> TRUE,
-	'default' 	=> ''
+        'description' => 'Limit type. The name of the class implementing it.',
+        'type' => 'varchar',
+        'length' => '31',
+        'not null' => TRUE,
+        'default' => ''
       ),
       'value' => array(
-	'description' 	=> 'A value from which the account is in warning',
-	'type' 		=> 'numeric',
-	'precision' 	=> 31,
-	'scale' 	=> 4,
-	'not null' 	=> TRUE,
-	'default' 	=> 0
+        'description' => 'A value from which the account is in warning',
+        'type' => 'numeric',
+        'precision' => 31,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 0
       ),
       'block' => array(
-	'description' 	=> 'Whether to block transaction when the limit is reached.',
-	'type'          => 'int',
-        'not null' 	=> TRUE,
-	'default' 	=> 0
+        'description' => 'Whether to block transaction when the limit is reached.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'data'	=> array(
-	'description'	=> 'PHP-serialized type-specific options.',
-	'type'		=> 'blob',
-	'not null' 	=> TRUE,
-        'serialize' 	=> TRUE
+      'data' => array(
+        'description' => 'PHP-serialized type-specific options.',
+        'type' => 'blob',
+        'not null' => TRUE,
+        'serialize' => TRUE
       )
     ),
-    'primary key'	=> array( 'id' ),
-    'foreign keys'=> array(
-      'limitchain'=> array(
-	'table'		=> 'ces_limitchain',
-	'columns'	=> array('limitchain'=>'id')
+    'primary key' => array( 'id' ),
+    'foreign keys' => array(
+      'limitchain' => array(
+        'table' => 'ces_limitchain',
+        'columns' => array('limitchain' => 'id')
       ),
     )
-      
   );
   $schema['ces_limitchain'] = array(
     'description' => 'Chain of account limits.',
     'fields' => array(
-      'id'	=> array(
-	'type'=>'serial',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
       'exchange' => array(
-	'type'	=> 'int',
-	'unsigned'=> TRUE,
-	'not null'=> TRUE,
-	'default'=>0
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'name'	=> array(
-	'type'	=> 'varchar',
-	'length'	=> '255',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => ''
       ),
     ),
     'primary key' => array( 'id'),
-    'foreign keys'=> array(
-      'exchange'=> array(
-	'table'		=> 'ces_exchange',
-	'columns'	=> array('exchange'=>'id')
+    'foreign keys' => array(
+      'exchange' => array(
+    'table' => 'ces_exchange',
+    'columns' => array('exchange' => 'id')
       ),
     )
   );
   $schema['ces_account'] = array(
-    'description'	=> 'Exchange account',
-    'fields'	=>	array(
-      'id'	=>	array(
-	'type'	=> 'serial',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
+    'description' => 'Exchange account',
+    'fields' => array(
+      'id' => array(
+      'type' => 'serial',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
       ),
-      'exchange'	=> array(
-	'description'	=> 'To which exchange belongs this account',
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'notnull'	=> TRUE,
-	'default'	=> 0
+      'exchange' => array(
+      'description' => 'To which exchange belongs this account',
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'notnull' => TRUE,
+      'default' => 0
       ),
-      'name'		=> array(
-	'description'	=> 'Public Account ID. It is 4-letter exchange code + account number + control character',
-	'type'		=> 'varchar',
-	'length'	=> '31',
-	'notnull'	=> TRUE,
-	'default'	=> ''
+      'name' => array(
+        'description' => 'Public Account ID. It is 4-letter exchange code + account number + control character',
+        'type' => 'varchar',
+        'length' => '31',
+        'notnull' => TRUE,
+        'default' => ''
       ),
-      'balance'	=> array(
-	'description'	=> 'Account balance.',
-	'type' 		=> 'numeric',
-	'precision' 	=> 31,
-	'scale' 	=> 4,
-	'not null' 	=> TRUE,
-	'default' 	=> 0  
+      'balance' => array(
+        'description' => 'Account balance.',
+        'type' => 'numeric',
+        'precision' => 31,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'limitchain'	=> array(
-	'type'	=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
-      ),
-      'state'          => array(
+      'limitchain' => array(
         'type' => 'int',
-        'unsigned'      => TRUE,
-        'not null'      => TRUE,
-        'default'       => 0
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'created'	=> array(
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'state' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
+      ),
+      'created' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
       'modified' => array(
-	'type' => 'int',
-	'unsigned' => TRUE,
-	'not null' => TRUE,
-	'default' => 0
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
       'kind' => array(
-        'description'=>'One of INDIVIDUAL (0), SHARED (1), ORGANIZATION (2), COMPANY (3), PUBLIC (4)',
+        'description' => 'One of INDIVIDUAL (0), SHARED (1), ORGANIZATION (2), COMPANY (3), PUBLIC (4)',
         'type' => 'int',
-        'unsigned'=> TRUE,
-        'not null'=> TRUE,
+        'unsigned' => TRUE,
+        'not null' => TRUE,
         'default' => 0
       ),
     ),
-    'primary key'	=> array ('id'),
-    'unique keys'	=> array (
-      'name' 		=> array ('name'),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'name' => array('name'),
     ),
-    'foreign keys'	=> array (
-      'exchange'	=> array (
-	'table'		=> 'ces_exchange',
-	'columns'	=> array ('exchange', 'id')
+    'foreign keys' => array(
+      'exchange' => array(
+        'table' => 'ces_exchange',
+        'columns' => array('exchange', 'id')
       ),
-      'limitchain'	=> array (
-	'table'		=> 'ces_limitchain',
-	'columns'	=> array ('limitchain' , 'id' )
+      'limitchain' => array(
+        'table' => 'ces_limitchain',
+        'columns' => array('limitchain' , 'id' )
       )
     )
   );
   $schema['ces_accountuser'] = array(
-    'description'	=> 'Relation n by n between users and accounts.',
-    'fields'	=> array(
-      'user'	=> array(
-	'type'	=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+    'description' => 'Relation n by n between users and accounts.',
+    'fields' => array(
+      'user' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'account'	=> array(
-	'type'	=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'account' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'privilege'	=> array(
-	'description'	=> 'Type of user relation with this account. 0 => user is owner.',
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'privilege' => array(
+        'description' => 'Type of user relation with this account. 0 => user is owner.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       )
     ),
-    'primary key' => array ('user', 'account'),
-    'foreign keys'=> array(
-      'user'		=> array(
-	'table'		=> 'user',
-	'columns'	=> array('user', 'uid')
+    'primary key' => array('user', 'account'),
+    'foreign keys' => array(
+      'user' => array(
+        'table' => 'user',
+        'columns' => array('user', 'uid')
       ),
-      'account'		=> array(
-	'table'		=> 'ces_account',
-	'colums'	=> array ('account', 'id')
+      'account' => array(
+        'table' => 'ces_account',
+        'colums' => array('account', 'id')
       )
     )
   );
   $schema['ces_transaction'] = array(
-    'description'	=> 'Account transaction',
-    'fields'	=> array(
-      'id'	=> array(
-	'type'	=> 'serial',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
+    'description' => 'Account transaction',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
-      'fromaccount'	=>array(
-	'type'		=> 'varchar',
-	'length'	=> '31',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'fromaccount' => array(
+        'type' => 'varchar',
+        'length' => '31',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'toaccount'	=>array(
-	'type'		=> 'varchar',
-	'length'	=> '31',
-	'not null'	=> TRUE,
-	'default'	=> ''
+      'toaccount' => array(
+        'type' => 'varchar',
+        'length' => '31',
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'amount'		=>array(
-	'type' 		=> 'numeric',
-	'precision'	=> 31,
-	'scale'		=> 4,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'amount' => array(
+        'type' => 'numeric',
+        'precision' => 31,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'user'		=>array(
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'user' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'concept'		=> array(
-	'type'		=> 'text',
-        'size'          => 'big',
-	'not null' 	=> TRUE,
+      'concept' => array(
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
       ),
-      'state'	=> array(
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'state' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'created'	=> array(
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'created' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'modified'	=> array(
-	'type'		=> 'int',
-	'unsigned'	=> TRUE,
-	'not null'	=> TRUE,
-	'default'	=> 0
+      'modified' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
       ),
-      'decoration'	=> array(
-	'description'	=> 'PHP-serialized transaction options.',
-	'type'		=> 'blob',
-	'not null'	=> TRUE,
-        'serialize'	=> TRUE
+      'decoration' => array(
+        'description' => 'PHP-serialized transaction options.',
+        'type' => 'blob',
+        'not null' => TRUE,
+        'serialize' => TRUE
       )
     ),
-    'primary key'	=> array('id'),
-    'foreign keys'	=> array(
-      'fromaccount'	=> array(
-	'table'		=> 'ces_account',
-	'columns'	=> array( 'fromaccount' => 'name' )  
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'fromaccount' => array(
+        'table' => 'ces_account',
+        'columns' => array( 'fromaccount' => 'name' )
       ),
-      'toaccount'	=> array(
-	'table'		=> 'ces_account',
-	'columns'	=> array( 'toaccount' => 'name' )  
+      'toaccount' => array(
+        'table' => 'ces_account',
+        'columns' => array( 'toaccount' => 'name' )
       ),
-      'user'	=> array(
-	'table'		=> 'user',
-	'columns'	=> array( 'user' => 'uid' )  
+      'user' => array(
+        'table' => 'user',
+        'columns' => array( 'user' => 'uid' )
       )
     )
   );
-  
   return $schema;
 }
