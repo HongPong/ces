@@ -80,7 +80,7 @@ class BankTestCase extends DrupalWebTestCase {
     $this->assertText(t('Location'));
     $this->assertText(t('Currency'));
     $this->assertNoText(t('Limits'));
-    $this->drupalPost(NULL, $this->exchange1, t('Submit'));
+    $this->drupalPost(NULL, $this->exchange1, t('Create exchange'));
     $this->assertRaw(t('Exchange %code successfully created.', array('%code' => $this->exchange1['code'])));
     $this->exchange1['id'] = '2';
   }
@@ -92,7 +92,7 @@ class BankTestCase extends DrupalWebTestCase {
     $this->drupalGet('ces/bank/exchange/activate/' . $this->exchange1['id']);
     $this->assertFieldByName('code', $this->exchange1['code']);
     $this->assertFieldByName('name', $this->exchange1['name']);
-    $this->drupalPost(NULL, array(), t('Activate'));
+    $this->drupalPost(NULL, array(), t('Activate exchange'));
     $this->assertRaw(t('Exchange %code successfully activated.', array('%code' => $this->exchange1['code'])));
     $this->assertText(t('Limits'));
     //$this->assertOptionSelected('edit-limitchain','default');
@@ -106,7 +106,7 @@ class BankTestCase extends DrupalWebTestCase {
     $edit = array(
       'state' => '1'
     );
-    $this->drupalPost(NULL, $edit, t('Submit'));
+    $this->drupalPost(NULL, $edit, t('Create account'));
     $this->assertText(t('Account successfully created.'));
   }
 
@@ -119,12 +119,12 @@ class BankTestCase extends DrupalWebTestCase {
         'concept' => 'Test transaction',
         'amount' => '1.5',
     );
-    $this->drupalPost(NULL, $edit, t('Submit'));
+    $this->drupalPost(NULL, $edit, t('Create transaction'));
     $this->assertText('HORA0001');
     $this->assertText('HORA0002');
     $this->assertText('1.5');
     $this->assertText('Test transaction');
-    $this->drupalPost(NULL, array(), t('Submit'));
+    $this->drupalPost(NULL, array(), t('Confirm transaction'));
     $this->assertText(t('Transaction successfully applied.'));
   }
 }

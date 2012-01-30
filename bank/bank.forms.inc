@@ -590,7 +590,6 @@ function bank_account_form_validate($form, &$form_state) {
     }
   }
 }
-
 function bank_account_form_submit($form, &$form_state) {
   $record = $form_state['values'];
   $op = $record['operation'];
@@ -624,15 +623,15 @@ function bank_account_form_submit($form, &$form_state) {
 
 /**
  * Single transaction form
+ * @todo Generalize this form to update (not just create) transactions.
+ * @todo Set the currency according the toaccount exchage currency.
+ * @todo Make an easy system to find account names by exchange/username.
  */
 function bank_transaction_form($form, &$form_state, $to_account_id = NULL, $from_account_id = NULL) {
   if (!empty($form_state['page_num']) && $form_state['page_num'] == 2) {
     return bank_transaction_confirm_form($form, $form_state);
   }
 
-  //TODO
-  // 1: Set the currency according the toaccount exchage currency.
-  // 2: Make an easy system to find account names by exchange/username.
   global $user;
 
   $bank = new Bank();
@@ -693,7 +692,7 @@ function bank_transaction_form($form, &$form_state, $to_account_id = NULL, $from
   );
   $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => $op == 'new'?t('Create transaction'):t('Update transaction'),
+      '#value' => t('Create transaction'),
   );
   return $form;
 }
