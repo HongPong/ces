@@ -95,7 +95,6 @@ class Bank{
   public function createTransaction(array &$record) {
     $t = Serializer::DBTransaction();
     try{
-      unset($record['id']);
       $transaction = $this->newTransaction($record);
       $s = new Serializer(get_class($transaction));
       $s->save($transaction);
@@ -299,17 +298,22 @@ class Bank{
     return $records;
   }
   /**
-   * applies a transaction given its id.
+   * Applies a transaction given its id.
    */
   public function applyTransaction($transactionId) {
     $t = Serializer::DBTransaction();
     try{
       $transaction = $this->getObject('BasicTransaction', $transactionId);
-      $res = $transaction->apply();
-      if ($res === TRUE) {//transaction were applied
-        $this->notifyTransaction($transaction);
+      //Trigger transaction application.
+      $transaction->setState(Transaction::STATE_TRIGGERED);
+      $transaction->check();
+      if ($transaction->getState() == Transaction::STATE_ACCEPTED) {
+        $transaction->apply();
+        if ($transaction->getState() == Transaction::STATE_COMMITED) {
+          return TRUE;
+        }
       }
-      return $res;
+      return $transaction->getLog($transaction->getState());
     }catch(Exception $e) {
       $t->rollback();
       throw $e;
@@ -357,6 +361,7 @@ class Bank{
    */
   private function newTransaction(array &$record) {
     unset($record['id']);
+    $record['state'] = Transaction::STATE_NEW;
     //load accounts
     if (isset($record['toaccount'])) {
       $toaccount = $this->getAccount($record['toaccount']);
@@ -515,6 +520,17 @@ class Exchange extends DBObject{
     return $default;
   }
   /**
+   * @return LocalAccount to be used as a prototype for new virtual accounts.
+   * @todo customize limit chain
+   * @todo customize state
+   */
+  public function getDefaultVirtualAccount() {
+    $virtAccount = $this->getDefaultAccount();
+    $virtAccount->type = LocalAccount::TYPE_VIRTUAL;
+    $users = $virtAccount->getUsers();
+    $users[0]->user = 1;
+  }
+  /**
    * @return LocalAccount to be used as a prototype for new accounts.
    */
   public function getDefaultAccount() {
@@ -564,7 +580,6 @@ class Exchange extends DBObject{
    * Activates a newly created exchange. Creates all the additional structures an
    * exchange needs in order to be operative. This includes:
    *  - default limit chain
-   *  - virtual account
    * And sets up the active flag to this exchange.
    * Exchange needs to be saved after this call so the state flag persists.
    */
@@ -581,6 +596,7 @@ class Exchange extends DBObject{
       $this->limitchain = $defLimitChain->id;
       $es->updateField($this, 'limitchain');
     }
+    /*
     $virtAccount = $this->getVirtualAccount();
     if (empty($virtAccount)) {
       //create virtual account
@@ -591,14 +607,24 @@ class Exchange extends DBObject{
       $as = new Serializer('LocalAccount');
       $as->save($virtAccount);
     }
+    */
     $this->state = Exchange::STATE_ACTIVE;
   }
   /**
-   * @return Account the virtual account for this exchange.
+   * @return Account the virtual account for this exchange. It is created if it
+   * doesn't exist.
+   * @todo notify exchange admin in case of virtual user creation.
    */
-  public function getVirtualAccount() {
+  public function getVirtualAccount(Exchange $exchange) {
     $s = new Serializer('LocalAccount');
-    return $s->loadFromUniqueKey('name', $this->code . 'VIRT');
+    $name = $this->code . $exchnage->code;
+    $virtAccount = $s->loadFromUniqueKey('name', $name);
+    if ($virtAccount === FALSE) {
+      $virtAccount = $this->getDefaultVirtualAccount();
+      $virtAccount->name = $name;
+      $s->save($virtAccount);
+    }
+    return $virtAccount;
   }
 }
 /**
@@ -688,6 +714,7 @@ class LocalAccount extends DBObject implements Account {
   const TYPE_COMPANY = 3;
   const TYPE_PUBLIC = 4;
   const TYPE_VIRTUAL = 5;
+
   public function loadRecord(&$record) {
     parent::loadRecord($record);
     if (isset($record['users']) && is_array($record['users'])) {
@@ -1001,45 +1028,146 @@ interface Transaction {
    */
   public function getAmount();
   /**
-   * @return the id of the user who has created this transaction.
+   * @return int
+   * The id of the user who has created this transaction.
    */
   public function getUser();
   /**
-   * @return a short description of this transaction.
+   * @return string
+   * A short description of this transaction.
    */
   public function getConcept();
   /**
-   * @return return the 'from' account public ID
+   * @return string
+   * The buyer account public ID
    */
   public function getFromAccountName();
   /**
-   * @return return the 'to' account public ID
+   * @return string
+   * The seller account public ID
    */
   public function getToAccountName();
   /**
-   * Tries to apply this transaction. Returns the transaction state after the operation.
+   * @return int
+   * The current state of this transaction.
+   */
+  public function getState();
+  /**
+   * @return array
+   * Array of messages with details about given $state.
+   */
+  public function getLog($state);
+  /**
+   * Trigger this transaction.
+   */
+  public function trigger();
+  /**
+   * Check this transaction.
+   */
+  public function check();
+  /**
+   * Apply this transaction.
    */
   public function apply();
   /**
-   * Tries to revoke this transaction. Returns the transaction state after the operation.
+   * Revoke this transaction.
    */
   public function revoke();
+  /**
+   * The transaction has been created but hasn't already been triggered to
+   * apply. This is the state while the transaction can be edited. Waiting
+   * for the user to apply this transaction.
+   */
   const STATE_NEW = 0;
-  const STATE_APPLIED = 1;
+  /**
+   * The transaction has been triggered to be applied. Waiting for acceptance
+   * from all authorities.
+   */
+  const STATE_TRIGGERED = 1;
+  /**
+   * The transaction has been accepted by all authorities. It is being
+   * effectively applied by the system. This state is short-lived in local
+   * transactions.
+   */
+  const STATE_ACCEPTED = 2;
+  /**
+   * The transaction has been successfully applied. It can however be revoked.
+   * If there aren't issues for this transaction after a prudencial time, it
+   * will be archieved.
+   */
+  const STATE_COMMITED = 3;
+  /**
+   * The transaction is archieved and successfully applied. Nothing can be done
+   * with it. It exists only as historical data.
+   */
+  const STATE_ARCHIVED = 4;
+  /**
+   * The transaction -triggered to apply- has been rejected by some of the
+   * authorities. It will be discarted in some days if nobody changes their
+   * opinion.
+   */
+  const STATE_REJECTED = 5;
+  /**
+   * The transaction is discarted and has not been applied. Nothing can be done
+   * with it. It exists only as historical data.
+   */
+  const STATE_DISCARDED = 6;
+  /**
+   * The transaction has been triggered to be revoked. Waiting for acceptance of
+   * this operation by all authorities.
+   */
+  const STATE_REVOKE_TRIGGERED = 7;
+  /**
+   * The revoke operation has been accepted by all authorities. The system is
+   * effectively doing the revoke. Short-lived state for local transactions.
+   */
+  const STATE_REVOKE_ACCEPTED = 8;
+  /**
+   * Some authorities rejected the revoke operation, so the transaction will
+   * remain applied.
+   */
+  const STATE_REVOKE_REJECTED = 9;
+  /**
+   * The transaction has been successfully revoked. Marked to be discarted after
+   * a prudential time.
+   */
+  const STATE_REVOKED = 10;
+  /**
+   * There has been a system error with this transaction. It requires
+   * administrator attention.
+   */
+  const STATE_ERROR = 11;
+
 }
 /**
  * Concrete class for the basic transaction. It can be enchanced using DecoratorTransactions.
  */
 class BasicTransaction extends DBObject implements Transaction{
+  /**
+   * @var int
+   * Transaction identifier.
+   */
   public $id;
+  /**
+   * @var int
+   * Buyer account identifier.
+   */
   public $fromaccount;
+  /**
+   * @var int
+   * Seller account identifier.
+   */
   public $toaccount;
+  /**
+   * @var float
+   */
   public $amount;
   public $user;
   public $concept;
   public $state;
   public $created;
   public $modified;
+  public $data;
   public static $table = 'ces_transaction';
   public function getAmount() {
     return $this->amount;
@@ -1063,21 +1191,84 @@ class BasicTransaction extends DBObject implements Transaction{
   public function getState() {
     return $this->state;
   }
-  public function apply() {
+  public function log(array $messages) {
+    if (!isset($this->data))
+      $this->data = array();
+    if (!isset($this->data['log']))
+      $this->data['log'] = array();
+    if (!isset($this->data['log'][$this->state]))
+      $this->data['log'][$this->state] = array();
+    $this->data['log'][$this->state] = array_merge($this->data['log'][$this->state], $messages);
+  }
+  public function getLog($state = NULL) {
+    return $this->data['log'][$state];
+  }
+  /**
+   * Changes the transaction state.
+   */
+  public function setState($state) {
+    switch ($this->state) {
+      case Transaction::STATE_NEW:
+        if ($state == Transaction::STATE_TRIGGERED) {
+          $this->state = Transaction::STATE_TRIGGERED;
+        }
+        else {
+          throw new Exception(t('Invalid transaction state'));
+        }
+        break;
+      case Transaction::STATE_TRIGGERED:
+        if ($state == Transaction::STATE_ACCEPTED) {
+          $this->state = Transaction::STATE_ACCEPTED;
+        }
+        elseif ($state == Transaction::STATE_REJECTED) {
+          $this->state = Transaction::STATE_REJECTED;
+        }
+        else {
+          throw new Exception(t('Invalid transaction state'));
+        }
+        break;
+      case Transaction::STATE_ACCEPTED:
+        if ($state == Transaction::STATE_COMMITED) {
+          $this->state = Transaction::STATE_COMMITED;
+        }
+        elseif ($state == Transaction::STATE_ERROR) {
+          $this->state = Transaction::STATE_ERROR;
+        }
+        else {
+          throw new Exception(t('Invalid transaction state'));
+        }
+        break;
+      case Transaction::STATE_COMMITED:
+        if ($state == Transaction::STATE_ARCHIVED) {
+          $this->state = Transaction::STATE_ARCHIVED;
+        }
+        elseif ($state == Transaction::STATE_REVOKE_TRIGGERED) {
+          $this->state = Transaction::STATE_REVOKE_TRIGGERED;
+        }
+        else {
+          throw new Exception(t('Invalid transaction state'));
+        }
+        break;
+      default:
+        throw new Exception(t('Invalid transaction state'));
+    }
+    $s = new Serializer('BasicTransaction');
+    $s->updateField($this, 'state');
+  }
+  public function trigger() {
+    $this->setState(Transaction::STATE_TRIGGERED);
+  }
+  public function check() {
     $s = new Serializer('LocalAccount');
     $accountFrom = $s->load($this->fromaccount);
     $accountTo = $s->load($this->toaccount);
     $messagesFrom = $accountFrom->checkTransaction($this);
     $messagesTo   = $accountTo->checkTransaction($this);
     if ($messagesFrom === TRUE && $messagesTo === TRUE) {
-      $accountTo->applyTransaction($this);
-      $accountFrom->applyTransaction($this);
-      $st = new Serializer('BasicTransaction');
-      $this->state = Transaction::STATE_APPLIED;
-      $st->updateField($this, 'state');
-      return TRUE;
+      $this->setState(Transaction::STATE_ACCEPTED);
     }
     else {
+      $this->setState(Transaction::STATE_REJECTED);
       if ($messagesFrom === TRUE) {
         $messages = $messagesTo;
       }
@@ -1087,11 +1278,46 @@ class BasicTransaction extends DBObject implements Transaction{
       else {
         $messages = array_merge($messagesFrom, $messagesTo);
       }
-      return $messages;
+      $this->log($messages);
+    }
+  }
+  public function apply() {
+    //load account objects
+    $s = new Serializer('LocalAccount');
+    $accountFrom = $s->load($this->fromaccount);
+    $accountTo = $s->load($this->toaccount);
+    //apply transaction to both accounts
+    try{
+      $accountTo->applyTransaction($this);
+      $accountFrom->applyTransaction($this);
+      $this->setState(Transaction::STATE_COMMITED);
+      return TRUE;
+    }
+    catch (Exception $e) {
+      $this->setState(Transaction::STATE_ERROR);
+      $this->log(array($e->getMessage()));
+      throw $e;
     }
   }
   public function revoke() {
     throw new Exception('Not implemented yet');
+  }
+  private static function getStateString($state) {
+    $string = array(
+        0 => 'NEW',
+        1 => 'TRIGGERED',
+        2 => 'ACCEPTED',
+        3 => 'COMMITED',
+        4 => 'ARCHIVED',
+        5 => 'REJECTED',
+        6 => 'DISCARTED',
+        7 => 'REVOKE TRIGGERED',
+        8 => 'REVOKE ACCEPTED',
+        9 => 'REVOKE REJECTED',
+        10 => 'REVOKED',
+        11 => 'ERROR',
+    );
+    return $string[$state];
   }
 }
 /**
@@ -1111,12 +1337,6 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
     public function getConcept() {
       return $this->parent->getConcept();
     }
-    public function apply() {
-      return $this->parent->apply();
-    }
-    public function revoke() {
-      return $this->parent->revoke();
-    }
     public function getFromAccountName() {
       return $this->parent->getFromAccountName();
     }
@@ -1129,41 +1349,114 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
     public function getState() {
       return $this->parent->getState();
     }
+    public function getLog($state) {
+      return $this->parent->getLog($state);
+    }
+    public function log($messages) {
+      return $this->parent->log($messages);
+    }
+    public function trigger() {
+      return $this->parent->trigger();
+    }
+    public function check() {
+      return $this->parent->check();
+    }
+    public function apply() {
+      return $this->parent->apply();
+    }
+    public function revoke() {
+      return $this->parent->revoke();
+    }
     public function __construct($parent, $record) {
       parent::__construct($record);
       $this->parent = $parent;
     }
 }
 class InterExchangeTransaction extends DecoratedTransaction{
+  /**
+   * @var BasicTransaction
+   */
+  protected $virtualTransactionFrom;
+  /**
+   * @var BasicTransaction
+   */
+  protected $virtualTransactionTo;
+  public function check() {
+    //Check two virtual transactions.
+    $virtFrom = getVirtualTransactionFrom();
+    $virtFrom->check();
+    $virtTo = getVirtualTransactionFrom();
+    $virtTo->check();
+    //Merge results.
+    if ($virtFrom->getState() == Transaction::STATE_ACCEPTED
+    && $virtTo->getState() == Transaction::STATE_ACCEPTED) {
+      $this->setState(Transaction::STATE_ACCEPTED);
+    }
+    elseif ($virtFrom->getState() == Transaction::STATE_REJECTED
+    || $virtTo->getState() == Transaction::STATE_REJECTED) { //one of the two must be rejected.
+      $this->setState(Transaction::STATE_REJECTED);
+    }
+    elseif ($virtFrom->getState() == Transaction::STATE_TRIGGERED
+    || $virtTo->getState() == Transaction::STATE_TRIGGERED) {
+      $this->setState(Transaction::STATE_TRIGGERED);
+    }
+    //Add the virtual logs regarding the final state of the whole interexchange tranaction.
+    $this->setLog($virtForm->getLog($this->getState()));
+    $this->setLog($virtTo->getLog($this->getState()));
+  }
   public function apply() {
-    $fromAccountName = $parent->getFromAccountName();
-    $toAccountName = $parent->toAccountName();
-    $sa = new Serializer('LocalAccount');
-    $fromAccount = $sa->loadFromUniqueKey('name', $fromAccountName);
-    $toAccount = $sa->loadFromUniqueKey('name', $toAccountName);
-    $se = new Serializer('Exchange');
-    $fromExchange = $se->load($fromAccount->exchange);
-    $toExchange = $se->load($toAccount->exchange);
-    $fromVirtualAccount = $fromExchange->getVirtualAccount();
-    $toVirtualAccount = $toExchange->getVirtualAccount();
-    $virtualTransaction = new BasicTransaction(array(
-        'fromaccount' => $toVirtualAccount->id,
+    //Apply the two virtual transactions.
+    $virtFrom = getVirtualTransactionFrom();
+    $virtFrom->apply();
+    $virtTo = getVirtualTransactionFrom();
+    $virtTo->apply();
+    //Merge state.
+    if ($virtFrom->getState() == Transaction::STATE_COMMITED
+    && $virtTo->getState() == Transaction::STATE_COMMITED) {
+      $this->setState(Transaction::STATE_COMMITED);
+    }
+    elseif ($virtFrom->getState() == Transaction::STATE_ERROR
+    || $virtTo->getState() == Transaction::STATE_ERROR) {
+      $this->setState(Transaction::STATE_ERROR);
+    }
+    $this->setLog($virtForm->getLog($this->getState()));
+    $this->setLog($virtTo->getLog($this->getState()));
+  }
+  protected function getVirtualTransactionFrom() {
+    if ($this->virtualTransactionFrom == NULL) {
+      $fromAccountName = $parent->getFromAccountName();
+      $sa = new Serializer('LocalAccount');
+      $fromAccount = $sa->loadFromUniqueKey('name', $fromAccountName);
+      $se = new Serializer('Exchange');
+      $fromExchange = $se->load($fromAccount->exchange);
+      $fromVirtualAccount = $fromExchange->getVirtualAccount($toExchange);
+      $this->virtualTransactionFrom = new BasicTransaction(array(
+        'fromaccount' => $fromAccount->id,
         'toaccount' => $fromVirtualAccount->id,
         'amount' => $this->getAmount(),
-        'concept' => t('Virtual currency exchange. Transaction %trans.', array('%trans' => $this->id)),
+        'concept' => $this->getConcept(),
         'user' => $this->user,
-    ));
-    //apply virtual transaction
-    $fromVirtualAccount->applyTransaction($virtualTransaction);
-    $toVirtualAccount->applyTransaction($virtualTransaction);
-    if (  $virtualTransaction->getApplyState(Transaction::ACCOUNT_FLAG_FROM) == Transaction::APPLY_STATE_APPLIED
-      && $virtualTransaction->getApplyState(Transaction::ACCOUNT_FLAG_TO) == Transaction::APPLY_STATE_APPLIED) {
-      //apply transaction
-      $parent->apply();
+      ));
     }
-    else {
-      //TODO: report error
+    return $this->virtualTransactionFrom;
+  }
+  protected function getVirtualTransactionTo() {
+    if ($this->virtualTransactionTo == NULL) {
+      $toAccountName = $parent->toAccountName();
+      $sa = new Serializer('LocalAccount');
+      $toAccount = $sa->loadFromUniqueKey('name', $toAccountName);
+      $se = new Serializer('Exchange');
+      $toExchange = $se->load($toAccount->exchange);
+      $toVirtualAccount = $toExchange->getVirtualAccount($fromExchange);
+      $virtualTransactionTo = new BasicTransaction(array(
+          'fromaccount' => $toVirtualAccount->id,
+          'toaccount' => $toAccount->id,
+          'amount' => $this->getAmount(),
+          'concept' => $this->getConcept(),
+          'user' => $this->user,
+      ));
     }
+    return $this->virtualTransactionTo;
   }
 }
 /**

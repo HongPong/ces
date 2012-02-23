@@ -451,6 +451,12 @@ function bank_schema() {
         'not null' => TRUE,
         'default' => 0
       ),
+      'data' => array(
+        'description' => 'PHP-serialized transaction extra data.',
+        'type' => 'blob',
+        'not null' => TRUE,
+        'serialize' => TRUE
+      ),
       'decoration' => array(
         'description' => 'PHP-serialized transaction options.',
         'type' => 'blob',
