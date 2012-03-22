@@ -11,6 +11,10 @@
  * The controller for all the banking logic. This is the only accessible class from outside this package.
  */
 class Bank{
+  public function access($permission, $object, $objectid, $account = NULL) {
+    $perm = new UserPermission($account);
+    return $perm->access($permission, $object, $objectid);
+  }
   /**
    * Create exchange. This exchange is not functional yet. It must be activated.
    */
@@ -164,13 +168,27 @@ class Bank{
   public function createAccount(array &$record) {
     $t = Serializer::DBTransaction();
     try{
+      //Create account record.
       unset($record['id']);
+      $record['balance'] = 0;
       $account = new LocalAccount($record);
       $s = new Serializer('LocalAccount');
       $s->save($account);
       //saveExtraData() after create account record because we need the new
       //account id in order to create the AccountUser record(s).
       $account->saveExtraData();
+      //Create permission entry for account owner(s).
+      $accountusers = $account->getUsers();
+      foreach ($accountusers as $accountuser){
+        $perm = array(
+          'permission' => Permission::PERMISSION_ADMIN,
+          'object' => 'account',
+          'objectid' => $account->id,
+          'scope' => Permission::SCOPE_USER,
+          'scopeid' => $accountuser->user,
+        );
+        $this->createPermission($perm);
+      }
     }catch(Exception $e) {
       $t->rollback();
       throw $e;
@@ -181,6 +199,7 @@ class Bank{
    */
   public function updateAccount(array &$record) {
     $t = Serializer::DBTransaction();
+    unset($record['balance']);
     try{
       return $this->updateObject('LocalAccount', $record);
     }catch(Exception $e) {
@@ -338,6 +357,41 @@ class Bank{
   public function getDecoratedTransactionClasses() {
     $classes = module_invoke_all('decorated_transaction_classes');
     return $classes;
+  }
+  public function getPermission($id) {
+    return $this->getObjectRecord('Permission', $id);
+  }
+  public function createPermission(array &$record) {
+    $t = Serializer::DBTransaction();
+    try{
+      unset($record['id']);
+      return $this->updateObject('Permission', $record);
+    } catch(Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
+  }
+  public function deletePermission($id) {
+    //TODO: implement this
+    throw new Exception('Not implemented yet');
+  }
+  public function updatePermission(array &$record) {
+    $t = Serializer::DBTransaction();
+    try{
+      return $this->updateObject('Permission', $record);
+    } catch(Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
+  }
+  public function getAdministrablePermissions($userid = NULL) {
+    $userperms = new UserPermission($userid);
+    $permissions = $userperms->getPermissions();
+    $result = array();
+    foreach($permissions as $perm){
+      $result[] = $perm->getRecord();
+    }
+    return $result;
   }
   private function getObject($className, $id) {
     $s = new Serializer($className);
@@ -527,7 +581,7 @@ class Exchange extends DBObject{
   public function getDefaultVirtualAccount() {
     $virtAccount = $this->getDefaultAccount();
     $virtAccount->type = LocalAccount::TYPE_VIRTUAL;
-    $users = $virtAccount->getUsers();
+    $users = &$virtAccount->getUsers();
     $users[0]->user = 1;
   }
   /**
@@ -556,7 +610,7 @@ class Exchange extends DBObject{
     //NOTE: this function is highly inefficient. It can be changed with a
     //single specific DB query if causes performance problems.
     $s = new Serializer('LocalAccount');
-    $accounts = $s->loadCollection(array($this->id => $this->id), 'name');
+    $accounts = $s->loadCollection(array('exchange' => $this->id), 'name');
     $start = floor((count($accounts) -1) / 2); //This is a bit tricky.
     $code = !empty($accounts)?$accounts[$start]->getCode():0;
     if (!is_numeric($code)) $code = 0;
@@ -772,7 +826,12 @@ class LocalAccount extends DBObject implements Account {
     $s->updateField($account, 'balance');
   }
   public function checkTransaction(Transaction &$transaction) {
-    return $this->getLimitChain()->checkTransaction($this, $transaction);
+    if($this->state == LocalAccount::STATE_ACTIVE) {
+      return $this->getLimitChain()->checkTransaction($this, $transaction);
+    }
+    else {
+      return array(t('User %user cannot accept transactions because is not active.'), array('%user' => $this->name));
+    }
   }
   public function getName() {
     return $this->name;
@@ -780,7 +839,7 @@ class LocalAccount extends DBObject implements Account {
   public function getCode() {
     return drupal_substr($this->name, 4);
   }
-  public function getUsers() {
+  public function &getUsers() {
     return $this->users;
   }
 }
@@ -1207,50 +1266,21 @@ class BasicTransaction extends DBObject implements Transaction{
    * Changes the transaction state.
    */
   public function setState($state) {
-    switch ($this->state) {
-      case Transaction::STATE_NEW:
-        if ($state == Transaction::STATE_TRIGGERED) {
-          $this->state = Transaction::STATE_TRIGGERED;
-        }
-        else {
-          throw new Exception(t('Invalid transaction state'));
-        }
-        break;
-      case Transaction::STATE_TRIGGERED:
-        if ($state == Transaction::STATE_ACCEPTED) {
-          $this->state = Transaction::STATE_ACCEPTED;
-        }
-        elseif ($state == Transaction::STATE_REJECTED) {
-          $this->state = Transaction::STATE_REJECTED;
-        }
-        else {
-          throw new Exception(t('Invalid transaction state'));
-        }
-        break;
-      case Transaction::STATE_ACCEPTED:
-        if ($state == Transaction::STATE_COMMITED) {
-          $this->state = Transaction::STATE_COMMITED;
-        }
-        elseif ($state == Transaction::STATE_ERROR) {
-          $this->state = Transaction::STATE_ERROR;
-        }
-        else {
-          throw new Exception(t('Invalid transaction state'));
-        }
-        break;
-      case Transaction::STATE_COMMITED:
-        if ($state == Transaction::STATE_ARCHIVED) {
-          $this->state = Transaction::STATE_ARCHIVED;
-        }
-        elseif ($state == Transaction::STATE_REVOKE_TRIGGERED) {
-          $this->state = Transaction::STATE_REVOKE_TRIGGERED;
-        }
-        else {
-          throw new Exception(t('Invalid transaction state'));
-        }
-        break;
-      default:
-        throw new Exception(t('Invalid transaction state'));
+    $flow = array(
+      Transaction::STATE_NEW => array(Transaction::STATE_TRIGGERED),
+      Transaction::STATE_TRIGGERED => array(Transaction::STATE_ACCEPTED, Transaction::STATE_REJECTED),
+      Transaction::STATE_ACCEPTED => array(Transaction::STATE_COMMITED, Transaction::STATE_ERROR),
+      Transaction::STATE_COMMITED => array(Transaction::STATE_ARCHIVED, Transaction::STATE_REVOKE_TRIGGERED),
+      Transaction::STATE_REJECTED => array(Transaction::STATE_ACCEPTED, Transaction::STATE_DISCARDED),
+    );
+    $candidates = $flow[$this->state];
+    foreach($candidates as $candidate) {
+      if ($candidate == $state) {
+        $this->state = $state;
+      }
+    }
+    if ($this->state != $state) {
+      throw new Exception(t('Invalid state transition for transaction %trans.', array('%trans' => $this->id)));
     }
     $s = new Serializer('BasicTransaction');
     $s->updateField($this, 'state');
@@ -1328,6 +1358,7 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
      * @var Transaction
      */
     private $parent;
+    public static $table = 'ces_transaction';
     public function getAmount() {
       return $this->parent->getAmount();
     }
@@ -1484,6 +1515,193 @@ class LevyedTransaction extends DecoratedTransaction{
     ));
     //TODO: finish this!
   }
+}
+/**
+ * The set of permissions of a particular user
+ */
+class UserPermission{
+  /**
+   * @var int
+   */
+  private $userid;
+  /**
+   * @var array of Permission
+   */
+  private static $permissions = array();
+  /**
+   * @param $user int
+   */
+  public function __construct($userid) {
+    global $user;
+    if ($userid === NULL) {
+      $this->userid = $user->uid;
+    }
+    else{
+      $this->userid = $userid;
+    }
+  }
+  /**
+   * @param $permission int or string
+   * @param $object String
+   * @param $objectid int
+   * @return whether user of this Permissions object has access of type given by
+   * the $permission parameter over the object ($object, $objectid).
+   */
+  public function access($permission, $object, $objectid) {
+    if ($this->userid == 1)
+      return TRUE;
+    if(is_string($permission)){
+      $equiv = array(
+        'view' => 10,
+        'use' => 20,
+        'edit' => 30,
+        'admin' => 40,
+      );
+      $permission = $equiv[$permission];
+    }
+    $userperms = &$this->getPermissions();
+    foreach ($userperms as $userperm) {
+      if ($userperm->permission >= $permission 
+        && $this->belongs($object, $objectid, $userperm->object, $userperm->objectid)) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+  /**
+   * compute the user's permissions and populate the private internal variable
+   * $permissions.
+   * Note: this function easily needs 10 or 15 database queries. It is 
+   * recommendable to make cache of its result. Further, it could be easily
+   * improved to do only 3 or 4 queries if it is necessary (changing the foreach
+   * loops for IN(...) SQL statements).
+   */
+  public function &getPermissions() {
+    if (!isset(self::$permissions[$this->userid])) {
+      $sp = new Serializer('Permission');
+      if ($this->userid == 1) {
+        $permissions = $sp->loadCollection(array());
+      }
+      else {
+        $permissions = array();
+        //Get permissions directly granted to this user.
+        $userperms = $sp->loadCollection(array('scope' => 'user', 'scopeid' => $this->userid));
+        $permissions = &array_merge($permissions, $userperms);
+        //Get permissions granted to user's accounts. Compute exchanges.
+        $sau = new Serializer('AccountUser');
+        $useraccounts = $sau->loadCollection(array('user' => $this->userid));
+        foreach ($useraccounts as $useraccount) {
+          $accountperms = $sp->loadCollection(array('scope' => 'account', 'scopeid' => $useraccount->account));
+          $permissions = &array_merge($permissions, $accountperms);
+
+        }
+        //Compute exchanges.
+        $exchanges = array();
+        $sla = new Serializer('LocalAccount');
+        foreach ($useraccounts as $useraccount) {
+          $account = $sla->load($useraccount->account);
+          if (!in_array($account->exchange, $exchanges)) {
+            $exchanges[] = $account->exchange;
+          }
+        }
+        //Get permissions granted to user's accounts exchanges.
+        foreach ($exchanges as $exchange) {
+          $exchangeperms = $sp->loadCollection(array('scope' => 'exchange', 'scopeid' => $exchange));
+          $permissions = &array_merge($permissions, $exchangeperms);
+        }
+        //Get global permissions.
+        $globalperms = $sp->loadCollection(array('scope' => 'global'));
+        $permissions = &array_merge($permissions, $globalperms);
+      }
+      //Set the static variable.
+      self::$permissions[$this->userid] = &$permissions;
+    }
+    return self::$permissions[$this->userid];
+  }
+  /**
+   * @return boolean 
+   * Whether (object1,objectid1) belongs to (object2, objectid2).
+   */
+  private function belongs($object1, $objectid1, $object2, $objectid2) {
+    //Case permission. Permission belongs to A iif the object of that permission
+    //belongs to A.
+    if ($objectid1 == 'permission') {
+      $s = new Serializer('Permission');
+      $perm = $s->load($objectid1);
+      return belongs($perm->object, $perm->objectid, $object2, $objectid2);
+    }
+    //Case same scope. Compare identifiers.
+    if (substr($object1, 0, strlen($object2)) == $object2) {
+      return $objectid1 == $objectid2;
+    }
+    elseif (strpos($object2, ' ') === FALSE) {
+      //All belongs to global scope
+      if ($object2 == Permission::SCOPE_GLOBAL) {
+        return TRUE;
+      }
+      //Strip non-scope keywords from object1
+      $object1 = substr($object1, 0, strpos($object1, ' '));
+      //At this point we know that $object2 is one of 'account', 'exchange' and
+      //$object1 one of 'account', 'exchange', 'global' and $object2 != $object1
+      //so the only favorable possibily is the following.
+      if($object1 == Permission::SCOPE_ACCOUNT && $object2 == Permission::SCOPE_EXCHANGE) {
+        $s = new Serializer('LocalAccount');
+        $account = $s->load($objectid1);
+        return ($account->exchange == $objectid2);
+      }
+      else {
+        return FALSE;
+      }
+    }
+    else {
+      return FALSE;
+    }
+  }
+}
+class Permission extends DBObject{
+  /**
+   * @var int
+   */
+  public $id;
+  /**
+   * @var int
+   */
+  public $permission;
+  /**
+   * @var String
+   * Determines, together with $objectid, the target data of this permission.
+   * It begins with a scope string and optionally contain another
+   * keyword separated by space. eg. 'account' or 'account balance'. This scope
+   * cannot be user. It can be only 'global', 'exchange' or 'account'
+   */
+  public $object;
+  /**
+   * @var int
+   */
+  public $objectid;
+  /**
+   * @var String
+   * Determines, together with scopeid, the group of users having this 
+   * permission.
+   * Is a single keyword. Must be one of 'global', 'exchange', 'account', 'user'
+   */
+  public $scope;
+  /**
+   * @var int
+   */
+  public $scopeid;
+  public static $table = 'ces_permission';
+  
+  const PERMISSION_VIEW = 10;
+  const PERMISSION_USE = 20;
+  const PERMISSION_EDIT = 30;
+  const PERMISSION_ADMIN = 40;
+  
+  const SCOPE_GLOBAL = 'global';
+  const SCOPE_EXCHANGE = 'exchange';
+  const SCOPE_ACCOUNT = 'account';
+  const SCOPE_USER = 'user';
+
 }
 /**
  * @} End of "ingroup ces.bank".

@@ -825,12 +825,13 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
     $lastmonth = mktime(0, 0, 0, date('m')-1, date('d'), date('Y'));
     $from = array(
       'year' => date('Y', $lastmonth),
-      'month' => date('m', $lastmonth),
+      'month' => date('n', $lastmonth),
       'day' => date('d', $lastmonth),
     );
+    $today = mktime(23, 59, 59, date('m'), date('d'), date('Y'));
     $to = array(
       'year' => date('Y'),
-      'month' => date('m'),
+      'month' => date('n'),
       'day' => date('d'),
     );
   }
@@ -849,7 +850,7 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
       '#value' => t('Filter'),
   );
   $timefrom = mktime(0, 0, 0, $from['month'], $from['day'], $from['year']);
-  $timeto = mktime(0, 0, 0, $to['month'], $to['day'], $to['year']);
+  $timeto = mktime(23, 59, 59, $to['month'], $to['day'], $to['year']);
   //transaction table
   $form['transactions'] = array(
       '#type' => 'fieldset',
@@ -867,6 +868,9 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
         'data' => t('Date'),
         'field' => 'created',
         'sort' => 'asc'
+      ),
+      array(
+        'data' => t('State'),
       ),
       array(
         'data' => t('Account'),
@@ -906,12 +910,36 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
       $other_account = $account;
       $type = 2;
     }
+    $statestring = array(
+      0 => t('New'),
+      1 => t('Triggered'),
+      2 => t('Accepted'),
+      3 => t('Commited'),
+      4 => t('Archived'),
+      5 => t('Rejected'),
+      6 => t('Discarted'),
+      7 => t('Revoke triggered'),
+      8 => t('Revoke accepted'),
+      9 => t('Revoke rejected'),
+      10 => t('Revoked'),
+      11 => t('Error'),
+    );
+    $row[] = $statestring[$transaction['state']];
     $row[] = $other_account['name'];
     $row[] = check_plain($transaction['concept']);
     $row[] = $type==0?$transaction['amount']:'';
     $row[] = $type==1?$transaction['amount']:'';
+    //TODO: compute balance!
     $row[] = ' - ';
-    $row[] = l(t('Edit'), 'ces/bank/transaction/edit/' . $transaction['id']);
+    $actions = array();
+    if($transaction['state'] == 0) {
+      $actions[]=l(t('Edit'), 'ces/bank/transaction/' . $transaction['id'] . '/edit');
+      $actions[]=l(t('Trigger'), 'ces/bank/transaction/' . $transaction['id'] . '/trigger');
+    }
+    elseif($transaction['state'] == 5) {
+      $actions[]=l(t('Discard'), 'ces/bank/transaction/' . $transaction['id'] . '/discard');
+    }
+    $row[] = implode(' ', $actions);
     $form['transactions']['table']['#rows'][] = $row;
   }
   return $form;
@@ -919,4 +947,151 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
 
 function bank_account_statement_form_submit($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
+}
+
+function bank_permission_form($form, &$form_state, $op, $id = NULL) {
+  $form = array();
+  if ($op != 'new') {
+    $bank = new Bank();
+    $values = $bank->getPermission($id);
+  }
+  else {
+    $values = array(
+      'permission' => '',
+      'object' => '',
+      'objectid' => 0,
+      'scope' => '',
+      'scopeid' => 0,
+    );
+  }
+  $form['operation'] = array(
+      '#type' => 'value',
+      '#value' => $op,
+  );
+  
+  if ($op != 'new') {
+    $form['id'] = array(
+      '#type' => 'value',
+      '#value' => $id,
+    );
+  }
+  $form['permission'] = array (
+    '#title' => t('Permission type'),
+    '#type' => 'select',
+    '#options' => array(
+      10 => t('View'),
+      20 => t('Use'),
+      30 => t('Edit'),
+      40 => t('Admin')
+    ),
+    '#default_value' => $values['permission'],
+    '#required' => TRUE,
+  );
+  $form['object'] = array(
+    '#type' => 'select',
+    '#title' => t('Object type'),
+    '#description' => t('The type of the piece of data on which the permission is set.'),
+    //TODO: move this array to the bank core file.
+    '#options' => array(
+      'global' => t('Global'),
+      'global statistics' => t('Global statistics'),
+      'global exchangecreator' => t('Global exchange creation'),
+      'exchange' => t('Exchange'),
+      'exchange details' => t('Exchange configuration details'),
+      'exchange accountcreator' => t('Exchange account creation'),
+      'account' => t('Account'),
+      'account details' => t('Account details'),  
+      'account transactions' => t('Account transactions'),
+      'account seller' => t('Account sell'),
+    ),
+    '#default_value' => $values['object'],
+    '#required' => TRUE,
+  );
+  //TODO: use ajax to provide an usable interface instead of the following 
+  //element.
+  $form['objectid'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Object identifier'),
+    '#default_value' => $values['objectid'],
+    '#required' => TRUE,
+  );
+  $form['scope'] = array(
+    '#type' => 'select',
+    '#title' => t('Scope type'),
+    '#description' => t('The group of users who have this permission.'),
+    '#options' => array(
+      'user' => t('User'),
+      'account' => t('Account'),
+      'exchange' => t('Exchange'),
+      'global' => t('Global')
+    ),
+    '#default_value' => $values['scope'],
+    '#required' => TRUE,
+  );
+  //TODO: use ajax to provide an usable interface instead of the following 
+  //element.
+  $form['scopeid'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Scope identifier'),
+    '#default_value' => $values['scopeid'],
+    '#required' => TRUE,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => $op == 'new'?t('Create permission'):t('Update permission'),
+  );
+  return $form;
+}
+function _bank_permission_check_object_exists($object, $objectid) {
+  $space = strpos($object, ' ');
+  if ($space > 0) {
+    $object = substr($object, 0, $space);
+  }
+  switch ($object) {
+    case 'global':
+      return TRUE;
+      break;
+    case 'user':
+      return user_load($objectid) !== FALSE;
+      break;
+    case 'exchange':
+      $bank = new Bank();
+      return $bank->getExchange($objectid) !== FALSE;
+      break;
+    case 'account':
+      $bank = new Bank();
+      return $bank->getAccount($objectid) !== FALSE;
+      break;
+  }
+  return FALSE;
+}
+function bank_permission_form_validate($form, &$form_state) {
+  $bank = new Bank();
+  $values = $form_state['values'];
+  if (!$bank->access('admin', $values['object'], $values['objectid'])) {
+    form_set_error('object', t('You are not authorized to modify permissions on this object.'));
+  }
+  if (!_bank_permission_check_object_exists($values['object'], $values['objectid'])) {
+    form_set_error('object', t('Object with given id does not exist.'));
+  }
+  if (!_bank_permission_check_object_exists($values['scope'], $values['scopeid'])) {
+    form_set_error('scope', t('Scope with given id does not exist.'));
+  }
+}
+function bank_permission_form_submit($form, &$form_state) {
+  $bank = new Bank();
+  $op = $form_state['values']['operation'];
+  try{
+    if ( $op == 'new') {
+      $bank->createPermission($form_state['values']);
+      drupal_set_message(t('Permission successfully created.'));
+    }
+    elseif ( $op == 'edit') {
+      $bank->updatePermission($form_state['values']);
+      drupal_set_message(t('Permission successfully updated.'));
+    }
+  }
+  catch (Exception $e) {
+    drupal_set_message(t('An error ocurred while saving the record. Details: %msg', array('msg' => $e->getMessage())), 'error');
+  }
 }

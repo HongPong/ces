@@ -146,7 +146,7 @@ function bank_account_list_page() {
 
     $accform['transaction'] = array(
       '#type' => 'item',
-      '#markup' => l(t('Transaction'), 'ces/bank/transaction/' . $account['id']),
+      '#markup' => l(t('Transaction'), 'ces/bank/transaction/new/' . $account['id']),
     );
 
     $page[$account['name']] = $accform;
@@ -179,6 +179,59 @@ function bank_admin_page() {
       '#type' => 'item',
       '#title' => t('No requests for new exchanges.'),
     );
+  }
+  return $page;
+}
+/**
+ * 
+ */
+function bank_permissions_page() {
+  $bank = new Bank();
+  $page = array();
+  $page['table'] = array(
+    '#theme' => 'table',
+    '#header' => array(
+      array(
+        'data' => t('Permission type'),
+        'field' => 'permission',
+        'sort' => 'asc',
+      ),
+      array(
+        'data' => t('Object type'),
+        'field' => 'object',
+        'sort' => 'asc',
+      ),
+      array(
+        'data' => t('Object identifier'),
+        'field' => 'objectid',
+      ),
+      array(
+        'data' => t('Scope type'),
+        'field' => 'scope',
+        'sort' => 'asc'
+      ),
+      array(
+        'data' => t('Scope identifier'),
+        'field' => 'scopeid',
+      ),
+      array(
+        'data' => t('Actions'),
+      ),
+    ),
+    '#rows' => array(),
+  );
+  global $user;
+  $perms = $bank->getAdministrablePermissions($user->uid);
+  foreach ($perms as $perm) {
+    $row = array(
+      $perm['permission'],
+      $perm['object'],
+      $perm['objectid'],
+      $perm['scope'],
+      $perm['scopeid'],
+      l(t('Edit'), 'ces/bank/permission/edit/'.$perm['id']) . ' ' . l(t('Delete'),'ces/bank/permission/delete/'.$perm['id']),
+    );
+    $page['table']['#rows'][] = $row;
   }
   return $page;
 }

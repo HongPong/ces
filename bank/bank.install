@@ -9,6 +9,7 @@
 function bank_install() {
   //create default exchange
   $record = array(
+    'id'=>1,
     'code' => '0000',
     'active' => 0,
     'shortname' => '',
@@ -33,6 +34,7 @@ function bank_install() {
     drupal_set_message(st('Error installing default exchange.'), 'error');
   //create default limit chain
   $record = array(
+    'id' => 1,
     'name' => 'default',
     'exchange' => 1
   );
@@ -479,6 +481,48 @@ function bank_schema() {
         'columns' => array( 'user' => 'uid' )
       )
     )
+  );
+  $schema['ces_permission'] = array(
+    'description' => 'Permissions',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'permission' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'object' => array(
+        'type' => 'varchar',
+        'length' => '31',
+        'not null' => TRUE,
+        'default' => ''
+      ),
+      'objectid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'scope' => array(
+        'type' => 'varchar',
+        'length' => '31',
+        'not null' => TRUE,
+        'default' => ''  
+      ),
+      'scopeid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(),
   );
   return $schema;
 }

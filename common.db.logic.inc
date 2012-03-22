@@ -206,6 +206,9 @@ abstract class DBObject{
     $reflect = new ReflectionObject($this);
     foreach ($record as $key => $value) {
       if ($reflect->hasProperty($key) && $reflect->getProperty($key)->isPublic()) {
+        if($key == 'data' || $key == 'decoration'){
+          $value = unserialize($value);
+        }
         $this->{$key} = $value;
       }
     }
