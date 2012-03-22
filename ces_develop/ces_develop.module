@@ -1,0 +1,21 @@
+<?php
+/**
+ * Implements hook_menu().
+ */
+function ces_develop_menu() {
+  $menu['ces/develop/script/%'] = array(
+    'title' => 'Run script',
+    'description' => 'Run script',
+    'page callback' => 'ces_develop_run_script',
+    'page arguments' => array(3),
+    'access callback' => TRUE
+  );
+  return $menu;
+}
+function ces_develop_run_script($file){
+  $path = drupal_get_path('module', 'ces_develop');
+  ob_start();
+  include($path.'/'.$file.'.php');
+  $output = ob_get_clean();
+  return $output;
+}

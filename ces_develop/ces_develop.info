@@ -1,0 +1,9 @@
+name = ces_develop
+description = CES develop helper module. Do not install in a production site.
+core = 7.x
+package = ces
+
+dependencies[] = ces
+dependencies[] = bank
+dependencies[] = ces_notify
+
