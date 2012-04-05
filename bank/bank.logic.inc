@@ -22,11 +22,41 @@ class Bank{
     global $user;
     $t = Serializer::DBTransaction();
     try{
-      //create exchange record
+      //Create exchange record.
       unset($record['id']);
       $record['state'] = Exchange::STATE_INACTIVE;
       $record['admin'] = $user->uid;
       $this->updateObject('Exchange', $record);
+      //Create permission records. By the moment they are static, but they could
+      //potentially be configured and stored in $record.
+      
+      //Let exchange users see the exchange details
+      $perm = array(
+        'permission' => Permission::PERMISSION_VIEW,
+        'object' => 'exchange details',
+        'objectid' => $record['id'],
+        'scope' => Permission::SCOPE_EXCHANGE,
+        'scopeid' => $record['id'],
+      );
+      $this->createPermission($perm);
+      //Let everybody register accounts to this exchange
+      $perm = array(
+        'permission' => Permission::PERMISSION_USE,
+        'object' => 'exchange accountcreator',
+        'objectid' => $record['id'],
+        'scope' => Permission::SCOPE_GLOBAL,
+        'scopeid' => 0,
+      );
+      $this->createPermission($perm);
+      //Let exchange users see other exchange accounts
+      $perm = array(
+        'permission' => Permission::PERMISSION_VIEW,
+        'object' => 'exchange accounts',
+        'objectid' => $record['id'],
+        'scope' => Permission::SCOPE_EXCHANGE,
+        'scopeid' => $record['id'],
+      );
+      $this->createPermission($perm);
     }catch(Exception $e) {
       $t->rollback();
       throw $e;
@@ -89,6 +119,22 @@ class Bank{
       $record = $exchange->getRecord();
       $record['accounts'] = $as->count('exchange', $exchange->id);
       $records[$exchange->id] = $record;
+    }
+    return $records;
+  }
+  /**
+   * @return array with all accounts that meet certain conditions.
+   * @param $conditions array filter the records. A common example is:
+   * <code>
+   * $conditions = array( 'exchange' => $id, 'active' => 1 )
+   * </code>
+   */
+  public function getAllAccounts(array $conditions = array('state' => 1)) {
+    $as = new Serializer('LocalAccount');
+    $accounts = $as->loadCollection($conditions);
+    $records = array();
+    foreach ($accounts as $account) {
+      $records[$account->id] = $account->getRecord();
     }
     return $records;
   }
@@ -393,6 +439,7 @@ class Bank{
     }
     return $result;
   }
+  
   private function getObject($className, $id) {
     $s = new Serializer($className);
     return $s->load($id);
@@ -1632,7 +1679,7 @@ class UserPermission{
     }
     //Case same scope. Compare identifiers.
     if (substr($object1, 0, strlen($object2)) == $object2) {
-      return $objectid1 == $objectid2;
+      return $objectid1 == $objectid2 || (substr($object1,0, 6) == 'global');
     }
     elseif (strpos($object2, ' ') === FALSE) {
       //All belongs to global scope

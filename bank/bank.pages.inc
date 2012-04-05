@@ -3,7 +3,35 @@
  * @file
  * All page callback functions for bank module.
  */
-
+function bank_exchange_admin($exchangeid){
+  $bank = new Bank();
+  $exchange = $bank->getExchange($exchangeid);
+  $page = array();
+  $page['new_accounts'] = array(
+    'type' => 'fieldset',
+    'title' => t('New accounts'),
+    'description' => t('List of new account requests for this exchange. Activate or delete all them.')
+  );
+  
+  $accounts = $bank->getAllAccounts(array('state' => 0, 'exchange' => $exchange['id']));
+  if (!empty($accounts)) {
+    $list = array(
+      '#theme' => 'item_list',
+      '#items' => array(),
+    );
+    foreach ($accounts as $account) {
+      $list['#items'][] = l($account['name'] . ' (' .$account['kind'].')', 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/activate');
+    }
+    $page['new_accounts']['new_accounts_list'] = $list;
+  }
+  else {
+    $page['new_accounts']['text'] = array(
+      '#type' => 'item',
+      '#title' => t('No requests for new accounts.'),
+    );
+  }
+  return $page;
+}
 /**
  * Page with the list of all exchanges organized by country.
  */
@@ -81,12 +109,12 @@ function bank_exchange_list_page() {
       }
       $row = array(
         $exchange['code'],
-        l($exchange['name'], 'ces/bank/account/new/' . $exchange['id'], array('title' => t('Click to register to this exchange'))),
+        $exchange['name'],
         $exchange['region'],
         $exchange['town'],
         $exchange['accounts'],
         $exchange['currencysymbol'],
-        ''
+        l(t('Register'), 'ces/bank/exchange/' . $exchange['id'].'/account/new', array('title' => t('Click to open an account in this exchange'))),
       );
       $page[$country]['table']['#rows'][] = $row;
     }
@@ -98,6 +126,36 @@ function bank_exchange_list_page() {
     ksort($page);
   }
 
+  return $page;
+}
+
+function bank_exchange_accounts_page($exchangeid) {
+  $bank = new Bank();
+  $accounts = $bank->getAllAccounts(array('exchange' => $exchangeid));
+  $page = array();
+  $table = array(
+    '#theme' => 'table',
+    '#header' => array(
+      '#','Account', 'User', 'Balance', 'Actions'
+    ),
+    '#rows' => array(),
+  );
+  $counter = 1;
+  foreach ($accounts as $account) {
+    if ($account['state'] == 0) continue;//LocalAccount::STATE_HIDDEN)
+    $acchref = 'ces/bank/exchange/'.$exchangeid.'/account/'.$account['id'];
+    $actions = l(t('details'), $acchref.'/view');
+    $row = array(
+      $counter++,
+      $account['name'],
+      '-',
+      $account['balance'],
+      $actions,
+    );
+    $table['#rows'][] = $row;
+  }
+  $table['#rows'] = 
+  $page['table'] = $table;
   return $page;
 }
 
@@ -136,17 +194,17 @@ function bank_account_list_page() {
 
     $accform['statement'] = array(
       '#type' => 'item',
-      '#markup' => l(t('Statement'), 'ces/bank/account/statement/' . $account['id']),
+      '#markup' => l(t('Statement'), 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/transaction'),
     );
 
     $accform['edit'] = array(
       '#type' => 'item',
-      '#markup' => l(t('Edit'), 'ces/bank/account/edit/' . $account['id']),
+      '#markup' => l(t('Edit'), 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/edit'),
     );
 
     $accform['transaction'] = array(
       '#type' => 'item',
-      '#markup' => l(t('Transaction'), 'ces/bank/transaction/new/' . $account['id']),
+      '#markup' => l(t('Charge a sale'), 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/transaction/sell'),
     );
 
     $page[$account['name']] = $accform;
@@ -170,7 +228,7 @@ function bank_admin_page() {
       '#items' => array(),
     );
     foreach ($exchanges as $exchange) {
-      $list['#items'][] = l($exchange['code'] . ' - ' . $exchange['name'], 'ces/bank/exchange/activate/' . $exchange['id']);
+      $list['#items'][] = l($exchange['code'] . ' - ' . $exchange['name'], 'ces/bank/exchange/'.$exchange['id'].'/activate');
     }
     $page['new_exchanges']['new_exchanges_list'] = $list;
   }
@@ -229,7 +287,7 @@ function bank_permissions_page() {
       $perm['objectid'],
       $perm['scope'],
       $perm['scopeid'],
-      l(t('Edit'), 'ces/bank/permission/edit/'.$perm['id']) . ' ' . l(t('Delete'),'ces/bank/permission/delete/'.$perm['id']),
+      l(t('Edit'), 'ces/bank/permission/'.$perm['id'].'/edit') . ' ' . l(t('Delete'),'ces/bank/permission/'.$perm['id'].'/delete'),
     );
     $page['table']['#rows'][] = $row;
   }

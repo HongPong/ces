@@ -7,7 +7,24 @@
  * Implements hook_install().
  */
 function bank_install() {
-  //create default exchange
+  $ok1 = _bank_create_default_exchange();
+  $ok2 = _bank_create_menu();
+  $ok3 = _bank_create_default_permissions();
+  if($ok1 && $ok2 && $ok3){
+    drupal_set_message(st('Initial records created.'));
+  }
+}
+function _bank_create_menu() {
+  //create menu
+  $record = array(
+      'menu_name'=>'ces', 
+      'title'=>'CES Menu', 
+      'description'=>'Navigation menu for CES',
+  );
+  $ok3 = drupal_write_record('menu_custom', $record);
+  return $ok3!==FALSE;
+}
+function _bank_create_default_exchange() {
   $record = array(
     'id'=>1,
     'code' => '0000',
@@ -41,8 +58,18 @@ function bank_install() {
   $ok2 = drupal_write_record('ces_limitchain', $record);
   if ($ok2 === FALSE)
     drupal_set_message(st('Error installing default limit chain.'), 'error');
-  if ($ok1!== FALSE && $ok2!=FALSE)
-    drupal_set_message(st('Initial records created.'));
+  return $ok1!==FALSE && $ok2!==FALSE;
+}
+function _bank_create_default_permissions(){
+  $record = array(
+    'permission' => 10,
+    'object' => 'global statistics',
+    'objectid' => 0,
+    'scope' => 'global',
+    'scopeid' => 0,
+  );
+  $ok = drupal_write_record('ces_permission', $record);
+  return ($ok !== FALSE);
 }
 /**
  * Implements hook_enable().
@@ -51,7 +78,9 @@ function bank_enable() {}
 /**
  * Implements hook_uninstall().
  */
-function bank_uninstall() {}
+function bank_uninstall() {
+  db_delete('menu_custom')->condition('menu_name', 'ces')->execute();
+}
 /**
  * Implements hook_schema().
  */

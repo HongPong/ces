@@ -481,10 +481,11 @@ function bank_account_form($form, &$form_state, $op, $id) {
     $exchange = $bank->getExchange($id);
     $account = $bank->getDefaultAccount($id);
   }
-  elseif ($op == 'edit' || $op == 'view') {
+  elseif ($op == 'edit' || $op == 'view' || $op == 'activate') {
     $account = $bank->getAccount($id);
     $exchange = $bank->getExchange($account['exchange']);
   }
+  $admin = bank_access('admin', 'exchange', $exchange['id']);
   $form['account']['id'] = array(
     '#type' => 'value',
     '#value' => $account['id']
@@ -497,10 +498,6 @@ function bank_account_form($form, &$form_state, $op, $id) {
     '#type' => 'value',
     '#value' => $account['exchange'],
   );
-  $form['account']['balance'] = array(
-    '#type' => 'value',
-    '#value' => $account['balance'],
-  );
   $form['account']['exchangename'] = array(
     '#type' => 'item',
     '#title' => t('Exchange'),
@@ -512,6 +509,7 @@ function bank_account_form($form, &$form_state, $op, $id) {
     '#title' => t('name'),
     '#default_value' => $account['name'],
     '#required' => TRUE,
+    '#disabled' => !$admin,
   );
   //TODO: multiple users
   $accuser = reset($account['users']);
@@ -520,8 +518,10 @@ function bank_account_form($form, &$form_state, $op, $id) {
     '#type' => 'textfield',
     '#title' => t('Username'),
     '#description' => t('Account administrator'),
-    '#autocomplete' => 'user/autocomplete',
-    '#default_value' => $accdrupaluser->name
+    '#autocomplete_path' => 'user/autocomplete',
+    '#default_value' => $accdrupaluser->name,
+    '#required' => TRUE,
+    '#disabled' => !$admin
   );
   $form['account']['kind'] = array(
     '#type' => 'select',
@@ -533,7 +533,7 @@ function bank_account_form($form, &$form_state, $op, $id) {
       2 => t('Organization'),
       3 => t('Company'),
       4 => t('Public')),
-    '#required' => tRUE,
+    '#required' => TRUE,
     '#default_value' => $account['kind'],
   );
 
@@ -547,7 +547,10 @@ function bank_account_form($form, &$form_state, $op, $id) {
       2 => t('Closed'),
       3 => t('Locked'),
     ),
-    '#default_value' => $account['state'],
+    '#default_value' => ($op == 'activate') ? 1 : $account['state'],
+    '#disabled' => $op != 'edit',
+    '#access' => $admin,
+    '#required' => TRUE,
   );
 
   $limitchains = $bank->getAllLimitChains($exchange['id']);
@@ -562,13 +565,26 @@ function bank_account_form($form, &$form_state, $op, $id) {
     '#description' => t('The limit chain to apply to this account'),
     '#options' => $options,
     '#default_value' => $account['limitchain'],
+    '#access' => $admin,
+    '#required' => TRUE,
   );
-
-  $form['account']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => $op=='new'?t('Create account'):t('Update account'),
-  );
-
+  
+  if ($op == 'new') {
+    $submit = t('Create account');
+  }
+  elseif ($op == 'edit') {
+    $submit = t('Update account');
+  }
+  elseif ($op == 'activate') {
+    $submit = t('Activate account');
+  }
+  
+  if(isset($submit)) {
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $submit,
+    );
+  }
   return $form;
 }
 
@@ -615,6 +631,10 @@ function bank_account_form_submit($form, &$form_state) {
     elseif ($op == 'delete') {
       $bank->deleteAccount($record['id']);
     }
+    elseif ($op == 'activate') {
+      $bank->activateAccount($record);
+      drupal_set_message(t('Account sucessfully activated.'));
+    }
   }
   catch (Exception $e) {
     drupal_set_message(t('An error occurred while saving the account record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
@@ -627,51 +647,45 @@ function bank_account_form_submit($form, &$form_state) {
  * @todo Set the currency according the toaccount exchage currency.
  * @todo Make an easy system to find account names by exchange/username.
  */
-function bank_transaction_form($form, &$form_state, $to_account_id = NULL, $from_account_id = NULL) {
+function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_account_id = NULL, $from_account_id = NULL) {
   if (!empty($form_state['page_num']) && $form_state['page_num'] == 2) {
     return bank_transaction_confirm_form($form, $form_state);
   }
-
-  global $user;
-
+  global  $user;
   $bank = new Bank();
-  if ($to_account_id == NULL) {
-    $accounts = $bank->getUserAccounts($user->uid);
-    $toaccount = reset($accounts);
+  $exchange = $bank->getExchange($exchangeid);
+  $accounts = $bank->getAllAccounts(array('exchange' => $exchangeid, 'state' => 1));
+  $options = array();
+  foreach ($accounts as $account) {
+    $options[$account['name']] = $account['name'];
   }
-  else{
-    $toaccount = $bank->getAccount($to_account_id);
-  }
-
-  $exchange = $bank->getExchange($toaccount['exchange']);
-
+  $form['toaccountname'] = array(
+    '#title' => t('Seller account'),
+    '#description' => t('The recipient of the transaction. The Exchange four letters code plus four numbers.'),
+    '#type' => 'select',
+    '#options' => $options,
+  );
   if ($to_account_id != NULL) {
-    $form['toaccountname'] = array(
-      '#type' => 'value',
-      '#value' => $toaccount['name'],
-    );
+    if(!isset($accounts[$to_account_id])) {
+      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id'=>$to_account_id, '%ex'=>$exchange['code'])), 'error');
+      return FALSE;
+    }
+    $form['toaccountname']['#default_value'] = $accounts[$to_account_id]['name'];
+    $form['toaccountname']['#disabled'] = TRUE;
   }
-  else{
-    $form['toaccountname'] = array(
-      '#title' => t('Seller account'),
-      '#description' => t('The recipient of the transaction. The Exchange four letters code plus four numbers.'),
-      '#type' => 'textfield',
-      '#defalut_value' => $toaccount['name'],
-    );
-  }
-
   $form['fromaccountname'] = array(
-      '#title' => t('Buyer account'),
-      '#description' => t('The payer of the transaction. The Exchange four letters code plus four numbers.'),
+    '#title' => t('Buyer account'),
+    '#description' => t('The payer of the transaction. The Exchange four letters code plus four numbers.'),
+    '#type' => 'select',
+    '#options' => $options,
   );
   if ($from_account_id != NULL) {
-    $fromaccount = $bank->getAccount($from_account_id);
-    $form['fromaccountname']['#type'] = 'item';
-    $form['fromaccountname']['#markup'] = $fromaccount['name'];
-  }
-  else{
-    $form['fromaccountname']['#type'] = 'textfield';
-    $form['fromaccountname']['#default_value'] = !empty($form_state['values']['fromaccountname'])?$form_state['values']['fromaccountname']:'';
+    if(!isset($accounts[$to_account_id])) {
+      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id'=>$from_account_id, '%ex'=>$exchange['code'])), 'error');
+      return FALSE;
+    }
+    $form['fromaccountname']['#default_value'] = $accounts[$from_account_id]['name'];
+    $form['fromaccountname']['#disabled'] = TRUE;
   }
   $form['concept']= array(
     '#type'  => 'textfield',
