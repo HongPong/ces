@@ -486,10 +486,12 @@ function bank_account_form($form, &$form_state, $op, $id) {
     $exchange = $bank->getExchange($account['exchange']);
   }
   $admin = bank_access('admin', 'exchange', $exchange['id']);
-  $form['account']['id'] = array(
-    '#type' => 'value',
-    '#value' => $account['id']
-  );
+  if (isset($account['id'])) {
+    $form['account']['id'] = array(
+      '#type' => 'value',
+      '#value' => $account['id']
+    );
+  }
   $form['account']['operation'] = array(
     '#type' => 'value',
     '#value' => $op
@@ -523,6 +525,12 @@ function bank_account_form($form, &$form_state, $op, $id) {
     '#required' => TRUE,
     '#disabled' => !$admin
   );
+  if (isset($accuser['id'])) { //if op != new
+    $form['account']['accountuser'] = array(
+      '#type' => 'value',
+      '#value' => $accuser['id'],
+    );
+  }
   $form['account']['kind'] = array(
     '#type' => 'select',
     '#title' => t('Type'),
@@ -616,9 +624,14 @@ function bank_account_form_submit($form, &$form_state) {
     array(
       'user' => $accuser->uid,
       'role' => 0,
-      'account' => $record['id'],
     ),
   );
+  if (isset($record['accountuser'])) {
+    $record['users'][0]['id'] = $record['accountuser'];
+  }
+  if (isset($record['id'])) {
+    $record['users'][0]['account'] = $record['id'];
+  }
   try {
     if ($op == 'new') {
       $bank->createAccount($record);

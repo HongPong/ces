@@ -144,15 +144,21 @@ class Notifier{
   /**
    * Senda an e-mail to a user.
    * @param $key string the message key
-   * @param $recipientId int the recipient user id
+   * @param $recipients int the recipient user id. May be an array for multiple
+   * notifications.
    * @param $senderId int the sender user id
    * @param $params array Associative array with the placeholder values for this
    * message
    */
-  public function notify($module, $key, $recipientId, $senderId, array $params) {
-    $recipient = user_load($recipientId);
-    $sender = user_load($senderId);
-    drupal_mail('ces_notify', $module . ' ' . $key, $recipient->mail, NULL, $params, $sender->mail, TRUE);
+  public function notify($module, $key, $recipients, $senderId, array $params) {
+    if (!is_array($recipients)) {
+      $recipients = array($recipients);
+    }
+    foreach($recipients as $recipientId) {
+      $recipient = user_load($recipientId);
+      $sender = user_load($senderId);
+      drupal_mail('ces_notify', $module . ' ' . $key, $recipient->mail, NULL, $params, $sender->mail, TRUE);
+    }
   }
 }
 

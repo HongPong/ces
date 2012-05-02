@@ -721,6 +721,11 @@ User: [exchange:admin:name] <[exchange:admin:mail]>
 
 ', $a, $b)
       );
+    case 'exchange activated':
+      return array(
+          'subject' => t('Exchange [exchange:code] activated', $a, $b),
+          'body' => t('Your new exchange request has been activated. bla bla bla', $a, $b),
+      );
     case 'new account':
       return array(
         'subject' => t('New account request for [exchange:code] - [exchange:shortname]', $a, $b),
@@ -732,6 +737,12 @@ Exchange: [exchange:code]
 Account name: [account:name]
 Account type: [account:kind]
 User: [account:user:name]', $a, $b)
+      );
+    case 'account activated':
+      return array(
+        'subject' => t('Account activated'),
+        'body' => t('Your account [account:name] has been activated. You can now start using it and bla bla bla', 
+                $a , $b)
       );
     case 'account debited':
       return array(

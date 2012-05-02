@@ -20,7 +20,7 @@ function bank_exchange_admin($exchangeid){
       '#items' => array(),
     );
     foreach ($accounts as $account) {
-      $list['#items'][] = l($account['name'] . ' (' .$account['kind'].')', 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/activate');
+      $list['#items'][] = l($account['name'], 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/activate');
     }
     $page['new_accounts']['new_accounts_list'] = $list;
   }

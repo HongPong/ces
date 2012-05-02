@@ -60,16 +60,29 @@ function _bank_create_default_exchange() {
     drupal_set_message(st('Error installing default limit chain.'), 'error');
   return $ok1!==FALSE && $ok2!==FALSE;
 }
+/**
+ * Create permissions that, by default, all people will have. These include:
+ *  - See global statistics
+ *  - Create a new exchange
+ */
 function _bank_create_default_permissions(){
   $record = array(
-    'permission' => 10,
+    'permission' => Permission::PERMISSION_VIEW,
     'object' => 'global statistics',
     'objectid' => 0,
     'scope' => 'global',
     'scopeid' => 0,
   );
-  $ok = drupal_write_record('ces_permission', $record);
-  return ($ok !== FALSE);
+  $ok = (drupal_write_record('ces_permission', $record) !== FALSE);
+  $record = array(
+    'permission' => Permission::PERMISSION_USE,
+    'object' => 'global exchangecreator',
+    'objectid' => 0,
+    'scope' => 'global',
+    'scopeid' => 0,
+  );
+  $ok = (drupal_write_record('ces_permission', $record) !== FALSE ) && $ok;
+  return $ok;
 }
 /**
  * Implements hook_enable().
@@ -318,16 +331,16 @@ function bank_schema() {
     'description' => 'Exchange account',
     'fields' => array(
       'id' => array(
-      'type' => 'serial',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
       'exchange' => array(
-      'description' => 'To which exchange belongs this account',
-      'type' => 'int',
-      'unsigned' => TRUE,
-      'notnull' => TRUE,
-      'default' => 0
+        'description' => 'To which exchange belongs this account',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'notnull' => TRUE,
+        'default' => 0
       ),
       'name' => array(
         'description' => 'Public Account ID. It is 4-letter exchange code + account number + control character',
@@ -394,6 +407,11 @@ function bank_schema() {
   $schema['ces_accountuser'] = array(
     'description' => 'Relation n by n between users and accounts.',
     'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       'user' => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -414,7 +432,10 @@ function bank_schema() {
         'default' => 0
       )
     ),
-    'primary key' => array('user', 'account'),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'accountuser' => array('user', 'account'),
+    ),
     'foreign keys' => array(
       'user' => array(
         'table' => 'user',

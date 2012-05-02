@@ -197,16 +197,21 @@ class LockSerializer extends Serializer{
 
 abstract class DBObject{
   public static $table;
-
+  
   public function getRecord() {
     $record = get_object_vars($this);
+    foreach ($record as $key => $value) {
+      if($value === NULL) {
+        unset($record[$key]);
+      }
+    }
     return $record;
   }
   protected function loadRecord($record) {
     $reflect = new ReflectionObject($this);
     foreach ($record as $key => $value) {
       if ($reflect->hasProperty($key) && $reflect->getProperty($key)->isPublic()) {
-        if($key == 'data' || $key == 'decoration'){
+        if(($key == 'data' || $key == 'decoration') && is_string($value)) {
           $value = unserialize($value);
         }
         $this->{$key} = $value;

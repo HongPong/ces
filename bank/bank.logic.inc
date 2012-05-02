@@ -27,36 +27,8 @@ class Bank{
       $record['state'] = Exchange::STATE_INACTIVE;
       $record['admin'] = $user->uid;
       $this->updateObject('Exchange', $record);
-      //Create permission records. By the moment they are static, but they could
-      //potentially be configured and stored in $record.
-      
-      //Let exchange users see the exchange details
-      $perm = array(
-        'permission' => Permission::PERMISSION_VIEW,
-        'object' => 'exchange details',
-        'objectid' => $record['id'],
-        'scope' => Permission::SCOPE_EXCHANGE,
-        'scopeid' => $record['id'],
-      );
-      $this->createPermission($perm);
-      //Let everybody register accounts to this exchange
-      $perm = array(
-        'permission' => Permission::PERMISSION_USE,
-        'object' => 'exchange accountcreator',
-        'objectid' => $record['id'],
-        'scope' => Permission::SCOPE_GLOBAL,
-        'scopeid' => 0,
-      );
-      $this->createPermission($perm);
-      //Let exchange users see other exchange accounts
-      $perm = array(
-        'permission' => Permission::PERMISSION_VIEW,
-        'object' => 'exchange accounts',
-        'objectid' => $record['id'],
-        'scope' => Permission::SCOPE_EXCHANGE,
-        'scopeid' => $record['id'],
-      );
-      $this->createPermission($perm);
+      $notifier = new Notifier();
+      $notifier->notify('bank', 'new exchange', 1, 1, array('exchange' => $record));
     }catch(Exception $e) {
       $t->rollback();
       throw $e;
@@ -82,15 +54,95 @@ class Bank{
     global $user;
     try{
       $s = new Serializer('Exchange');
+      //activate exchange
       $exchange = $s->loadFromRecord($record);
       $exchange->activate();
       $s->save($exchange);
+
+      //Create permission records. By the moment they are static, but they could
+      //potentially be configured and stored in $record.
+ 
+      //Let exchange users see the exchange details.
+      $perm = array(
+        'permission' => Permission::PERMISSION_VIEW,
+        'object' => 'exchange details',
+        'objectid' => $exchange->id,
+        'scope' => Permission::SCOPE_EXCHANGE,
+        'scopeid' => $exchange->id,
+      );
+      $this->createPermission($perm);
+      //Let everybody register accounts to this exchange.
+      $perm = array(
+        'permission' => Permission::PERMISSION_USE,
+        'object' => 'exchange accountcreator',
+        'objectid' => $exchange->id,
+        'scope' => Permission::SCOPE_GLOBAL,
+        'scopeid' => 0,
+      );
+      $this->createPermission($perm);
+      //Let exchange users see other exchange accounts.
+      $perm = array(
+        'permission' => Permission::PERMISSION_VIEW,
+        'object' => 'exchange accounts',
+        'objectid' => $exchange->id,
+        'scope' => Permission::SCOPE_EXCHANGE,
+        'scopeid' => $exchange->id,
+      );
+      $this->createPermission($perm);
+      //Let exchange creator administer the exchabge.
+      $perm = array(
+        'permission' => Permission::PERMISSION_ADMIN,
+        'object' => 'exchange',
+        'objectid' => $exchange->id,
+        'scope' => Permission::SCOPE_USER,
+        'scopeid' => $exchange->admin,
+      );
+      $this->createPermission($perm);
+      
       $notifier = new Notifier();
-      $notifier->notify('bank', 'new exchange', $exchange->admin, $user->uid, array('exchange' => $exchange->getRecord()));
+      $notifier->notify('bank', 'exchange activated', $exchange->admin, $user->uid, array('exchange' => $exchange->getRecord()));
+
     }catch(Exception $e) {
       $t->rollback();
       throw $e;
     }
+  }
+  /**
+   * Updates and activates an account.
+   */
+  public function activateAccount(array &$record){
+    $t = Serializer::DBTransaction();
+    global $user;
+    try{
+      $s = new Serializer('LocalAccount');
+      $account = $s->loadFromRecord($record);
+      $account->activate();
+      $s->save($account);
+      //Create permission entry for account owner(s).
+      $accountusers = $account->getUsers();
+      foreach ($accountusers as $accountuser){
+        $perm = array(
+          'permission' => Permission::PERMISSION_EDIT,
+          'object' => 'account',
+          'objectid' => $account->id,
+          'scope' => Permission::SCOPE_USER,
+          'scopeid' => $accountuser->user,
+        );
+        $this->createPermission($perm);
+      }
+      $notifier = new Notifier();
+      //build recipients array;
+      $recipients = array();
+      $accusers = $account->getUsers();
+      foreach($accusers as $accuser) {
+        $recipients[] = $accuser->user;
+      }
+      $notifier->notify('bank', 'account activated', $recipients, $user->uid, array('account' => $account->getRecord()));
+    }catch(Exception $e){
+      $t->rollback();
+      throw $e;
+    }
+    
   }
   /**
    * Gets the exchange from its id
@@ -217,24 +269,20 @@ class Bank{
       //Create account record.
       unset($record['id']);
       $record['balance'] = 0;
+      
       $account = new LocalAccount($record);
       $s = new Serializer('LocalAccount');
       $s->save($account);
       //saveExtraData() after create account record because we need the new
       //account id in order to create the AccountUser record(s).
       $account->saveExtraData();
-      //Create permission entry for account owner(s).
-      $accountusers = $account->getUsers();
-      foreach ($accountusers as $accountuser){
-        $perm = array(
-          'permission' => Permission::PERMISSION_ADMIN,
-          'object' => 'account',
-          'objectid' => $account->id,
-          'scope' => Permission::SCOPE_USER,
-          'scopeid' => $accountuser->user,
-        );
-        $this->createPermission($perm);
-      }
+      
+      $es = new Serializer('Exchange');
+      $exchange = $es->load($account->exchange);
+      
+      $notifier = new Notifier();
+      $notifier->notify('bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
+      
     }catch(Exception $e) {
       $t->rollback();
       throw $e;
@@ -294,6 +342,13 @@ class Bank{
     $t = Serializer::DBTransaction();
     try{
       unset($record['id']);
+      if(isset($record['limits'])) {
+        foreach ($record['limits'] as $limitRecord) {
+          if(!isset($limitRecord['data'])) {
+            $limitRecord['data'] = serialize(array());
+          }
+        }
+      }
       return $this->updateObject('LimitChain', $record);
     }catch(Exception $e) {
       $t->rollback();
@@ -489,6 +544,9 @@ class Bank{
     //set up acocunt id's
     $record['toaccount'] = $toaccount['id'];
     $record['fromaccount'] = $fromaccount['id'];
+    if (!isset($record['data'])) {
+      $record['data'] = serialize(array());
+    }
     $transaction = new BasicTransaction($record);
     if ($toaccount['exchange'] != $fromaccount['exchange']) {
       //basic transaction
@@ -686,6 +744,7 @@ class Exchange extends DBObject{
    */
   public function activate() {
     $es = new Serializer('Exchange');
+    //Setup default limit chain
     if (empty($this->limitchain)) {
       //create default limit chain copying from the default exchange
       $defExchange = Exchange::getDefaultExchange();
@@ -880,6 +939,9 @@ class LocalAccount extends DBObject implements Account {
       return array(t('User %user cannot accept transactions because is not active.'), array('%user' => $this->name));
     }
   }
+  public function activate() {
+    $this->state = LocalAccount::STATE_ACTIVE;
+  }
   public function getName() {
     return $this->name;
   }
@@ -892,6 +954,8 @@ class LocalAccount extends DBObject implements Account {
 }
 class AccountUser extends DBObject{
   public static $table = 'ces_accountuser';
+  public static $primary_key = array('user', 'account');
+  public $id;
   public $user;
   public $account;
   public $role;
@@ -1268,13 +1332,33 @@ class BasicTransaction extends DBObject implements Transaction{
    * @var float
    */
   public $amount;
+  /**
+   * @var int
+   */
   public $user;
+  /**
+   * @var string
+   */
   public $concept;
+  /**
+   * @var int
+   */
   public $state;
+  /**
+   * @var int
+   */
   public $created;
+  /**
+   * @var int
+   */
   public $modified;
+  /**
+   * @var array
+   */
   public $data;
+  
   public static $table = 'ces_transaction';
+  
   public function getAmount() {
     return $this->amount;
   }
