@@ -19,13 +19,11 @@ class Bank{
    * Create exchange. This exchange is not functional yet. It must be activated.
    */
   public function createExchange(array &$record) {
-    global $user;
     $t = Serializer::DBTransaction();
     try{
       //Create exchange record.
       unset($record['id']);
       $record['state'] = Exchange::STATE_INACTIVE;
-      $record['admin'] = $user->uid;
       $this->updateObject('Exchange', $record);
       $notifier = new Notifier();
       $notifier->notify('bank', 'new exchange', 1, 1, array('exchange' => $record));
@@ -237,9 +235,27 @@ class Bank{
    *
    * @return array
    * transaction records meeting all conditions specified by $conditions parameter.
+   * The amount is expressed in a currency depending on the given conditions: if
+   * 'account' is set, then it is used the account's currency. If 'fromaccount' 
+   * is set but 'toaccount' is ommited, then the fromaccount's currency is used.
+   * Otherwise the currency is the seller's account one for each exchenge.
    */
   public function getTransactions(array $conditions) {
     $s = new Serializer('BasicTransaction');
+    //Choose currency.
+    $currencyaccount = NULL;
+    $currency = NULL;
+    if(isset($conditions['account'])) 
+      $currencyaccount = $conditions['account'];
+    if(isset($conditions['fromaccount']) && !isset($conditions['toaccount']))
+      $currencyaccount = $conditions['fromaccount'];
+    if($currencyaccount!=NULL) {
+      $as = new Serializer('LocalAccount');
+      $account = $as->load($currencyaccount);
+      $currency = $account->getExchange()->getCurrency();
+    }
+    
+    //Load collection.
     if (isset($conditions['account'])) {
       //Shall we improve Serializer so it can directly handle 'or' conditions?
       $account = $conditions['account'];
@@ -256,8 +272,12 @@ class Bank{
     }
     $records = array();
     foreach ($transactions as $t) {
-      $records[]=$t->getRecord();
+      $record = $t->getRecord();
+      if($currency != NULL)
+      $record['amount'] = $t->getAmount($currency);
+      $records[] = $record;
     }
+    
     return $records;
   }
   /**
@@ -276,9 +296,10 @@ class Bank{
       //saveExtraData() after create account record because we need the new
       //account id in order to create the AccountUser record(s).
       $account->saveExtraData();
+      $record = $account->getRecord();
       
-      $es = new Serializer('Exchange');
-      $exchange = $es->load($account->exchange);
+      
+      $exchange = $account->getExchange();
       
       $notifier = new Notifier();
       $notifier->notify('bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
@@ -316,6 +337,26 @@ class Bank{
     if ($account === FALSE) return FALSE;
     return $account->getRecord();
   }
+  public function getAccountHistoricBalance($id, $time) {
+    $s = new Serializer('LocalAccount');
+    $account = $s->load($id);
+    $balance = $account->balance;
+    $st = new Serializer('BasicTransaction');
+    $positive = $st->selectFunctionField('SUM', 'amount', 
+            array(
+              array('toaccount', $account->id), 
+              array('created', $time, '>='),
+              array('state', array(3)),
+            ));
+    $negative = $st->selectFunctionField('SUM', 'amount', 
+            array(
+              array('fromaccount', $account->id), 
+              array('created', $time, '>='),
+              array('state', array(3)),
+            ));
+    $timebalance =  $balance - $positive + $negative;
+    return $timebalance;
+  }
   /**
    * @return array of this user accounts.
    */
@@ -345,7 +386,7 @@ class Bank{
       if(isset($record['limits'])) {
         foreach ($record['limits'] as $limitRecord) {
           if(!isset($limitRecord['data'])) {
-            $limitRecord['data'] = serialize(array());
+            $limitRecord['data'] = array();
           }
         }
       }
@@ -386,7 +427,10 @@ class Bank{
    * @return array the default exchange. To be used as a model for new exchanges.
    */
   public function getDefaultExchange() {
+    //TODO: hardcode it!
     $exchange = Exchange::getDefaultExchange();
+    $exchange->admin = NULL;
+    $exchange->id = NULL;
     return $exchange->getRecord();
   }
   /**
@@ -423,17 +467,24 @@ class Bank{
   public function applyTransaction($transactionId) {
     $t = Serializer::DBTransaction();
     try{
+      //Get transaction. May be any type of transaction.
       $transaction = $this->getObject('BasicTransaction', $transactionId);
       //Trigger transaction application.
-      $transaction->setState(Transaction::STATE_TRIGGERED);
+      $transaction->trigger();
       $transaction->check();
+      $ret = FALSE;
       if ($transaction->getState() == Transaction::STATE_ACCEPTED) {
         $transaction->apply();
         if ($transaction->getState() == Transaction::STATE_COMMITED) {
-          return TRUE;
+          $ret = TRUE;
         }
       }
-      return $transaction->getLog($transaction->getState());
+      if(!$ret) {
+        $ret = $transaction->getLog($transaction->getState());
+      }
+      $s = new Serializer('BasicTransaction');
+      $s->save($transaction);
+      return $ret;
     }catch(Exception $e) {
       $t->rollback();
       throw $e;
@@ -510,7 +561,9 @@ class Bank{
     $object = $s->loadFromRecord($record);
     $s->save($object);
     $record['id'] = $object->id;
+    return TRUE;
   }
+  
   /**
    * Creates a new transacion object based on the record array.
    * @return Transaction
@@ -545,11 +598,12 @@ class Bank{
     $record['toaccount'] = $toaccount['id'];
     $record['fromaccount'] = $fromaccount['id'];
     if (!isset($record['data'])) {
-      $record['data'] = serialize(array());
+      $record['data'] = array();
     }
+    //Basic transaction.
     $transaction = new BasicTransaction($record);
     if ($toaccount['exchange'] != $fromaccount['exchange']) {
-      //basic transaction
+      //Interexchange transaction.
       $transaction = new InterExchangeTransaction($transaction, array());
     }
     return $transaction;
@@ -678,35 +732,27 @@ class Exchange extends DBObject{
       throw new Exception(t('Default exchange ( id = %id ) not found', array('%id' => self::DEFAULT_EXCHANGE_ID)));
     return $default;
   }
-  /**
-   * @return LocalAccount to be used as a prototype for new virtual accounts.
-   * @todo customize limit chain
-   * @todo customize state
-   */
-  public function getDefaultVirtualAccount() {
-    $virtAccount = $this->getDefaultAccount();
-    $virtAccount->type = LocalAccount::TYPE_VIRTUAL;
-    $users = &$virtAccount->getUsers();
-    $users[0]->user = 1;
-  }
+  
   /**
    * @return LocalAccount to be used as a prototype for new accounts.
    */
   public function getDefaultAccount() {
     global $user;
-    $record = array();
-    $record['id']=NULL;
-    $record['exchange'] = $this->id;
-    $record['name'] = $this->getFreeAccountName();
-    $record['balance'] = 0.0;
-    $record['state'] = LocalAccount::STATE_HIDDEN;
-    $record['kind'] = LocalAccount::TYPE_INDIVIDUAL;
-    $record['limitchain'] = $this->limitchain;
-    $record['users'] = array(
-      array(
-        'account' => NULL,
-        'user' => $user->uid,
-        'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR),
+    $record = array(
+      'id' => NULL,
+      'exchange' => $this->id,
+      'name' => $this->getFreeAccountName(),
+      'balance' => 0.0,
+      'state' => LocalAccount::STATE_HIDDEN,
+      'kind' => LocalAccount::TYPE_INDIVIDUAL,
+      'limitchain' => $this->limitchain,
+      'users' => array(
+         array(
+           'account' => NULL,
+           'user' => $user->uid,
+           'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR
+         ),
+      )
     );
     $account = new LocalAccount($record);
     return $account;
@@ -777,14 +823,36 @@ class Exchange extends DBObject{
    */
   public function getVirtualAccount(Exchange $exchange) {
     $s = new Serializer('LocalAccount');
-    $name = $this->code . $exchnage->code;
+    $name = $this->code . $exchange->code;
     $virtAccount = $s->loadFromUniqueKey('name', $name);
     if ($virtAccount === FALSE) {
-      $virtAccount = $this->getDefaultVirtualAccount();
-      $virtAccount->name = $name;
-      $s->save($virtAccount);
+      $record = array(
+        'id' => NULL,
+        'exchange' => $this->id,
+        'name' => $name,
+        'balance' => 0.0,
+        'state' => LocalAccount::STATE_HIDDEN,
+        'kind' => LocalAccount::TYPE_VIRTUAL,
+        'limitchain' => $this->limitchain,
+        'users' => array(
+           array(
+             'account' => NULL,
+             'user' => 1,
+             'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR
+           ),
+        )
+      );
+      $bank = new Bank();
+      $bank->createAccount($record);
+      $virtAccount = new LocalAccount($record);
     }
     return $virtAccount;
+  }
+  /**
+   * @return Currency
+   */
+  public function getCurrency() {
+    return $this->currency;
   }
 }
 /**
@@ -811,6 +879,18 @@ class Currency extends DBObject{
    @var int
    */
   public $currencyscale;
+  
+  /**
+   * @return float the amount in this currency of the value represented by the 
+   * two given parameters.
+   * @param $amount float the amount to be converted.
+   * @param $currency Currency the original currency.
+   */
+  public function convert($amount, Currency $currency) {
+    $rate = ( $currency->currencyvalue / $this->currencyvalue );
+    $newamount = $amount * $rate;
+    return $newamount;
+  }
 }
 interface Account {
   public function getName();
@@ -936,7 +1016,7 @@ class LocalAccount extends DBObject implements Account {
       return $this->getLimitChain()->checkTransaction($this, $transaction);
     }
     else {
-      return array(t('User %user cannot accept transactions because is not active.'), array('%user' => $this->name));
+      return array(t('User %user cannot accept transactions because is not active.', array('%user' => $this->name)));
     }
   }
   public function activate() {
@@ -950,6 +1030,13 @@ class LocalAccount extends DBObject implements Account {
   }
   public function &getUsers() {
     return $this->users;
+  }
+  /**
+   * @return Exchange the exchange object to which this account belongs.
+   */
+  public function getExchange() {
+    $es = new Serializer('Exchange');
+    return $es->load($this->exchange);
   }
 }
 class AccountUser extends DBObject{
@@ -1196,7 +1283,7 @@ interface Transaction {
   /**
    * @return the currency amount of this transaction.
    */
-  public function getAmount();
+  public function getAmount(Currency $currency = NULL);
   /**
    * @return int
    * The id of the user who has created this transaction.
@@ -1359,8 +1446,21 @@ class BasicTransaction extends DBObject implements Transaction{
   
   public static $table = 'ces_transaction';
   
-  public function getAmount() {
-    return $this->amount;
+  /**
+   * @return the amount of this transaction in the given currency.
+   * @param $currency The currency to be used. If ommited it returns the value
+   * in the seller's exchange currency.
+   */
+  public function getAmount(Currency $currency = NULL) {
+    if ($currency != NULL) {
+      //get current (seller's) currency.
+      $as = new Serializer('LocalAccount');
+      $toaccount = $as->load($this->toaccount);
+      return $currency->convert($this->amount, $toaccount->getExchange()->getCurrency());
+    } 
+    else {
+      return $this->amount;
+    }
   }
   public function getUser() {
     return $this->user;
@@ -1382,6 +1482,7 @@ class BasicTransaction extends DBObject implements Transaction{
     return $this->state;
   }
   public function log(array $messages) {
+    if (empty($messages)) return;
     if (!isset($this->data))
       $this->data = array();
     if (!isset($this->data['log']))
@@ -1391,7 +1492,12 @@ class BasicTransaction extends DBObject implements Transaction{
     $this->data['log'][$this->state] = array_merge($this->data['log'][$this->state], $messages);
   }
   public function getLog($state = NULL) {
-    return $this->data['log'][$state];
+    if(isset($this->data) && isset($this->data['log']) && isset($this->data['log'][$state])){
+      return $this->data['log'][$state];
+    }
+    else{
+      return array();
+    }
   }
   /**
    * Changes the transaction state.
@@ -1405,16 +1511,12 @@ class BasicTransaction extends DBObject implements Transaction{
       Transaction::STATE_REJECTED => array(Transaction::STATE_ACCEPTED, Transaction::STATE_DISCARDED),
     );
     $candidates = $flow[$this->state];
-    foreach($candidates as $candidate) {
-      if ($candidate == $state) {
-        $this->state = $state;
-      }
-    }
-    if ($this->state != $state) {
+    if(!in_array($state, $candidates)) {
       throw new Exception(t('Invalid state transition for transaction %trans.', array('%trans' => $this->id)));
     }
-    $s = new Serializer('BasicTransaction');
-    $s->updateField($this, 'state');
+    $this->state = $state;
+    /*$s = new Serializer('BasicTransaction');
+    $s->updateField($this, 'state');*/
   }
   public function trigger() {
     $this->setState(Transaction::STATE_TRIGGERED);
@@ -1437,7 +1539,7 @@ class BasicTransaction extends DBObject implements Transaction{
         $messages = $messagesFrom;
       }
       else {
-        $messages = array_merge($messagesFrom, $messagesTo);
+        $messages = array_($messagesFrom, $messagesTo);
       }
       $this->log($messages);
     }
@@ -1490,8 +1592,8 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
      */
     private $parent;
     public static $table = 'ces_transaction';
-    public function getAmount() {
-      return $this->parent->getAmount();
+    public function getAmount(Currency $currency = NULL) {
+      return $this->parent->getAmount($currency);
     }
     public function getUser() {
       return $this->parent->getUser();
@@ -1529,25 +1631,44 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
     public function revoke() {
       return $this->parent->revoke();
     }
+    public function setState($state) {
+      return $this->parent->setState($state);
+    }
     public function __construct($parent, $record) {
       parent::__construct($record);
       $this->parent = $parent;
     }
 }
+
+/**
+ * This class extends the basic transaction features to allow transactions 
+ * between distinct exchanges. The amount of this transaction has always to be 
+ * understood in the seller's exchange currency.
+ */
 class InterExchangeTransaction extends DecoratedTransaction{
   /**
    * @var BasicTransaction
+   * Transaction buyer <-> virtual. This is not stored in the DB.
    */
   protected $virtualTransactionFrom;
   /**
    * @var BasicTransaction
+   * Transaction virtual <-> seller. This is not stored in the DB.
    */
   protected $virtualTransactionTo;
+  public function trigger() {
+    $this->getVirtualTransactionFrom()->trigger();
+    $this->getVirtualTransactionTo()->trigger();
+    if($this->getVirtualTransactionFrom()->getState() == Transaction::STATE_TRIGGERED
+    && $this->getVirtualTransactionTo()->getState() == Transaction::STATE_TRIGGERED) {
+      $this->setState(Transaction::STATE_TRIGGERED);
+    }
+  }
   public function check() {
     //Check two virtual transactions.
-    $virtFrom = getVirtualTransactionFrom();
+    $virtFrom = $this->getVirtualTransactionFrom();
     $virtFrom->check();
-    $virtTo = getVirtualTransactionFrom();
+    $virtTo = $this->getVirtualTransactionTo();
     $virtTo->check();
     //Merge results.
     if ($virtFrom->getState() == Transaction::STATE_ACCEPTED
@@ -1562,15 +1683,15 @@ class InterExchangeTransaction extends DecoratedTransaction{
     || $virtTo->getState() == Transaction::STATE_TRIGGERED) {
       $this->setState(Transaction::STATE_TRIGGERED);
     }
-    //Add the virtual logs regarding the final state of the whole interexchange tranaction.
-    $this->setLog($virtForm->getLog($this->getState()));
-    $this->setLog($virtTo->getLog($this->getState()));
+    //Add the virtual logs regarding the final state of the whole interexchange transaction.
+    $this->log($virtFrom->getLog($this->getState()));
+    $this->log($virtTo->getLog($this->getState()));
   }
   public function apply() {
     //Apply the two virtual transactions.
-    $virtFrom = getVirtualTransactionFrom();
+    $virtFrom = $this->getVirtualTransactionFrom();
     $virtFrom->apply();
-    $virtTo = getVirtualTransactionFrom();
+    $virtTo = $this->getVirtualTransactionTo();
     $virtTo->apply();
     //Merge state.
     if ($virtFrom->getState() == Transaction::STATE_COMMITED
@@ -1581,41 +1702,47 @@ class InterExchangeTransaction extends DecoratedTransaction{
     || $virtTo->getState() == Transaction::STATE_ERROR) {
       $this->setState(Transaction::STATE_ERROR);
     }
-    $this->setLog($virtForm->getLog($this->getState()));
-    $this->setLog($virtTo->getLog($this->getState()));
+    $this->log($virtFrom->getLog($this->getState()));
+    $this->log($virtTo->getLog($this->getState()));
   }
   protected function getVirtualTransactionFrom() {
     if ($this->virtualTransactionFrom == NULL) {
-      $fromAccountName = $parent->getFromAccountName();
       $sa = new Serializer('LocalAccount');
-      $fromAccount = $sa->loadFromUniqueKey('name', $fromAccountName);
-      $se = new Serializer('Exchange');
-      $fromExchange = $se->load($fromAccount->exchange);
+      $toAccount = $sa->loadFromUniqueKey('name', $this->getToAccountName());
+      $fromAccount = $sa->loadFromUniqueKey('name', $this->getFromAccountName());
+      $toExchange = $toAccount->getExchange();
+      $fromExchange = $fromAccount->getExchange();
       $fromVirtualAccount = $fromExchange->getVirtualAccount($toExchange);
+      
+      $amount = $this->getAmount($fromExchange->getCurrency());
+
       $this->virtualTransactionFrom = new BasicTransaction(array(
         'fromaccount' => $fromAccount->id,
         'toaccount' => $fromVirtualAccount->id,
-        'amount' => $this->getAmount(),
+        'amount' => $amount,
         'concept' => $this->getConcept(),
-        'user' => $this->user,
+        'user' => $this->getUser(),
+        'state' => $this->getState(),
       ));
     }
     return $this->virtualTransactionFrom;
   }
   protected function getVirtualTransactionTo() {
     if ($this->virtualTransactionTo == NULL) {
-      $toAccountName = $parent->toAccountName();
       $sa = new Serializer('LocalAccount');
-      $toAccount = $sa->loadFromUniqueKey('name', $toAccountName);
-      $se = new Serializer('Exchange');
-      $toExchange = $se->load($toAccount->exchange);
+      $toAccount = $sa->loadFromUniqueKey('name', $this->getToAccountName());
+      $fromAccount = $sa->loadFromUniqueKey('name', $this->getFromAccountName());
+      $toExchange = $toAccount->getExchange();
+      $fromExchange = $fromAccount->getExchange();
       $toVirtualAccount = $toExchange->getVirtualAccount($fromExchange);
-      $virtualTransactionTo = new BasicTransaction(array(
+
+      $this->virtualTransactionTo = new BasicTransaction(array(
           'fromaccount' => $toVirtualAccount->id,
           'toaccount' => $toAccount->id,
-          'amount' => $this->getAmount(),
+          'amount' => $this->getAmount(), //This transaction is in the "to" currency
           'concept' => $this->getConcept(),
-          'user' => $this->user,
+          'user' => $this->getUser(),
+          'state' => $this->getState(),
       ));
     }
     return $this->virtualTransactionTo;
@@ -1633,16 +1760,15 @@ class LevyedTransaction extends DecoratedTransaction{
     $fromAccountName = $this->getFromAccountName();
     $s = new Serializer('LocalAccount');
     $fromAccount = $s->loadFromUniqueKey('name', $fromAccountName);
-    $s = new Serializer('Exchange');
-    $exchange = $s->load($fromAccount->exchange);
+    $exchange = $fromAccount->getExchange();
     $levyAccount = $exchange->getLevyAccount();
     $amount = $this->getAmount()* $this->levy / 100.0;
     $levyTransaction = new BasicTransaction(array(
         'fromaccount' => $this->fromaccount,
-        'toaccount'   => $levyAccount->id,
-        'amount'      => $amount,
-        'concept'     => t('Levy. Transaction %trans', array('%trans', $this->getId())),
-        'user'        => $this->getUser(),
+        'toaccount' => $levyAccount->id,
+        'amount' => $amount,
+        'concept' => t('Levy. Transaction %trans', array('%trans', $this->getId())),
+        'user' => $this->getUser(),
     ));
     //TODO: finish this!
   }
@@ -1675,7 +1801,7 @@ class UserPermission{
    * @param $permission int or string
    * @param $object String
    * @param $objectid int
-   * @return whether user of this Permissions object has access of type given by
+   * @return bool whether user of this Permissions object has access of type given by
    * the $permission parameter over the object ($object, $objectid).
    */
   public function access($permission, $object, $objectid) {
@@ -1690,6 +1816,14 @@ class UserPermission{
       );
       $permission = $equiv[$permission];
     }
+    //Treat here the recursive case of transaction
+    if ($object == 'transaction') {
+      $s = new Serializer('BasicTransaction');
+      $transaction = $s->load($objectid);
+      return $this->access($permission, 'account buyer', $transaction->fromaccount) 
+          || $this->access($permission, 'account seller', $transaction->toaccount);
+    }
+    //compute permissions
     $userperms = &$this->getPermissions();
     foreach ($userperms as $userperm) {
       if ($userperm->permission >= $permission 

@@ -22,6 +22,14 @@ class Serializer {
 
   protected $className;
   protected $table;
+  
+  /**
+   * cache array. Srtucture:
+   *  class name
+   *    unique key
+   *      value => record
+   */
+  static protected $cache = array();
 
   public function __construct($className) {
     $this->className = $className;
@@ -29,10 +37,16 @@ class Serializer {
   }
 
   public function load($id) {
-    $record = db_query('SELECT * FROM {' . $this->table . '} WHERE id = :id', array(':id' => $id))->fetchAssoc();
-    if ($record === FALSE)
-      return FALSE;
-    return $this->loadFromRecord($record);
+    if(!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
+    if(!isset(Serializer::$cache[$this->className]['id'])) $cache[$this->className]['id'] = array();
+    if(!isset(Serializer::$cache[$this->className]['id'][$id])) {
+      $record = db_query('SELECT * FROM {' . $this->table . '} WHERE id = :id', array(':id' => $id))->fetchAssoc();
+      if ($record === FALSE)
+        return FALSE;
+      $this->handleSerialized($record);
+      Serializer::$cache[$this->className]['id'][$id] = $this->loadFromRecord($record);
+    }
+    return Serializer::$cache[$this->className]['id'][$id];
   }
   /**
    * @return int
@@ -55,7 +69,7 @@ class Serializer {
     if (!empty($record['decoration']) && is_array($record['decoration'])) {//load decorator pattern
       foreach ($record['decoration'] as $value) {
         if (isset($value['classname']) && class_exists($value['classname'])) {
-          $obj = new $className($obj, $value['data']);
+          $obj = new $value['classname']($obj, $value['data']);
         }
       }
     }
@@ -71,10 +85,10 @@ class Serializer {
                         'classname' => get_class($object),
                         'data' => $object->getRecord()
                       );
-      array_reverse($decoration);
       $object = $parent;
       $parent = $object->getParent();
     }
+    array_reverse($decoration);
     $object->saveExtraData();
     $record = $object->getRecord();
     $record['decoration'] = $decoration;
@@ -90,11 +104,37 @@ class Serializer {
     else {
       drupal_write_record($this->table, $record, 'id');
     }
+    $this->deleteRecordFromCache($record);
   }
+  /**
+   * Updates a single database field from a single row.
+   */
   public function updateField(DBObject &$object, $key) {
     $id = $object->id;
     $value = $object->{$key};
+    $this->deleteCache();
     return db_update($this->table)->condition('id', $id)->fields(array($key => $value))->execute();
+  }
+  /**
+   * Performs a SQL function such as COUNT(*), SUM(*), ... on a table field for
+   * those rows meeting conditions.
+   * @param $key must be SQL safe.
+   * @param $conditions array Each entry is a condition. A condition is an array 
+   * of three therms
+   */
+  public function selectFunctionField($function, $key, array $conditions) {
+    $functions = array('COUNT', 'SUM');
+    if (!in_array($function, $functions))
+      throw new Exception('Invalid database function.');
+    $query = db_select($this->table, 't');
+    $query->addExpression($function.'('.$key.')');
+    foreach ($conditions as $condition) {
+      if (count($condition) == 3)
+        $query->condition($condition[0], $condition[1], $condition[2]);
+      else if(count($condition) == 2)
+        $query->condition($condition[0], $condition[1]);
+    }
+    return $query->execute()->fetchField();
   }
   /**
    * @param $conditions array
@@ -102,6 +142,8 @@ class Serializer {
    * for those objects having the created [time] field:
    * - createdsince: the smaller created time to return.
    * - createduntil: the largest created time to return.
+   * @TODO: remove these two exceptions and change the conditions to be an array
+   * of three elements: (key, value, $cmp='=').
    * @param $order string
    * A field to order by.
    * @return array Objects with attribute $key = $value ordered by $order field.
@@ -133,18 +175,25 @@ class Serializer {
    * @return DBObject
    */
   public function loadFromUniqueKey($key, $value) {
-    $query = db_select($this->table, 't')->fields('t')->condition($key, $value)->range(0, 1);
-    $result = $query->execute();
-    $record = $result->fetchAssoc();
-    if ($record === FALSE)
-      return FALSE;
-    return $this->loadFromRecord($record);
+    if(!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
+    if(!isset(Serializer::$cache[$this->className][$key])) $cache[$this->className][$key] = array();
+    if(!isset(Serializer::$cache[$this->className][$key][$value])) {
+      $query = db_select($this->table, 't')->fields('t')->condition($key, $value)->range(0, 1);
+      $result = $query->execute();
+      $record = $result->fetchAssoc();
+      if ($record === FALSE)
+        return FALSE;
+      $this->handleSerialized($record);
+      Serializer::$cache[$this->className][$key][$value] = $this->loadFromRecord($record);
+    }
+    return Serializer::$cache[$this->className][$key][$value];
   }
   /**
    * Deletes a database record
    * @param id int the record id.
    */
   public function delete($id) {
+    $this->deleteCache();
     $query = db_delete($this->table)->condition('id', $id);
     return $query->execute();
   }
@@ -153,6 +202,27 @@ class Serializer {
    */
   public static function DBTransaction() {
     return db_transaction();
+  }
+  private function handleSerialized(array &$record) {
+    //It would be nice if it was done automatically by Drupal, but...
+    $serialized = array('data', 'decoration');
+    foreach ($serialized as $field) {
+      if (isset($record[$field]) && is_string($record[$field])) {
+        $record[$field] = unserialize($record[$field]);
+      }
+    }
+  }
+  private function deleteRecordFromCache(array $record) {
+    if (isset(Serializer::$cache[$this->className])) {
+      foreach (Serializer::$cache[$this->className] as $key => $value) {
+        if (isset($record[$key]) && isset($value[$record[$key]])) {
+          unset(Serializer::$cache[$this->className][$key][$record[$key]]);
+        }
+      }
+    }
+  }
+  private function deleteCache() {
+    Serializer::$cache[$this->className] = array();
   }
 }
 
@@ -211,9 +281,6 @@ abstract class DBObject{
     $reflect = new ReflectionObject($this);
     foreach ($record as $key => $value) {
       if ($reflect->hasProperty($key) && $reflect->getProperty($key)->isPublic()) {
-        if(($key == 'data' || $key == 'decoration') && is_string($value)) {
-          $value = unserialize($value);
-        }
         $this->{$key} = $value;
       }
     }

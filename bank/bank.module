@@ -160,7 +160,7 @@ function bank_menu() {
   );
   //TODO
   $menu['ces/bank/exchange/%/account/%'] = array(
-    'title' => 'View account',
+    'title' => 'View',
     'description' => 'View account details',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_account_form', 'view', 5),
@@ -198,8 +198,8 @@ function bank_menu() {
   );
   //TODO
   $menu['ces/bank/exchange/%/account/%/delete'] = array(
-    'title' => 'Edit account',
-    'description' => 'Edit account details',
+    'title' => 'Delete',
+    'description' => 'Delete account',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bank_account_form', 'delete', 5),
     'file' => 'bank.forms.inc',
@@ -283,12 +283,12 @@ function bank_menu() {
     'title' => 'Apply transaction',
     'description' => 'Apply transaction',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('bank_transaction_form', 'trigger', 5),
+    'page arguments' => array('bank_transaction_confirm_form', 'trigger', 5),
     'file' => 'bank.forms.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_CALLBACK,
     'access callback' => 'bank_access',
-    'access arguments' => array('use', 'transaction triggerer', 5),  
+    'access arguments' => array('use', 'transaction', 5),  
   );
   //TODO
   $menu['ces/bank/exchange/%/limitchain'] = array(

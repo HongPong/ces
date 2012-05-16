@@ -7,6 +7,7 @@
  * Exchange form. Create, view and edit forms.
  */
 function bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
+  global $user;
   $bank = new Bank();
   if (isset($form_state['values'])) {//form rebuild
     $exchange = $form_state['values'];
@@ -48,7 +49,7 @@ function bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
 
   $form['exchange']['admin'] = array(
     '#type' => 'value',
-    '#value' => $exchange['admin'],
+    '#value' => isset($exchange['admin'])?$exchange['admin']:$user->uid,
   );
 
   $form['exchange']['general']['code'] = array(
@@ -485,7 +486,10 @@ function bank_account_form($form, &$form_state, $op, $id) {
     $account = $bank->getAccount($id);
     $exchange = $bank->getExchange($account['exchange']);
   }
+
   $admin = bank_access('admin', 'exchange', $exchange['id']);
+  $virtual = ($account['kind'] == LocalAccount::TYPE_VIRTUAL);
+
   if (isset($account['id'])) {
     $form['account']['id'] = array(
       '#type' => 'value',
@@ -511,7 +515,7 @@ function bank_account_form($form, &$form_state, $op, $id) {
     '#title' => t('name'),
     '#default_value' => $account['name'],
     '#required' => TRUE,
-    '#disabled' => !$admin,
+    '#disabled' => !$admin || $virtual,
   );
   //TODO: multiple users
   $accuser = reset($account['users']);
@@ -523,7 +527,7 @@ function bank_account_form($form, &$form_state, $op, $id) {
     '#autocomplete_path' => 'user/autocomplete',
     '#default_value' => $accdrupaluser->name,
     '#required' => TRUE,
-    '#disabled' => !$admin
+    '#disabled' => !$admin || $virtual, 
   );
   if (isset($accuser['id'])) { //if op != new
     $form['account']['accountuser'] = array(
@@ -531,18 +535,24 @@ function bank_account_form($form, &$form_state, $op, $id) {
       '#value' => $accuser['id'],
     );
   }
-  $form['account']['kind'] = array(
-    '#type' => 'select',
-    '#title' => t('Type'),
-    '#description' => t('Select "Individual" for personal use, "Shared" if several people share this account, "Organization" for a non-profit organization, "Company" for a profit-pursuing company and "Public" for a public account.'),
-    '#options' => array(
+  $options = array(
       0 => t('Individual'),
       1 => t('Shared'),
       2 => t('Organization'),
       3 => t('Company'),
-      4 => t('Public')),
+      4 => t('Public')
+    );
+  if($account['kind'] == LocalAccount::TYPE_VIRTUAL) {
+    $options[5] = t('Virtual');
+  }
+  $form['account']['kind'] = array(
+    '#type' => 'select',
+    '#title' => t('Type'),
+    '#description' => t('Select "Individual" for personal use, "Shared" if several people share this account, "Organization" for a non-profit organization, "Company" for a profit-pursuing company and "Public" for a public account.'),
+    '#options' => $options,
     '#required' => TRUE,
     '#default_value' => $account['kind'],
+    '#disabled' => $virtual,
   );
 
   $form['account']['state'] = array(
@@ -661,40 +671,107 @@ function bank_account_form_submit($form, &$form_state) {
  * @todo Make an easy system to find account names by exchange/username.
  */
 function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_account_id = NULL, $from_account_id = NULL) {
-  if (!empty($form_state['page_num']) && $form_state['page_num'] == 2) {
-    return bank_transaction_confirm_form($form, $form_state);
+  if (!empty($form_state['values']) && !empty($form_state['values']['page']) 
+      && $form_state['values']['page'] == 'confirm') {
+    return bank_transaction_confirm_form($form, $form_state, $op);
   }
   global  $user;
   $bank = new Bank();
-  $exchange = $bank->getExchange($exchangeid);
-  $accounts = $bank->getAllAccounts(array('exchange' => $exchangeid, 'state' => 1));
-  $options = array();
+  //Exchange options for selects.
+  $exchanges = $bank->getAllExchanges();
+  $exoptions = array();
+  foreach ($exchanges as $exchange) {
+    $exoptions[$exchange['id']] = $exchange['code'];
+  }
+  //Select seller's exchange
+  $toexchangeid = isset($form_state['values']['toexchange'])?$form_state['values']['toexchange']:$exchangeid;
+  $toexchange = $exchanges[$toexchangeid];
+  $form['toexchange'] = array(
+    '#title' => t('Seller exchange'),
+    '#description' => t('The seller\'s account exchange.'),
+    '#type' => 'select',
+    '#options' => $exoptions,
+    '#default_value' => $toexchangeid,
+    '#disabled' => $to_account_id != NULL,
+    '#ajax' => array(
+      'callback' => 'bank_toaccountname_dropdown_callback',
+      'wrapper' => 'dropdown-toaccountname-replace',  
+    ),
+  );
+  //Select seller's account
+  $accountconditions = array(
+            'exchange' => $toexchangeid, 
+            'state' => 1, 
+            'kind' => array(
+              LocalAccount::TYPE_INDIVIDUAL,
+              LocalAccount::TYPE_SHARED,
+              LocalAccount::TYPE_ORGANIZATION,
+              LocalAccount::TYPE_COMPANY,
+              LocalAccount::TYPE_PUBLIC,
+            ));
+  $accounts = $bank->getAllAccounts($accountconditions);
+  $tooptions = array();
   foreach ($accounts as $account) {
-    $options[$account['name']] = $account['name'];
+    $tooptions[$account['name']] = $account['name'];
   }
   $form['toaccountname'] = array(
     '#title' => t('Seller account'),
     '#description' => t('The recipient of the transaction. The Exchange four letters code plus four numbers.'),
     '#type' => 'select',
-    '#options' => $options,
+    '#options' => $tooptions,
+    '#prefix' => '<div id="dropdown-toaccountname-replace">',
+    '#suffix' => '</div>'
   );
+  if (isset($form_state['values']['toaccountname'])) 
+    $form['fromaccountname']['#default_value'] = $form_state['values']['toaccountname'];
   if ($to_account_id != NULL) {
     if(!isset($accounts[$to_account_id])) {
-      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id'=>$to_account_id, '%ex'=>$exchange['code'])), 'error');
+      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id'=>$to_account_id, '%ex'=>$toexchange['code'])), 'error');
       return FALSE;
     }
     $form['toaccountname']['#default_value'] = $accounts[$to_account_id]['name'];
     $form['toaccountname']['#disabled'] = TRUE;
   }
+  //Select buyer's exchange
+  $fromexchangeid = isset($form_state['values']['fromexchange'])?$form_state['values']['fromexchange']:$exchangeid;
+  $fromexchange = $exchanges[$fromexchangeid];
+  $form['fromexchange'] = array(
+    '#title' => t('Buyer exchange'),
+    '#description' => t('The buyer\'s account exchange.'),
+    '#type' => 'select',
+    '#options' => $exoptions,
+    '#default_value' => $fromexchangeid,
+    '#disabled' => $from_account_id != NULL,
+    '#ajax' => array(
+      'callback' => 'bank_fromaccountname_dropdown_callback',
+      'wrapper' => 'dropdown-fromaccountname-replace',  
+    ),
+  );
+  //Select buyer's account.
+  if($fromexchangeid == $toexchangeid) {
+    $fromoptions = &$tooptions;
+  }
+  else{
+    $fromoptions = array();
+    $accountconditions['exchange'] = $fromexchangeid;
+    $accounts = $bank->getAllAccounts($accountconditions);
+    foreach ($accounts as $account) {
+      $fromoptions[$account['name']] = $account['name'];
+    }
+  }
   $form['fromaccountname'] = array(
     '#title' => t('Buyer account'),
     '#description' => t('The payer of the transaction. The Exchange four letters code plus four numbers.'),
     '#type' => 'select',
-    '#options' => $options,
+    '#options' => $fromoptions,
+    '#prefix' => '<div id="dropdown-fromaccountname-replace">',
+    '#suffix' => '</div>'
   );
+  if (isset($form_state['values']['fromaccountname'])) 
+    $form['fromaccountname']['#default_value'] = $form_state['values']['fromaccountname'];
   if ($from_account_id != NULL) {
     if(!isset($accounts[$to_account_id])) {
-      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id'=>$from_account_id, '%ex'=>$exchange['code'])), 'error');
+      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id'=>$from_account_id, '%ex'=>$fromexchange['code'])), 'error');
       return FALSE;
     }
     $form['fromaccountname']['#default_value'] = $accounts[$from_account_id]['name'];
@@ -709,7 +786,7 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
   $form['amount'] = array(
       '#type' => 'textfield',
       '#size' => '5',
-      '#title' => t('Amount in @currenciesname', array('@currenciesname' => $exchange['currenciesname'])),
+      '#title' => t('Amount in @currenciesname', array('@currenciesname' => $toexchange['currenciesname'])),
       '#description' => t('The amount to be transferred.'),
       '#default_value' => !empty($form_state['values']['amount'])?$form_state['values']['amount']:'',
   );
@@ -717,26 +794,82 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
       '#type' => 'value',
       '#value' => $user->uid,
   );
+  
   $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Create transaction'),
   );
   return $form;
 }
-
+/**
+ * AJAX callback for transaction form
+ */
+function bank_toaccountname_dropdown_callback($form, $form_state) {
+  return $form['toaccountname'];
+}
+/**
+ * AJAX callback for transaction form
+ */
+function bank_fromaccountname_dropdown_callback($form, $form_state) {
+  return $form['fromaccountname'];
+}
 function bank_transaction_form_submit($form, &$form_state) {
-  $form_state['page_values'][1] = $form_state['values'];
-
-  if (!empty($form_state['page_values'][2])) {
-    $form_state['values'] = $form_state['page_values'][2];
-  }
-
-  $form_state['page_num'] = 2;
+  $form_state['values']['page'] = 'confirm';
   $form_state['rebuild'] = TRUE;
 }
-
-function bank_transaction_confirm_form($form, &$form_state) {
-  $values = $form_state['page_values'][1];
+/**
+ * @param $op string One of:
+ *  - new: create and trigger transaction.
+ *  - edit: edit a new transaction.
+ *  - trigger: trigger an alredy created transaction.
+ *  - discard: discard a rejected transaction (TODO).
+ *  - revoke: revoke a commited transaction (TODO).
+ * @param $id int the id of the transaction. If $op='new', then it is ignored
+ * in favour of $form_state values comming from bank_trsansaction_form.
+ */
+function bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
+  if ($op == 'new') {
+    $values = $form_state['values'];
+    //Copy values from previous form in a safe place.
+    $form_state['edit_page'] = $values;
+  }
+  else {
+    $bank = new Bank();
+    try {
+      $transaction = $bank->getTransaction($id);
+      $fromaccount = $bank->getAccount($transaction['fromaccount']);
+      $toaccount = $bank->getAccount($transaction['toaccount']);
+      $values = array(
+        'toaccountname'=> $toaccount['name'],
+        'fromaccountname' => $fromaccount['name'],
+        'amount' => $transaction['amount'],
+        'concept' => $transaction['concept'],
+        'id'=> $transaction['id'],
+      );
+    }catch(Exception $e){
+      drupal_set_message($e->getMessage(), 'error');
+      return array();
+    }
+  }
+  if($op != 'new' && $op != 'trigger' && $op != 'edit') {
+    drupal_set_message(t('Operation not permitted or not implemented yet.'), 'error');
+    return array();
+  }
+  if (isset($values['id'])) {
+    $form['id'] = array(
+      '#type' => 'value',
+      '#value' => $values['id'],
+    );
+  }
+  $form['operation'] = array(
+      '#type' => 'value',
+      '#value' => $op,
+  );
+  //This value is used in bank_transaction_form().
+  $form['page'] = array(
+      '#type' => 'value',
+      '#value' => 'confirm',
+  );
   $form['itemtoaccountname'] = array(
       '#type' => 'item',
       '#title' => t('Seller account'),
@@ -765,20 +898,30 @@ function bank_transaction_confirm_form($form, &$form_state) {
   );
   $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Confirm transaction'),
-      '#submit' => array('bank_transaction_confirm_form_submit'),
+      '#submit' => array('bank_transaction_confirm_form_submit')
   );
+  switch ($op) {
+    case 'new':
+      $form['submit']['#value'] = t('Confirm transaction');
+      break;
+    case 'trigger':
+      $from['submit']['#value'] = t('Trigger transaction');
+      break;
+    case 'edit':
+      $form['submit']['#value'] = t('Update transaction');
+      break;
+  }
   return $form;
 }
 
 function bank_transaction_confirm_form_back($form, &$form_state) {
-  $form_state['values'] = $form_state['page_values'][1];
-  $form_state['page_num'] = 1;
+  $form_state['values'] = $form_state['edit_page'];
+  $form_state['values']['page'] = 'edit';
   $form_state['rebuild'] = TRUE;
 }
 
 function bank_transaction_form_validate($form, &$form_state) {
-  if (!empty($form_state['page_num']) && $form_state['page_num'] == 2)
+  if (!empty($form_state['values']['page']) && $form_state['values']['page'] == 'confirm')
     return;
 
   $bank = new Bank();
@@ -805,29 +948,50 @@ function bank_transaction_form_validate($form, &$form_state) {
 }
 function bank_transaction_confirm_form_submit($form, &$form_state) {
   $bank = new Bank();
-  $record = $form_state['page_values'][1];
-  $transaction = array(
-    'user' => $record['user'],
-    'fromaccountname' => $record['fromaccountname'],
-    'toaccountname' => $record['toaccountname'],
-    'amount' => $record['amount'],
-    'concept' => $record['concept'],
-  );
-  $bank->createTransaction($transaction);
-  $messages = $bank->applyTransaction($transaction['id']);
-  if ($messages === TRUE) {
-    drupal_set_message(t('Transaction successfully applied.'));
-  }
-  else{
-    $text = t('The transaction has NOT been applied');
-    $text .= '<br/>' . t('Details:') . '<br/>';
-    $text .= '<ul>';
-    foreach ($messages as $message) {
-      $text .= '<li>' . $message . '</li>';
+  $result = TRUE;
+  $op = $form_state['values']['operation'];
+  try{
+    switch ($op) {
+      case 'new':
+        $record = $form_state['edit_page'];
+        $bank->createTransaction($record);
+        $result = $bank->applyTransaction($record['id']);
+        break;
+      case 'trigger':
+        $result = $bank->applyTransaction($form_state['values']['id']);
+        break;
+      case 'edit':
+        $record = $form_state['edit_page'];
+        $result = $bank->updateTransaction($record);
+      default:
+        throw new Exception(t('Operation not permitted or no implemented yet.'));
     }
-    $text .= '</ul>';
-    drupal_set_message(filter_xss($text), 'warning');
+    if ($result !== TRUE) {
+      $text = t('The transaction has NOT been applied.');
+      if(is_array($result)){
+        $text .= '<br/>' . t('Details:') . '<br/>';
+        $text .= '<ul>';
+        foreach ($result as $message) {
+          $text .= '<li>' . filter_xss($message) . '</li>';
+        }
+        $text .= '</ul>';
+      }
+      throw new Exception($text);
+    }
+  } catch (Exception $e) {
+    drupal_set_message($e->getMessage(), 'error');
+    return;
   }
+  switch ($op) {
+    case 'new':
+    case 'trigger':
+      $msg = t('Transaction successfully applied.');
+      break;
+    case 'edit':
+      $msg = t('Transaction successfully updated.');
+      break;
+  }
+  drupal_set_message($msg);
 }
 
 /**
@@ -921,7 +1085,7 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
     '#rows' => array(),
   );
   $transactions = $bank->getTransactions(array('account' => $account['id'], 'createdsince' => $timefrom, 'createduntil' => $timeto));
-
+  $inibalance = $bank->getAccountHistoricBalance($account['id'], $timefrom);
   foreach ($transactions as $transaction) {
     $row = array();
     $row[] = format_date($transaction['created']);
@@ -956,8 +1120,10 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
     $row[] = check_plain($transaction['concept']);
     $row[] = $type==0?$transaction['amount']:'';
     $row[] = $type==1?$transaction['amount']:'';
-    //TODO: compute balance!
-    $row[] = ' - ';
+    if(in_array((int)$transaction['state'], array(3))){
+      $inibalance += ($transaction['amount'])*($type==0?1:-1);
+    }
+    $row[] = $inibalance;
     $actions = array();
     if($transaction['state'] == 0) {
       $actions[]=l(t('Edit'), 'ces/bank/transaction/' . $transaction['id'] . '/edit');

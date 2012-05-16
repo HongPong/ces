@@ -69,6 +69,7 @@ $hora = array(
   'currenciesname' => 'hores',
   'currencyvalue' => '1.0',
   'currencyscale' => '2',
+  'admin' => $adminhora->uid,
 );
 $bank->createExchange($hora);
 $bank->activateExchange($hora);
@@ -87,6 +88,7 @@ $bcna = array(
   'currenciesname' => 'ecos',
   'currencyvalue' => '0.1',
   'currencyscale' => '2',
+  'admin' => $adminbcna->uid,
 );
 $bank->createExchange($bcna);
 $bank->activateExchange($bcna);
@@ -97,16 +99,16 @@ $hora0001 = array(
   'name'=>'HORA0001',
   'limitchain'=>$limitchainhora['id'],
   'kind'=>LocalAccount::TYPE_INDIVIDUAL,
-  'state'=>LocalAccount::STATE_ACTIVE,
+  'state'=>LocalAccount::STATE_HIDDEN,
   'users'=>array(
     array(
       'user'=>$userhora->uid,
       'role'=>AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
-      'account'=>0
     )
   )
 );
 $bank->createAccount($hora0001);
+$bank->activateAccount($hora0001);
 $hora0002 = array(
   'exchange'=>$hora['id'],
   'name'=>'HORA0002',
@@ -117,11 +119,11 @@ $hora0002 = array(
     array(
       'user'=>$userhorabcna->uid,
       'role'=>AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
-      'account'=>0
     )
   )
 );
 $bank->createAccount($hora0002);
+$bank->activateAccount($hora0002);
 $limitchainbcna = $bank->getDefaultLimitChain($bcna['id']);
 $bcna0001 = array(
   'exchange'=>$bcna['id'],
@@ -133,11 +135,11 @@ $bcna0001 = array(
     array(
       'user'=>$userbcna->uid,
       'role'=>AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
-      'account'=>0
     )
   )
 );
 $bank->createAccount($bcna0001);
+$bank->activateAccount($bcna0001);
 $bcna0002 = array(
   'exchange'=>$bcna['id'],
   'name'=>'BCNA0002',
@@ -148,29 +150,12 @@ $bcna0002 = array(
     array(
       'user'=>$userhorabcna->uid,
       'role'=>AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
-      'account'=>0
     )
   )
 );
 $bank->createAccount($bcna0002);
+$bank->activateAccount($bcna0002);
 
-//set administrative permissions
-$perm1 = array(
-  'permission' => Permission::PERMISSION_ADMIN,
-  'object' => 'exchange',
-  'objectid' => $hora['id'],
-  'scope' => Permission::SCOPE_USER,
-  'scopeid' => $adminhora->uid
-);
-$bank->createPermission($perm1);
-$perm2 = array(
-  'permission' => Permission::PERMISSION_ADMIN,
-  'object' => 'exchange',
-  'objectid' => $bcna['id'],
-  'scope' => Permission::SCOPE_USER,
-  'scopeid' => $adminbcna->uid
-);
-$bank->createPermission($perm2);
 
 function registerUser($name){
   // register a new user
