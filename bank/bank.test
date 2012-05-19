@@ -153,8 +153,34 @@ class BankTestCase extends DrupalWebTestCase {
     $this->activateAccount($this->exchange1Admin, array('name'=>'HORABCNA'));
     $this->activateAccount($this->exchange2Admin, array('name'=>'BCNAHORA'));
     //Re-trigger transaction.
-    
-    
+    $this->triggerTransaction($this->exchange2User2);
+    //Assert currency conversion.
+    $this->assertBalance($this->exchange2User2, $account11, '10.00');
+    $this->assertBalance($this->exchange1User1, $account12, '0.50');
+    //Configure limit chains.
+    $this->addLimit($this->exchange1Admin, 'default', 'AbsoluteDebitLimit', '-1.0', true);
+    $this->addLimit($this->exchange2Admin, 'default', 'AbsoluteDebitLimit', '0.0', true);
+    $this->createTransaction($this->exchange1User2, $account12, $account11, '1.0', 'Limit chain pass test', true);
+    $this->createTransaction($this->exchange1User2, $account12, $account11, '1.0', 'Limit chain fail test', false);
+    $this->createTransaction($this->exchange2User1, $account21, $account22, '10', 'Limit chain pass test', true);
+    $this->createTransaction($this->exchange2User1, $account21, $account22, '1', 'Limit chain fail test', false);    
+  }
+  protected function addLimit($user, $chain, $classname, $value, $block) {
+    $this->drupalLogin($user);
+    $this->drupalGet('ces/bank/dashboard');
+    $this->clickLink(t('Administrative interface'));
+    $this->clickLink(t('Administer limit chains'));
+    $this->clickLink(t('Edit'));
+    $edit = array(
+      'newlimit[classname]' => $classname,
+    );
+    $this->drupalPost(NULL, $edit, t('Add limit'));
+    $edit = array(
+      'limits[0][block]' => $block,
+      'limits[0][value]' => $value,
+    );
+    $this->drupalPost(NULL, $edit, t('Update limit chain'));
+    $this->assertRaw(t('Limit chain %chain successfully updated.', array('%chain' => $chain)));
   }
   protected function setupMenuBlock() {
     $this->drupalLogin($this->globalAdminUser);
@@ -259,6 +285,20 @@ class BankTestCase extends DrupalWebTestCase {
     $this->assertText($amount);
     $this->assertText($concept);
     $this->drupalPost(NULL, array(), t('Confirm transaction'));
+    $okmessage = t('Transaction successfully applied.');
+    if($successful) {
+      $this->assertText($okmessage);
+    }
+    else {
+      $this->assertNoText($okmessage);
+    }
+  }
+  protected function triggerTransaction($user, $successful = TRUE) {
+    $this->drupalLogin($user);
+    $this->drupalGet('ces/bank/dashboard');
+    $this->clickLink(t('Statement'));
+    $this->clickLink('Trigger');
+    $this->drupalPost(NULL, array(), t('Trigger transaction'));
     $okmessage = t('Transaction successfully applied.');
     if($successful) {
       $this->assertText($okmessage);

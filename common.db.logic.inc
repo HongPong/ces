@@ -77,26 +77,19 @@ class Serializer {
   }
 
   public function save(DBObject &$object) {
-    $parent = $object->getParent();
-    $decoration = array();
-    while ($parent != NULL && ($parent instanceof DBObject)) {
-      $object->saveExtraData();
-      $decoration[] = array(
-                        'classname' => get_class($object),
-                        'data' => $object->getRecord()
-                      );
-      $object = $parent;
-      $parent = $object->getParent();
-    }
-    array_reverse($decoration);
-    $object->saveExtraData();
     $record = $object->getRecord();
-    $record['decoration'] = $decoration;
+    //Call save extra data to all implied objects.
+    $auxobject = $object; //Don't loose the main reference!
+    do{
+      $auxobject->saveExtraData();
+      $auxobject = $auxobject->getParent();
+    } while ($auxobject != NULL && ($auxobject instanceof DBObject));
+    //Decide between insert and update, and automatically populate temporal fields.
     $record['modified'] = REQUEST_TIME;
     if (empty($record['id'])) {
       $record['created'] = REQUEST_TIME;
       drupal_write_record($this->table, $record);
-      //should the entire object be updated with $object->loadRecord($record)?
+      //Update the inserted object with the id parameter.
       if (isset($record['id'])) {
         $object->id = $record['id'];
       }
@@ -267,8 +260,31 @@ class LockSerializer extends Serializer{
 
 abstract class DBObject{
   public static $table;
-  
   public function getRecord() {
+    //Handle decorator pattern.
+    $object = $this;
+    $parent = $object->getParent();
+    $decoration = array();
+    if($parent != NULL && ($parent instanceof DBObject)) {
+      do {
+        $decoration[] = array(
+                          'classname' => get_class($object),
+                          'data' => $object->getSimpleRecord(),
+                        );
+        $object = $parent;
+        $parent = $object->getParent();
+      } while ($parent != NULL && ($parent instanceof DBObject));
+      array_reverse($decoration);
+    }
+    //Get record.
+    $record = $object->getSimpleRecord();
+    $record['decoration'] = $decoration;
+    return $record;
+  }
+  /**
+   * @returns The fields directly hanging from this object.
+   */
+  private function getSimpleRecord() {
     $record = get_object_vars($this);
     foreach ($record as $key => $value) {
       if($value === NULL) {

@@ -7,6 +7,7 @@ function bank_exchange_admin($exchangeid){
   $bank = new Bank();
   $exchange = $bank->getExchange($exchangeid);
   $page = array();
+  //New accounts request
   $page['new_accounts'] = array(
     'type' => 'fieldset',
     'title' => t('New accounts'),
@@ -30,6 +31,9 @@ function bank_exchange_admin($exchangeid){
       '#title' => t('No requests for new accounts.'),
     );
   }
+  $page['limitchains'] = array(
+      '#markup' => l(t('Administer limit chains'), 'ces/bank/exchange/'.$exchange['id'].'/limitchain'),
+  );
   return $page;
 }
 /**
@@ -289,6 +293,53 @@ function bank_permissions_page() {
       $perm['scopeid'],
       l(t('Edit'), 'ces/bank/permission/'.$perm['id'].'/edit') . ' ' . l(t('Delete'),'ces/bank/permission/'.$perm['id'].'/delete'),
     );
+    $page['table']['#rows'][] = $row;
+  }
+  return $page;
+}
+/**
+ * List the limitchains for the given exchange.
+ */
+function bank_limitchain_list_page($exchangeId) {
+  $bank = new Bank();
+  $limitchains = $bank->getAllLimitChains($exchangeId);
+  $page = array();
+  $page['table'] = array(
+    '#theme' => 'table',
+    '#header' => array(
+      array(
+        'data' => t('Name'),
+        'field' => 'name',
+        'sort' => 'asc',
+      ),
+      array(
+        'data' => t('Limits'),
+      ),
+      array(
+        'data' => t('Actions'),
+      ),
+    ),
+    '#rows' => array(),
+  );
+  foreach ($limitchains as $limitchain) {
+    $row = array();
+    $row[] = $limitchain['name'];
+    $limits = array();
+    foreach ($limitchain['limits'] as $limit) {
+      $limits[] = $limit['classname']::getName() . ' ' . $limit['value'] . ($limit['block'] ? ' ' . t('block') : '');
+    }
+    $row[] = implode('<br/>',$limits);
+    $actions = array();
+    if (bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', $exchangeId)) {
+      $actions[] = l(t('View'), 'ces/bank/exchange/'.$exchangeId.'/limitchain/'.$limitchain['id'].'/view');
+    }
+    if (bank_access(Permission::PERMISSION_EDIT, 'exchange', $exchangeId)) {
+      $actions[] = l(t('Edit'), 'ces/bank/exchange/'.$exchangeId.'/limitchain/'.$limitchain['id'].'/edit');
+    }
+    if (bank_access(Permission::PERMISSION_ADMIN, 'exchange', $exchangeId)) {
+      $actions[] = l(t('Delete'), 'ces/bank/exchange/'.$exchangeId.'/limitchain/'.$limitchain['id'].'/delete');
+    }
+    $row[] = implode(' ', $actions);
     $page['table']['#rows'][] = $row;
   }
   return $page;

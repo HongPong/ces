@@ -434,7 +434,17 @@ function bank_limitchain_form_validate($form, &$form_state) {
     foreach ($values['limits'] as $key => $limit) {
       $amount = $limit['value'];
       if (!is_numeric($amount)) {
-        form_set_error('value', t('The limit amount must be numeric'));
+        form_set_error('value', t('The limit amount must be numeric.'));
+      }
+      if ($limit['classname'] == 'AbsoluteCreditLimit') {
+        if ($amount < 0) {
+          form_set_error('value', t('The credit limit must not be negative.'));
+        }
+      }
+      elseif ($limit['classname'] == 'AbsoluteDebitLimit') {
+        if($amount > 0) {
+          form_set_error('value', t('The debit limit must not be positive.'));
+        }
       }
     }
   }
@@ -770,7 +780,7 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
   if (isset($form_state['values']['fromaccountname'])) 
     $form['fromaccountname']['#default_value'] = $form_state['values']['fromaccountname'];
   if ($from_account_id != NULL) {
-    if(!isset($accounts[$to_account_id])) {
+    if(!isset($accounts[$from_account_id])) {
       drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id'=>$from_account_id, '%ex'=>$fromexchange['code'])), 'error');
       return FALSE;
     }
@@ -905,7 +915,7 @@ function bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
       $form['submit']['#value'] = t('Confirm transaction');
       break;
     case 'trigger':
-      $from['submit']['#value'] = t('Trigger transaction');
+      $form['submit']['#value'] = t('Trigger transaction');
       break;
     case 'edit':
       $form['submit']['#value'] = t('Update transaction');
@@ -915,9 +925,14 @@ function bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
 }
 
 function bank_transaction_confirm_form_back($form, &$form_state) {
-  $form_state['values'] = $form_state['edit_page'];
-  $form_state['values']['page'] = 'edit';
-  $form_state['rebuild'] = TRUE;
+  if (isset($form_state['edit_page'])) {
+    $form_state['values'] = $form_state['edit_page'];
+    $form_state['values']['page'] = 'edit';
+    $form_state['rebuild'] = TRUE;
+  }
+  else {
+    drupal_goto('ces/bank/dashboard');
+  }
 }
 
 function bank_transaction_form_validate($form, &$form_state) {
@@ -1125,12 +1140,10 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
     }
     $row[] = $inibalance;
     $actions = array();
-    if($transaction['state'] == 0) {
-      $actions[]=l(t('Edit'), 'ces/bank/transaction/' . $transaction['id'] . '/edit');
-      $actions[]=l(t('Trigger'), 'ces/bank/transaction/' . $transaction['id'] . '/trigger');
-    }
-    elseif($transaction['state'] == 5) {
-      $actions[]=l(t('Discard'), 'ces/bank/transaction/' . $transaction['id'] . '/discard');
+    if($transaction['state'] == Transaction::STATE_NEW || $transaction['state'] == Transaction::STATE_REJECTED) {
+      $actions[]=l(t('Edit'), 'ces/bank/exchange/'.$account['exchange'].'/transaction/' . $transaction['id'] . '/edit');
+      $actions[]=l(t('Trigger'), 'ces/bank/exchange/'.$account['exchange'].'/transaction/' . $transaction['id'] . '/trigger');
+      $actions[]=l(t('Discard'), 'ces/bank/exchange/'.$account['exchange'].'/transaction/' . $transaction['id'] . '/discard');
     }
     $row[] = implode(' ', $actions);
     $form['transactions']['table']['#rows'][] = $row;

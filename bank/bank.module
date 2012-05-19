@@ -278,7 +278,6 @@ function bank_menu() {
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  //TODO
   $menu['ces/bank/exchange/%/transaction/%/trigger'] = array(
     'title' => 'Apply transaction',
     'description' => 'Apply transaction',
@@ -290,13 +289,12 @@ function bank_menu() {
     'access callback' => 'bank_access',
     'access arguments' => array('use', 'transaction', 5),  
   );
-  //TODO
   $menu['ces/bank/exchange/%/limitchain'] = array(
     'title' => 'Exchange limit chains',
     'description' => 'Exchange limit chain list',
     'page callback' => 'bank_limitchain_list_page',
     'page arguments' => array(3),
-    'file' => 'bank.forms.inc',
+    'file' => 'bank.pages.inc',
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_NORMAL_ITEM,
     'access callback' => 'bank_access',

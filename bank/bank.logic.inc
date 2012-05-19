@@ -380,21 +380,8 @@ class Bank{
    * creates a limit chain.
    */
   public function createLimitChain(array &$record) {
-    $t = Serializer::DBTransaction();
-    try{
-      unset($record['id']);
-      if(isset($record['limits'])) {
-        foreach ($record['limits'] as $limitRecord) {
-          if(!isset($limitRecord['data'])) {
-            $limitRecord['data'] = array();
-          }
-        }
-      }
-      return $this->updateObject('LimitChain', $record);
-    }catch(Exception $e) {
-      $t->rollback();
-      throw $e;
-    }
+    unset($record['id']);
+    return $this->updateLimitChain($record);
   }
   /**
    * updates a limit chain.
@@ -402,8 +389,16 @@ class Bank{
   public function updateLimitChain(array &$record) {
     $t = Serializer::DBTransaction();
     try{
-      if (!isset($record['limits']))
+      if (isset($record['limits'])) {
+        foreach ($record['limits'] as $key=>$limit) {
+          if(!isset($limit['data'])) {
+            $record['limits'][$key]['data'] = array();
+          }
+        }
+      } 
+      else {
         $record['limits'] = array();
+      }
       return $this->updateObject('LimitChain', $record);
     }catch(Exception $e) {
       $t->rollback();
@@ -1051,7 +1046,7 @@ class AccountUser extends DBObject{
 /**
  * A chain of account limits. It is used by account.
  */
-class LimitChain extends DBObject{
+class LimitChain extends DBObject {
   public static $table = 'ces_limitchain';
   /**
   @var int
@@ -1201,14 +1196,14 @@ abstract class AccountLimit extends DBObject{
       $newvalue = $value;
       $transactionValue = $this->getTransactionValue($transaction);
       if ($account->getName() == $transaction->getFromAccountName()) {
-        $newvalue += $transactionValue;
-      }
-      elseif ($account->getName() == $transaction->getToAccountName()) {
         $newvalue -= $transactionValue;
       }
-      if ($newvalue > $this->getLimit())//account is ok after transaction
+      elseif ($account->getName() == $transaction->getToAccountName()) {
+        $newvalue += $transactionValue;
+      }
+      if ($newvalue >= $this->getLimit())//account is ok after transaction
         return TRUE;
-      elseif ($newvalue > $value) //account is not ok after transaction but improves its mark
+      elseif ($newvalue >= $value) //account is not ok after transaction but improves its mark.
         return TRUE;
       else                        //block transaction
         return FALSE;
@@ -1256,10 +1251,10 @@ class AbsoluteCreditLimit extends AccountLimit {
     return - $transaction->getAmount();
   }
   public function getLimit() {
-    return - $this->limit;
+    return - $this->value;
   }
   public function getFailMessage(LocalAccount &$account) {
-    return t('Account %account exceeds the credit limit of %limit.', array('%limit' => $this->limit, '%account' => $account->getName()));
+    return t('Account %account exceeds the credit limit of %limit.', array('%limit' => $this->value, '%account' => $account->getName()));
   }
   public static function getName() {
     return t('Absolute credit limit');
@@ -1504,11 +1499,11 @@ class BasicTransaction extends DBObject implements Transaction{
    */
   public function setState($state) {
     $flow = array(
-      Transaction::STATE_NEW => array(Transaction::STATE_TRIGGERED),
+      Transaction::STATE_NEW => array(Transaction::STATE_TRIGGERED, Transaction::STATE_DISCARDED),
       Transaction::STATE_TRIGGERED => array(Transaction::STATE_ACCEPTED, Transaction::STATE_REJECTED),
       Transaction::STATE_ACCEPTED => array(Transaction::STATE_COMMITED, Transaction::STATE_ERROR),
       Transaction::STATE_COMMITED => array(Transaction::STATE_ARCHIVED, Transaction::STATE_REVOKE_TRIGGERED),
-      Transaction::STATE_REJECTED => array(Transaction::STATE_ACCEPTED, Transaction::STATE_DISCARDED),
+      Transaction::STATE_REJECTED => array(Transaction::STATE_TRIGGERED, Transaction::STATE_DISCARDED),
     );
     $candidates = $flow[$this->state];
     if(!in_array($state, $candidates)) {
@@ -1818,10 +1813,13 @@ class UserPermission{
     }
     //Treat here the recursive case of transaction
     if ($object == 'transaction') {
-      $s = new Serializer('BasicTransaction');
-      $transaction = $s->load($objectid);
-      return $this->access($permission, 'account buyer', $transaction->fromaccount) 
-          || $this->access($permission, 'account seller', $transaction->toaccount);
+      $ts = new Serializer('BasicTransaction');
+      $as = new Serializer('LocalAccount');
+      $transaction = $ts->load($objectid);
+      $fromaccount = $as->loadFromUniqueKey('name', $transaction->getFromAccountName());
+      $toaccount = $as->loadFromUniqueKey('name', $transaction->getToAccountName());
+      return $this->access($permission, 'account buyer', $fromaccount->id) 
+          || $this->access($permission, 'account seller', $toaccount->id);
     }
     //compute permissions
     $userperms = &$this->getPermissions();
