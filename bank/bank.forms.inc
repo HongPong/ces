@@ -442,7 +442,7 @@ function bank_limitchain_form_validate($form, &$form_state) {
         }
       }
       elseif ($limit['classname'] == 'AbsoluteDebitLimit') {
-        if($amount > 0) {
+        if ($amount > 0) {
           form_set_error('value', t('The debit limit must not be positive.'));
         }
       }
@@ -537,7 +537,7 @@ function bank_account_form($form, &$form_state, $op, $id) {
     '#autocomplete_path' => 'user/autocomplete',
     '#default_value' => $accdrupaluser->name,
     '#required' => TRUE,
-    '#disabled' => !$admin || $virtual, 
+    '#disabled' => !$admin || $virtual,
   );
   if (isset($accuser['id'])) { //if op != new
     $form['account']['accountuser'] = array(
@@ -552,7 +552,7 @@ function bank_account_form($form, &$form_state, $op, $id) {
       3 => t('Company'),
       4 => t('Public')
     );
-  if($account['kind'] == LocalAccount::TYPE_VIRTUAL) {
+  if ($account['kind'] == LocalAccount::TYPE_VIRTUAL) {
     $options[5] = t('Virtual');
   }
   $form['account']['kind'] = array(
@@ -596,7 +596,6 @@ function bank_account_form($form, &$form_state, $op, $id) {
     '#access' => $admin,
     '#required' => TRUE,
   );
-  
   if ($op == 'new') {
     $submit = t('Create account');
   }
@@ -606,8 +605,7 @@ function bank_account_form($form, &$form_state, $op, $id) {
   elseif ($op == 'activate') {
     $submit = t('Activate account');
   }
-  
-  if(isset($submit)) {
+  if (isset($submit)) {
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => $submit,
@@ -681,7 +679,7 @@ function bank_account_form_submit($form, &$form_state) {
  * @todo Make an easy system to find account names by exchange/username.
  */
 function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_account_id = NULL, $from_account_id = NULL) {
-  if (!empty($form_state['values']) && !empty($form_state['values']['page']) 
+  if (!empty($form_state['values']) && !empty($form_state['values']['page'])
       && $form_state['values']['page'] == 'confirm') {
     return bank_transaction_confirm_form($form, $form_state, $op);
   }
@@ -705,13 +703,13 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
     '#disabled' => $to_account_id != NULL,
     '#ajax' => array(
       'callback' => 'bank_toaccountname_dropdown_callback',
-      'wrapper' => 'dropdown-toaccountname-replace',  
+      'wrapper' => 'dropdown-toaccountname-replace',
     ),
   );
   //Select seller's account
   $accountconditions = array(
-            'exchange' => $toexchangeid, 
-            'state' => 1, 
+            'exchange' => $toexchangeid,
+            'state' => 1,
             'kind' => array(
               LocalAccount::TYPE_INDIVIDUAL,
               LocalAccount::TYPE_SHARED,
@@ -732,11 +730,11 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
     '#prefix' => '<div id="dropdown-toaccountname-replace">',
     '#suffix' => '</div>'
   );
-  if (isset($form_state['values']['toaccountname'])) 
+  if (isset($form_state['values']['toaccountname']))
     $form['fromaccountname']['#default_value'] = $form_state['values']['toaccountname'];
   if ($to_account_id != NULL) {
-    if(!isset($accounts[$to_account_id])) {
-      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id'=>$to_account_id, '%ex'=>$toexchange['code'])), 'error');
+    if (!isset($accounts[$to_account_id])) {
+      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $to_account_id, '%ex' => $toexchange['code'])), 'error');
       return FALSE;
     }
     $form['toaccountname']['#default_value'] = $accounts[$to_account_id]['name'];
@@ -754,11 +752,11 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
     '#disabled' => $from_account_id != NULL,
     '#ajax' => array(
       'callback' => 'bank_fromaccountname_dropdown_callback',
-      'wrapper' => 'dropdown-fromaccountname-replace',  
+      'wrapper' => 'dropdown-fromaccountname-replace',
     ),
   );
   //Select buyer's account.
-  if($fromexchangeid == $toexchangeid) {
+  if ($fromexchangeid == $toexchangeid) {
     $fromoptions = &$tooptions;
   }
   else{
@@ -777,11 +775,11 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
     '#prefix' => '<div id="dropdown-fromaccountname-replace">',
     '#suffix' => '</div>'
   );
-  if (isset($form_state['values']['fromaccountname'])) 
+  if (isset($form_state['values']['fromaccountname']))
     $form['fromaccountname']['#default_value'] = $form_state['values']['fromaccountname'];
   if ($from_account_id != NULL) {
-    if(!isset($accounts[$from_account_id])) {
-      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id'=>$from_account_id, '%ex'=>$fromexchange['code'])), 'error');
+    if (!isset($accounts[$from_account_id])) {
+      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $from_account_id, '%ex' => $fromexchange['code'])), 'error');
       return FALSE;
     }
     $form['fromaccountname']['#default_value'] = $accounts[$from_account_id]['name'];
@@ -804,7 +802,6 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
       '#type' => 'value',
       '#value' => $user->uid,
   );
-  
   $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Create transaction'),
@@ -850,18 +847,18 @@ function bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
       $fromaccount = $bank->getAccount($transaction['fromaccount']);
       $toaccount = $bank->getAccount($transaction['toaccount']);
       $values = array(
-        'toaccountname'=> $toaccount['name'],
+        'toaccountname' => $toaccount['name'],
         'fromaccountname' => $fromaccount['name'],
         'amount' => $transaction['amount'],
         'concept' => $transaction['concept'],
-        'id'=> $transaction['id'],
+        'id' => $transaction['id'],
       );
-    }catch(Exception $e){
+    } catch (Exception $e) {
       drupal_set_message($e->getMessage(), 'error');
       return array();
     }
   }
-  if($op != 'new' && $op != 'trigger' && $op != 'edit') {
+  if ($op != 'new' && $op != 'trigger' && $op != 'edit') {
     drupal_set_message(t('Operation not permitted or not implemented yet.'), 'error');
     return array();
   }
@@ -983,7 +980,7 @@ function bank_transaction_confirm_form_submit($form, &$form_state) {
     }
     if ($result !== TRUE) {
       $text = t('The transaction has NOT been applied.');
-      if(is_array($result)){
+      if (is_array($result)) {
         $text .= '<br/>' . t('Details:') . '<br/>';
         $text .= '<ul>';
         foreach ($result as $message) {
@@ -1135,15 +1132,15 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
     $row[] = check_plain($transaction['concept']);
     $row[] = $type==0?$transaction['amount']:'';
     $row[] = $type==1?$transaction['amount']:'';
-    if(in_array((int)$transaction['state'], array(3))){
+    if (in_array((int)$transaction['state'], array(3))) {
       $inibalance += ($transaction['amount'])*($type==0?1:-1);
     }
     $row[] = $inibalance;
     $actions = array();
-    if($transaction['state'] == Transaction::STATE_NEW || $transaction['state'] == Transaction::STATE_REJECTED) {
-      $actions[]=l(t('Edit'), 'ces/bank/exchange/'.$account['exchange'].'/transaction/' . $transaction['id'] . '/edit');
-      $actions[]=l(t('Trigger'), 'ces/bank/exchange/'.$account['exchange'].'/transaction/' . $transaction['id'] . '/trigger');
-      $actions[]=l(t('Discard'), 'ces/bank/exchange/'.$account['exchange'].'/transaction/' . $transaction['id'] . '/discard');
+    if ($transaction['state'] == Transaction::STATE_NEW || $transaction['state'] == Transaction::STATE_REJECTED) {
+      $actions[]=l(t('Edit'), 'ces/bank/exchange/' . $account['exchange'] . '/transaction/' . $transaction['id'] . '/edit');
+      $actions[]=l(t('Trigger'), 'ces/bank/exchange/' . $account['exchange'] . '/transaction/' . $transaction['id'] . '/trigger');
+      $actions[]=l(t('Discard'), 'ces/bank/exchange/' . $account['exchange'] . '/transaction/' . $transaction['id'] . '/discard');
     }
     $row[] = implode(' ', $actions);
     $form['transactions']['table']['#rows'][] = $row;
@@ -1174,14 +1171,13 @@ function bank_permission_form($form, &$form_state, $op, $id = NULL) {
       '#type' => 'value',
       '#value' => $op,
   );
-  
   if ($op != 'new') {
     $form['id'] = array(
       '#type' => 'value',
       '#value' => $id,
     );
   }
-  $form['permission'] = array (
+  $form['permission'] = array(
     '#title' => t('Permission type'),
     '#type' => 'select',
     '#options' => array(
@@ -1206,14 +1202,14 @@ function bank_permission_form($form, &$form_state, $op, $id = NULL) {
       'exchange details' => t('Exchange configuration details'),
       'exchange accountcreator' => t('Exchange account creation'),
       'account' => t('Account'),
-      'account details' => t('Account details'),  
+      'account details' => t('Account details'),
       'account transactions' => t('Account transactions'),
       'account seller' => t('Account sell'),
     ),
     '#default_value' => $values['object'],
     '#required' => TRUE,
   );
-  //TODO: use ajax to provide an usable interface instead of the following 
+  //TODO: use ajax to provide an usable interface instead of the following
   //element.
   $form['objectid'] = array(
     '#type' => 'textfield',
@@ -1234,7 +1230,7 @@ function bank_permission_form($form, &$form_state, $op, $id = NULL) {
     '#default_value' => $values['scope'],
     '#required' => TRUE,
   );
-  //TODO: use ajax to provide an usable interface instead of the following 
+  //TODO: use ajax to provide an usable interface instead of the following
   //element.
   $form['scopeid'] = array(
     '#type' => 'textfield',

@@ -12,10 +12,10 @@ function ces_develop_menu() {
   );
   return $menu;
 }
-function ces_develop_run_script($file){
+function ces_develop_run_script($file) {
   $path = drupal_get_path('module', 'ces_develop');
   ob_start();
-  include($path.'/'.$file.'.php');
+  include($path . '/' . $file . '.php');
   $output = ob_get_clean();
   return $output;
 }

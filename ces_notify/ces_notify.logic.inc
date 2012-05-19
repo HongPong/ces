@@ -154,7 +154,7 @@ class Notifier{
     if (!is_array($recipients)) {
       $recipients = array($recipients);
     }
-    foreach($recipients as $recipientId) {
+    foreach ($recipients as $recipientId) {
       $recipient = user_load($recipientId);
       $sender = user_load($senderId);
       drupal_mail('ces_notify', $module . ' ' . $key, $recipient->mail, NULL, $params, $sender->mail, TRUE);

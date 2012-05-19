@@ -10,23 +10,23 @@ function bank_install() {
   $ok1 = _bank_create_default_exchange();
   $ok2 = _bank_create_menu();
   $ok3 = _bank_create_default_permissions();
-  if($ok1 && $ok2 && $ok3){
+  if ($ok1 && $ok2 && $ok3) {
     drupal_set_message(st('Initial records created.'));
   }
 }
 function _bank_create_menu() {
   //create menu
   $record = array(
-      'menu_name'=>'ces', 
-      'title'=>'CES Menu', 
-      'description'=>'Navigation menu for CES',
+      'menu_name' => 'ces',
+      'title' => 'CES Menu',
+      'description' => 'Navigation menu for CES',
   );
   $ok3 = drupal_write_record('menu_custom', $record);
   return $ok3!==FALSE;
 }
 function _bank_create_default_exchange() {
   $record = array(
-    'id'=>1,
+    'id' => 1,
     'code' => '0000',
     'active' => 0,
     'shortname' => '',
@@ -65,7 +65,7 @@ function _bank_create_default_exchange() {
  *  - See global statistics
  *  - Create a new exchange
  */
-function _bank_create_default_permissions(){
+function _bank_create_default_permissions() {
   $record = array(
     'permission' => Permission::PERMISSION_VIEW,
     'object' => 'global statistics',
@@ -562,7 +562,7 @@ function bank_schema() {
         'type' => 'varchar',
         'length' => '31',
         'not null' => TRUE,
-        'default' => ''  
+        'default' => ''
       ),
       'scopeid' => array(
         'type' => 'int',

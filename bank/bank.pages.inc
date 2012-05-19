@@ -3,7 +3,7 @@
  * @file
  * All page callback functions for bank module.
  */
-function bank_exchange_admin($exchangeid){
+function bank_exchange_admin($exchangeid) {
   $bank = new Bank();
   $exchange = $bank->getExchange($exchangeid);
   $page = array();
@@ -13,7 +13,6 @@ function bank_exchange_admin($exchangeid){
     'title' => t('New accounts'),
     'description' => t('List of new account requests for this exchange. Activate or delete all them.')
   );
-  
   $accounts = $bank->getAllAccounts(array('state' => 0, 'exchange' => $exchange['id']));
   if (!empty($accounts)) {
     $list = array(
@@ -21,7 +20,7 @@ function bank_exchange_admin($exchangeid){
       '#items' => array(),
     );
     foreach ($accounts as $account) {
-      $list['#items'][] = l($account['name'], 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/activate');
+      $list['#items'][] = l($account['name'], 'ces/bank/exchange/' . $exchange['id'] . '/account/' . $account['id'] . '/activate');
     }
     $page['new_accounts']['new_accounts_list'] = $list;
   }
@@ -32,7 +31,7 @@ function bank_exchange_admin($exchangeid){
     );
   }
   $page['limitchains'] = array(
-      '#markup' => l(t('Administer limit chains'), 'ces/bank/exchange/'.$exchange['id'].'/limitchain'),
+      '#markup' => l(t('Administer limit chains'), 'ces/bank/exchange/' . $exchange['id'] . '/limitchain'),
   );
   return $page;
 }
@@ -42,9 +41,7 @@ function bank_exchange_admin($exchangeid){
 function bank_exchange_list_page() {
   $bank = new Bank();
   $exchanges = $bank->getAllExchanges();
-
   $page = array();
-
   if (empty($exchanges)) {
     $page['text'] = array(
       '#type' => 'markup',
@@ -54,7 +51,6 @@ function bank_exchange_list_page() {
   else {
     include_once DRUPAL_ROOT . '/includes/locale.inc';
     $countries = country_get_list();
-
     foreach ($exchanges as $exchange) {
       $country = $countries[$exchange['country']];
       if (!isset($page[$country])) {
@@ -118,7 +114,7 @@ function bank_exchange_list_page() {
         $exchange['town'],
         $exchange['accounts'],
         $exchange['currencysymbol'],
-        l(t('Register'), 'ces/bank/exchange/' . $exchange['id'].'/account/new', array('title' => t('Click to open an account in this exchange'))),
+        l(t('Register'), 'ces/bank/exchange/' . $exchange['id'] . '/account/new', array('title' => t('Click to open an account in this exchange'))),
       );
       $page[$country]['table']['#rows'][] = $row;
     }
@@ -132,7 +128,6 @@ function bank_exchange_list_page() {
 
   return $page;
 }
-
 function bank_exchange_accounts_page($exchangeid) {
   $bank = new Bank();
   $accounts = $bank->getAllAccounts(array('exchange' => $exchangeid));
@@ -140,15 +135,15 @@ function bank_exchange_accounts_page($exchangeid) {
   $table = array(
     '#theme' => 'table',
     '#header' => array(
-      '#','Account', 'User', 'Balance', 'Actions'
+      '#', 'Account', 'User', 'Balance', 'Actions'
     ),
     '#rows' => array(),
   );
   $counter = 1;
   foreach ($accounts as $account) {
     if ($account['state'] == 0) continue;//LocalAccount::STATE_HIDDEN)
-    $acchref = 'ces/bank/exchange/'.$exchangeid.'/account/'.$account['id'];
-    $actions = l(t('details'), $acchref.'/view');
+    $acchref = 'ces/bank/exchange/' . $exchangeid . '/account/' . $account['id'];
+    $actions = l(t('details'), $acchref . '/view');
     $row = array(
       $counter++,
       $account['name'],
@@ -158,73 +153,59 @@ function bank_exchange_accounts_page($exchangeid) {
     );
     $table['#rows'][] = $row;
   }
-  $table['#rows'] = 
   $page['table'] = $table;
   return $page;
 }
 
 function bank_account_list_page() {
   global $user;
-
   $bank = new Bank();
   $page = array();
-
   $accounts = $bank->getUserAccounts($user->uid);
   foreach ($accounts as $account) {
     $exchange = $bank->getExchange($account['exchange']);
-
     $accform = array(
         '#type' => 'fieldset',
         '#title' => t('Account') . ' ' . $account['name'],
     );
-
     $accform['exchange'] = array(
       '#type' => 'item',
       '#title' => t('Exchange'),
       '#markup' => $exchange['name'],
     );
-
     $accform['account'] = array(
       '#type' => 'item',
       '#title' => t('Account'),
       '#markup' => $account['name'],
     );
-
     $accform['balance'] = array(
       '#type' => 'item',
       '#title' => t('Balance'),
       '#markup' => $account['balance'],
     );
-
     $accform['statement'] = array(
       '#type' => 'item',
-      '#markup' => l(t('Statement'), 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/transaction'),
+      '#markup' => l(t('Statement'), 'ces/bank/exchange/' . $exchange['id'] . '/account/' . $account['id'] . '/transaction'),
     );
-
     $accform['edit'] = array(
       '#type' => 'item',
-      '#markup' => l(t('Edit'), 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/edit'),
+      '#markup' => l(t('Edit'), 'ces/bank/exchange/' . $exchange['id'] . '/account/' . $account['id'] . '/edit'),
     );
-
     $accform['transaction'] = array(
       '#type' => 'item',
-      '#markup' => l(t('Charge a sale'), 'ces/bank/exchange/'.$exchange['id'].'/account/'.$account['id'].'/transaction/sell'),
+      '#markup' => l(t('Charge a sale'), 'ces/bank/exchange/' . $exchange['id'] . '/account/' . $account['id'] . '/transaction/sell'),
     );
-
     $page[$account['name']] = $accform;
   }
   return $page;
 }
-
 function bank_admin_page() {
   $bank = new Bank();
-
   $page = array();
   $page['new_exchanges'] = array(
       '#type' => 'fieldset',
       '#title' => t('Exchange requests'),
   );
-
   $exchanges = $bank->getAllExchanges(array('state' => 0));
   if (!empty($exchanges)) {
     $list = array(
@@ -232,7 +213,7 @@ function bank_admin_page() {
       '#items' => array(),
     );
     foreach ($exchanges as $exchange) {
-      $list['#items'][] = l($exchange['code'] . ' - ' . $exchange['name'], 'ces/bank/exchange/'.$exchange['id'].'/activate');
+      $list['#items'][] = l($exchange['code'] . ' - ' . $exchange['name'], 'ces/bank/exchange/' . $exchange['id'] . '/activate');
     }
     $page['new_exchanges']['new_exchanges_list'] = $list;
   }
@@ -245,7 +226,7 @@ function bank_admin_page() {
   return $page;
 }
 /**
- * 
+ *
  */
 function bank_permissions_page() {
   $bank = new Bank();
@@ -291,7 +272,7 @@ function bank_permissions_page() {
       $perm['objectid'],
       $perm['scope'],
       $perm['scopeid'],
-      l(t('Edit'), 'ces/bank/permission/'.$perm['id'].'/edit') . ' ' . l(t('Delete'),'ces/bank/permission/'.$perm['id'].'/delete'),
+      l(t('Edit'), 'ces/bank/permission/' . $perm['id'] . '/edit') . ' ' . l(t('Delete'), 'ces/bank/permission/' . $perm['id'] . '/delete'),
     );
     $page['table']['#rows'][] = $row;
   }
@@ -300,9 +281,9 @@ function bank_permissions_page() {
 /**
  * List the limitchains for the given exchange.
  */
-function bank_limitchain_list_page($exchangeId) {
+function bank_limitchain_list_page($exchange) {
   $bank = new Bank();
-  $limitchains = $bank->getAllLimitChains($exchangeId);
+  $limitchains = $bank->getAllLimitChains($exchange);
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
@@ -328,16 +309,16 @@ function bank_limitchain_list_page($exchangeId) {
     foreach ($limitchain['limits'] as $limit) {
       $limits[] = $limit['classname']::getName() . ' ' . $limit['value'] . ($limit['block'] ? ' ' . t('block') : '');
     }
-    $row[] = implode('<br/>',$limits);
+    $row[] = implode('<br/>', $limits);
     $actions = array();
-    if (bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', $exchangeId)) {
-      $actions[] = l(t('View'), 'ces/bank/exchange/'.$exchangeId.'/limitchain/'.$limitchain['id'].'/view');
+    if (bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', $exchange)) {
+      $actions[] = l(t('View'), 'ces/bank/exchange/' . $exchange . '/limitchain/' . $limitchain['id'] . '/view');
     }
-    if (bank_access(Permission::PERMISSION_EDIT, 'exchange', $exchangeId)) {
-      $actions[] = l(t('Edit'), 'ces/bank/exchange/'.$exchangeId.'/limitchain/'.$limitchain['id'].'/edit');
+    if (bank_access(Permission::PERMISSION_EDIT, 'exchange', $exchange)) {
+      $actions[] = l(t('Edit'), 'ces/bank/exchange/' . $exchange . '/limitchain/' . $limitchain['id'] . '/edit');
     }
-    if (bank_access(Permission::PERMISSION_ADMIN, 'exchange', $exchangeId)) {
-      $actions[] = l(t('Delete'), 'ces/bank/exchange/'.$exchangeId.'/limitchain/'.$limitchain['id'].'/delete');
+    if (bank_access(Permission::PERMISSION_ADMIN, 'exchange', $exchange)) {
+      $actions[] = l(t('Delete'), 'ces/bank/exchange/' . $exchange . '/limitchain/' . $limitchain['id'] . '/delete');
     }
     $row[] = implode(' ', $actions);
     $page['table']['#rows'][] = $row;

@@ -56,10 +56,8 @@ class Bank{
       $exchange = $s->loadFromRecord($record);
       $exchange->activate();
       $s->save($exchange);
-
       //Create permission records. By the moment they are static, but they could
       //potentially be configured and stored in $record.
- 
       //Let exchange users see the exchange details.
       $perm = array(
         'permission' => Permission::PERMISSION_VIEW,
@@ -96,11 +94,11 @@ class Bank{
         'scopeid' => $exchange->admin,
       );
       $this->createPermission($perm);
-      
       $notifier = new Notifier();
       $notifier->notify('bank', 'exchange activated', $exchange->admin, $user->uid, array('exchange' => $exchange->getRecord()));
 
-    }catch(Exception $e) {
+    }
+    catch (Exception $e) {
       $t->rollback();
       throw $e;
     }
@@ -108,7 +106,7 @@ class Bank{
   /**
    * Updates and activates an account.
    */
-  public function activateAccount(array &$record){
+  public function activateAccount(array &$record) {
     $t = Serializer::DBTransaction();
     global $user;
     try{
@@ -118,7 +116,7 @@ class Bank{
       $s->save($account);
       //Create permission entry for account owner(s).
       $accountusers = $account->getUsers();
-      foreach ($accountusers as $accountuser){
+      foreach ($accountusers as $accountuser) {
         $perm = array(
           'permission' => Permission::PERMISSION_EDIT,
           'object' => 'account',
@@ -132,15 +130,15 @@ class Bank{
       //build recipients array;
       $recipients = array();
       $accusers = $account->getUsers();
-      foreach($accusers as $accuser) {
+      foreach ($accusers as $accuser) {
         $recipients[] = $accuser->user;
       }
       $notifier->notify('bank', 'account activated', $recipients, $user->uid, array('account' => $account->getRecord()));
-    }catch(Exception $e){
+    }
+    catch (Exception $e) {
       $t->rollback();
       throw $e;
     }
-    
   }
   /**
    * Gets the exchange from its id
@@ -236,7 +234,7 @@ class Bank{
    * @return array
    * transaction records meeting all conditions specified by $conditions parameter.
    * The amount is expressed in a currency depending on the given conditions: if
-   * 'account' is set, then it is used the account's currency. If 'fromaccount' 
+   * 'account' is set, then it is used the account's currency. If 'fromaccount'
    * is set but 'toaccount' is ommited, then the fromaccount's currency is used.
    * Otherwise the currency is the seller's account one for each exchenge.
    */
@@ -245,16 +243,15 @@ class Bank{
     //Choose currency.
     $currencyaccount = NULL;
     $currency = NULL;
-    if(isset($conditions['account'])) 
+    if (isset($conditions['account']))
       $currencyaccount = $conditions['account'];
-    if(isset($conditions['fromaccount']) && !isset($conditions['toaccount']))
+    if (isset($conditions['fromaccount']) && !isset($conditions['toaccount']))
       $currencyaccount = $conditions['fromaccount'];
-    if($currencyaccount!=NULL) {
+    if ($currencyaccount!=NULL) {
       $as = new Serializer('LocalAccount');
       $account = $as->load($currencyaccount);
       $currency = $account->getExchange()->getCurrency();
     }
-    
     //Load collection.
     if (isset($conditions['account'])) {
       //Shall we improve Serializer so it can directly handle 'or' conditions?
@@ -273,11 +270,10 @@ class Bank{
     $records = array();
     foreach ($transactions as $t) {
       $record = $t->getRecord();
-      if($currency != NULL)
+      if ($currency != NULL)
       $record['amount'] = $t->getAmount($currency);
       $records[] = $record;
     }
-    
     return $records;
   }
   /**
@@ -289,7 +285,6 @@ class Bank{
       //Create account record.
       unset($record['id']);
       $record['balance'] = 0;
-      
       $account = new LocalAccount($record);
       $s = new Serializer('LocalAccount');
       $s->save($account);
@@ -297,14 +292,11 @@ class Bank{
       //account id in order to create the AccountUser record(s).
       $account->saveExtraData();
       $record = $account->getRecord();
-      
-      
       $exchange = $account->getExchange();
-      
       $notifier = new Notifier();
       $notifier->notify('bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
-      
-    }catch(Exception $e) {
+    }
+    catch (Exception $e) {
       $t->rollback();
       throw $e;
     }
@@ -342,15 +334,15 @@ class Bank{
     $account = $s->load($id);
     $balance = $account->balance;
     $st = new Serializer('BasicTransaction');
-    $positive = $st->selectFunctionField('SUM', 'amount', 
+    $positive = $st->selectFunctionField('SUM', 'amount',
             array(
-              array('toaccount', $account->id), 
+              array('toaccount', $account->id),
               array('created', $time, '>='),
               array('state', array(3)),
             ));
-    $negative = $st->selectFunctionField('SUM', 'amount', 
+    $negative = $st->selectFunctionField('SUM', 'amount',
             array(
-              array('fromaccount', $account->id), 
+              array('fromaccount', $account->id),
               array('created', $time, '>='),
               array('state', array(3)),
             ));
@@ -390,17 +382,18 @@ class Bank{
     $t = Serializer::DBTransaction();
     try{
       if (isset($record['limits'])) {
-        foreach ($record['limits'] as $key=>$limit) {
-          if(!isset($limit['data'])) {
+        foreach ($record['limits'] as $key => $limit) {
+          if (!isset($limit['data'])) {
             $record['limits'][$key]['data'] = array();
           }
         }
-      } 
+      }
       else {
         $record['limits'] = array();
       }
       return $this->updateObject('LimitChain', $record);
-    }catch(Exception $e) {
+    }
+    catch (Exception $e) {
       $t->rollback();
       throw $e;
     }
@@ -474,7 +467,7 @@ class Bank{
           $ret = TRUE;
         }
       }
-      if(!$ret) {
+      if (!$ret) {
         $ret = $transaction->getLog($transaction->getState());
       }
       $s = new Serializer('BasicTransaction');
@@ -510,10 +503,11 @@ class Bank{
   }
   public function createPermission(array &$record) {
     $t = Serializer::DBTransaction();
-    try{
+    try {
       unset($record['id']);
       return $this->updateObject('Permission', $record);
-    } catch(Exception $e) {
+    }
+    catch (Exception $e) {
       $t->rollback();
       throw $e;
     }
@@ -524,9 +518,10 @@ class Bank{
   }
   public function updatePermission(array &$record) {
     $t = Serializer::DBTransaction();
-    try{
+    try {
       return $this->updateObject('Permission', $record);
-    } catch(Exception $e) {
+    }
+    catch (Exception $e) {
       $t->rollback();
       throw $e;
     }
@@ -535,12 +530,11 @@ class Bank{
     $userperms = new UserPermission($userid);
     $permissions = $userperms->getPermissions();
     $result = array();
-    foreach($permissions as $perm){
+    foreach ($permissions as $perm) {
       $result[] = $perm->getRecord();
     }
     return $result;
   }
-  
   private function getObject($className, $id) {
     $s = new Serializer($className);
     return $s->load($id);
@@ -558,7 +552,6 @@ class Bank{
     $record['id'] = $object->id;
     return TRUE;
   }
-  
   /**
    * Creates a new transacion object based on the record array.
    * @return Transaction
@@ -727,7 +720,6 @@ class Exchange extends DBObject{
       throw new Exception(t('Default exchange ( id = %id ) not found', array('%id' => self::DEFAULT_EXCHANGE_ID)));
     return $default;
   }
-  
   /**
    * @return LocalAccount to be used as a prototype for new accounts.
    */
@@ -742,11 +734,11 @@ class Exchange extends DBObject{
       'kind' => LocalAccount::TYPE_INDIVIDUAL,
       'limitchain' => $this->limitchain,
       'users' => array(
-         array(
-           'account' => NULL,
-           'user' => $user->uid,
-           'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR
-         ),
+        array(
+          'account' => NULL,
+          'user' => $user->uid,
+          'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR
+        ),
       )
     );
     $account = new LocalAccount($record);
@@ -830,11 +822,11 @@ class Exchange extends DBObject{
         'kind' => LocalAccount::TYPE_VIRTUAL,
         'limitchain' => $this->limitchain,
         'users' => array(
-           array(
-             'account' => NULL,
-             'user' => 1,
-             'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR
-           ),
+          array(
+            'account' => NULL,
+            'user' => 1,
+            'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR
+          ),
         )
       );
       $bank = new Bank();
@@ -874,9 +866,8 @@ class Currency extends DBObject{
    @var int
    */
   public $currencyscale;
-  
   /**
-   * @return float the amount in this currency of the value represented by the 
+   * @return float the amount in this currency of the value represented by the
    * two given parameters.
    * @param $amount float the amount to be converted.
    * @param $currency Currency the original currency.
@@ -1007,7 +998,7 @@ class LocalAccount extends DBObject implements Account {
     $s->updateField($account, 'balance');
   }
   public function checkTransaction(Transaction &$transaction) {
-    if($this->state == LocalAccount::STATE_ACTIVE) {
+    if ($this->state == LocalAccount::STATE_ACTIVE) {
       return $this->getLimitChain()->checkTransaction($this, $transaction);
     }
     else {
@@ -1438,9 +1429,7 @@ class BasicTransaction extends DBObject implements Transaction{
    * @var array
    */
   public $data;
-  
   public static $table = 'ces_transaction';
-  
   /**
    * @return the amount of this transaction in the given currency.
    * @param $currency The currency to be used. If ommited it returns the value
@@ -1452,7 +1441,7 @@ class BasicTransaction extends DBObject implements Transaction{
       $as = new Serializer('LocalAccount');
       $toaccount = $as->load($this->toaccount);
       return $currency->convert($this->amount, $toaccount->getExchange()->getCurrency());
-    } 
+    }
     else {
       return $this->amount;
     }
@@ -1487,7 +1476,7 @@ class BasicTransaction extends DBObject implements Transaction{
     $this->data['log'][$this->state] = array_merge($this->data['log'][$this->state], $messages);
   }
   public function getLog($state = NULL) {
-    if(isset($this->data) && isset($this->data['log']) && isset($this->data['log'][$state])){
+    if (isset($this->data) && isset($this->data['log']) && isset($this->data['log'][$state])) {
       return $this->data['log'][$state];
     }
     else{
@@ -1506,12 +1495,10 @@ class BasicTransaction extends DBObject implements Transaction{
       Transaction::STATE_REJECTED => array(Transaction::STATE_TRIGGERED, Transaction::STATE_DISCARDED),
     );
     $candidates = $flow[$this->state];
-    if(!in_array($state, $candidates)) {
+    if (!in_array($state, $candidates)) {
       throw new Exception(t('Invalid state transition for transaction %trans.', array('%trans' => $this->id)));
     }
     $this->state = $state;
-    /*$s = new Serializer('BasicTransaction');
-    $s->updateField($this, 'state');*/
   }
   public function trigger() {
     $this->setState(Transaction::STATE_TRIGGERED);
@@ -1634,10 +1621,9 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
       $this->parent = $parent;
     }
 }
-
 /**
- * This class extends the basic transaction features to allow transactions 
- * between distinct exchanges. The amount of this transaction has always to be 
+ * This class extends the basic transaction features to allow transactions
+ * between distinct exchanges. The amount of this transaction has always to be
  * understood in the seller's exchange currency.
  */
 class InterExchangeTransaction extends DecoratedTransaction{
@@ -1654,7 +1640,7 @@ class InterExchangeTransaction extends DecoratedTransaction{
   public function trigger() {
     $this->getVirtualTransactionFrom()->trigger();
     $this->getVirtualTransactionTo()->trigger();
-    if($this->getVirtualTransactionFrom()->getState() == Transaction::STATE_TRIGGERED
+    if ($this->getVirtualTransactionFrom()->getState() == Transaction::STATE_TRIGGERED
     && $this->getVirtualTransactionTo()->getState() == Transaction::STATE_TRIGGERED) {
       $this->setState(Transaction::STATE_TRIGGERED);
     }
@@ -1708,9 +1694,7 @@ class InterExchangeTransaction extends DecoratedTransaction{
       $toExchange = $toAccount->getExchange();
       $fromExchange = $fromAccount->getExchange();
       $fromVirtualAccount = $fromExchange->getVirtualAccount($toExchange);
-      
       $amount = $this->getAmount($fromExchange->getCurrency());
-
       $this->virtualTransactionFrom = new BasicTransaction(array(
         'fromaccount' => $fromAccount->id,
         'toaccount' => $fromVirtualAccount->id,
@@ -1802,7 +1786,7 @@ class UserPermission{
   public function access($permission, $object, $objectid) {
     if ($this->userid == 1)
       return TRUE;
-    if(is_string($permission)){
+    if (is_string($permission)) {
       $equiv = array(
         'view' => 10,
         'use' => 20,
@@ -1818,13 +1802,13 @@ class UserPermission{
       $transaction = $ts->load($objectid);
       $fromaccount = $as->loadFromUniqueKey('name', $transaction->getFromAccountName());
       $toaccount = $as->loadFromUniqueKey('name', $transaction->getToAccountName());
-      return $this->access($permission, 'account buyer', $fromaccount->id) 
+      return $this->access($permission, 'account buyer', $fromaccount->id)
           || $this->access($permission, 'account seller', $toaccount->id);
     }
     //compute permissions
     $userperms = &$this->getPermissions();
     foreach ($userperms as $userperm) {
-      if ($userperm->permission >= $permission 
+      if ($userperm->permission >= $permission
         && $this->belongs($object, $objectid, $userperm->object, $userperm->objectid)) {
         return TRUE;
       }
@@ -1834,7 +1818,7 @@ class UserPermission{
   /**
    * compute the user's permissions and populate the private internal variable
    * $permissions.
-   * Note: this function easily needs 10 or 15 database queries. It is 
+   * Note: this function easily needs 10 or 15 database queries. It is
    * recommendable to make cache of its result. Further, it could be easily
    * improved to do only 3 or 4 queries if it is necessary (changing the foreach
    * loops for IN(...) SQL statements).
@@ -1882,7 +1866,7 @@ class UserPermission{
     return self::$permissions[$this->userid];
   }
   /**
-   * @return boolean 
+   * @return boolean
    * Whether (object1,objectid1) belongs to (object2, objectid2).
    */
   private function belongs($object1, $objectid1, $object2, $objectid2) {
@@ -1895,7 +1879,7 @@ class UserPermission{
     }
     //Case same scope. Compare identifiers.
     if (substr($object1, 0, strlen($object2)) == $object2) {
-      return $objectid1 == $objectid2 || (substr($object1,0, 6) == 'global');
+      return $objectid1 == $objectid2 || (substr($object1, 0, 6) == 'global');
     }
     elseif (strpos($object2, ' ') === FALSE) {
       //All belongs to global scope
@@ -1907,7 +1891,7 @@ class UserPermission{
       //At this point we know that $object2 is one of 'account', 'exchange' and
       //$object1 one of 'account', 'exchange', 'global' and $object2 != $object1
       //so the only favorable possibily is the following.
-      if($object1 == Permission::SCOPE_ACCOUNT && $object2 == Permission::SCOPE_EXCHANGE) {
+      if ($object1 == Permission::SCOPE_ACCOUNT && $object2 == Permission::SCOPE_EXCHANGE) {
         $s = new Serializer('LocalAccount');
         $account = $s->load($objectid1);
         return ($account->exchange == $objectid2);
@@ -1944,7 +1928,7 @@ class Permission extends DBObject{
   public $objectid;
   /**
    * @var String
-   * Determines, together with scopeid, the group of users having this 
+   * Determines, together with scopeid, the group of users having this
    * permission.
    * Is a single keyword. Must be one of 'global', 'exchange', 'account', 'user'
    */
@@ -1954,17 +1938,14 @@ class Permission extends DBObject{
    */
   public $scopeid;
   public static $table = 'ces_permission';
-  
   const PERMISSION_VIEW = 10;
   const PERMISSION_USE = 20;
   const PERMISSION_EDIT = 30;
   const PERMISSION_ADMIN = 40;
-  
   const SCOPE_GLOBAL = 'global';
   const SCOPE_EXCHANGE = 'exchange';
   const SCOPE_ACCOUNT = 'account';
   const SCOPE_USER = 'user';
-
 }
 /**
  * @} End of "ingroup ces.bank".

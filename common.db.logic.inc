@@ -22,7 +22,6 @@ class Serializer {
 
   protected $className;
   protected $table;
-  
   /**
    * cache array. Srtucture:
    *  class name
@@ -37,9 +36,9 @@ class Serializer {
   }
 
   public function load($id) {
-    if(!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
-    if(!isset(Serializer::$cache[$this->className]['id'])) $cache[$this->className]['id'] = array();
-    if(!isset(Serializer::$cache[$this->className]['id'][$id])) {
+    if (!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
+    if (!isset(Serializer::$cache[$this->className]['id'])) $cache[$this->className]['id'] = array();
+    if (!isset(Serializer::$cache[$this->className]['id'][$id])) {
       $record = db_query('SELECT * FROM {' . $this->table . '} WHERE id = :id', array(':id' => $id))->fetchAssoc();
       if ($record === FALSE)
         return FALSE;
@@ -112,7 +111,7 @@ class Serializer {
    * Performs a SQL function such as COUNT(*), SUM(*), ... on a table field for
    * those rows meeting conditions.
    * @param $key must be SQL safe.
-   * @param $conditions array Each entry is a condition. A condition is an array 
+   * @param $conditions array Each entry is a condition. A condition is an array
    * of three therms
    */
   public function selectFunctionField($function, $key, array $conditions) {
@@ -120,11 +119,11 @@ class Serializer {
     if (!in_array($function, $functions))
       throw new Exception('Invalid database function.');
     $query = db_select($this->table, 't');
-    $query->addExpression($function.'('.$key.')');
+    $query->addExpression($function . '(' . $key . ')');
     foreach ($conditions as $condition) {
       if (count($condition) == 3)
         $query->condition($condition[0], $condition[1], $condition[2]);
-      else if(count($condition) == 2)
+      elseif (count($condition) == 2)
         $query->condition($condition[0], $condition[1]);
     }
     return $query->execute()->fetchField();
@@ -168,9 +167,9 @@ class Serializer {
    * @return DBObject
    */
   public function loadFromUniqueKey($key, $value) {
-    if(!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
-    if(!isset(Serializer::$cache[$this->className][$key])) $cache[$this->className][$key] = array();
-    if(!isset(Serializer::$cache[$this->className][$key][$value])) {
+    if (!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
+    if (!isset(Serializer::$cache[$this->className][$key])) $cache[$this->className][$key] = array();
+    if (!isset(Serializer::$cache[$this->className][$key][$value])) {
       $query = db_select($this->table, 't')->fields('t')->condition($key, $value)->range(0, 1);
       $result = $query->execute();
       $record = $result->fetchAssoc();
@@ -265,7 +264,7 @@ abstract class DBObject{
     $object = $this;
     $parent = $object->getParent();
     $decoration = array();
-    if($parent != NULL && ($parent instanceof DBObject)) {
+    if ($parent != NULL && ($parent instanceof DBObject)) {
       do {
         $decoration[] = array(
                           'classname' => get_class($object),
@@ -287,7 +286,7 @@ abstract class DBObject{
   private function getSimpleRecord() {
     $record = get_object_vars($this);
     foreach ($record as $key => $value) {
-      if($value === NULL) {
+      if ($value === NULL) {
         unset($record[$key]);
       }
     }

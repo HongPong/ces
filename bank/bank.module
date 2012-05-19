@@ -41,8 +41,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'access callback' => TRUE,
     'type' => MENU_NORMAL_ITEM,
-     
-  );  
+  );
   $menu['ces/bank/admin'] = array(
     'title' => 'Administer CES bank',
     'description' => 'Top administer interface for CES Bank',
@@ -73,7 +72,7 @@ function bank_menu() {
     'access callback' => 'bank_access',
     'access arguments' => array('use', 'global exchangecreator', 0),
     'type' => MENU_LOCAL_ACTION,
-  );  
+  );
   $menu['ces/bank/exchange/%'] = array(
     'title' => 'View exchange',
     'description' => 'View exchange',
@@ -86,8 +85,8 @@ function bank_menu() {
     'access arguments' => array('view', 'exchange details', 3),
   );
   $menu['ces/bank/exchange/%/view'] = array(
-    'title'=>'View',
-    'type'=>MENU_DEFAULT_LOCAL_TASK,
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   $menu['ces/bank/exchange/%/activate'] = array(
     'title' => 'Activate exchange',
@@ -111,7 +110,6 @@ function bank_menu() {
     'access callback' => 'bank_access',
     'access arguments' => array('edit', 'exchange', 3),
   );
-  //TODO
   $menu['ces/bank/exchange/%/admin'] = array(
     'title' => 'Administer exchange',
     'description' => 'Exchange administrative interface',
@@ -171,8 +169,8 @@ function bank_menu() {
     'access arguments' => array('view', 'account details', 5),
   );
   $menu['ces/bank/exchange/%/account/%/view'] = array(
-    'title'=>'View',
-    'type'=>MENU_DEFAULT_LOCAL_TASK,
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   $menu['ces/bank/exchange/%/account/%/edit'] = array(
     'title' => 'Edit account',
@@ -228,7 +226,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_LOCAL_ACTION,
     'access callback' => 'bank_access',
-    'access arguments' => array('use', 'account seller', 5),  
+    'access arguments' => array('use', 'account seller', 5),
   );
   $menu['ces/bank/exchange/%/account/%/transaction/buy'] = array(
     'title' => 'Pay for a purchase',
@@ -239,7 +237,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_LOCAL_ACTION,
     'access callback' => 'bank_access',
-    'access arguments' => array('use', 'account buyer', 5),  
+    'access arguments' => array('use', 'account buyer', 5),
   );
   $menu['ces/bank/exchange/%/transaction'] = array(
     'title' => 'Exchange transactions',
@@ -261,7 +259,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_LOCAL_ACTION,
     'access callback' => 'bank_access',
-    'access arguments' => array('use', 'exchange transactioncreator', 3),  
+    'access arguments' => array('use', 'exchange transactioncreator', 3),
   );
   $menu['ces/bank/exchange/%/transaction/%'] = array(
     'title' => 'View transaction',
@@ -272,7 +270,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_NORMAL_ITEM,
     'access callback' => 'bank_access',
-    'access arguments' => array('view', 'transaction details', 5),  
+    'access arguments' => array('view', 'transaction details', 5),
   );
   $menu['ces/bank/exchange/%/transaction/%/view'] = array(
     'title' => 'View',
@@ -287,7 +285,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_CALLBACK,
     'access callback' => 'bank_access',
-    'access arguments' => array('use', 'transaction', 5),  
+    'access arguments' => array('use', 'transaction', 5),
   );
   $menu['ces/bank/exchange/%/limitchain'] = array(
     'title' => 'Exchange limit chains',
@@ -298,7 +296,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_NORMAL_ITEM,
     'access callback' => 'bank_access',
-    'access arguments' => array('view', 'exchange limitchains', 3),  
+    'access arguments' => array('view', 'exchange limitchains', 3),
   );
   $menu['ces/bank/exchange/%/limitchain/new'] = array(
     'title' => 'New limit chain',
@@ -309,7 +307,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_LOCAL_ACTION,
     'access callback' => 'bank_access',
-    'access arguments' => array('admin', 'exchange', 3), 
+    'access arguments' => array('admin', 'exchange', 3),
   );
   //TODO
   $menu['ces/bank/exchange/%/limitchain/%'] = array(
@@ -324,8 +322,8 @@ function bank_menu() {
     'access arguments' => array('view', 'exchange limitchains', 3),
   );
   $menu['ces/bank/exchange/%/limitchain/%/view'] = array(
-    'title'=>'View',
-    'type'=> MENU_DEFAULT_LOCAL_TASK,
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   $menu['ces/bank/exchange/%/limitchain/%/edit'] = array(
     'title' => 'Edit limit chain',
@@ -336,7 +334,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_LOCAL_TASK,
     'access callback' => 'bank_access',
-    'access arguments' => array('edit', 'exchange', 3),  
+    'access arguments' => array('edit', 'exchange', 3),
   );
   //TODO
   $menu['ces/bank/exchange/%/limitchain/%/delete'] = array(
@@ -348,7 +346,7 @@ function bank_menu() {
     'file path' => drupal_get_path('module', 'bank'),
     'type' => MENU_LOCAL_TASK,
     'access callback' => 'bank_access',
-    'access arguments' => array('admin', 'exchange', 3),  
+    'access arguments' => array('admin', 'exchange', 3),
   );
   $menu['ces/bank/permission'] = array(
     'title' => 'Permissions',
@@ -369,7 +367,6 @@ function bank_menu() {
     'type' => MENU_LOCAL_ACTION,
     'access callback' => TRUE,
   );
-  
   $menu['ces/bank/permission/%/edit'] = array(
     'title' => 'Edit permission',
     'description' => 'Edit permission',
@@ -381,7 +378,6 @@ function bank_menu() {
     'access callback' => 'bank_access',
     'access arguments' => array('edit', 'permission', 3),
   );
-
   foreach ($menu as $key => $value) {
     $menu[$key]['menu_name'] = 'ces';
   }
@@ -419,18 +415,18 @@ function bank_block_view() {
   $bank = new Bank();
   $tree = array();
   $tree[] = _bank_get_link_item('ces/bank/dashboard', t('Dashboard'));
-  $exchanges = array();  
+  $exchanges = array();
   $accounts = array();
   //Compute relevant exchanges and accounts from permissions.
   $perms = $bank->getAdministrablePermissions($user->uid);
-  foreach($perms as $perm) {
-    if($perm['scope']!='global') { //discard global permissions.
-      if (substr($perm['object'],0,strlen('exchange')) == 'exchange') {
+  foreach ($perms as $perm) {
+    if ($perm['scope']!='global') { //discard global permissions.
+      if (substr($perm['object'], 0, strlen('exchange')) == 'exchange') {
         if (!isset($exchanges[$perm['objectid']])) {
           $exchanges[$perm['objectid']] = $bank->getExchange($perm['objectid']);
         }
       }
-      if (substr($perm['object'],0,strlen('account')) == 'account') {
+      if (substr($perm['object'], 0, strlen('account')) == 'account') {
         if (!isset($accounts[$perm['objectid']])) {
           $accounts[$perm['objectid']] = $bank->getAccount($perm['objectid']);
         }
@@ -439,17 +435,17 @@ function bank_block_view() {
   }
   //Add account exchanges.
   foreach ($accounts as $account) {
-    if(!isset($exchanges[$account['exchange']])){
+    if (!isset($exchanges[$account['exchange']])) {
       $exchanges[$account['exchange']] = $bank->getExchange($account['exchange']);
     }
   }
   //Build exchange-related menu.
   foreach ($exchanges as $exchange) {
-    $exhref = 'ces/bank/exchange/'.$exchange['id'];
+    $exhref = 'ces/bank/exchange/' . $exchange['id'];
     $exchilds = array();
     foreach ($accounts as $account) {
       if ($account['exchange'] == $exchange['id']) {
-        $achref = $exhref.'/account/'.$account['id'];
+        $achref = $exhref . '/account/' . $account['id'];
         $acchilds = array();
         $acchilds[] = _bank_get_link_item($achref . '/transaction', t('Statement'));
         $acchilds[] = _bank_get_link_item($achref . '/transaction/sell', t('Charge a sale'));
@@ -459,18 +455,18 @@ function bank_block_view() {
       }
     }
     if (bank_access('admin', 'exchange', $exchange['id'])) {
-      $exchilds[] = _bank_get_link_item($exhref.'/admin', t('Administrative interface'));
+      $exchilds[] = _bank_get_link_item($exhref . '/admin', t('Administrative interface'));
     }
     $exlink = _bank_get_link_item($exhref, $exchange['shortname'], $exchilds);
     $tree[] = $exlink;
   }
   $block = array(
-    'subject'=>t('CES Navigation'),
+    'subject' => t('CES Navigation'),
     'content' => menu_tree_output($tree),
   );
   return $block;
 }
-function _bank_get_link_item($href, $title, $childs = array()){
+function _bank_get_link_item($href, $title, $childs = array()) {
   static $counter = 0;
   $path = $_GET['q'];
   $link = array(
@@ -489,7 +485,7 @@ function _bank_get_link_item($href, $title, $childs = array()){
       'title' => $title,
       'mlid' => $counter++,
     ),
-    'below'=>$childs,
+    'below' => $childs,
   );
   return $link;
 }
@@ -739,7 +735,7 @@ User: [account:user:name]', $a, $b)
     case 'account activated':
       return array(
         'subject' => t('Account activated'),
-        'body' => t('Your account [account:name] has been activated. You can now start using it and bla bla bla', 
+        'body' => t('Your account [account:name] has been activated. You can now start using it and bla bla bla',
                 $a , $b)
       );
     case 'account debited':
