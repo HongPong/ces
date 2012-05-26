@@ -3,7 +3,7 @@
  * @file
  * All page callback functions for bank module.
  */
-function bank_exchange_admin($exchangeid) {
+function ces_bank_exchange_admin($exchangeid) {
   $bank = new Bank();
   $exchange = $bank->getExchange($exchangeid);
   $page = array();
@@ -38,7 +38,7 @@ function bank_exchange_admin($exchangeid) {
 /**
  * Page with the list of all exchanges organized by country.
  */
-function bank_exchange_list_page() {
+function ces_bank_exchange_list_page() {
   $bank = new Bank();
   $exchanges = $bank->getAllExchanges();
   $page = array();
@@ -128,7 +128,7 @@ function bank_exchange_list_page() {
 
   return $page;
 }
-function bank_exchange_accounts_page($exchangeid) {
+function ces_bank_exchange_accounts_page($exchangeid) {
   $bank = new Bank();
   $accounts = $bank->getAllAccounts(array('exchange' => $exchangeid));
   $page = array();
@@ -157,7 +157,7 @@ function bank_exchange_accounts_page($exchangeid) {
   return $page;
 }
 
-function bank_account_list_page() {
+function ces_bank_account_list_page() {
   global $user;
   $bank = new Bank();
   $page = array();
@@ -199,7 +199,7 @@ function bank_account_list_page() {
   }
   return $page;
 }
-function bank_admin_page() {
+function ces_bank_admin_page() {
   $bank = new Bank();
   $page = array();
   $page['new_exchanges'] = array(
@@ -228,7 +228,7 @@ function bank_admin_page() {
 /**
  *
  */
-function bank_permissions_page() {
+function ces_bank_permissions_page() {
   $bank = new Bank();
   $page = array();
   $page['table'] = array(
@@ -281,7 +281,7 @@ function bank_permissions_page() {
 /**
  * List the limitchains for the given exchange.
  */
-function bank_limitchain_list_page($exchange) {
+function ces_bank_limitchain_list_page($exchange) {
   $bank = new Bank();
   $limitchains = $bank->getAllLimitChains($exchange);
   $page = array();
@@ -311,17 +311,60 @@ function bank_limitchain_list_page($exchange) {
     }
     $row[] = implode('<br/>', $limits);
     $actions = array();
-    if (bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', $exchange)) {
+    if (ces_bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', $exchange)) {
       $actions[] = l(t('View'), 'ces/bank/exchange/' . $exchange . '/limitchain/' . $limitchain['id'] . '/view');
     }
-    if (bank_access(Permission::PERMISSION_EDIT, 'exchange', $exchange)) {
+    if (ces_bank_access(Permission::PERMISSION_EDIT, 'exchange', $exchange)) {
       $actions[] = l(t('Edit'), 'ces/bank/exchange/' . $exchange . '/limitchain/' . $limitchain['id'] . '/edit');
     }
-    if (bank_access(Permission::PERMISSION_ADMIN, 'exchange', $exchange)) {
+    if (ces_bank_access(Permission::PERMISSION_ADMIN, 'exchange', $exchange)) {
       $actions[] = l(t('Delete'), 'ces/bank/exchange/' . $exchange . '/limitchain/' . $limitchain['id'] . '/delete');
     }
     $row[] = implode(' ', $actions);
     $page['table']['#rows'][] = $row;
   }
+  return $page;
+}
+function ces_bank_exchange_view($id) {
+  $bank = new Bank();
+  $exchange = $bank->getExchange($id);
+  $page = array(
+    'exchange' => $exchange,
+    '#theme' => 'ces_bank_exchange_view',
+  );
+  return $page;
+}
+function ces_bank_account_view($id) {
+  $bank = new Bank();
+  $account = $bank->getAccount($id);
+  $page = array(
+    'account' => $account,
+    '#theme' => 'ces_bank_account_view',
+  );
+  //Add and override some items
+  $exchange = $bank->getExchange($account['exchange']);
+  $page['account']['exchange'] = $exchange['name'];
+  $users = reset($account['users']);
+  $accuser = user_load($users['user']);
+  $page['account']['username'] = $accuser->name;
+  //TODO: these arrays are repeated in ces_bank_account_form(). They should be
+  //shared.
+  $kinds = array(
+    0 => t('Individual'),
+    1 => t('Shared'),
+    2 => t('Organization'),
+    3 => t('Company'),
+    4 => t('Public')
+  );
+  $states = array(
+    0 => t('Hidden'),
+    1 => t('Active'),
+    2 => t('Closed'),
+    3 => t('Locked'),
+  );
+  $page['account']['kind'] = $kinds[$account['kind']];
+  $page['account']['state'] = $states[$account['state']];
+  $limitchain = $bank->getLimitChain($account['limitchain']);
+  $page['account']['limitchain'] = $limitchain['name'];
   return $page;
 }

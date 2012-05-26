@@ -26,7 +26,7 @@ class Bank{
       $record['state'] = Exchange::STATE_INACTIVE;
       $this->updateObject('Exchange', $record);
       $notifier = new Notifier();
-      $notifier->notify('bank', 'new exchange', 1, 1, array('exchange' => $record));
+      $notifier->notify('ces_bank', 'new exchange', 1, 1, array('exchange' => $record));
     }catch(Exception $e) {
       $t->rollback();
       throw $e;
@@ -95,7 +95,7 @@ class Bank{
       );
       $this->createPermission($perm);
       $notifier = new Notifier();
-      $notifier->notify('bank', 'exchange activated', $exchange->admin, $user->uid, array('exchange' => $exchange->getRecord()));
+      $notifier->notify('ces_bank', 'exchange activated', $exchange->admin, $user->uid, array('exchange' => $exchange->getRecord()));
 
     }
     catch (Exception $e) {
@@ -133,7 +133,7 @@ class Bank{
       foreach ($accusers as $accuser) {
         $recipients[] = $accuser->user;
       }
-      $notifier->notify('bank', 'account activated', $recipients, $user->uid, array('account' => $account->getRecord()));
+      $notifier->notify('ces_bank', 'account activated', $recipients, $user->uid, array('account' => $account->getRecord()));
     }
     catch (Exception $e) {
       $t->rollback();
@@ -294,7 +294,7 @@ class Bank{
       $record = $account->getRecord();
       $exchange = $account->getExchange();
       $notifier = new Notifier();
-      $notifier->notify('bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
+      $notifier->notify('ces_bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
     }
     catch (Exception $e) {
       $t->rollback();
@@ -622,7 +622,7 @@ class Bank{
     $notifier = new Notifier();
     foreach ($accountUsers as $accountUser) {
       if ($transactionUser != $accountUser->user) { //don't notify the transaction user
-        $notifier->notify('bank', $messageKey, $accountUser->user, $transactionUser, $params);
+        $notifier->notify('ces_bank', $messageKey, $accountUser->user, $transactionUser, $params);
       }
     }
   }

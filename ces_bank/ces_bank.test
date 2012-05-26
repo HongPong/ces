@@ -55,7 +55,7 @@ class BankTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'bank',
+      'name' => 'ces_bank',
       'description' => 'Test bank module features. Create exchange, create accounts, do transactions...',
       'group' => 'CES',
     );
@@ -63,7 +63,7 @@ class BankTestCase extends DrupalWebTestCase {
 
   public function setUp() {
     // Enable any modules required for the test. It also enables dependences.
-    parent::setUp('bank');
+    parent::setUp('ces_bank');
     $bank = new Bank();
     // Create global administrator.
     $this->globalAdminUser = $this->drupalCreateUser(array('administer blocks', 'access administration pages'));
@@ -179,8 +179,8 @@ class BankTestCase extends DrupalWebTestCase {
   }
   protected function setupMenuBlock() {
     $this->drupalLogin($this->globalAdminUser);
-    $this->drupalPost('admin/structure/block', array('blocks[bank_navigation][region]' => 'sidebar_first'), t('Save blocks'));
-    $this->assertFieldByName('blocks[bank_navigation][region]', 'sidebar_first');
+    $this->drupalPost('admin/structure/block', array('blocks[ces_bank_navigation][region]' => 'sidebar_first'), t('Save blocks'));
+    $this->assertFieldByName('blocks[ces_bank_navigation][region]', 'sidebar_first');
     $this->drupalGet('ces/bank/dashboard');
     $this->assertText(t('CES Navigation'));
   }

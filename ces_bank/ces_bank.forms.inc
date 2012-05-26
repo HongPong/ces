@@ -1,12 +1,12 @@
 <?php
 /**
  * @file
- * Forms definition for bank module
+ * Forms definition for ces_bank module
  */
 /**
  * Exchange form. Create, view and edit forms.
  */
-function bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
+function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
   global $user;
   $bank = new Bank();
   if (isset($form_state['values'])) {//form rebuild
@@ -219,7 +219,7 @@ function bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
   return $form;
 }
 
-function bank_exchange_form_validate($form, &$form_state) {
+function ces_bank_exchange_form_validate($form, &$form_state) {
   //code
   $code = $form_state['values']['code'];
   if (drupal_strlen($code)!=4)
@@ -244,7 +244,7 @@ function bank_exchange_form_validate($form, &$form_state) {
 
 }
 
-function bank_exchange_form_submit($form, &$form_state) {
+function ces_bank_exchange_form_submit($form, &$form_state) {
   $bank = new Bank();
   $op = $form_state['values']['operation'];
   try{
@@ -266,7 +266,7 @@ function bank_exchange_form_submit($form, &$form_state) {
   }
 }
 
-function bank_limitchain_form($form, &$form_state, $op, $id) {
+function ces_bank_limitchain_form($form, &$form_state, $op, $id) {
   $bank = new Bank();
   if (!empty($form_state['values'])) {//Form rebuild. Take values from last user input.
     $values = &$form_state['values'];
@@ -321,7 +321,7 @@ function bank_limitchain_form($form, &$form_state, $op, $id) {
 
   if (isset($values['limits'])) {
     foreach ($values['limits'] as $key => $value) {
-      $form['limits'][$key] = _bank_limitchain_limit_fieldset(array(), $values['limits'][$key]);
+      $form['limits'][$key] = _ces_bank_limitchain_limit_fieldset(array(), $values['limits'][$key]);
     }
   }
   //Add new limit to the chain
@@ -352,7 +352,7 @@ function bank_limitchain_form($form, &$form_state, $op, $id) {
   $form['newlimit']['addlimit'] = array(
     '#type' => 'submit',
     '#value' => t('Add limit'),
-    '#submit' => array('bank_limitchain_form_addlimit'),
+    '#submit' => array('ces_bank_limitchain_form_addlimit'),
   );
 
   $form['submit'] = array(
@@ -364,7 +364,7 @@ function bank_limitchain_form($form, &$form_state, $op, $id) {
 /**
  * Helper function.
  */
-function _bank_limitchain_limit_fieldset($form, &$form_values) {
+function _ces_bank_limitchain_limit_fieldset($form, &$form_values) {
   if (!isset($form_values['operation']))
     $form_values['operation'] = 'edit';
   $bank = new Bank();
@@ -404,11 +404,11 @@ function _bank_limitchain_limit_fieldset($form, &$form_values) {
   $limit['deletelimit'] = array(
     '#type' => 'submit',
     '#value' => t('Delete'),
-    '#submit' => array('bank_limitchain_form_deletelimit'),
+    '#submit' => array('ces_bank_limitchain_form_deletelimit'),
   );
   return $limit;
 }
-function bank_limitchain_form_addlimit($form, &$form_state) {
+function ces_bank_limitchain_form_addlimit($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
   $parents = $form_state['clicked_button']['#parents'];
   $value = &$form_state['values'];
@@ -417,7 +417,7 @@ function bank_limitchain_form_addlimit($form, &$form_state) {
   }
   $value['limits'][] = $value['newlimit'];
 }
-function bank_limitchain_form_deletelimit($form, &$form_state) {
+function ces_bank_limitchain_form_deletelimit($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
   $parents = $form_state['clicked_button']['#parents'];
   //go to the parent element of the clicked button and unset it!
@@ -428,7 +428,7 @@ function bank_limitchain_form_deletelimit($form, &$form_state) {
   }
   unset($value[$key]);
 }
-function bank_limitchain_form_validate($form, &$form_state) {
+function ces_bank_limitchain_form_validate($form, &$form_state) {
   $values = $form_state['values'];
   if (!empty($values['limits'])) {
     foreach ($values['limits'] as $key => $limit) {
@@ -449,7 +449,7 @@ function bank_limitchain_form_validate($form, &$form_state) {
     }
   }
 }
-function bank_limitchain_fieldset_submit($form, &$form_state) {
+function ces_bank_limitchain_fieldset_submit($form, &$form_state) {
   $values = $form_state['values'];
   try {
     $bank = new Bank();
@@ -464,7 +464,7 @@ function bank_limitchain_fieldset_submit($form, &$form_state) {
     drupal_set_message(t('Error occurred while updating the limit chain. Details: %msg', array('%msg' => $e->getMessage())), 'error');
   }
 }
-function bank_limitchain_form_submit($form, &$form_state) {
+function ces_bank_limitchain_form_submit($form, &$form_state) {
   $bank = new Bank();
   $op = $form_state['values']['operation'];
   try {
@@ -485,7 +485,7 @@ function bank_limitchain_form_submit($form, &$form_state) {
  * @param id either the id of an exchange (if $op == new) or the id of an account
  * otherwise.
  */
-function bank_account_form($form, &$form_state, $op, $id) {
+function ces_bank_account_form($form, &$form_state, $op, $id) {
   // TODO: Acess control to some fields.
   $bank = new Bank();
   if ($op == 'new') {
@@ -497,7 +497,7 @@ function bank_account_form($form, &$form_state, $op, $id) {
     $exchange = $bank->getExchange($account['exchange']);
   }
 
-  $admin = bank_access('admin', 'exchange', $exchange['id']);
+  $admin = ces_bank_access('admin', 'exchange', $exchange['id']);
   $virtual = ($account['kind'] == LocalAccount::TYPE_VIRTUAL);
 
   if (isset($account['id'])) {
@@ -614,7 +614,7 @@ function bank_account_form($form, &$form_state, $op, $id) {
   return $form;
 }
 
-function bank_account_form_validate($form, &$form_state) {
+function ces_bank_account_form_validate($form, &$form_state) {
   //TODO
   $record = &$form_state['values'];
   $username = $record['username'];
@@ -632,7 +632,7 @@ function bank_account_form_validate($form, &$form_state) {
     }
   }
 }
-function bank_account_form_submit($form, &$form_state) {
+function ces_bank_account_form_submit($form, &$form_state) {
   $record = $form_state['values'];
   $op = $record['operation'];
   $bank = new Bank();
@@ -678,10 +678,10 @@ function bank_account_form_submit($form, &$form_state) {
  * @todo Set the currency according the toaccount exchage currency.
  * @todo Make an easy system to find account names by exchange/username.
  */
-function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_account_id = NULL, $from_account_id = NULL) {
+function ces_bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_account_id = NULL, $from_account_id = NULL) {
   if (!empty($form_state['values']) && !empty($form_state['values']['page'])
       && $form_state['values']['page'] == 'confirm') {
-    return bank_transaction_confirm_form($form, $form_state, $op);
+    return ces_bank_transaction_confirm_form($form, $form_state, $op);
   }
   global  $user;
   $bank = new Bank();
@@ -702,7 +702,7 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
     '#default_value' => $toexchangeid,
     '#disabled' => $to_account_id != NULL,
     '#ajax' => array(
-      'callback' => 'bank_toaccountname_dropdown_callback',
+      'callback' => 'ces_bank_toaccountname_dropdown_callback',
       'wrapper' => 'dropdown-toaccountname-replace',
     ),
   );
@@ -751,7 +751,7 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
     '#default_value' => $fromexchangeid,
     '#disabled' => $from_account_id != NULL,
     '#ajax' => array(
-      'callback' => 'bank_fromaccountname_dropdown_callback',
+      'callback' => 'ces_bank_fromaccountname_dropdown_callback',
       'wrapper' => 'dropdown-fromaccountname-replace',
     ),
   );
@@ -811,16 +811,16 @@ function bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_accoun
 /**
  * AJAX callback for transaction form
  */
-function bank_toaccountname_dropdown_callback($form, $form_state) {
+function ces_bank_toaccountname_dropdown_callback($form, $form_state) {
   return $form['toaccountname'];
 }
 /**
  * AJAX callback for transaction form
  */
-function bank_fromaccountname_dropdown_callback($form, $form_state) {
+function ces_bank_fromaccountname_dropdown_callback($form, $form_state) {
   return $form['fromaccountname'];
 }
-function bank_transaction_form_submit($form, &$form_state) {
+function ces_bank_transaction_form_submit($form, &$form_state) {
   $form_state['values']['page'] = 'confirm';
   $form_state['rebuild'] = TRUE;
 }
@@ -832,9 +832,9 @@ function bank_transaction_form_submit($form, &$form_state) {
  *  - discard: discard a rejected transaction (TODO).
  *  - revoke: revoke a commited transaction (TODO).
  * @param $id int the id of the transaction. If $op='new', then it is ignored
- * in favour of $form_state values comming from bank_trsansaction_form.
+ * in favour of $form_state values comming from ces_bank_trsansaction_form.
  */
-function bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
+function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
   if ($op == 'new') {
     $values = $form_state['values'];
     //Copy values from previous form in a safe place.
@@ -872,7 +872,7 @@ function bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
       '#type' => 'value',
       '#value' => $op,
   );
-  //This value is used in bank_transaction_form().
+  //This value is used in ces_bank_transaction_form().
   $form['page'] = array(
       '#type' => 'value',
       '#value' => 'confirm',
@@ -900,12 +900,12 @@ function bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
   $form['back'] = array(
       '#type' => 'submit',
       '#value' => t('Back'),
-      '#submit' => array('bank_transaction_confirm_form_back'),
+      '#submit' => array('ces_bank_transaction_confirm_form_back'),
       '#limit_validation_errors' => array(),
   );
   $form['submit'] = array(
       '#type' => 'submit',
-      '#submit' => array('bank_transaction_confirm_form_submit')
+      '#submit' => array('ces_bank_transaction_confirm_form_submit')
   );
   switch ($op) {
     case 'new':
@@ -921,7 +921,7 @@ function bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
   return $form;
 }
 
-function bank_transaction_confirm_form_back($form, &$form_state) {
+function ces_bank_transaction_confirm_form_back($form, &$form_state) {
   if (isset($form_state['edit_page'])) {
     $form_state['values'] = $form_state['edit_page'];
     $form_state['values']['page'] = 'edit';
@@ -932,7 +932,7 @@ function bank_transaction_confirm_form_back($form, &$form_state) {
   }
 }
 
-function bank_transaction_form_validate($form, &$form_state) {
+function ces_bank_transaction_form_validate($form, &$form_state) {
   if (!empty($form_state['values']['page']) && $form_state['values']['page'] == 'confirm')
     return;
 
@@ -958,7 +958,7 @@ function bank_transaction_form_validate($form, &$form_state) {
     form_set_error('fromaccountname', t('Buyer account cannot be the same as seller account.'));
   }
 }
-function bank_transaction_confirm_form_submit($form, &$form_state) {
+function ces_bank_transaction_confirm_form_submit($form, &$form_state) {
   $bank = new Bank();
   $result = TRUE;
   $op = $form_state['values']['operation'];
@@ -1008,9 +1008,9 @@ function bank_transaction_confirm_form_submit($form, &$form_state) {
 
 /**
  * @return array page where to find the last transactions with this account.
- * @see bank_account_statement_form_submit()
+ * @see ces_bank_account_statement_form_submit()
  */
-function bank_account_statement_form($form, &$form_state, $account_id) {
+function ces_bank_account_statement_form($form, &$form_state, $account_id) {
   $bank = new Bank();
   $account = $bank->getAccount($account_id); //throws exception
 
@@ -1148,11 +1148,11 @@ function bank_account_statement_form($form, &$form_state, $account_id) {
   return $form;
 }
 
-function bank_account_statement_form_submit($form, &$form_state) {
+function ces_bank_account_statement_form_submit($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
 }
 
-function bank_permission_form($form, &$form_state, $op, $id = NULL) {
+function ces_bank_permission_form($form, &$form_state, $op, $id = NULL) {
   $form = array();
   if ($op != 'new') {
     $bank = new Bank();
@@ -1244,7 +1244,7 @@ function bank_permission_form($form, &$form_state, $op, $id = NULL) {
   );
   return $form;
 }
-function _bank_permission_check_object_exists($object, $objectid) {
+function _ces_bank_permission_check_object_exists($object, $objectid) {
   $space = strpos($object, ' ');
   if ($space > 0) {
     $object = substr($object, 0, $space);
@@ -1267,20 +1267,20 @@ function _bank_permission_check_object_exists($object, $objectid) {
   }
   return FALSE;
 }
-function bank_permission_form_validate($form, &$form_state) {
+function ces_bank_permission_form_validate($form, &$form_state) {
   $bank = new Bank();
   $values = $form_state['values'];
   if (!$bank->access('admin', $values['object'], $values['objectid'])) {
     form_set_error('object', t('You are not authorized to modify permissions on this object.'));
   }
-  if (!_bank_permission_check_object_exists($values['object'], $values['objectid'])) {
+  if (!_ces_bank_permission_check_object_exists($values['object'], $values['objectid'])) {
     form_set_error('object', t('Object with given id does not exist.'));
   }
-  if (!_bank_permission_check_object_exists($values['scope'], $values['scopeid'])) {
+  if (!_ces_bank_permission_check_object_exists($values['scope'], $values['scopeid'])) {
     form_set_error('scope', t('Scope with given id does not exist.'));
   }
 }
-function bank_permission_form_submit($form, &$form_state) {
+function ces_bank_permission_form_submit($form, &$form_state) {
   $bank = new Bank();
   $op = $form_state['values']['operation'];
   try{

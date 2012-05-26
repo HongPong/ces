@@ -6,15 +6,15 @@
 /**
  * Implements hook_install().
  */
-function bank_install() {
-  $ok1 = _bank_create_default_exchange();
-  $ok2 = _bank_create_menu();
-  $ok3 = _bank_create_default_permissions();
+function ces_bank_install() {
+  $ok1 = _ces_bank_create_default_exchange();
+  $ok2 = _ces_bank_create_menu();
+  $ok3 = _ces_bank_create_default_permissions();
   if ($ok1 && $ok2 && $ok3) {
     drupal_set_message(st('Initial records created.'));
   }
 }
-function _bank_create_menu() {
+function _ces_bank_create_menu() {
   //create menu
   $record = array(
       'menu_name' => 'ces',
@@ -24,7 +24,7 @@ function _bank_create_menu() {
   $ok3 = drupal_write_record('menu_custom', $record);
   return $ok3!==FALSE;
 }
-function _bank_create_default_exchange() {
+function _ces_bank_create_default_exchange() {
   $record = array(
     'id' => 1,
     'code' => '0000',
@@ -65,7 +65,7 @@ function _bank_create_default_exchange() {
  *  - See global statistics
  *  - Create a new exchange
  */
-function _bank_create_default_permissions() {
+function _ces_bank_create_default_permissions() {
   $record = array(
     'permission' => Permission::PERMISSION_VIEW,
     'object' => 'global statistics',
@@ -87,17 +87,17 @@ function _bank_create_default_permissions() {
 /**
  * Implements hook_enable().
  */
-function bank_enable() {}
+function ces_bank_enable() {}
 /**
  * Implements hook_uninstall().
  */
-function bank_uninstall() {
+function ces_bank_uninstall() {
   db_delete('menu_custom')->condition('menu_name', 'ces')->execute();
 }
 /**
  * Implements hook_schema().
  */
-function bank_schema() {
+function ces_bank_schema() {
   $schema = array();
   $schema['ces_exchange'] = array(
     'description' => '',

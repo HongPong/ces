@@ -37,9 +37,9 @@ db_delete('ces_messages')->execute();
 db_delete('ces_permission')->execute();
 db_delete('ces_transaction')->execute();
 include_once DRUPAL_ROOT . '/includes/install.inc';
-require_once(drupal_get_path('module', 'bank') . '/bank.install');
-_bank_create_default_exchange();
-_bank_create_default_permissions();
+require_once(drupal_get_path('module', 'ces_bank') . '/ces_bank.install');
+_ces_bank_create_default_exchange();
+_ces_bank_create_default_permissions();
 //create users
 register_user('adminhora');
 register_user('userhora');
