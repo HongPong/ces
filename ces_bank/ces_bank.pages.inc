@@ -271,9 +271,14 @@ function ces_bank_permissions_page() {
       $perm['object'],
       $perm['objectid'],
       $perm['scope'],
-      $perm['scopeid'],
-      l(t('Edit'), 'ces/bank/permission/' . $perm['id'] . '/edit') . ' ' . l(t('Delete'), 'ces/bank/permission/' . $perm['id'] . '/delete'),
+      $perm['scopeid']
     );
+    $actions = array();
+    if ($bank->access('admin', 'permission', $perm['id'])) {
+      $actions[] = l(t('Edit'), 'ces/bank/permission/' . $perm['id'] . '/edit');
+      $actions[] = l(t('Delete'), 'ces/bank/permission/' . $perm['id'] . '/delete');
+    }
+    $row[] = implode(' ', $actions);
     $page['table']['#rows'][] = $row;
   }
   return $page;

@@ -419,6 +419,8 @@ function ces_bank_block_view() {
   $bank = new Bank();
   $tree = array();
   $tree[] = _ces_bank_get_link_item('ces/bank/dashboard', t('Dashboard'));
+  $tree[] = _ces_bank_get_link_item('ces/bank/exchange', t('All exchanges'));
+  $tree[] = _ces_bank_get_link_item('ces/bank/permission', t('Permissions'));
   $exchanges = array();
   $accounts = array();
   //Compute relevant exchanges and accounts from permissions.

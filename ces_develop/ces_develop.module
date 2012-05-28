@@ -8,7 +8,8 @@ function ces_develop_menu() {
     'description' => 'Run script',
     'page callback' => 'ces_develop_run_script',
     'page arguments' => array(3),
-    'access callback' => TRUE
+    'access callback' => 'user_access',
+    'access argunents' => array('administer users'),
   );
   return $menu;
 }
