@@ -55,9 +55,12 @@ function ces_notify_schema() {
       ),
     ),
     'primary key' => array('id'),
+    /*
+    //Key too long in some DB engines.
     'unique keys' => array(
       'modulenamelangsender' => array('module', 'name', 'lang', 'sender'),
     ),
+    */
   );
   return $schema;
 }

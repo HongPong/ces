@@ -1,0 +1,7 @@
+name = CES Offers and Wants
+description = CES Offers and Wants
+core = 7.x
+package = ces
+dependencies[] = ces
+files[] = 
+

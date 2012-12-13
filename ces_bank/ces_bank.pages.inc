@@ -3,9 +3,9 @@
  * @file
  * All page callback functions for bank module.
  */
-function ces_bank_exchange_admin($exchangeid) {
+function ces_bank_exchange_admin() {
   $bank = new Bank();
-  $exchange = $bank->getExchange($exchangeid);
+  $exchange = ces_bank_get_current_exchange();
   $page = array();
   //New accounts request
   $page['new_accounts'] = array(
@@ -128,33 +128,106 @@ function ces_bank_exchange_list_page() {
 
   return $page;
 }
-function ces_bank_exchange_accounts_page($exchangeid) {
+function ces_bank_exchange_accounts_page() {
   $bank = new Bank();
-  $accounts = $bank->getAllAccounts(array('exchange' => $exchangeid));
+  $exchange = ces_bank_get_current_exchange();
+  $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id']));
+  //accounts per user
+  $useraccounts = array();
+  foreach($accounts as $account) {
+    foreach($account['users'] as $user) {
+      $uid = $user['user'];
+      if(!isset($useraccounts[$uid])) $useraccounts[$uid] = array();
+      $useraccounts[$uid][] = $account;
+    }
+  }
   $page = array();
+  $page['table'] = array();
+  $page['table']['header'] = array(
+    '#type' => 'container',
+    '#attributes' => array('class' => array('ces-account-user', 'ces-account-user-header')),
+    'user' => array(
+      '#type' => 'container',
+      '#attributes' => array('class' => array('ces-user-column')),
+      'title' => array('#markup' => t('User')),
+    ),
+    'accounts' => array(
+      '#type' => 'container',
+      '#attributes' => array('class' => array('ces-accounts-column')),
+      'name' => array(
+        '#type' => 'container',
+        '#attributes' => array(),
+        'title' => array('#markup' => t('Account')),
+      ),
+      'balance' => array(
+        '#type' => 'container',
+        '#attributes' => array('class' => array('ces-currency-amount')),
+        'title' => array('#markup' => t('Balance')),
+      )
+    ),
+  );
+  $counter = 1;
+  foreach($useraccounts as $uid => $accounts) {
+    $user = user_load($uid);
+    $parity = ($counter % 2 == 0)?'even':'odd';
+    $row = array(
+      '#type' => 'container',
+      '#attributes' => array('class' => array('ces-account-user', $parity)),
+    );
+    $row['user'] = array(
+      '#type' => 'container',
+      '#attributes' => array('class' => array('ces-user-column')),
+    );
+    $row['user']['picture'] = array(
+      '#theme' => 'user_picture',
+      '#account' => $user,
+    );
+    $row['user']['name'] = array(
+      '#markup' => l(ces_user_get_name($user), 'user/' . $uid),
+    );
+    $row['accounts'] = array(
+      '#type' => 'container',
+      '#attributes' => array('class' => array('ces-accounts-column')),
+    );
+    foreach($accounts as $account) {
+      $row['accounts']['name'] = array('#type' => 'container', '#attributes' => array());
+      $row['accounts']['name'][] = array('#markup' => $account['name']);
+      $row['accounts']['balance'] = array('#type' => 'container', '#attributes' => array('class' => array('ces-currency-amount')));
+      $row['accounts']['balance'][] = array(
+        '#markup' => $bank->formatAmount($account['balance'], $exchange, TRUE)
+      );
+    }
+    $page['table'][] = $row;
+    $counter++;
+  }
+  return $page;
+  /*
+  $page = array();
+  
+  
   $table = array(
     '#theme' => 'table',
     '#header' => array(
-      '#', 'Account', 'User', 'Balance', 'Actions'
+      '#', 'Account', 'User', 'Balance'
     ),
     '#rows' => array(),
   );
   $counter = 1;
   foreach ($accounts as $account) {
     if ($account['state'] == 0) continue;//LocalAccount::STATE_HIDDEN)
-    $acchref = 'ces/bank/exchange/' . $exchangeid . '/account/' . $account['id'];
-    $actions = l(t('details'), $acchref . '/view');
+    $acchref = 'ces/bank/exchange/' . $exchange['id'] . '/account/' . $account['id'];
+    $accuser = reset($account['users']);
+    $user = user_load($accuser['user']);
     $row = array(
       $counter++,
       $account['name'],
-      '-',
-      $account['balance'],
-      $actions,
+      l(ces_user_get_name($user), 'user/' . $user->uid),
+      $account['balance']
     );
     $table['#rows'][] = $row;
   }
   $page['table'] = $table;
-  return $page;
+  return $page;*/
 }
 
 function ces_bank_account_list_page() {
@@ -307,12 +380,13 @@ function ces_bank_limitchain_list_page($exchange) {
     ),
     '#rows' => array(),
   );
+  $limitnames = module_invoke_all('account_limit_classes');
   foreach ($limitchains as $limitchain) {
     $row = array();
     $row[] = $limitchain['name'];
     $limits = array();
     foreach ($limitchain['limits'] as $limit) {
-      $limits[] = $limit['classname']::getName() . ' ' . $limit['value'] . ($limit['block'] ? ' ' . t('block') : '');
+      $limits[] = $limitnames[$limit['classname']] . ' ' . $limit['value'] . ($limit['block'] ? ' ' . t('block') : '');
     }
     $row[] = implode('<br/>', $limits);
     $actions = array();
@@ -330,22 +404,21 @@ function ces_bank_limitchain_list_page($exchange) {
   }
   return $page;
 }
-function ces_bank_exchange_view($id) {
-  $bank = new Bank();
-  $exchange = $bank->getExchange($id);
+function ces_bank_exchange_view() {
+  $exchange = ces_bank_get_current_exchange();
   $page = array(
     'exchange' => $exchange,
     '#theme' => 'ces_bank_exchange_view',
   );
   return $page;
 }
-function ces_bank_account_view($id) {
-  $bank = new Bank();
-  $account = $bank->getAccount($id);
+function ces_bank_account_view() {
+  $account = ces_bank_get_current_account();
   $page = array(
     'account' => $account,
     '#theme' => 'ces_bank_account_view',
   );
+  $bank = new Bank();
   //Add and override some items
   $exchange = $bank->getExchange($account['exchange']);
   $page['account']['exchange'] = $exchange['name'];
@@ -371,5 +444,27 @@ function ces_bank_account_view($id) {
   $page['account']['state'] = $states[$account['state']];
   $limitchain = $bank->getLimitChain($account['limitchain']);
   $page['account']['limitchain'] = $limitchain['name'];
+  return $page;
+}
+/**
+ * @param $id int transaction id.
+ */
+function ces_bank_transaction_view($transaction) {
+  $bank = new Bank();
+  $fromaccount = $bank->getAccount($transaction['fromaccount']);
+  $toaccount = $bank->getAccount($transaction['toaccount']);
+  $page = array(
+    '#theme' => 'ces_bank_transaction_view',
+  );
+  $page['transaction'] = $transaction;
+  $page['fromaccount'] = $fromaccount;
+  $page['toaccount'] = $toaccount;
+  $page['toexchange'] = $bank->getExchange($toaccount['exchange']);
+  if ($fromaccount['exchange'] != $toaccount['exchange']) {  
+    $page['fromexchange'] = $bank->getExchange($fromaccount['exchange']);
+  }
+  else {
+    $page['fromexchange'] = &$page['toexchange'];
+  }
   return $page;
 }

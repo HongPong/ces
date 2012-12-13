@@ -333,7 +333,7 @@ function ces_bank_limitchain_form($form, &$form_state, $op, $id) {
   $form['newlimit']['classname'] = array(
     '#type' => 'select',
     '#title' => t('Limit class'),
-    '#options' => $bank->getAccountLimitClasses(),
+    '#options' => module_invoke_all('account_limit_classes'),
     '#description' => t('The type of limit to add. Each class limites a different aspect of the account balance or in a different way. Once added you will be able to configure its parameters.')
   );
   $form['newlimit']['value'] = array(
@@ -367,8 +367,7 @@ function ces_bank_limitchain_form($form, &$form_state, $op, $id) {
 function _ces_bank_limitchain_limit_fieldset($form, &$form_values) {
   if (!isset($form_values['operation']))
     $form_values['operation'] = 'edit';
-  $bank = new Bank();
-  $options = $bank->getAccountLimitClasses();
+  $options = module_invoke_all('account_limit_classes');
   $limit = array(
     '#type' => 'fieldset',
     '#title' => $options[$form_values['classname']],
@@ -674,11 +673,10 @@ function ces_bank_account_form_submit($form, &$form_state) {
 
 /**
  * Single transaction form
- * @todo Generalize this form to update (not just create) transactions.
  * @todo Set the currency according the toaccount exchage currency.
  * @todo Make an easy system to find account names by exchange/username.
  */
-function ces_bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_account_id = NULL, $from_account_id = NULL) {
+function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_id = NULL, $from_account_id = NULL) {
   if (!empty($form_state['values']) && !empty($form_state['values']['page'])
       && $form_state['values']['page'] == 'confirm') {
     return ces_bank_transaction_confirm_form($form, $form_state, $op);
@@ -691,105 +689,150 @@ function ces_bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_ac
   foreach ($exchanges as $exchange) {
     $exoptions[$exchange['id']] = $exchange['code'];
   }
+  if ($op == 'new') {
+    $exchangeid = $arg;
+  } else if ($op == 'edit') {
+    $from = $bank->getAccount($arg['fromaccount']);
+    $to = $bank->getAccount($arg['toaccount']);
+    $form_state['values']['toexchange'] = $to['exchange'];
+    $form_state['values']['toaccountname'] = $to['name'];
+    $form_state['values']['fromexchange'] = $from['exchange'];
+    $form_state['values']['fromaccountname'] = $from['name'];
+    $form_state['values']['concept'] = $arg['concept'];
+    $form_state['values']['amount'] = $arg['amount'];
+    $form_state['values']['id'] = $arg['id'];
+  }
+  if(isset($form_state['values']['id'])){
+   $form['id'] = array(
+     '#type' => 'value',
+     '#value' => $form_state['values']['id'], 
+   );
+  }
   //Select seller's exchange
   $toexchangeid = isset($form_state['values']['toexchange'])?$form_state['values']['toexchange']:$exchangeid;
   $toexchange = $exchanges[$toexchangeid];
-  $form['toexchange'] = array(
-    '#title' => t('Seller exchange'),
-    '#description' => t('The seller\'s account exchange.'),
-    '#type' => 'select',
-    '#options' => $exoptions,
-    '#default_value' => $toexchangeid,
-    '#disabled' => $to_account_id != NULL,
-    '#ajax' => array(
-      'callback' => 'ces_bank_toaccountname_dropdown_callback',
-      'wrapper' => 'dropdown-toaccountname-replace',
-    ),
-  );
-  //Select seller's account
-  $accountconditions = array(
-            'exchange' => $toexchangeid,
-            'state' => 1,
-            'kind' => array(
-              LocalAccount::TYPE_INDIVIDUAL,
-              LocalAccount::TYPE_SHARED,
-              LocalAccount::TYPE_ORGANIZATION,
-              LocalAccount::TYPE_COMPANY,
-              LocalAccount::TYPE_PUBLIC,
-            ));
-  $accounts = $bank->getAllAccounts($accountconditions);
-  $tooptions = array();
-  foreach ($accounts as $account) {
-    $tooptions[$account['name']] = $account['name'];
+  if ($to_account_id == NULL) {
+    $form['toexchange'] = array(
+      '#title' => t('Seller exchange'),
+      '#description' => t('The seller\'s account exchange.'),
+      '#type' => 'select',
+      '#options' => $exoptions,
+      '#default_value' => $toexchangeid,
+      '#ajax' => array(
+        'callback' => 'ces_bank_toaccountname_dropdown_callback',
+        'wrapper' => 'dropdown-toaccountname-replace',
+      ),
+      '#weight' => 30, 
+    );
+    //Select seller's account
+    $accountconditions = array(
+      'exchange' => $toexchangeid,
+      'state' => 1,
+      'kind' => array(
+        LocalAccount::TYPE_INDIVIDUAL,
+        LocalAccount::TYPE_SHARED,
+        LocalAccount::TYPE_ORGANIZATION,
+        LocalAccount::TYPE_COMPANY,
+        LocalAccount::TYPE_PUBLIC,
+    ));
+    $accounts = $bank->getAllAccounts($accountconditions);
+    $tooptions = array();
+    foreach ($accounts as $account) {
+      $useracc = reset($account['users']);
+      $tooptions[$account['name']] = $account['name'] . ' - ' . ces_user_get_name(user_load($useracc['user']));
+    }
+    $form['toaccountname'] = array(
+      '#title' => t('Seller account'),
+      '#description' => t('The recipient of the transaction. The Exchange four letters code plus four numbers.'),
+      '#type' => 'select',
+      '#options' => $tooptions,
+      '#prefix' => '<div id="dropdown-toaccountname-replace">',
+      '#suffix' => '</div>',
+      '#weight' => 40,
+    );
+    if (isset($form_state['values']['toaccountname']))
+      $form['fromaccountname']['#default_value'] = $form_state['values']['toaccountname'];
   }
-  $form['toaccountname'] = array(
-    '#title' => t('Seller account'),
-    '#description' => t('The recipient of the transaction. The Exchange four letters code plus four numbers.'),
-    '#type' => 'select',
-    '#options' => $tooptions,
-    '#prefix' => '<div id="dropdown-toaccountname-replace">',
-    '#suffix' => '</div>'
-  );
-  if (isset($form_state['values']['toaccountname']))
-    $form['fromaccountname']['#default_value'] = $form_state['values']['toaccountname'];
-  if ($to_account_id != NULL) {
-    if (!isset($accounts[$to_account_id])) {
+  else {
+    $toaccount = $bank->getAccount($to_account_id);
+    if (empty($toaccount)) {
       drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $to_account_id, '%ex' => $toexchange['code'])), 'error');
       return FALSE;
     }
-    $form['toaccountname']['#default_value'] = $accounts[$to_account_id]['name'];
-    $form['toaccountname']['#disabled'] = TRUE;
+    ;
+    $form['toexchange'] = array(
+      '#type' => 'value',
+      '#value' => $toexchangeid,
+    );
+    $form['toaccountname'] = array(
+      '#type' => 'value',
+      '#value' => $toaccount['name'],
+    );
   }
-  //Select buyer's exchange
   $fromexchangeid = isset($form_state['values']['fromexchange'])?$form_state['values']['fromexchange']:$exchangeid;
   $fromexchange = $exchanges[$fromexchangeid];
-  $form['fromexchange'] = array(
-    '#title' => t('Buyer exchange'),
-    '#description' => t('The buyer\'s account exchange.'),
-    '#type' => 'select',
-    '#options' => $exoptions,
-    '#default_value' => $fromexchangeid,
-    '#disabled' => $from_account_id != NULL,
-    '#ajax' => array(
-      'callback' => 'ces_bank_fromaccountname_dropdown_callback',
-      'wrapper' => 'dropdown-fromaccountname-replace',
-    ),
-  );
-  //Select buyer's account.
-  if ($fromexchangeid == $toexchangeid) {
-    $fromoptions = &$tooptions;
-  }
-  else{
-    $fromoptions = array();
-    $accountconditions['exchange'] = $fromexchangeid;
-    $accounts = $bank->getAllAccounts($accountconditions);
-    foreach ($accounts as $account) {
-      $fromoptions[$account['name']] = $account['name'];
+  if ($from_account_id == NULL) {
+    //Select buyer's exchange
+    $form['fromexchange'] = array(
+      '#title' => t('Buyer exchange'),
+      '#description' => t('The buyer\'s account exchange.'),
+      '#type' => 'select',
+      '#options' => $exoptions,
+      '#default_value' => $fromexchangeid,
+      '#ajax' => array(
+        'callback' => 'ces_bank_fromaccountname_dropdown_callback',
+        'wrapper' => 'dropdown-fromaccountname-replace',
+      ),
+      '#weight' => 10,
+    );
+    //Select buyer's account.
+    if ($fromexchangeid == $toexchangeid && !empty($tooptions)) {
+      $fromoptions = &$tooptions;
     }
+    else {
+      $fromoptions = array();
+      $accountconditions['exchange'] = $fromexchangeid;
+      $accounts = $bank->getAllAccounts($accountconditions);
+      foreach ($accounts as $account) {
+        $useracc = reset($account['users']);
+        $fromoptions[$account['name']] = $account['name'] . ' - ' . ces_user_get_name(user_load($useracc['user']));
+      }
+    }
+    $form['fromaccountname'] = array(
+      '#title' => t('Buyer account'),
+      '#description' => t('The payer of the transaction. The Exchange four letters code plus four numbers.'),
+      '#type' => 'select',
+      '#options' => $fromoptions,
+      '#prefix' => '<div id="dropdown-fromaccountname-replace">',
+      '#suffix' => '</div>',
+      '#weight' => 20,
+    );
+    if (isset($form_state['values']['fromaccountname']))
+      $form['fromaccountname']['#default_value'] = $form_state['values']['fromaccountname'];
+  
   }
-  $form['fromaccountname'] = array(
-    '#title' => t('Buyer account'),
-    '#description' => t('The payer of the transaction. The Exchange four letters code plus four numbers.'),
-    '#type' => 'select',
-    '#options' => $fromoptions,
-    '#prefix' => '<div id="dropdown-fromaccountname-replace">',
-    '#suffix' => '</div>'
-  );
-  if (isset($form_state['values']['fromaccountname']))
-    $form['fromaccountname']['#default_value'] = $form_state['values']['fromaccountname'];
-  if ($from_account_id != NULL) {
-    if (!isset($accounts[$from_account_id])) {
+  else {
+    $fromaccount = $bank->getAccount($from_account_id);
+    if (empty($fromaccount)) {
       drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $from_account_id, '%ex' => $fromexchange['code'])), 'error');
       return FALSE;
     }
-    $form['fromaccountname']['#default_value'] = $accounts[$from_account_id]['name'];
-    $form['fromaccountname']['#disabled'] = TRUE;
+    
+    $form['fromexchange'] = array(
+      '#type' => 'value',
+      '#value' => $fromexchangeid,
+    );
+    $form['fromaccountname'] = array(
+      '#type' => 'value',
+      '#value' => $fromaccount['name'],
+    );
   }
   $form['concept']= array(
     '#type'  => 'textfield',
     '#title' => t('Description'),
     '#description' => t('Enter the concept of the transference.'),
     '#default_value' => !empty($form_state['values']['concept'])?$form_state['values']['concept']:'',
+    '#weight' => 50,
   );
   $form['amount'] = array(
       '#type' => 'textfield',
@@ -797,6 +840,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_ac
       '#title' => t('Amount in @currenciesname', array('@currenciesname' => $toexchange['currenciesname'])),
       '#description' => t('The amount to be transferred.'),
       '#default_value' => !empty($form_state['values']['amount'])?$form_state['values']['amount']:'',
+      '#weight' => 60,
   );
   $form['user'] = array(
       '#type' => 'value',
@@ -804,7 +848,8 @@ function ces_bank_transaction_form($form, &$form_state, $op, $exchangeid, $to_ac
   );
   $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Create transaction'),
+      '#value' => $op == 'new' ? t('Create transaction') : t('Update transaction'),
+      '#weight' => 100,
   );
   return $form;
 }
@@ -835,7 +880,7 @@ function ces_bank_transaction_form_submit($form, &$form_state) {
  * in favour of $form_state values comming from ces_bank_trsansaction_form.
  */
 function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
-  if ($op == 'new') {
+  if ($op == 'new' || $op == 'edit') {
     $values = $form_state['values'];
     //Copy values from previous form in a safe place.
     $form_state['edit_page'] = $values;
@@ -1013,12 +1058,13 @@ function ces_bank_transaction_confirm_form_submit($form, &$form_state) {
 function ces_bank_account_statement_form($form, &$form_state, $account_id) {
   $bank = new Bank();
   $account = $bank->getAccount($account_id); //throws exception
+  $exchange = $bank->getExchange($account['exchange']);
 
   $form = array();
   //filter controls
   $form['controls'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Controls'),
+    '#type' => 'container',
+    '#attributes' => array(),
   );
   if (isset($form_state['values']['from']) && isset($form_state['values']['to'])) {
     $from = $form_state['values']['from'];
@@ -1056,13 +1102,8 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
   $timeto = mktime(23, 59, 59, $to['month'], $to['day'], $to['year']);
   //transaction table
   $form['transactions'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Transactions from %datefrom to %dateto',
-        array(
-          '%datefrom' => format_date($timefrom, 'short'),
-          '%dateto' => format_date($timeto, 'short'),
-        )
-      ),
+      '#type' => 'container',
+      '#attributes' => array(),
   );
   $form['transactions']['table'] = array(
     '#theme' => 'table',
@@ -1070,37 +1111,40 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
       array(
         'data' => t('Date'),
         'field' => 'created',
-        'sort' => 'asc'
+        'sort' => 'asc',
       ),
       array(
         'data' => t('State'),
+        'class' => 'ces-statement-state',
       ),
       array(
         'data' => t('Account'),
+        'class' => 'ces-statement-user',
       ),
       array(
         'data' => t('Description'),
+        'class' => 'ces-statement-description',
       ),
       array(
-        'data' => t('Credit'),
-      ),
-      array(
-        'data' => t('Debit'),
+        'data' => t('Amount'),
+        'class' => 'ces-currency-amount'
       ),
       array(
         'data' => t('Balance'),
-      ),
-      array(
-        'data' => t('Actions')
-      ),
+        'class' => 'ces-currency-amount'
+      )
     ),
     '#rows' => array(),
   );
   $transactions = $bank->getTransactions(array('account' => $account['id'], 'createdsince' => $timefrom, 'createduntil' => $timeto));
   $inibalance = $bank->getAccountHistoricBalance($account['id'], $timefrom);
+  $dateformat = $format = variable_get('date_format_short', 'm/d/Y');
+  $space = strpos($format, ' ');
+  if ($space !== FALSE) $dateformat = substr($dateformat, 0, $space);
   foreach ($transactions as $transaction) {
     $row = array();
-    $row[] = format_date($transaction['created']);
+    $row[] = array('data' => format_date($transaction['created'], 'custom', $dateformat));
+    
     if ($transaction['fromaccount'] != $account['id']) {
       $other_account = $bank->getAccount($transaction['fromaccount']);
       $type = 0;
@@ -1127,22 +1171,29 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
       10 => t('Revoked'),
       11 => t('Error'),
     );
-    $row[] = $statestring[$transaction['state']];
-    $row[] = $other_account['name'];
-    $row[] = check_plain($transaction['concept']);
-    $row[] = $type==0?$transaction['amount']:'';
-    $row[] = $type==1?$transaction['amount']:'';
+    $row[] = array('data' => $statestring[$transaction['state']]);
+    
+    $useracc = reset($other_account['users']);
+    $uid = $useracc['user'];
+    
+    $row[] = array('data' => $other_account['name'] . ' - ' . l(ces_user_get_name(user_load($uid)), 'user/' . $uid));
+    $row[] = array('data' => l(check_plain($transaction['concept']),'ces/bank/account/transaction/' . $transaction['id'] . '/view'));
+    
+    $amount = ($transaction['amount'])*($type==0?1:-1);
+    $row[] = array('data' => $bank->formatAmount($amount, $exchange, true, true), 'class' => 'ces-currency-amount');
+    
     if (in_array((int)$transaction['state'], array(3))) {
-      $inibalance += ($transaction['amount'])*($type==0?1:-1);
+      $inibalance += $amount;
     }
-    $row[] = $inibalance;
+    $row[] = array('data' => $bank->formatAmount($amount, $exchange, true, false), 'class' => 'ces-currency-amount');
+    /*
     $actions = array();
     if ($transaction['state'] == Transaction::STATE_NEW || $transaction['state'] == Transaction::STATE_REJECTED) {
       $actions[]=l(t('Edit'), 'ces/bank/exchange/' . $account['exchange'] . '/transaction/' . $transaction['id'] . '/edit');
       $actions[]=l(t('Trigger'), 'ces/bank/exchange/' . $account['exchange'] . '/transaction/' . $transaction['id'] . '/trigger');
       $actions[]=l(t('Discard'), 'ces/bank/exchange/' . $account['exchange'] . '/transaction/' . $transaction['id'] . '/discard');
     }
-    $row[] = implode(' ', $actions);
+    $row[] = implode(' ', $actions); */
     $form['transactions']['table']['#rows'][] = $row;
   }
   return $form;

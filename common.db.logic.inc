@@ -10,14 +10,6 @@
  * and saving objects.
  */
 
-// Note:
-// I've now realized the existence of a Drupal 7 feature that could replace this
-// whole file with additional features.
-// This is the Entity CRUD API with the hook_entity_info() and related functions.
-// See also the Entity API contrib module documentation http://drupal.org/node/878784.
-// But it should be carefully studied since it may introduce undesired behavior
-// and unnecessary overhead.
-
 class Serializer {
 
   protected $className;
@@ -32,7 +24,8 @@ class Serializer {
 
   public function __construct($className) {
     $this->className = $className;
-    $this->table = $className::$table;
+    $class = new ReflectionClass($this->className);
+    $this->table = $class->getStaticPropertyValue('table');
   }
 
   public function load($id) {
@@ -150,12 +143,17 @@ class Serializer {
       $query = $query->condition('created', $conditions['createduntil'], '<=');
       unset($conditions['createduntil']);
     }
+    if (isset($conditions['limit'])) {
+      $query->range(0, $conditions['limit']);
+      unset($conditions['limit']);
+    }
     foreach ($conditions as $key => $value) {
       $query = $query->condition($key, $value);
     }
     if ($order != NULL) {
       $query->orderBy($order);
     }
+    
     $result = $query->execute();
     $loads = array();
     while (($record = $result->fetchAssoc()) !== FALSE) {

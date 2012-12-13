@@ -1,0 +1,177 @@
+<?php
+/**
+ * Implements hook_schema().
+ */
+function ces_offerswants_schema() {
+  $schema = array();
+  $schema['ces_offerwant'] = array(
+    'description' => 'Main table for offers and wants entities.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'ID of this offer or want',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => 'The type of this entity. It is one of: offer, want.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'user' => array(
+        'description' => 'UID of the owner user',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'The title of this offer or want, always treated as non-markup plain text.',
+        'type' => 'varchar', 
+        'length' => 255, 
+        'not null' => TRUE, 
+        'default' => '',
+      ),
+      'body' => array(
+        'description' => 'The body of this offer or want. It is HTML.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+      'image' => array(
+        'description' => 'Image source for this offer or want.',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'category' => array(
+        'description' => 'Reference to category table.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'keywords' => array(
+        'description' => 'Keywords for this offer or want',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+      'state' => array(
+        'description' => 'The state of this offer. 0 = hidden, 1 = public',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+         'type' => 'int',
+         'unsigned' => TRUE,
+         'not null' => TRUE,
+         'default' => 0
+      ),
+      'modified' => array(
+         'type' => 'int',
+         'unsigned' => TRUE,
+         'not null' => TRUE,
+         'default' => 0
+      ),
+      'expire' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  $schema['ces_category'] = array(
+    'description' => 'Table for offers and wants categories.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'ID of this offer or want',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'parent' => array(
+        'description' => 'Parent category',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'default' => 0,
+      ),
+      'title' => array(
+        'description' => 'Title for this category',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => 'Detailed description of this category',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+      'exchange' => array(
+        'description' => 'The id of the exchange where this category belongs',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
+      ),
+      'context' => array(
+        'description'   => 'Whether this category is applicable to offers (1), wants (2), both (3) or none (0)',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'parent' => array(
+        'table' => 'ces_category',
+        'columns' => array('parent' => 'id'),
+      )
+    )
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function ces_offerswants_install() {
+  _ces_offerswants_add_offer_fields();
+  //Create root category
+  $category = (object) array(
+    'title' => 'root',
+    'parent' => 0,
+    'description' => 'Top category',
+    'exchange' => 1,
+    'context' => 0,
+  );
+  ces_category_save($category);
+}
+/**
+ * Set bundle-specific fields.
+ */
+function _ces_offerswants_add_offer_fields() {
+  if(!field_info_field('ces_offer_rate')) {
+    $field = array(
+      'field_name' => 'ces_offer_rate',
+      'type' => 'text'
+    );
+    field_create_field($field);
+    $instance = array(
+      'field_name' => 'ces_offer_rate',
+      'entity_type' => 'ces_offerwant',
+      'bundle' => 'ces_offer',
+      'label' => t('Rate'),
+      //'description' => '',
+      'widget' => array(
+        'type' => 'text_textfield',
+        'weight' => 10,
+      ),
+    );
+    field_create_instance($instance);
+  }
+}

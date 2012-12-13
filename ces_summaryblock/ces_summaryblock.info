@@ -1,0 +1,5 @@
+name = ces_summaryblock
+description = Block with CES bank account summary.
+core = 7.x
+package = ces
+dependencies[] = ces_bank

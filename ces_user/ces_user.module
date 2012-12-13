@@ -1,0 +1,129 @@
+<?php
+
+function ces_user_get_name($account = NULL) {
+  if ($account == NULL) {
+    global $user;
+    $account = user_load($user->uid);
+  }
+  $items = field_get_items('user', $account, 'ces_firstname');
+  $userfullname = '';
+  if(!empty($items)){
+    $item = reset($items);
+    $userfullname = $item['safe_value'] . ' ';
+  }
+  $items = field_get_items('user', $account, 'ces_surname');
+  if(!empty($items)){
+    $item = reset($items);
+    $userfullname .= $item['safe_value'];
+  }
+  if(empty($userfullname)) {
+    $userfullname = $account->name;
+  }
+  return $userfullname;
+}
+
+function ces_user_get_full_address($account = NULL) {
+  if ($account == NULL) {
+    global $user;
+    $account = user_load($user->uid);
+  }
+  $items = field_get_items('user', $account, 'ces_address');
+  $address = '';
+  if(!empty($items)){
+    $item = reset($items);
+    $address = $item['safe_value'] . ', ';
+  }
+  $items = field_get_items('user', $account, 'ces_postcode');
+  if(!empty($items)){
+    $item = reset($items);
+    $address .= $item['safe_value'] . ', ';
+  }
+  $items = field_get_items('user', $account, 'ces_town');
+  if(!empty($items)){
+    $item = reset($items);
+    $address .= $item['safe_value'] . ', ';
+  }
+  return $address;
+}
+
+function ces_user_get_main_phone($account = NULL) {
+  if ($account == NULL) {
+    global $user;
+    $account = user_load($user->uid);
+  }
+  $order = array('ces_phonemobile', 'ces_phonework', 'ces_phonehome');
+  foreach($order as $name) {
+    $items = field_get_items('user', $account, $name);
+    if(!empty($items)){
+      $item = reset($items);
+      return $item['safe_value'];
+    }  
+  }
+  return '';
+}
+/**
+ * Implements hook_form_alter().
+ */
+function ces_user_form_alter(&$form, &$form_state, $form_id) {
+  if($form_id == 'user_register_form' || $form_id == 'user_profile_form') {
+    //Move all ces fields to account fieldset
+    foreach ($form as $key => $field) {
+      if(strlen($key)>4 && substr($key,0,4) == 'ces_') {
+        $form['account'][$key] = $form[$key];
+        unset($form[$key]);
+      }
+    }
+    $form['account']['picture'] = $form['picture'];
+    unset($form['picture']);
+    //Set up weights
+    $form['account']['name']['#weight'] = -10;
+    $form['account']['current_pass']['#weight'] = -5;
+    $form['account']['pass']['#weight'] = 0;
+    $form['account']['status']['#weight'] = 60;
+    $form['account']['roles']['#weight'] = 65;
+  }else if($form_id == 'user_login_block') {
+    unset($form['links']);
+  }
+}
+function ces_user_user_view($account, $view_mode, $langcode) {
+  //Set fields to be rendered with user profile item theme.
+  $account->content['account'] = array(
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => array(
+        'user-profile-account-items'
+      )
+    )
+  );
+  foreach($account->content as $key => $item) {
+    if(substr($key,0,4) == 'ces_') {
+      $account->content[$key]['#theme'] = 'user_profile_item';
+      if(isset($account->content[$key][0])) {
+        $account->content[$key]['#markup'] = $account->content[$key][0]['#markup'];
+      }
+      $account->content['account'][$key] = $account->content[$key];
+      unset($account->content[$key]);
+    }
+  }
+  $account->content['account']['ces_fullname'] = array(
+    '#type' => 'markup',
+    '#prefix' => '<h3 class="user-profile-ces-fullname">',
+    '#suffix' => '</h3>',
+    '#markup' => ces_user_get_name($account),
+    'weight' => 0,
+  );
+  
+  $account->content['account']['ces_fulladdress'] = array(
+    '#theme' => 'user_profile_item',
+    '#title' => t('Address'),
+    '#markup' => ces_user_get_full_address($account),
+    '#weight' => 15,
+  );
+  
+  $account->content['account']['ces_email'] = array(
+    '#theme' => 'user_profile_item',
+    '#title' => t('Email'),
+    '#markup' => $account->mail,
+    '#weight' => 25,
+  );
+}

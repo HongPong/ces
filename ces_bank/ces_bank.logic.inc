@@ -85,7 +85,7 @@ class Bank{
         'scopeid' => $exchange->id,
       );
       $this->createPermission($perm);
-      //Let exchange creator administer the exchabge.
+      //Let exchange creator administer the exchange.
       $perm = array(
         'permission' => Permission::PERMISSION_ADMIN,
         'object' => 'exchange',
@@ -94,9 +94,15 @@ class Bank{
         'scopeid' => $exchange->admin,
       );
       $this->createPermission($perm);
+      //Create a new zero account for the admin of this exchange
+      $account = $this->getDefaultAccount($exchange->id);
+      $account['users'][0]['user'] = $exchange->admin;
+      $account['name'] = $exchange->code . '0000';
+      $this->createAccount($account);
+      
       $notifier = new Notifier();
       $notifier->notify('ces_bank', 'exchange activated', $exchange->admin, $user->uid, array('exchange' => $exchange->getRecord()));
-
+      $this->activateAccount($account);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -174,12 +180,12 @@ class Bank{
    * @return array with all accounts that meet certain conditions.
    * @param $conditions array filter the records. A common example is:
    * <code>
-   * $conditions = array( 'exchange' => $id, 'active' => 1 )
+   * $conditions = array( 'exchange' => $id, 'state' => 1 )
    * </code>
    */
-  public function getAllAccounts(array $conditions = array('state' => 1)) {
+  public function getAllAccounts(array $conditions = array('state' => 1), $order = NULL) {
     $as = new Serializer('LocalAccount');
-    $accounts = $as->loadCollection($conditions);
+    $accounts = $as->loadCollection($conditions, $order);
     $records = array();
     foreach ($accounts as $account) {
       $records[$account->id] = $account->getRecord();
@@ -230,6 +236,7 @@ class Bank{
    * - toaccount: id. Get transactions where the specified account id is the seller.
    * - createdsince: time. Get transactions created after this timestamp in seconds.
    * - createduntil: time. Get transactions created before this timestamp in seconds.
+   * - limit: int. Get only n transactions.
    *
    * @return array
    * transaction records meeting all conditions specified by $conditions parameter.
@@ -329,23 +336,34 @@ class Bank{
     if ($account === FALSE) return FALSE;
     return $account->getRecord();
   }
+  private function getAccountHistoricValue($id, $field, $from, $to) {
+    $s = new Serializer('LocalAccount');
+    $account = $s->load($id);
+    $st = new Serializer('BasicTransaction');
+    $result = $st->selectFunctionField('SUM', 'amount',
+      array(
+        array($field, $account->id),
+          array('created', $from, '>='),
+          array('created', $to, '<='),
+          array('state', array(3)),
+        )
+      );
+    return $result;
+  }
+  public function getAccountHistoricSales($id, $from, $to = null) {
+    if($to == null) $to = time();
+    return $this->getAccountHistoricValue($id, 'toaccount', $from, $to);
+  }
+  public function getAccountHistoricPurchases($id, $from, $to = null) {
+    if($to == null) $to = time();
+    return $this->getAccountHistoricValue($id, 'fromaccount', $from, $to);
+  }
   public function getAccountHistoricBalance($id, $time) {
     $s = new Serializer('LocalAccount');
     $account = $s->load($id);
     $balance = $account->balance;
-    $st = new Serializer('BasicTransaction');
-    $positive = $st->selectFunctionField('SUM', 'amount',
-            array(
-              array('toaccount', $account->id),
-              array('created', $time, '>='),
-              array('state', array(3)),
-            ));
-    $negative = $st->selectFunctionField('SUM', 'amount',
-            array(
-              array('fromaccount', $account->id),
-              array('created', $time, '>='),
-              array('state', array(3)),
-            ));
+    $positive = $this->getAccountHistoricSales($id, $time);
+    $negative = $this->getAccountHistoricPurchases($id, $time);
     $timebalance =  $balance - $positive + $negative;
     return $timebalance;
   }
@@ -481,6 +499,7 @@ class Bank{
   /**
    * @return array the names of classes that implement the AccountLimit interface.
    */
+  /*
   public function getAccountLimitClasses() {
     $classes = module_invoke_all('account_limit_classes');
     $limits = array();
@@ -490,7 +509,7 @@ class Bank{
       }
     }
     return $limits;
-  }
+  }*/
   /**
    * @return array the names of classes that implement the DecoratedTransaction interface.
    */
@@ -534,6 +553,21 @@ class Bank{
       $result[] = $perm->getRecord();
     }
     return $result;
+  }
+  /**
+   * @return A string representation of $amount following $exchange preference
+   * and $format option.
+   */
+  public function formatAmount($amount, $exchange, $symbol = FALSE, $sign = FALSE) {
+    $decimals = $exchange['currencyscale'];
+    $number = number_format($amount, $decimals, '.', ' ');
+    if ($symbol) {
+      $number .= $exchange['currencysymbol'];
+    }
+    if($sign && $amount > 0) {
+      $number = '+' . $number;
+    }
+    return $number;
   }
   private function getObject($className, $id) {
     $s = new Serializer($className);
@@ -1212,7 +1246,6 @@ abstract class AccountLimit extends DBObject{
    */
   public abstract function getTransactionValue(Transaction &$transaction);
   public abstract function getFailMessage(LocalAccount &$account);
-  public static abstract function getName();
 }
 /**
  * Limites an account if its balance is less than a given value.
@@ -1226,9 +1259,6 @@ class AbsoluteDebitLimit extends AccountLimit {
   }
   public function getFailMessage(LocalAccount &$account) {
     return t('Account %account exceeds the debit limit of %limit.', array('%limit' => $this->getLimit(), '%account' => $account->getName()));
-  }
-  public static function getName() {
-    return t('Absolute debit limit');
   }
 }
 /**
@@ -1246,9 +1276,6 @@ class AbsoluteCreditLimit extends AccountLimit {
   }
   public function getFailMessage(LocalAccount &$account) {
     return t('Account %account exceeds the credit limit of %limit.', array('%limit' => $this->value, '%account' => $account->getName()));
-  }
-  public static function getName() {
-    return t('Absolute credit limit');
   }
 }
 /**
@@ -1475,7 +1502,7 @@ class BasicTransaction extends DBObject implements Transaction{
       $this->data['log'][$this->state] = array();
     $this->data['log'][$this->state] = array_merge($this->data['log'][$this->state], $messages);
   }
-  public function getLog($state = NULL) {
+  public function getLog($state) {
     if (isset($this->data) && isset($this->data['log']) && isset($this->data['log'][$state])) {
       return $this->data['log'][$state];
     }

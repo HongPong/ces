@@ -49,3 +49,53 @@ function theme_ces_bank_account_view($variables) {
   $out .= '</dl>';
   return $out;
 }
+function theme_ces_bank_transaction_view($variables) {
+  $tran = $variables['element']['transaction'];
+  $from = $variables['element']['fromaccount'];
+  $to = $variables['element']['toaccount'];
+  $fex = $variables['element']['fromexchange'];
+  $tex = $variables['element']['toexchange'];
+  
+  $out = '<dl>';
+  $out .= '<dt>' . t('Date') . '</dt>';
+  $out .= '<dd>' . format_date($tran['created']) . '</dd>';
+  if ($tran['created'] != $tran['modified']) {
+    $out .= '<dt>' . t('Modified') . '</dt>';
+    $out .= '<dd>' . format_date($tran['modified']) . '</dd>';
+  }
+  if($fex['id'] == $tex['id']) {
+    $out .= '<dt>' . t('Exchange') . '</dt>';
+    $out .= '<dd>' . $fex['name'] . '</dd>';
+  }
+  if($fex['id'] != $tex['id']) {
+    $out .= '<dt>' . t('Buyer\'s exchange') . '</dt>';
+    $out .= '<dd>' . $fex['name'] . '</dd>';
+  }
+  $out .= '<dt>' . t('Buyer\'s account') . '</dt>';
+  $out .= '<dd>' . $from['name'] . '</dd>';
+  
+  $out .= '<dt>' . t('Buyer\'s account user') . '</dt>';
+  foreach($from['users'] as $accuser) {
+    $out .= '<dd>' . l(ces_user_get_name(user_load($accuser['user'])),'user/' . $accuser['user']) . '</dd>';
+  }
+  if($fex['id'] != $tex['id']) {
+    $out .= '<dt>' . t('Seller\'s exchange') . '</dt>';
+    $out .= '<dd>' . $tex['name'] . '</dd>';
+  }
+  $out .= '<dt>' . t('Seller\'s account') . '</dt>';
+  $out .= '<dd>' . ($to['name']) . '</dd>';
+  
+  $out .= '<dt>' . t('Seller\'s account user') . '</dt>';
+  foreach($to['users'] as $accuser) {
+    $out .= '<dd>' . l(ces_user_get_name(user_load($accuser['user'])),'user/' . $accuser['user']) . '</dd>';
+  }
+  $out .= '<dt>' . t('Description') . '</dt>';
+  $out .= '<dd>' . check_plain($tran['concept']) . '</dd>';
+  
+  $bank = new Bank();
+  $out .= '<dt>' . t('Amount') . '</dt>';
+  $out .= '<dd>' . $bank->formatAmount($tran['amount'], $tex, true) . '</dd>';
+    
+  $out .= '</dl>';
+  return $out;
+}
