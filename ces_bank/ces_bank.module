@@ -42,6 +42,11 @@ function ces_bank_theme() {
       'path' => drupal_get_path('module', 'ces_bank'),
       'file' => 'ces_bank.theme.inc',
     ),
+    'ces_bank_limitchain_view' => array(
+      'render element' => 'element',
+      'path' => drupal_get_path('module', 'ces_bank'),
+      'file' => 'ces_bank.theme.inc',
+    ),
   );
 }
 /**
@@ -135,6 +140,7 @@ function ces_bank_menu() {
     'expanded' => TRUE,
     'weight' => 600,
   );
+  
   $menu['ces/bank/exchange/accounts'] = array(
     'title' => 'Accounts',
     'description' => 'Vieu exchange accounts list',
@@ -181,6 +187,71 @@ function ces_bank_menu() {
     'access arguments' => array('edit', 'exchange', CES_CURRENT_EXCHANGE),
     'weight' => 910,
   );
+  /* Begin limit chains */
+  $menu['ces/admin/limit'] = array(
+    'title' => 'Account limits',
+    'description' => 'Types of debit and credit limits for accounts.',
+    'page callback' => 'ces_bank_limitchain_list_page',
+    'file' => 'ces_bank.pages.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_NORMAL_ITEM,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('view', 'exchange limitchains', CES_CURRENT_EXCHANGE),
+  );
+  $menu['ces/admin/limit/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $menu['ces/admin/limit/new'] = array(
+    'title' => 'New',
+    'description' => 'Create a new account limit.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_limitchain_form'),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  );
+  $menu['ces/admin/limit/%ces_limitchain/view'] = array(
+    'title' => 'View',
+    'description' => 'View account limit details.',
+    'page callback' => 'ces_bank_limitchain_view',
+    'page arguments' => array(3),
+    'file' => 'ces_bank.pages.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('view', 'exchange limitchains', CES_CURRENT_EXCHANGE),
+    'weight' => 2,
+  );
+  $menu['ces/admin/limit/%ces_limitchain/edit'] = array(
+    'title' => 'Edit',
+    'description' => 'Edit account limit',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_limitchain_form', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('edit', 'exchange', CES_CURRENT_EXCHANGE),
+    'weight' => 3,
+  );
+  $menu['ces/admin/limit/%ces_limitchain/delete'] = array(
+    'title' => 'Delete',
+    'description' => 'Delete account limit',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_limitchain_delete_form', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
+    'weight' => 4,
+  );
+  /* End limit chains */
   $menu['ces/admin/ces'] = array(
     'title' => 'Administer CES bank',
     'description' => 'Top administer interface for CES Bank',
@@ -266,6 +337,12 @@ function ces_transaction_load($id = NULL) {
   $bank = new Bank();
   $transaction =  $bank->getTransaction($id);
   return $transaction;
+}
+function ces_limitchain_load($id = NULL) {
+  if(empty($id)) return FALSE;
+  $bank = new Bank();
+  $limitchain = $bank->getLimitChain($id);
+  return $limitchain;
 }
 function _ces_bank_get_form() {
   $args = func_get_args();
@@ -554,67 +631,6 @@ function _ces_bank_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('use', 'transaction', 5),
   );
-  $menu['ces/bank/exchange/%/limitchain'] = array(
-    'title' => 'Exchange limit chains',
-    'description' => 'Exchange limit chain list',
-    'page callback' => 'ces_bank_limitchain_list_page',
-    'page arguments' => array(3),
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_NORMAL_ITEM,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange limitchains', 3),
-  );
-  $menu['ces/bank/exchange/%/limitchain/new'] = array(
-    'title' => 'New limit chain',
-    'description' => 'Create a new limit chain',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_limitchain_form', 'new', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_ACTION,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', 3),
-  );
-  //TODO
-  $menu['ces/bank/exchange/%/limitchain/%'] = array(
-    'title' => 'View limit chain',
-    'description' => 'View limit chain details',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_limitchain_form', 'view', 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_NORMAL_ITEM,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange limitchains', 3),
-  );
-  $menu['ces/bank/exchange/%/limitchain/%/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-  $menu['ces/bank/exchange/%/limitchain/%/edit'] = array(
-    'title' => 'Edit limit chain',
-    'description' => 'Edit a limit chain',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_limitchain_form', 'edit', 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('edit', 'exchange', 3),
-  );
-  //TODO
-  $menu['ces/bank/exchange/%/limitchain/%/delete'] = array(
-    'title' => 'Delete limit chain',
-    'description' => 'Delete a limit chain',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_limitchain_form', 'delete', 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', 3),
-  );
   $menu['ces/bank/permission'] = array(
     'title' => 'Permissions',
     'description' => 'Adminiser permissions',
@@ -681,7 +697,7 @@ function ces_bank_user_presave(&$edit, $account, $category) {
 function ces_bank_user_load($users){
   $bank = new Bank();
   foreach ($users as $uid => $account) {
-    if(!isset($user->data['ces_current_account'])){
+    if(!isset($account->data['ces_current_account'])){
       $bankaccounts = $bank->getUserAccounts($uid);
       if(!empty($bankaccounts)){
         $firstbankaccount = reset($bankaccounts);

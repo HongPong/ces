@@ -72,11 +72,6 @@ function ces_summaryblock_block_view($delta = '') {
   $content['controls'] = array(
     '#type' => 'container',
     '#attributes' => array('class' => array('ces_summaryblock_controls')),
-    'title' => array(
-      '#prefix' => '<h3>',
-      '#suffix' => '</h3>',
-      '#markup' => t('My account'),
-    ),
     'form' => array(
         drupal_get_form('ces_summaryblock_form'),
     ),
@@ -121,6 +116,32 @@ function ces_summaryblock_block_view($delta = '') {
 
 function ces_summaryblock_form($form, &$form_state){
   global $user;
+  $user = user_load($user->uid);
+  $bank = new Bank();
+  $accounts = $bank->getUserAccounts($user->uid);
+  $options = array();
+  foreach ($accounts as $account) {
+    $options[$account['id']] = $account['name'];
+  }
+  $default = reset($accounts);
+  if(count($accounts)>1) {
+    $form['account'] = array(
+      '#type' => 'select',
+      '#options' => $options,
+      '#default_value' => isset($user->data['ces_current_account'])?$user->data['ces_current_account']:$default['id'],
+      '#attributes' => array(
+        'onChange' => array('this.form.submit();')
+      ),
+    );
+  }
+  else {
+    $form['account'] = array(
+      '#type' => 'markup',
+      '#prefix' => '<h3>',
+      '#suffix' => '</h3>',
+      '#markup' => $default['name'],
+    );
+  }
   $form['period'] = array(
     '#type' => 'select',
     '#options' => array(
@@ -213,6 +234,7 @@ function ces_summaryblock_form_submit($form, &$form_state) {
   $user->data['ces_summaryblock_period_from'] = $from;
   $user->data['ces_summaryblock_period_to'] = $to;
   $user->data['ces_summaryblock_period'] = $form_state['values']['period'];
+  $user->data['ces_current_account'] = $form_state['values']['account'];
   user_save($user);
 }
 

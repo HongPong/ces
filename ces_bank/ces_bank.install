@@ -291,12 +291,19 @@ function ces_bank_schema() {
         'not null' => TRUE,
         'default' => 0
       ),
+      'weight' => array(
+        'description' => 'Wheight of this limit within the chain.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'data' => array(
         'description' => 'PHP-serialized type-specific options.',
         'type' => 'blob',
         'not null' => TRUE,
         'serialize' => TRUE
       )
+        
     ),
     'primary key' => array( 'id' ),
     'foreign keys' => array(
@@ -325,6 +332,12 @@ function ces_bank_schema() {
         'length' => '255',
         'not null' => TRUE,
         'default' => ''
+      ),
+      'description' => array(
+        'description' => 'A full description of this limit or to which accounts is it applied.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
       ),
     ),
     'primary key' => array( 'id'),

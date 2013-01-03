@@ -266,18 +266,19 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
   }
 }
 
-function ces_bank_limitchain_form($form, &$form_state, $op, $id) {
+function ces_bank_limitchain_form($form, &$form_state, $limitchain = NULL) {
   $bank = new Bank();
   if (!empty($form_state['values'])) {//Form rebuild. Take values from last user input.
-    $values = &$form_state['values'];
-    $op = $values['operation'];
+    $limitchain = &$form_state['values'];
+    $op = $form_state['values']['operation'];
   }
   else {//First build. Take values from logic layer.
-    if ($op == 'new') {
-      $values = $bank->getDefaultLimitChain($id);
+    if ($limitchain == NULL) {
+      $limitchain = $bank->getDefaultLimitChain($id);
+      $op = 'new';
     }
     else{
-      $values = $bank->getLimitChain($id);
+      $op = 'edit';
     }
   }
 
@@ -295,13 +296,13 @@ function ces_bank_limitchain_form($form, &$form_state, $op, $id) {
 
   $form['exchange'] = array(
     '#type' => 'value',
-    '#value' => $values['exchange'],
+    '#value' => $limitchain['exchange'],
   );
 
   if ($op != 'new') {
     $form['id'] = array(
       '#type' => 'value',
-      '#value' => $values['id'],
+      '#value' => $limitchain['id'],
     );
   }
 
@@ -309,7 +310,7 @@ function ces_bank_limitchain_form($form, &$form_state, $op, $id) {
     '#type' => 'textfield',
     '#description' => t('Name for this account limit'),
     '#title' => t('name'),
-    '#default_value' => $values['name'],
+    '#default_value' => $limitchain['name'],
     '#required' => TRUE
   );
   // Limits list
@@ -319,9 +320,9 @@ function ces_bank_limitchain_form($form, &$form_state, $op, $id) {
     '#description' => t('List of account limits currently belonging to this chain.'),
   );
 
-  if (isset($values['limits'])) {
-    foreach ($values['limits'] as $key => $value) {
-      $form['limits'][$key] = _ces_bank_limitchain_limit_fieldset(array(), $values['limits'][$key]);
+  if (isset($limitchain['limits'])) {
+    foreach ($limitchain['limits'] as $key => $value) {
+      $form['limits'][$key] = _ces_bank_limitchain_limit_fieldset(array(), $limitchain['limits'][$key]);
     }
   }
   //Add new limit to the chain

@@ -359,9 +359,10 @@ function ces_bank_permissions_page() {
 /**
  * List the limitchains for the given exchange.
  */
-function ces_bank_limitchain_list_page($exchange) {
+function ces_bank_limitchain_list_page() {
+  $exchange = ces_bank_get_current_exchange();
   $bank = new Bank();
-  $limitchains = $bank->getAllLimitChains($exchange);
+  $limitchains = $bank->getAllLimitChains($exchange['id']);
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
@@ -375,6 +376,9 @@ function ces_bank_limitchain_list_page($exchange) {
         'data' => t('Limits'),
       ),
       array(
+        'data' => t('Accounts'),
+      ),
+      array(
         'data' => t('Actions'),
       ),
     ),
@@ -386,22 +390,37 @@ function ces_bank_limitchain_list_page($exchange) {
     $row[] = $limitchain['name'];
     $limits = array();
     foreach ($limitchain['limits'] as $limit) {
-      $limits[] = $limitnames[$limit['classname']] . ' ' . $limit['value'] . ($limit['block'] ? ' ' . t('block') : '');
+      $limits[] = $limitnames[$limit['classname']] . ' ' . $bank->formatAmount($limit['value'], $exchange, TRUE) . ($limit['block'] ? ' ' . t('block') : '');
     }
     $row[] = implode('<br/>', $limits);
     $actions = array();
-    if (ces_bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', $exchange)) {
-      $actions[] = l(t('View'), 'ces/bank/exchange/' . $exchange . '/limitchain/' . $limitchain['id'] . '/view');
+    if (ces_bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', CES_CURRENT_EXCHANGE)) {
+      $actions[] = l(t('View'), 'ces/admin/limit/' . $limitchain['id'] . '/view');
     }
-    if (ces_bank_access(Permission::PERMISSION_EDIT, 'exchange', $exchange)) {
-      $actions[] = l(t('Edit'), 'ces/bank/exchange/' . $exchange . '/limitchain/' . $limitchain['id'] . '/edit');
+    if (ces_bank_access(Permission::PERMISSION_EDIT, 'exchange', CES_CURRENT_EXCHANGE)) {
+      $actions[] = l(t('Edit'), 'ces/admin/limit/' . $limitchain['id'] . '/edit');
     }
-    if (ces_bank_access(Permission::PERMISSION_ADMIN, 'exchange', $exchange)) {
-      $actions[] = l(t('Delete'), 'ces/bank/exchange/' . $exchange . '/limitchain/' . $limitchain['id'] . '/delete');
+    if (ces_bank_access(Permission::PERMISSION_ADMIN, 'exchange', CES_CURRENT_EXCHANGE)) {
+      $actions[] = l(t('Delete'), 'ces/admin/limit/' . $limitchain['id'] . '/delete');
     }
+    $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'limitchain' => $limitchain['id']));
+    $row[] = count($accounts);
     $row[] = implode(' ', $actions);
     $page['table']['#rows'][] = $row;
   }
+  return $page;
+}
+function ces_bank_limitchain_view($limitchain) {
+  $bank = new Bank();
+  foreach($limitchain['limits'] as $key => $value){
+    $limitchain['limits'][$key]['value'] = $bank->formatAmount($value['value'], ces_bank_get_current_exchange(), TRUE);
+  }
+  $page = array(
+    '#theme' => 'ces_bank_limitchain_view',
+    'limitchain' => $limitchain,
+    'limitclasses' => module_invoke_all('account_limit_classes'),
+  );
+  
   return $page;
 }
 function ces_bank_exchange_view() {

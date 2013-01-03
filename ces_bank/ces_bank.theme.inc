@@ -99,3 +99,66 @@ function theme_ces_bank_transaction_view($variables) {
   $out .= '</dl>';
   return $out;
 }
+/**
+ * @todo move this to page function! -My God, this is logic!!
+ */
+function theme_ces_bank_limitchain_view($variables) {
+  drupal_add_tabledrag('ces-bank-limitchain-table', 'order', 'sibling', 'ces-bank-limit-weight');
+  $limitchain = $variables['element']['limitchain'];
+  $classes = $variables['element']['limitclasses'];
+  $out = '';
+  $out .= '<h2>' . $limitchain['name'] . '</h2>';
+  $out .= '<div>';
+  $out .= filter_xss($limitchain['description']);
+  $out .= '</div>';
+  $out .= '<div>';
+  $out .= '<h3>' . t('Limits') . '</h3>';
+  if(empty($limitchain['limits'])) {
+    $out .= t('No limits.');
+  }else{
+    $table = array(
+      '#theme' => 'table',
+      '#header' => array(t('Type'), t('Value'), t('Action'), t('Weight')),
+      '#rows' => array(),
+      '#attributes' => array(
+        'id' => array('ces-bank-limitchain-table'),
+      )
+    );
+    $count=1;
+    foreach($limitchain['limits'] as $limit) {
+      //@todo TODO debug !! this line must be removed!
+      $limit['weight'] = $count;
+      $type = array(
+        '#type' => 'select',
+        '#options' => $classes,
+        '#default_value' => $limit['classname'],
+      );
+      $value = array(
+        '#type' => 'textfield',
+        '#default_value' => $limit['value'],
+        '#size' => 3,
+      );
+      $weight = array(
+        '#type' => 'textfield',
+        '#default_value' => $limit['weight'],
+        '#size' => 3,
+        '#attributes' => array(
+          'class' => array('ces-bank-limit-weight'),
+        )
+      );
+      $table['#rows'][] = array(
+        'data' => array(
+          drupal_render($type),
+          drupal_render($value),
+          $limit['block'] ? t('Block') : t('Warn'),
+          drupal_render($weight),
+        ),
+        'class' => array('draggable'),
+      );
+      $count++;
+    }
+    $out .= drupal_render($table);
+  }
+  $out .= '</div>';
+  return $out;
+}

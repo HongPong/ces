@@ -343,11 +343,10 @@ class Bank{
     $result = $st->selectFunctionField('SUM', 'amount',
       array(
         array($field, $account->id),
-          array('created', $from, '>='),
-          array('created', $to, '<='),
-          array('state', array(3)),
-        )
-      );
+        array('created', $from, '>='),
+        array('created', $to, '<='),
+        array('state', array(3)),
+      ));
     return $result;
   }
   public function getAccountHistoricSales($id, $from, $to = null) {
@@ -1601,6 +1600,7 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
      */
     private $parent;
     public static $table = 'ces_transaction';
+    
     public function getAmount(Currency $currency = NULL) {
       return $this->parent->getAmount($currency);
     }
