@@ -202,7 +202,7 @@ class Bank{
       $transaction = $this->newTransaction($record);
       $s = new Serializer(get_class($transaction));
       $s->save($transaction);
-      $record['id'] = $transaction->id;
+      $record['id'] = $transaction->getId();
     }catch(Exception $e) {
       $t->rollback();
       throw $e;
@@ -225,6 +225,18 @@ class Bank{
    */
   public function getTransaction($id) {
     return $this->getObjectRecord('BasicTransaction', $id);
+  }
+  public function getTransactionFromAccount(array $record) {
+    $s = new Serializer('BasicTransaction');
+    $transaction = $s->loadFromRecord($record);
+    $name = $transaction->getFromAccountName();
+    return $this->getAccountByName($name);
+  }
+  public function getTransactionToAccount(array $record) {
+    $s = new Serializer('BasicTransaction');
+    $transaction = $s->loadFromRecord($record);
+    $name = $transaction->getToAccountName();
+    return $this->getAccountByName($name);
   }
   /**
    * @param $conditions array
@@ -622,10 +634,11 @@ class Bank{
       $record['data'] = array();
     }
     //Basic transaction.
-    $transaction = new BasicTransaction($record);
-    if ($toaccount['exchange'] != $fromaccount['exchange']) {
-      //Interexchange transaction.
-      $transaction = new InterExchangeTransaction($transaction, array());
+    if ($toaccount['exchange'] == $fromaccount['exchange']) {
+      $transaction = new BasicTransaction($record);  
+    }
+    else {
+      $transaction = InterExchangeTransaction::newInterExchangeTransaction($record);
     }
     return $transaction;
   }
@@ -1292,6 +1305,7 @@ class AbsoluteCreditLimit extends AccountLimit {
  * temporally save the money in delayed transactions.
  */
 interface Transaction {
+  public function getId();
   /**
    * @return the currency amount of this transaction.
    */
@@ -1456,6 +1470,9 @@ class BasicTransaction extends DBObject implements Transaction{
    */
   public $data;
   public static $table = 'ces_transaction';
+  public function getId(){
+    return $this->id;
+  }
   /**
    * @return the amount of this transaction in the given currency.
    * @param $currency The currency to be used. If ommited it returns the value
@@ -1600,7 +1617,9 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
      */
     private $parent;
     public static $table = 'ces_transaction';
-    
+    public function getId(){
+      return $this->parent->getId();
+    }
     public function getAmount(Currency $currency = NULL) {
       return $this->parent->getAmount($currency);
     }
@@ -1655,103 +1674,107 @@ abstract class DecoratedTransaction extends DBObject implements Transaction{
  */
 class InterExchangeTransaction extends DecoratedTransaction{
   /**
-   * @var BasicTransaction
-   * Transaction buyer <-> virtual. This is not stored in the DB.
+   * @var int The identifier of the other transaction
    */
-  protected $virtualTransactionFrom;
+  public $pairid;
   /**
-   * @var BasicTransaction
-   * Transaction virtual <-> seller. This is not stored in the DB.
+   * @var int one of InterExchangeTransaction::$FROM or InterExchangeTransaction::$TO.
    */
-  protected $virtualTransactionTo;
+  public $side;
+  
+  public static $FROM = 0;
+  public static $TO = 1;
+  /**
+   * @return InterExchangeTransaction
+   */
+  public static function newInterExchangeTransaction($record) {
+    $sa = new Serializer('LocalAccount');
+    $fromaccount = $sa->load($record['fromaccount']);
+    $toaccount = $sa->load($record['toaccount']);
+    $se = new Serializer('Exchange');
+    $fromexchange = $se->load($fromaccount->exchange);
+    $toexchange = $se->load($toaccount->exchange);
+    
+    $torecord = $record;
+    $torecord['fromaccount'] = $toexchange->getVirtualAccount($fromexchange)->id;
+    $totransaction = new InterExchangeTransaction(
+            new BasicTransaction($torecord), 
+            array('side' => InterExchangeTransaction::$TO,
+                  'pairid' => NULL
+                 )
+            );
+    $st = new Serializer('InterExchangeTransaction');
+    $st->save($totransaction);
+    
+    $fromrecord = $record;
+    $fromrecord['toaccount'] = $fromexchange->getVirtualAccount($toexchange)->id;
+    $fromrecord['amount'] = $totransaction->getAmount($fromexchange->getCurrency());
+    $fromtransaction = new InterExchangeTransaction(
+            new BasicTransaction($fromrecord),
+            array('side' => InterExchangeTransaction::$FROM,
+                  'pairid' => $totransaction->getId(),
+                 )
+            );
+    $st->save($fromtransaction);
+    $totransaction->pairid = $fromtransaction->getId();
+    return $totransaction;
+  }
   public function trigger() {
-    $this->getVirtualTransactionFrom()->trigger();
-    $this->getVirtualTransactionTo()->trigger();
-    if ($this->getVirtualTransactionFrom()->getState() == Transaction::STATE_TRIGGERED
-    && $this->getVirtualTransactionTo()->getState() == Transaction::STATE_TRIGGERED) {
-      $this->setState(Transaction::STATE_TRIGGERED);
-    }
+    
+    $this->getParent()->trigger();
+    $pair = $this->getPair();
+    $pair->getParent()->trigger();
+    $s = new Serializer('BasicTransaction');
+    $s->save($pair);
+    //TODO: If the first transaction fails, dont try the second. If the second 
+    //fails, undo the first,
   }
   public function check() {
     //Check two virtual transactions.
-    $virtFrom = $this->getVirtualTransactionFrom();
-    $virtFrom->check();
-    $virtTo = $this->getVirtualTransactionTo();
-    $virtTo->check();
-    //Merge results.
-    if ($virtFrom->getState() == Transaction::STATE_ACCEPTED
-    && $virtTo->getState() == Transaction::STATE_ACCEPTED) {
-      $this->setState(Transaction::STATE_ACCEPTED);
-    }
-    elseif ($virtFrom->getState() == Transaction::STATE_REJECTED
-    || $virtTo->getState() == Transaction::STATE_REJECTED) { //one of the two must be rejected.
-      $this->setState(Transaction::STATE_REJECTED);
-    }
-    elseif ($virtFrom->getState() == Transaction::STATE_TRIGGERED
-    || $virtTo->getState() == Transaction::STATE_TRIGGERED) {
-      $this->setState(Transaction::STATE_TRIGGERED);
-    }
-    //Add the virtual logs regarding the final state of the whole interexchange transaction.
-    $this->log($virtFrom->getLog($this->getState()));
-    $this->log($virtTo->getLog($this->getState()));
+    $this->getParent()->check();
+    $pair = $this->getPair();
+    $pair->getParent()->check();
+    $s = new Serializer('BasicTransaction');
+    $s->save($pair);
   }
   public function apply() {
     //Apply the two virtual transactions.
-    $virtFrom = $this->getVirtualTransactionFrom();
-    $virtFrom->apply();
-    $virtTo = $this->getVirtualTransactionTo();
-    $virtTo->apply();
-    //Merge state.
-    if ($virtFrom->getState() == Transaction::STATE_COMMITED
-    && $virtTo->getState() == Transaction::STATE_COMMITED) {
-      $this->setState(Transaction::STATE_COMMITED);
-    }
-    elseif ($virtFrom->getState() == Transaction::STATE_ERROR
-    || $virtTo->getState() == Transaction::STATE_ERROR) {
-      $this->setState(Transaction::STATE_ERROR);
-    }
-    $this->log($virtFrom->getLog($this->getState()));
-    $this->log($virtTo->getLog($this->getState()));
+    $this->getParent()->apply();
+    $pair = $this->getPair();
+    $pair->getParent()->apply();
+    $s = new Serializer('BasicTransaction');
+    $s->save($pair);
+  }
+  public function getToAccountName() {
+    return $this->getVirtualTransactionTo()->getToAccountName();
+  }
+  public function getFromAccountName() {
+    return $this->getVirtualTransactionFrom()->getFromAccountName();
   }
   protected function getVirtualTransactionFrom() {
-    if ($this->virtualTransactionFrom == NULL) {
-      $sa = new Serializer('LocalAccount');
-      $toAccount = $sa->loadFromUniqueKey('name', $this->getToAccountName());
-      $fromAccount = $sa->loadFromUniqueKey('name', $this->getFromAccountName());
-      $toExchange = $toAccount->getExchange();
-      $fromExchange = $fromAccount->getExchange();
-      $fromVirtualAccount = $fromExchange->getVirtualAccount($toExchange);
-      $amount = $this->getAmount($fromExchange->getCurrency());
-      $this->virtualTransactionFrom = new BasicTransaction(array(
-        'fromaccount' => $fromAccount->id,
-        'toaccount' => $fromVirtualAccount->id,
-        'amount' => $amount,
-        'concept' => $this->getConcept(),
-        'user' => $this->getUser(),
-        'state' => $this->getState(),
-      ));
+    if ($this->side == InterExchangeTransaction::$FROM) {
+      $t = $this->getParent();
+      return $t;
     }
-    return $this->virtualTransactionFrom;
+    else {
+      $t = $this->getPair()->getParent();
+      return $t;
+    }
   }
   protected function getVirtualTransactionTo() {
-    if ($this->virtualTransactionTo == NULL) {
-      $sa = new Serializer('LocalAccount');
-      $toAccount = $sa->loadFromUniqueKey('name', $this->getToAccountName());
-      $fromAccount = $sa->loadFromUniqueKey('name', $this->getFromAccountName());
-      $toExchange = $toAccount->getExchange();
-      $fromExchange = $fromAccount->getExchange();
-      $toVirtualAccount = $toExchange->getVirtualAccount($fromExchange);
-
-      $this->virtualTransactionTo = new BasicTransaction(array(
-          'fromaccount' => $toVirtualAccount->id,
-          'toaccount' => $toAccount->id,
-          'amount' => $this->getAmount(), //This transaction is in the "to" currency
-          'concept' => $this->getConcept(),
-          'user' => $this->getUser(),
-          'state' => $this->getState(),
-      ));
+    if ($this->side == InterExchangeTransaction::$TO) {
+      $t = $this->getParent();
+      return $t;
     }
-    return $this->virtualTransactionTo;
+    else {
+      $t = $this->getPair()->getParent();
+      return $t;
+    }
+  }
+  protected function getPair(){
+    $s = new Serializer('BasicTransaction');
+    $iet = $s->load($this->pairid);
+    return $iet;
   }
 }
 /**

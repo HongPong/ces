@@ -18,12 +18,10 @@ function ces_summaryblock_block_view($delta = '') {
   $user = user_load($user->uid);
   $from = isset($user->data['ces_summaryblock_period_from'])?$user->data['ces_summaryblock_period_from']:0;
   $to = isset($user->data['ces_summaryblock_period_to'])?$user->data['ces_summaryblock_period_to']:time();
-  $aid = isset($user->data['ces_current_account'])?$user->data['ces_current_account']:0;
-  if (!empty($aid)) {
+  $account = ces_bank_get_current_account();
+  if (!empty($account)) {
     $bank = new Bank();
-    $account = $bank->getAccount($user->data['ces_current_account']);
-    $exchange = $bank->getExchange($account['exchange']);
-    
+    $exchange = ces_bank_get_current_exchange();
     $sales = $bank->getAccountHistoricSales($account['id'], $from, $to);
     $sales = $bank->formatAmount($sales, $exchange);
     $purchases = $bank->getAccountHistoricPurchases($account['id'], $from, $to);
@@ -31,11 +29,11 @@ function ces_summaryblock_block_view($delta = '') {
     $balance = $bank->formatAmount($account['balance'], $exchange);
     $currency = $exchange['currenciesname'];
     
-    $transactions = $bank->getTransactions(array('limit' => 1, 'account' => $aid));
+    $transactions = $bank->getTransactions(array('limit' => 1, 'account' => $account['id']));
     if(!empty($transactions)) {
       $transaction = reset($transactions);
       $lasttradedesc = text_summary($transaction['concept'], NULL, 35);
-      if ($aid == $transaction['fromaccount']) {
+      if ($account['id'] == $transaction['fromaccount']) {
         $otheraccountid = $transaction['toaccount'];
       }
       else {

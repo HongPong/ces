@@ -72,8 +72,10 @@ class Serializer {
     $record = $object->getRecord();
     //Call save extra data to all implied objects.
     $auxobject = $object; //Don't loose the main reference!
+    $inner = NULL;
     do{
       $auxobject->saveExtraData();
+      $inner = $auxobject;
       $auxobject = $auxobject->getParent();
     } while ($auxobject != NULL && ($auxobject instanceof DBObject));
     //Decide between insert and update, and automatically populate temporal fields.
@@ -83,7 +85,7 @@ class Serializer {
       drupal_write_record($this->table, $record);
       //Update the inserted object with the id parameter.
       if (isset($record['id'])) {
-        $object->id = $record['id'];
+        $inner->id = $record['id'];
       }
     }
     else {
@@ -157,6 +159,7 @@ class Serializer {
     $result = $query->execute();
     $loads = array();
     while (($record = $result->fetchAssoc()) !== FALSE) {
+      $this->handleSerialized($record);
       $loads[] = $this->loadFromRecord($record);
     }
     return $loads;

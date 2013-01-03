@@ -1147,11 +1147,11 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
     $row[] = array('data' => format_date($transaction['created'], 'custom', $dateformat));
     
     if ($transaction['fromaccount'] != $account['id']) {
-      $other_account = $bank->getAccount($transaction['fromaccount']);
+      $other_account = $bank->getTransactionFromAccount($transaction);
       $type = 0;
     }
     elseif ($transaction['toaccount']!=$account['id']) {
-      $other_account = $bank->getAccount($transaction['toaccount']);
+      $other_account = $bank->getTransactionToAccount($transaction);
       $type = 1;
     }
     else {//This is impossible, but just in case.
