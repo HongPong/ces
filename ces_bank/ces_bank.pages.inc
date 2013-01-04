@@ -470,8 +470,9 @@ function ces_bank_account_view() {
  */
 function ces_bank_transaction_view($transaction) {
   $bank = new Bank();
-  $fromaccount = $bank->getAccount($transaction['fromaccount']);
-  $toaccount = $bank->getAccount($transaction['toaccount']);
+  
+  $fromaccount = $bank->getTransactionFromAccount($transaction);
+  $toaccount = $bank->getTransactionToAccount($transaction);
   $page = array(
     '#theme' => 'ces_bank_transaction_view',
   );

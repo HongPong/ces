@@ -18,7 +18,7 @@ function ces_bank_help($path, $arg) {
     case 'ces/bank/exchange/accounts':
       return '<p>' . t('All users and banking accounts of your exchange.') . '</p>';
     case 'ces/bank/account/transaction':
-      return '<p>' . t('Showing your transactions. Set the From and To 
+      return '<p>' . t('Showing your transactions. Set the "From" and "To" 
         dates to see a specific time range.') .'</p>';
   }
 }
@@ -299,8 +299,8 @@ function ces_bank_menu() {
     'page arguments' => array(4),
     'file' => 'ces_bank.pages.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'transaction', 4),
+    'access callback' => 'ces_transaction_access',
+    'access arguments' => array('view', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
   );
@@ -312,8 +312,8 @@ function ces_bank_menu() {
     'page arguments' => array('ces_bank_transaction_form', 'edit', 4),
     'file' => 'ces_bank.forms.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('edit', 'transaction', 4),
+    'access callback' => 'ces_transaction_access',
+    'access arguments' => array('edit', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   );
@@ -324,8 +324,8 @@ function ces_bank_menu() {
     'page arguments' => array('ces_bank_transaction_delete_form', 4),
     'file' => 'ces_bank.forms.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('edit', 'transaction', 4),
+    'access callback' => 'ces_transaction_access',
+    'access arguments' => array('edit', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
   );
@@ -337,6 +337,10 @@ function ces_transaction_load($id = NULL) {
   $bank = new Bank();
   $transaction =  $bank->getTransaction($id);
   return $transaction;
+}
+function ces_transaction_access($permission, $transaction, $account = NULL) {
+  return ces_bank_access($permission, 'account buyer', $transaction['fromaccount'], $account)
+      || ces_bank_access($permission, 'account seller', $transaction['toaccount'], $account);
 }
 function ces_limitchain_load($id = NULL) {
   if(empty($id)) return FALSE;

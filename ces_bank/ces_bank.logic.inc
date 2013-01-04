@@ -1940,7 +1940,7 @@ class UserPermission{
       $object1 = substr($object1, 0, strpos($object1, ' '));
       //At this point we know that $object2 is one of 'account', 'exchange' and
       //$object1 one of 'account', 'exchange', 'global' and $object2 != $object1
-      //so the only favorable possibily is the following.
+      //so the only favorable possibility is the following.
       if ($object1 == Permission::SCOPE_ACCOUNT && $object2 == Permission::SCOPE_EXCHANGE) {
         $s = new Serializer('LocalAccount');
         $account = $s->load($objectid1);

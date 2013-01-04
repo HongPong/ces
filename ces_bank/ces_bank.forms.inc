@@ -693,8 +693,8 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
   if ($op == 'new') {
     $exchangeid = $arg;
   } else if ($op == 'edit') {
-    $from = $bank->getAccount($arg['fromaccount']);
-    $to = $bank->getAccount($arg['toaccount']);
+    $from = $bank->getTransactionFromAccount($arg);
+    $to = $bank->getTransactionToAccount($arg);
     $form_state['values']['toexchange'] = $to['exchange'];
     $form_state['values']['toaccountname'] = $to['name'];
     $form_state['values']['fromexchange'] = $from['exchange'];

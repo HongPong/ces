@@ -148,10 +148,7 @@ function ces_offerswants_menu() {
     'title' => 'Offers',
     'description' => 'View available offers',
     'page callback' => 'ces_offerswants_list_page',
-    'access callback' => TRUE,
     'page arguments' => array('offer',2,3,4,5,6),
-    /*'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'offers', 0),*/
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
     'type' => MENU_NORMAL_ITEM,
@@ -193,7 +190,8 @@ function ces_offerswants_menu() {
     'title' => 'View offer',
     'page callback' => 'ces_offerwant_view',
     'page arguments' => array(4),
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('view', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   );
@@ -201,7 +199,8 @@ function ces_offerswants_menu() {
     'title' => 'Edit offer',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_offerwant_form', NULL, 4),
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('edit', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
       
@@ -210,7 +209,8 @@ function ces_offerswants_menu() {
     'title' => 'Delete offer',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_offerwant_delete_form', 4),
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('admin', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 40,
   );
@@ -236,12 +236,12 @@ function ces_offerswants_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
   );
-  
-    $menu['ces/bank/account/mywants/%ces_offerwant/view'] = array(
+  $menu['ces/bank/account/mywants/%ces_offerwant/view'] = array(
     'title' => 'View offer',
     'page callback' => 'ces_offerwant_view',
     'page arguments' => array(4),
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('view', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   );
@@ -249,7 +249,8 @@ function ces_offerswants_menu() {
     'title' => 'Edit offer',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_offerwant_form', NULL, 4),
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('edit', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
   );
@@ -257,7 +258,8 @@ function ces_offerswants_menu() {
     'title' => 'Delete offer',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_offerwant_delete_form', 4),
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('admin', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 40,
   );
@@ -266,7 +268,8 @@ function ces_offerswants_menu() {
     'title' => 'Edit categories',
     'description' => 'View, edit and add categories for your exchange',
     'page callback' => 'ces_offerswants_admin_categories_page',
-    'access callback' => TRUE,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('edit', 'exchange', CES_CURRENT_EXCHANGE),
     'type' => MENU_NORMAL_ITEM
   );
   $menu['ces/admin/categories/list'] = array(
@@ -279,7 +282,8 @@ function ces_offerswants_menu() {
     'description' => 'View, edit and add categories for your exchange',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_category_form'),
-    'access callback' => TRUE,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('edit', 'exchange', CES_CURRENT_EXCHANGE),
     'type' => MENU_LOCAL_TASK,
     'weight' => 100,
   );
@@ -288,7 +292,8 @@ function ces_offerswants_menu() {
     'description' => 'Edit category',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_category_form', 3),
-    'access callback' => TRUE,
+    'access callback' => 'ces_category_access',
+    'access arguments' => array('edit', 3),
     'type' => MENU_LOCAL_TASK,
     'weight' => 200,
   );
@@ -297,7 +302,8 @@ function ces_offerswants_menu() {
     'description' => 'Delete category',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_category_delete_form', 3),
-    'access callback' => TRUE,
+    'access callback' => 'ces_category_access',
+    'access arguments' => array('admin', 3),
     'type' => MENU_LOCAL_TASK,
     'weight' => 300,
   );
@@ -453,6 +459,10 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
       '#value' => $category,
     );
   }
+  $form['user'] = array(
+    '#type' => 'value',
+    '#value' => isset($offerwant->user)?$offerwant->user:$user->uid,
+  );
   $form['title'] = array(
     '#type' => 'textfield',
     '#description' => t('Enter here a short but descriptive title.'),
@@ -523,7 +533,6 @@ function ces_offerwant_form_submit($form, &$form_state) {
   $offerwant->state = $form_state['values']['hide'] ? 0 : 1;
   $offerwant->expire = mktime(24, 0, 0, $form_state['values']['expire']['month'], $form_state['values']['expire']['day'], $form_state['values']['expire']['year']);
   $offerwant->modified = REQUEST_TIME;
-  $offerwant->user = $user->uid;
   field_attach_submit('ces_offerwant', $offerwant, $form, $form_state);
   //Load original $offerwant
   if (!empty($offerwant->id)) {
@@ -560,7 +569,7 @@ function ces_offerwant_form_submit($form, &$form_state) {
     file_usage_delete($ofile, 'ces_offerswants', 'ces_offerwant', $offerwant->id);
     file_delete($ofile);
   }
-  $form_state['redirect'] = 'ces/bank/account/my' . $offerwant->type . 's';
+  $form_state['redirect'] = 'ces/bank/account/my' . $offerwant->type . 's/' . $offerwant->id . '/view';
 }
 
 function ces_offerwant_delete_form($form, &$form_state, $offerwant) {
@@ -651,8 +660,13 @@ function template_preprocess_ces_offerwant(&$variables) {
   $variables['ces_offerwant_keywords'] = check_plain($offerwant->keywords);
   //actions
   $prefix = 'ces/bank/account/my' . $offerwant->type .'s/' . $offerwant->id;
-  $variables['ces_offerwant_actions'] = l(t('Edit'), $prefix . '/edit') . ' '
-                                    . l(t('Delete'), $prefix . '/delete');
+  $actions = array();
+  $actions[] = l(t('Details'), $prefix . '/view');
+  if(ces_offerwant_access('edit', $offerwant)) {
+    $actions[] = l(t('Edit'), $prefix . '/edit');
+    $actions[] = l(t('Delete'), $prefix . '/delete');
+  }
+  $variables['ces_offerwant_actions'] = implode(' ', $actions);
   //seller info
   $variables['ces_offerwant_seller_uid'] = $offerwant->user;
   $account = user_load($offerwant->user);
@@ -660,7 +674,18 @@ function template_preprocess_ces_offerwant(&$variables) {
   $variables['ces_offerwant_seller_phone'] = ces_user_get_main_phone($account);
   $variables['ces_offerwant_seller_mail'] = $account->mail;
 }
-
+/**
+ * @param operation one of 'view', 'use', 'edit', 'admin'.
+ */
+function ces_offerwant_access($operation, $offerwant, $account = NULL) {
+  if ($account == NULL) {
+    global $user;
+    $account = $user;
+  }
+  if($offerwant->user == $account->uid) return TRUE;
+  $category = ces_category_load($offerwant->category);
+  return ces_bank_access($operation, 'exchange', $category->exchange);
+}
 
 function ces_category_form($form, &$form_state, $category = NULL) {
   if ($category == NULL) {
@@ -783,6 +808,9 @@ function ces_category_load_multiple($ids = array(), $conditions = array(), $rese
 function ces_category_delete($id) {
   $controller = entity_get_controller('ces_category');
   return $controller->delete($id);
+}
+function ces_category_access($permission, $category) {
+  return ces_bank_access($permission, 'exchange', $category->exchange);
 }
 
 function ces_offerswants_get_current_exchage_id($account = NULL) {
