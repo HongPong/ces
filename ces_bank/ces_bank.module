@@ -1162,7 +1162,10 @@ function ces_bank_not_yet_implemented(){
 function ces_bank_user_view($user, $view_mode, $langcode) {
   $bank = new Bank();
   $accounts = $bank->getUserAccounts($user->uid);
-  foreach($accounts as $account){
+  foreach ($accounts as $account) {
+    if(!ces_bank_access('view', 'exchange accounts', $account['exchange'])) {
+      continue;
+    }
     $exchange = $bank->getExchange($account['exchange']);
     $limitchain = $bank->getLimitChain($account['limitchain']);
     $accounting = array(
@@ -1203,9 +1206,26 @@ function ces_bank_user_view($user, $view_mode, $langcode) {
       '#markup' => $limitchain['name'],
       '#weight' => 40,
     );
-    
-    
-    
     $user->content['account_'.$account['name']] = $accounting;
   }
+}
+/**
+ * Implements hook_menu_alter().
+ */
+function ces_user_menu_alter(&$items) {
+  $items['user/%user']['access callback'] = 'ces_bank_user_access';
+  $items['user/%user']['access arguments'] = array('view', 1);  
+}
+/**
+ */
+function ces_bank_user_access($permission, $target, $account = NULL) {
+  $bank = new Bank();
+  $accounts = $bank->getUserAccounts($target->uid);
+  
+  foreach ($accounts as $acc) {
+    if (ces_bank_access($permission, 'exchange accounts', $acc['exchange'], $account)) {
+      return TRUE;
+    }
+  }
+  return FALSE;
 }

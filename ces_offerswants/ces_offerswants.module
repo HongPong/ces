@@ -684,7 +684,7 @@ function ces_offerwant_access($operation, $offerwant, $account = NULL) {
   }
   if($offerwant->user == $account->uid) return TRUE;
   $category = ces_category_load($offerwant->category);
-  return ces_bank_access($operation, 'exchange', $category->exchange);
+  return ces_bank_access($operation, 'exchange accounts', $category->exchange);
 }
 
 function ces_category_form($form, &$form_state, $category = NULL) {
