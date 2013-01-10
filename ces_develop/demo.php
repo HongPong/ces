@@ -88,12 +88,12 @@ for ($i=0; $i<3; $i++) {
 }
 //CREATE LOCAL TRANSACTIONS
 $transactions = array(
-    array('NET10001', 'NET10002', 1.2, '3kg of potatoes.'),
-    array('NET10002', 'NET10003', 0.8, 'Standard haircut.'),
-    array('NET10003', 'NET10001', 2.1, 'Yearly website mantainment'),
-    array('NET20001', 'NET20002', 25, 'Bike revision.'),
-    array('NET20002', 'NET20003', 6, 'Natural soap.'),
-    array('NET20003', 'NET20001', 5.5, 'Ecologic carrots'),
+    array('NET10001', 'NET10002', 1.2, '3kg of potatoes.', $users['Euclides']->uid),
+    array('NET10002', 'NET10003', 0.8, 'Standard haircut.', $users['Gauss']->uid),
+    array('NET10003', 'NET10001', 2.1, 'Yearly website mantainment', $users['Riemann']->uid),
+    array('NET20001', 'NET20002', 25, 'Bike revision.', $users['Noether']->uid),
+    array('NET20002', 'NET20003', 6, 'Natural soap.', $users['Fermat']->uid),
+    array('NET20003', 'NET20001', 5.5, 'Ecologic carrots', $users['Gauss']->uid),
 );
 foreach($transactions as $t) {
   $trans = array(
@@ -101,6 +101,7 @@ foreach($transactions as $t) {
     'toaccountname' => $t[1],
     'amount' => $t[2],
     'concept' => $t[3],
+    'user' => $t[4],
   );
   $bank->createTransaction($trans);
   $bank->applyTransaction($trans['id']);
@@ -111,6 +112,7 @@ $trans = array(
   'toaccountname' => 'NET20001',
   'amount' => '10',
   'concept' => 'Some old math books from Germany.',
+  'user' => $users['Gauss']->uid,
 );
 $bank->createTransaction($trans);
 $bank->applyTransaction($trans['id']);

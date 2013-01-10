@@ -680,7 +680,7 @@ function ces_bank_account_form_submit($form, &$form_state) {
 function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_id = NULL, $from_account_id = NULL) {
   if (!empty($form_state['values']) && !empty($form_state['values']['page'])
       && $form_state['values']['page'] == 'confirm') {
-    return ces_bank_transaction_confirm_form($form, $form_state, $op);
+    return ces_bank_transaction_confirm_form($form, $form_state, $form_state['values']['operation']);
   }
   global  $user;
   $bank = new Bank();
@@ -702,7 +702,12 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
     $form_state['values']['concept'] = $arg['concept'];
     $form_state['values']['amount'] = $arg['amount'];
     $form_state['values']['id'] = $arg['id'];
+    $form_state['values']['user'] = $arg['user'];
   }
+  $form['operation'] = array(
+    '#type' => 'value',
+    '#value' => $op,
+  );
   if(isset($form_state['values']['id'])){
    $form['id'] = array(
      '#type' => 'value',
@@ -845,7 +850,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
   );
   $form['user'] = array(
       '#type' => 'value',
-      '#value' => $user->uid,
+      '#value' => isset($form_state['values']['user'])?$form_state['values']['user']:$user->uid,
   );
   $form['submit'] = array(
       '#type' => 'submit',
@@ -898,6 +903,7 @@ function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL)
         'amount' => $transaction['amount'],
         'concept' => $transaction['concept'],
         'id' => $transaction['id'],
+        'user' => $transaction['user'],
       );
     } catch (Exception $e) {
       drupal_set_message($e->getMessage(), 'error');
@@ -974,7 +980,7 @@ function ces_bank_transaction_confirm_form_back($form, &$form_state) {
     $form_state['rebuild'] = TRUE;
   }
   else {
-    drupal_goto('ces/bank/dashboard');
+    drupal_goto('ces/bank');
   }
 }
 
@@ -1021,6 +1027,7 @@ function ces_bank_transaction_confirm_form_submit($form, &$form_state) {
       case 'edit':
         $record = $form_state['edit_page'];
         $result = $bank->updateTransaction($record);
+        break;
       default:
         throw new Exception(t('Operation not permitted or no implemented yet.'));
     }

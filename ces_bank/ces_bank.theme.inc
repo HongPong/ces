@@ -63,6 +63,8 @@ function theme_ces_bank_transaction_view($variables) {
     $out .= '<dt>' . t('Modified') . '</dt>';
     $out .= '<dd>' . format_date($tran['modified']) . '</dd>';
   }
+  $out .= '<dt>' . t('Entered by') . '</dt>';
+  $out .= '<dd>' . l(ces_user_get_name(user_load($tran['user'])),'user/' . $tran['user']) . '</dd>';
   if($fex['id'] == $tex['id']) {
     $out .= '<dt>' . t('Exchange') . '</dt>';
     $out .= '<dd>' . $fex['name'] . '</dd>';
