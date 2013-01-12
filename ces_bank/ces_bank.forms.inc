@@ -1059,6 +1059,26 @@ function ces_bank_transaction_confirm_form_submit($form, &$form_state) {
   drupal_set_message($msg);
 }
 
+function ces_bank_transaction_delete_form($form, &$form_state, $transaction) {
+  $form = array();
+  $form['transaction'] = array('#type' => 'value', '#value' => $transaction);
+  
+  $message = '<p>' . t('Are you sure you want to delete the transaction?') . '</p>';
+  $caption = '<p>' . t('Transaction details:') . '</p>';
+  require_once(drupal_get_path('module', 'ces_bank') . '/ces_bank.pages.inc');
+  $caption .= '<p>' . drupal_render(ces_bank_transaction_view($transaction)) . '</p>';
+  $caption .= '<p>' . t('This action cannot be undone.') . '</p>';
+  return confirm_form($form, $message, 'ces/bank/account/transaction', $caption, t('Delete'));
+}
+
+function ces_bank_transaction_delete_form_submit($form, &$form_state) {
+  $bank = new Bank();
+  $transaction = $form_state['values']['transaction'];
+  $bank->deleteTransaction($transaction['id']);
+  drupal_set_message(t('Transaction %concept has been deleted.', array('%concept' => $transaction['concept'])));
+  $form_state['redirect'] = 'ces/bank/account/transaction';
+}
+
 /**
  * @return array page where to find the last transactions with this account.
  * @see ces_bank_account_statement_form_submit()

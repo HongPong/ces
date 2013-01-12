@@ -185,9 +185,11 @@ class Serializer {
    * Deletes a database record
    * @param id int the record id.
    */
-  public function delete($id) {
+  public function delete(DBObject $object) {
+    $object->deleteExtraData();
     $this->deleteCache();
-    $query = db_delete($this->table)->condition('id', $id);
+    $record = $object->getRecord();
+    $query = db_delete($this->table)->condition('id', $record['id']);
     return $query->execute();
   }
   /**
@@ -307,6 +309,8 @@ abstract class DBObject{
    */
   public function saveExtraData() {
   }
+  public function deleteExtraData() {
+  }
   public function __construct($record) {
     $this->loadRecord($record);
   }
@@ -315,7 +319,7 @@ abstract class DBObject{
   }
 }
 
-interface DBTransaction{
+interface DBTransaction {
   public function rollback();
 }
 

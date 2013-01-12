@@ -295,6 +295,20 @@ class Bank{
     }
     return $records;
   }
+  public function deleteTransaction($id) {
+    $t = Serializer::DBTransaction();
+    try{
+      $s = new Serializer('BasicTransaction');
+      $transaction = $s->load($id);
+      $transaction->revoke();
+      $s->delete($transaction);
+    }
+    catch(Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
+    
+  }
   /**
    * creates a banking account
    */
@@ -1150,7 +1164,7 @@ class LimitChain extends DBObject {
     }
     $oldids = array_diff($allids, $newids);
     foreach ($oldids as $id) {
-      $s->delete($id);
+      $s->delete($limits[$id]);
     }
   }
   public function checkAccount(LocalAccount &$account) {
@@ -1534,8 +1548,11 @@ class BasicTransaction extends DBObject implements Transaction{
       Transaction::STATE_NEW => array(Transaction::STATE_TRIGGERED, Transaction::STATE_DISCARDED),
       Transaction::STATE_TRIGGERED => array(Transaction::STATE_ACCEPTED, Transaction::STATE_REJECTED),
       Transaction::STATE_ACCEPTED => array(Transaction::STATE_COMMITED, Transaction::STATE_ERROR),
-      Transaction::STATE_COMMITED => array(Transaction::STATE_ARCHIVED, Transaction::STATE_REVOKE_TRIGGERED),
       Transaction::STATE_REJECTED => array(Transaction::STATE_TRIGGERED, Transaction::STATE_DISCARDED),
+      Transaction::STATE_COMMITED => array(Transaction::STATE_ARCHIVED, Transaction::STATE_REVOKE_TRIGGERED),
+      Transaction::STATE_REVOKE_TRIGGERED => array(Transaction::STATE_REVOKE_ACCEPTED, Transaction::STATE_REVOKE_REJECTED),
+      Transaction::STATE_REVOKE_ACCEPTED => array(Transaction::STATE_REVOKED, Transaction::STATE_ERROR),
+      Transaction::STATE_REVOKE_REJECTED => array(Transaction::STATE_REVOKE_TRIGGERED),
     );
     $candidates = $flow[$this->state];
     if (!in_array($state, $candidates)) {
@@ -1588,7 +1605,27 @@ class BasicTransaction extends DBObject implements Transaction{
     }
   }
   public function revoke() {
-    throw new Exception('Not implemented yet');
+    //load account objects
+    $s = new Serializer('LocalAccount');
+    $accountFrom = $s->load($this->fromaccount);
+    $accountTo = $s->load($this->toaccount);
+    //revoke transaction from both accounts
+    try{
+      $this->amount = -$this->amount;
+      $accountTo->applyTransaction($this);
+      $accountFrom->applyTransaction($this);
+      $this->amount = -$this->amount;
+      //go through the three necessary workflow states.
+      $this->setState(Transaction::STATE_REVOKE_TRIGGERED);
+      $this->setState(Transaction::STATE_REVOKE_ACCEPTED);
+      $this->setState(Transaction::STATE_REVOKED);
+      return TRUE;
+    }
+    catch (Exception $e) {
+      $this->setState(Transaction::STATE_ERROR);
+      $this->log(array($e->getMessage()));
+      throw $e;
+    }
   }
   private static function getStateString($state) {
     $string = array(
@@ -1744,6 +1781,19 @@ class InterExchangeTransaction extends DecoratedTransaction{
     $pair->getParent()->apply();
     $s = new Serializer('BasicTransaction');
     $s->save($pair);
+  }
+  public function revoke() {
+    //Revoke the two virtual transactions.
+    $this->getParent()->revoke();
+    $pair = $this->getPair();
+    $pair->getParent()->revoke();
+    $s = new Serializer('BasicTransaction');
+    $s->save($pair);
+  }
+  public function deleteExtraData() {
+    $pair = $this->getPair()->getParent();
+    $s = new Serializer('BasicTransaction');
+    $s->delete($pair);
   }
   public function getToAccountName() {
     return $this->getVirtualTransactionTo()->getToAccountName();
