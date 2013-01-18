@@ -94,9 +94,8 @@ function theme_ces_bank_transaction_view($variables) {
   $out .= '<dt>' . t('Description') . '</dt>';
   $out .= '<dd>' . check_plain($tran['concept']) . '</dd>';
   
-  $bank = new Bank();
   $out .= '<dt>' . t('Amount') . '</dt>';
-  $out .= '<dd>' . $bank->formatAmount($tran['amount'], $tex, true) . '</dd>';
+  $out .= '<dd>' . $tran['amount'] . '</dd>';
     
   $out .= '</dl>';
   return $out;

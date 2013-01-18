@@ -1607,6 +1607,8 @@ class BasicTransaction extends DBObject implements Transaction{
       Transaction::STATE_REVOKE_TRIGGERED => array(Transaction::STATE_REVOKE_ACCEPTED, Transaction::STATE_REVOKE_REJECTED),
       Transaction::STATE_REVOKE_ACCEPTED => array(Transaction::STATE_REVOKED, Transaction::STATE_ERROR),
       Transaction::STATE_REVOKE_REJECTED => array(Transaction::STATE_REVOKE_TRIGGERED),
+      Transaction::STATE_REVOKED => array(Transaction::STATE_DISCARDED, Transaction::STATE_TRIGGERED),
+        
     );
     $candidates = $flow[$this->state];
     if (!in_array($state, $candidates)) {

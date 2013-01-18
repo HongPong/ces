@@ -477,6 +477,7 @@ function ces_bank_transaction_view($transaction) {
     '#theme' => 'ces_bank_transaction_view',
   );
   $page['transaction'] = $transaction;
+  $page['transaction']['amount'] = $bank->formatAmount($transaction['amount'], ces_bank_get_current_exchange(), true);
   $page['fromaccount'] = $fromaccount;
   $page['toaccount'] = $toaccount;
   $page['toexchange'] = $bank->getExchange($toaccount['exchange']);
@@ -486,5 +487,6 @@ function ces_bank_transaction_view($transaction) {
   else {
     $page['fromexchange'] = &$page['toexchange'];
   }
+  
   return $page;
 }
