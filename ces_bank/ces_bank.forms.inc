@@ -757,7 +757,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
       '#weight' => 40,
     );
     if (isset($form_state['values']['toaccountname']))
-      $form['fromaccountname']['#default_value'] = $form_state['values']['toaccountname'];
+      $form['toaccountname']['#default_value'] = $form_state['values']['toaccountname'];
   }
   else {
     $toaccount = $bank->getAccount($to_account_id);

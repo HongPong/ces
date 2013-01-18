@@ -214,6 +214,47 @@ class Bank{
   public function updateTransaction(array &$record) {
     $t = Serializer::DBTransaction();
     try{
+      //1. Perform some checks over accounts.
+      $record = $this->transactionFormToRecord($record);
+      //2. Load old transaction
+      $s = new Serializer('BasicTransaction');
+      $old = $s->load($record['id']);
+      $oldstate = $old->getState();
+      $moneychange = ($old->getAmount() != $record['amount']
+          || $old->fromAccountName() != $record['fromaccountname']
+          || $old->toAccountName() != $record['toaccountname']);
+      $forbiddenstates = array(Transaction::STATE_ARCHIVED, Transaction::STATE_DISCARDED, 
+        Transaction::STATE_REVOKED,
+        Transaction::STATE_REVOKE_ACCEPTED, Transaction::STATE_REVOKE_REJECTED, 
+        Transaction::STATE_REVOKE_TRIGGERED, Transaction::STATE_TRIGGERED);
+      if (in_array($oldstate, $forbiddenstates)) {
+        throw new Exception('Could not update transaction in this state.');
+      }
+      if ($oldstate == Transaction::STATE_COMMITED && $moneychange) {
+        //3. Undo old transaction
+        $old->revoke();
+        if ($old->getState() != Transaction::STATE_REVOKED) {
+          throw new Exception('Could not revoke transaction: ' . $old->getLog($old->getState()));
+        }
+        //4. Build new transaction
+        $oldrecord = $old->getRecord();
+        $record = array_merge($oldrecord, $record);
+        $record['state'] = Transaction::STATE_NEW;
+        $new = $s->loadFromRecord($record);
+        //5. Apply new transaction
+        $new->trigger();
+        $new->check();
+        if($new->getState() != Transaction::STATE_ACCEPTED) {
+          throw new Exception('Could not apply transaction: ' . $new->getLog($new->getState()));
+        }
+        $new->apply();
+        if($new->getState() != Transaction::STATE_COMMITED) {
+          throw new Exception('Could not apply transaction: ' . $new->getLog($new->getState()));
+        }
+        $record = $new->getRecord();
+      } elseif ($oldstate == Transaction::STATE_REJECTED) {
+        $record['state'] = Transaction::STATE_NEW;
+      }
       return $this->updateObject('BasicTransaction', $record);
     }catch(Exception $e) {
       $t->rollback();
@@ -301,7 +342,11 @@ class Bank{
       $s = new Serializer('BasicTransaction');
       $transaction = $s->load($id);
       $transaction->revoke();
+      if($transaction->getState() != Transaction::STATE_REVOKED) {
+        throw new Exception('Couldn\'t revoke transaction: ' . $transaction->getLog($transaction->getState()));
+      }
       $s->delete($transaction);
+      return TRUE;
     }
     catch(Exception $e) {
       $t->rollback();
@@ -612,11 +657,9 @@ class Bank{
     return TRUE;
   }
   /**
-   * Creates a new transacion object based on the record array.
-   * @return Transaction
+   * Auxiliar
    */
-  private function newTransaction(array &$record) {
-    unset($record['id']);
+  private function transactionFormToRecord($record) {
     $record['state'] = Transaction::STATE_NEW;
     //load accounts
     if (isset($record['toaccount'])) {
@@ -647,8 +690,19 @@ class Bank{
     if (!isset($record['data'])) {
       $record['data'] = array();
     }
+    return $record;
+  }
+  /**
+   * Creates a new transacion object based on the record array.
+   * @return Transaction
+   */
+  private function newTransaction(array &$record) {
+    unset($record['id']);
+    $record = $this->transactionFormToRecord($record);
+    $fromaccount = $this->getObject('LocalAccount', $record['fromaccount']);
+    $toaccount = $this->getObject('LocalAccount', $record['toaccount']);
     //Basic transaction.
-    if ($toaccount['exchange'] == $fromaccount['exchange']) {
+    if ($toaccount->exchange == $fromaccount->exchange) {
       $transaction = new BasicTransaction($record);  
     }
     else {
