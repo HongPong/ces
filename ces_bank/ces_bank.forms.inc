@@ -695,12 +695,13 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
   } else if ($op == 'edit') {
     $from = $bank->getTransactionFromAccount($arg);
     $to = $bank->getTransactionToAccount($arg);
+    $toexchange = $exchanges[$to['exchange']];
     $form_state['values']['toexchange'] = $to['exchange'];
     $form_state['values']['toaccountname'] = $to['name'];
     $form_state['values']['fromexchange'] = $from['exchange'];
     $form_state['values']['fromaccountname'] = $from['name'];
     $form_state['values']['concept'] = $arg['concept'];
-    $form_state['values']['amount'] = $arg['amount'];
+    $form_state['values']['amount'] = $bank->formatAmount($bank->getTransactionAmount($arg, $toexchange), $toexchange, FALSE, FALSE);
     $form_state['values']['id'] = $arg['id'];
     $form_state['values']['user'] = $arg['user'];
   }
@@ -847,6 +848,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
       '#description' => t('The amount to be transferred.'),
       '#default_value' => !empty($form_state['values']['amount'])?$form_state['values']['amount']:'',
       '#weight' => 60,
+      '#field_suffix' => $toexchange['currencysymbol'],
   );
   $form['user'] = array(
       '#type' => 'value',
@@ -1014,19 +1016,23 @@ function ces_bank_transaction_confirm_form_submit($form, &$form_state) {
   $bank = new Bank();
   $result = TRUE;
   $op = $form_state['values']['operation'];
+  $id = '';
   try{
     switch ($op) {
       case 'new':
         $record = $form_state['edit_page'];
         $bank->createTransaction($record);
-        $result = $bank->applyTransaction($record['id']);
+        $id = $record['id'];
+        $result = $bank->applyTransaction($id);
         break;
       case 'trigger':
-        $result = $bank->applyTransaction($form_state['values']['id']);
+        $id = $form_state['values']['id'];
+        $result = $bank->applyTransaction($id);
         break;
       case 'edit':
         $record = $form_state['edit_page'];
         $result = $bank->updateTransaction($record);
+        $id = $record['id'];
         break;
       default:
         throw new Exception(t('Operation not permitted or no implemented yet.'));
@@ -1056,6 +1062,7 @@ function ces_bank_transaction_confirm_form_submit($form, &$form_state) {
       $msg = t('Transaction successfully updated.');
       break;
   }
+  $form_state['redirect'] = 'ces/bank/account/transaction/' . $id . '/view';
   drupal_set_message($msg);
 }
 

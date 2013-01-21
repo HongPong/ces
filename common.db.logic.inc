@@ -35,7 +35,6 @@ class Serializer {
       $record = db_query('SELECT * FROM {' . $this->table . '} WHERE id = :id', array(':id' => $id))->fetchAssoc();
       if ($record === FALSE)
         return FALSE;
-      $this->handleSerialized($record);
       Serializer::$cache[$this->className]['id'][$id] = $this->loadFromRecord($record);
     }
     return Serializer::$cache[$this->className]['id'][$id];
@@ -52,6 +51,7 @@ class Serializer {
    * @return DBObject
    */
   public function loadFromRecord($record) {
+    $this->handleSerialized($record);
     if (isset($record['classname']) && class_exists($record['classname']) && is_subclass_of($record['classname'], $this->className)) {
       $obj = new $record['classname']($record);
     }
@@ -159,7 +159,6 @@ class Serializer {
     $result = $query->execute();
     $loads = array();
     while (($record = $result->fetchAssoc()) !== FALSE) {
-      $this->handleSerialized($record);
       $loads[] = $this->loadFromRecord($record);
     }
     return $loads;
@@ -176,7 +175,6 @@ class Serializer {
       $record = $result->fetchAssoc();
       if ($record === FALSE)
         return FALSE;
-      $this->handleSerialized($record);
       Serializer::$cache[$this->className][$key][$value] = $this->loadFromRecord($record);
     }
     return Serializer::$cache[$this->className][$key][$value];
