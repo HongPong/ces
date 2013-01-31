@@ -1139,8 +1139,12 @@ function ces_bank_get_current_exchange($account = NULL) {
   $bankaccount = ces_bank_get_current_account($account);
   if($bankaccount === FALSE) 
     return FALSE;
+  return ces_bank_get_exchange($bankaccount['exchange']);
+}
+
+function ces_bank_get_exchange($id) {
   $bank = new Bank();
-  $exchange = $bank->getExchange($bankaccount['exchange']);
+  $exchange = $bank->getExchange($id);
   return $exchange;
 }
 

@@ -13,7 +13,8 @@ function ces_offerswants_help($path, $arg) {
       return '<p>' . t('Enter the details of your want.') . '</p>';
     case 'ces/bank/account/myoffers/%/edit':
     case 'ces/bank/account/myoffers/add':
-      return '<p>' . t('Enter the details of your offer.') . '</p>';
+      $exchange = ces_offerswants_get_an_exchange();
+      return '<p>' . t('Enter the details of your offer. All offers that include national currency in the rate must include also %currenciesname. Filling the keywords field will improve the search of this offer. Remember to delete offers no longer available. The administrator may delete inappropriate ads.', array('%currenciesname' => $exchange['currenciesname'])) . '</p>';
     case 'ces/admin/categories':
       return '<p>' . t('Administer offers and wants categories.') . '</p>';
     case 'ces/admin/categories/add':
@@ -410,9 +411,42 @@ function ces_offerwant_build_content($offerwant, $view_mode = 'full') {
   field_attach_prepare_view('ces_offerwant', array($offerwant->id => $offerwant), $view_mode);
   entity_prepare_view('ces_offerwant', array($offerwant->id => $offerwant));
   $offerwant->content += field_attach_view('ces_offerwant', $offerwant, $view_mode);
-  
 }
-
+/**
+ * Implements hook_field_formatter_info().
+ */
+function ces_offerswants_field_formatter_info() {
+  return array(
+    'ces_offer_rate' => array( //Machine name of the formatter
+      'label' => t('Rate'),
+      'field types' => array('ces_offer_rate'), //This will only be available to ces_offer_rate fields
+    ),
+  );
+}
+/**
+ * Implements hook_field_formatter_view().
+ */
+function ces_offerswants_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array(); // Initialize the var
+  foreach ($items as $delta => $item) {
+    $rate = $item['safe_value']; // Getting the actual value
+  }
+  if (isset($rate)) {
+    if($entity->category!=1 && is_numeric($rate)) {
+      $category = ces_category_load($entity->category);
+      $exchange = ces_offerswants_get_an_exchange($category->exchange);
+      $rate = number_format($rate, $exchange['currencyscale'], '.', ' ');
+      $rate .= $exchange['currencysymbol'];
+    }
+    $element = array(
+      '#type' => 'container',
+      '#attributes' => array('title' => array(t('Rate')), 'class' => 'ces-offer-rate'),
+    );
+    $element[0]['#markup'] = $rate;
+  }
+  $element['#label_display'] = 'hidden';
+  return $element;
+}
 function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $offerwant = NULL) {
   global $user;
   if ($offerwant == NULL) {
@@ -450,6 +484,7 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
       '#required' => TRUE,
       '#options' => $options,
       '#default_value' => $offerwant->category,
+      '#weight' => 0
     );
   }
   else {
@@ -471,25 +506,32 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
     '#size' => 40,
     '#maxlength' => 70,
     '#required' => TRUE,
+    '#weight' => 1
   );
-  $form['keywords'] = array(
-    '#type' => 'textfield',
-    '#title' => t('keywords'),
-    '#description' => t('Enter a comma-separated list of words to describe your content.'),
-    '#default_value' => $offerwant->keywords,
-  );
+  
   $form['body'] = array(
     '#type' => 'textarea',
     '#description' => t('Enter here a detailed description.'),
     '#title' => t('Description'),
     '#default_value' => $offerwant->body,
     '#required' => TRUE,
+    '#weight' => 2
   );
+  
+  $form['keywords'] = array(
+    '#type' => 'textfield',
+    '#title' => t('keywords'),
+    '#description' => t('Enter a comma-separated list of words to describe your content.'),
+    '#default_value' => $offerwant->keywords,
+    '#weight' => 20
+  );
+  
   $form['image'] = array(
     '#type' => 'managed_file',
     '#title' => t('Image'),
     '#description' => t('Upload an image for your announce.'),
     '#default_value' => $offerwant->image,
+    '#weight' => 21
   );
   $form['expire'] = array(
     '#type' => 'date',
@@ -500,19 +542,25 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
       'month' => date('n', $offerwant->expire),
       'year' => date('Y', $offerwant->expire),
     ),
+    '#weight' => 22
   );
   $form['hide'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide'),
     '#description' => t('Check it if you don\'t want to publish the announcememnt.'),
     '#default_value' => !$offerwant->state,
+    '#weight' => 23
   );
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
+    '#weight' => 100
   );
   
   field_attach_form('ces_offerwant', $offerwant, $form, $form_state);
+  $form['ces_offer_rate']['und'][0]['value']['#title'] = t('Rate');
+  $exchange = ces_offerswants_get_an_exchange();
+  $form['ces_offer_rate']['und'][0]['value']['#description'] = t('Eg: \'2.5\' or \'5.00%symbol and transport\' or \'Contact me\' or \'Free\'.', array('%symbol' => $exchange['currencysymbol']));
   
   return $form;
 }
@@ -658,6 +706,10 @@ function template_preprocess_ces_offerwant(&$variables) {
   $variables['ces_offerwant_expire'] = format_date($offerwant->expire);
   //keywords
   $variables['ces_offerwant_keywords'] = check_plain($offerwant->keywords);
+  //rate
+  if($offerwant->type == 'offer') {
+    $variables['ces_offer_rate'] = drupal_render($variables['element']['ces_offer_rate']);
+  }
   //actions
   $prefix = 'ces/bank/account/my' . $offerwant->type .'s/' . $offerwant->id;
   $actions = array();
@@ -673,6 +725,7 @@ function template_preprocess_ces_offerwant(&$variables) {
   $variables['ces_offerwant_seller_name'] = ces_user_get_name($account);
   $variables['ces_offerwant_seller_phone'] = ces_user_get_main_phone($account);
   $variables['ces_offerwant_seller_mail'] = $account->mail;
+  
 }
 /**
  * @param operation one of 'view', 'use', 'edit', 'admin'.
@@ -815,7 +868,7 @@ function ces_category_access($permission, $category) {
 
 function ces_offerswants_get_current_exchage_id($account = NULL) {
   //Invoke in fact ces_bank module, but we avoid explicit dependence.
-  $result = module_invoke_all('get_current_exchange', $account);
+  $result = ces_offerswants_get_an_exchange();
   if (isset($result['id'])) {
     return $result['id'];
   }
@@ -824,6 +877,15 @@ function ces_offerswants_get_current_exchage_id($account = NULL) {
 
 function ces_offerswants_get_exchanges() {
   return array();
+}
+function ces_offerswants_get_an_exchange($id = NULL) {
+  //Invoke in fact ces_bank module, but we avoid explicit dependence.
+  if ($id == NULL) {
+    return module_invoke_all('get_current_exchange');
+  }
+  else {
+    return module_invoke_all('get_exchange', $id);
+  }
 }
 //Warning: indexs aren't ids.
 function ces_offerswants_get_all_exchanges() {

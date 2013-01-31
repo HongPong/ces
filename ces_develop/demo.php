@@ -160,6 +160,7 @@ $offers = array(array(
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
+  'rate' => '0.2',
 ),array(
   'type'=>'offer',
   'user'=>$users['Euclides']->uid, 
@@ -171,6 +172,7 @@ $offers = array(array(
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
+  'rate' => '1h/hour',
 ),array(
   'type'=>'offer',
   'user'=>$users['Gauss']->uid, 
@@ -182,6 +184,7 @@ $offers = array(array(
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
+  'rate' => '0.40',
 ),array(
   'type'=>'offer',
   'user'=>$users['Gauss']->uid, 
@@ -193,6 +196,7 @@ $offers = array(array(
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
+  'rate' => '2.5',
 ),array(
   'type'=>'offer',
   'user'=>$users['Noether']->uid, 
@@ -204,6 +208,7 @@ $offers = array(array(
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
+  'rate' => 'it depends'
 ),array(
   'type'=>'offer',
   'user'=>$users['Fermat']->uid, 
@@ -215,11 +220,13 @@ $offers = array(array(
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
+  'rate' => '6ECO each'
 ));
 foreach($offers as $offer) {
   $o = (object)$offer;
+  $o->ces_offer_rate = array('und' => array(array('value' => $offer['rate'])));
+  unset($o->rate);
   ces_offerwant_save($o);
-  
 }
 
 

@@ -140,7 +140,8 @@ function ces_offerswants_schema() {
  * Implements hook_install().
  */
 function ces_offerswants_install() {
-  _ces_offerswants_add_offer_fields();
+  $t = get_t();  
+
   //Create root category
   $category = (object) array(
     'title' => 'root',
@@ -150,28 +151,38 @@ function ces_offerswants_install() {
     'context' => 0,
   );
   ces_category_save($category);
+
+  //Create price field
+  $field = array(
+    'field_name' => 'ces_offer_rate',
+    'type' => 'text',
+    'cardinality' => 1,
+  );
+  $field = field_create_field($field);
+  $instance = array(
+    'field_name' => 'ces_offer_rate',
+    'entity_type' => 'ces_offerwant',
+    'bundle' => 'offer',
+    'label' => 'Rate',
+    'widget' => array(
+      'type' => 'text_textfield',
+      'weight' => 10,
+    ),
+    'display' => array(
+      'default' => array('type' => 'ces_offer_rate'),
+    )
+  );
+  $instance = field_create_instance($instance);
 }
 /**
- * Set bundle-specific fields.
+ * Implements hook_uninstall().
  */
-function _ces_offerswants_add_offer_fields() {
-  if(!field_info_field('ces_offer_rate')) {
-    $field = array(
-      'field_name' => 'ces_offer_rate',
-      'type' => 'text'
-    );
-    field_create_field($field);
-    $instance = array(
-      'field_name' => 'ces_offer_rate',
-      'entity_type' => 'ces_offerwant',
-      'bundle' => 'ces_offer',
-      'label' => t('Rate'),
-      //'description' => '',
-      'widget' => array(
-        'type' => 'text_textfield',
-        'weight' => 10,
-      ),
-    );
-    field_create_instance($instance);
+function ces_offerswants_uninstall() {
+  //Delete price field.
+  field_delete_field('ces_offer_rate');
+  $instances = field_info_instances('ces_offerwant', 'ces_offer_rate');
+  foreach ($instances as $instance) {
+    field_delete_instance($instance);
   }
+  field_purge_batch(1000);
 }

@@ -9,6 +9,7 @@
       endif;
       ?></div>
       <div class="ces-offerwant-body"><?php echo $ces_offerwant_body; ?></div>
+      <div class="ces-offerwant-rate"><?php echo $ces_offer_rate ?></div>
     </div>
   </div>
   <?php if ($view_mode_full): ?>
