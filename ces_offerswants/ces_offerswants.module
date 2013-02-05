@@ -917,13 +917,7 @@ function _ces_offerswants_get_categories_options($offerwant_type = NULL, $exchan
   }
   return $options;
 }
-/**
- * @param $offerwant_type
- *   - NULL for all $offerwant type's categories.
- *   - 'offer' for offer's categories.
- *   - 'want' for want's categories.
- */
-function ces_offerswants_get_categories($offerwant_type = NULL, $exchange = NULL) {
+function ces_offerswants_get_categories_ids($offerwant_type = NULL, $exchange = NULL) {
   if($exchange == NULL) {
     $exchange = ces_offerswants_get_current_exchage_id();
   }
@@ -939,11 +933,19 @@ function ces_offerswants_get_categories($offerwant_type = NULL, $exchange = NULL
   }
   $result = $query->execute();
   if (isset($result['ces_category'])) {
-    $ids = array_keys($result['ces_category']);
-    $categories = ces_category_load_multiple($ids);
-    return $categories;
+    return array_keys($result['ces_category']);
   }
   return array();
+}
+/**
+ * @param $offerwant_type
+ *   - NULL for all $offerwant type's categories.
+ *   - 'offer' for offer's categories.
+ *   - 'want' for want's categories.
+ */
+function ces_offerswants_get_categories($offerwant_type = NULL, $exchange = NULL) {
+  $ids = ces_offerswants_get_categories_ids($offerwant_type, $exchange);
+  return ces_category_load_multiple($ids);
 }
 function ces_offerswants_admin_categories_page() {
   $categories = ces_offerswants_get_categories();
@@ -1266,9 +1268,9 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
       if($arg1 == NULL) {
         $arg1 = ces_offerswants_get_current_exchage_id();
       }
-      $categories = ces_offerswants_get_categories($offerwant_type, $arg1);
+      $categories = ces_offerswants_get_categories_ids($offerwant_type, $arg1);
       if (!empty($categories)) {
-        $query->propertyCondition('category', array_keys($categories), 'IN');
+        $query->propertyCondition('category', $categories, 'IN');
       }
     }
     if ($arg3 == NULL) {

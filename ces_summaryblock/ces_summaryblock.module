@@ -32,7 +32,7 @@ function ces_summaryblock_block_view($delta = '') {
     $transactions = $bank->getTransactions(array('limit' => 1, 'account' => $account['id']));
     if(!empty($transactions)) {
       $transaction = reset($transactions);
-      $lasttradedesc = text_summary($transaction['concept'], NULL, 35);
+      $lasttradedesc = l(_ces_summaryblock_shorten_text($transaction['concept'], 25),'ces/bank/account/transaction');
       if ($account['id'] == $transaction['fromaccount']) {
         $otheraccountid = $transaction['toaccount'];
       }
@@ -43,7 +43,7 @@ function ces_summaryblock_block_view($delta = '') {
       $otheruser = reset($otheraccount['users']);
       $otheruid = $otheruser['user'];
       $otheracc = user_load($otheruid);
-      $lasttradeuser = ces_bank_get_full_username($otheracc);
+      $lasttradeuser = l(ces_bank_get_full_username($otheracc), 'user/' . $otheruid);
     }
   }
   else {
@@ -56,10 +56,15 @@ function ces_summaryblock_block_view($delta = '') {
     $lasttradedesc = t('You haven\'t traded yet.');
     $lasttradeuser = '';
   }
-  
-  $interestingoffer = 'To do';
-  $interestinguser = 'nobody';
-  
+  $offer = _ces_summaryblock_get_interesting_offer($user);
+  if ($offer !== FALSE) {
+    $interestingoffer = l(_ces_summaryblock_shorten_text($offer->title, 25),'ces/bank/account/myoffers/' . $offer->id . '/view');
+    $interestinguser = l(ces_bank_get_full_username(user_load($offer->user)), 'user/' . $offer->user);
+  }
+  else {
+    $interestingoffer = t('No offers yet!');
+    $interestinguser = '';
+  }
   //Format the render array
   $block = array();
   $block['subject'] = t('My account');
@@ -110,6 +115,57 @@ function ces_summaryblock_block_view($delta = '') {
   
   $block['content'] = $content;
   return $block;
+}
+function _ces_summaryblock_shorten_text($text, $size = 50) {
+  if(drupal_strlen($text) <= $size) return $text;
+  $text = drupal_substr($text, 0, $size - 3);
+  $space = strrpos($text, ' ');
+  if($space !== FALSE && $space > (strlen($text)*0.75)) {
+    $text = substr($text, 0, $space);
+  }
+  return $text . '...';
+}
+/**
+ * @return a potentially interesting offer for given account.
+ * Current implementation is just random that changes every 5 minutes.
+ */
+function _ces_summaryblock_get_interesting_offer($account) {
+  if (isset($account->data['ces_interesting_offer']) && $account->data['ces_interesting_offer']['time'] > REQUEST_TIME - 60*5) {
+    $id = $account->data['ces_interesting_offer']['id'];
+  }
+  else {
+    $exchange = ces_bank_get_current_exchange($account);
+    if ($exchange != FALSE) {
+      $query = new EntityFieldQuery();
+      $categories = ces_offerswants_get_categories_ids('offer', $exchange['id']);
+      $query->entityCondition('entity_type', 'ces_offerwant')
+            ->entityCondition('bundle', 'offer')
+            ->propertyCondition('category', $categories, 'IN')
+            ->propertyCondition('user', $account->uid, '<>')
+            ->addTag('random')
+            ->range(0,1);
+      $result = $query->execute();
+      if (isset($result['ces_offerwant']) && count($result['ces_offerwant'])>0) {
+        $id = reset(array_keys($result['ces_offerwant']));
+        $account->data['ces_interesting_offer']= array(
+          'time' => REQUEST_TIME,
+          'id' => $id,
+        );
+        user_save($account);
+      }
+    }
+    else {
+      return FALSE;
+    }
+  }
+  return ces_offerwant_load($id);
+        
+}
+/**
+ * Implements hook_query_TAG_alter().
+ */
+function ces_summaryblock_query_random_alter($query) {
+  $query->orderRandom();
 }
 
 function ces_summaryblock_form($form, &$form_state){
