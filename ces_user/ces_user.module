@@ -1,5 +1,22 @@
 <?php
 
+function ces_user_menu(){
+  $menu = array();
+  $menu['ces'] = array(
+    'title' => 'Welcome to Integral CES',
+    'access callback' => TRUE,
+    'page callback' => 'ces_user_main_page',
+    'type' => MENU_CALLBACK,
+  );
+  $menu['ces/register'] = array(
+    'title' => 'Register to Integral CES',
+    'access callback' => TRUE,
+    'page callback' => 'ces_user_register',
+    'type' => MENU_CALLBACK,
+  );
+  return $menu;         
+}
+
 function ces_user_get_name($account = NULL) {
   if ($account == NULL) {
     global $user;
@@ -82,9 +99,21 @@ function ces_user_form_alter(&$form, &$form_state, $form_id) {
     $form['account']['status']['#weight'] = 60;
     $form['account']['roles']['#weight'] = 65;
   }else if($form_id == 'user_login_block') {
-    unset($form['links']);
+    //Override $form['links']
+    $items = array();
+    $items[] = l(t('Forgot password?'), 'user/password', array('attributes' => array('title' => t('Request new password via e-mail.'))));
+    $form['actions']['#weight'] = 90;
+    $form['links'] = array(
+      '#markup' => theme('item_list', array('items' => $items)),
+      '#weight' => 100,
+    );
+    $form['end'] = array(
+      '#markup' => '<div class="clearfix"></div>',
+      '#weight' => 200,
+    );
   }
 }
+
 function ces_user_user_view($account, $view_mode, $langcode) {
   //Set fields to be rendered with user profile item theme.
   $account->content['account'] = array(
@@ -126,4 +155,99 @@ function ces_user_user_view($account, $view_mode, $langcode) {
     '#markup' => $account->mail,
     '#weight' => 25,
   );
+}
+/**
+ * Implements hook_block_info().
+ */
+function ces_user_block_info() {
+  $block = array(
+    'ces_user_register'=> array(
+      'info' => t('CES register'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+      'visibility' => BLOCK_VISIBILITY_LISTED,
+      'pages' => '<front>',
+    ),
+    'ces_user_links' => array(
+      'info' => t('CES front links'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+      'visibility' => BLOCK_VISIBILITY_LISTED,
+      'pages' => '<front>',
+    ),
+  );
+  return $block;
+}
+/**
+ * Implements hook_block_view().
+ */
+function ces_user_block_view($delta = '') {
+  $block = array();
+  $block['subject'] = '';
+  if($delta == 'ces_user_register') {
+    $content = array(
+      'text' => array(
+        '#type' => 'container',
+        'p1' => array(
+          '#markup' => t('New to Integal CES?'),
+          '#prefix' => '<p><strong>',
+          '#suffix' => '</strong></p>',
+        ),
+        'p2' => array(
+          '#markup' => t('Find an exchange network near you and start trading using social money!'),
+          '#prefix' => '<p>',
+          '#suffix' => '</p>',
+        ),
+        'actions' => array(
+          '#markup' => l('Register', 'ces/register'),
+          '#prefix' => '<p>',
+          '#suffix' => '</p>',
+        ),
+        '#attributes' => array(),
+      )
+    );
+  } else if($delta == 'ces_user_links') {
+    $content = array(
+      '#theme' => 'item_list',
+      '#attributes' => array('class' => array('front-links')),
+      '#items' => array(
+        l(t('Documentation'), 'http://www.integralces.net'),
+        l(t('Developers'), 'http://drupal.org/sandbox/esteve/1367140'),
+        l(t('Donate'), 'ces/donate'),
+        l(t('New exchange'), 'ces/bank/exchange/new'),
+        l(t('About'), 'ces/about'),
+      ),
+    );
+  }
+  $block['content'] = $content;
+  return $block;
+}
+function ces_user_main_page(){
+  global $user;
+  //TODO: redirect to blog when is available.
+  if($user->uid) drupal_goto('ces/bank/account/transaction');
+  return array(
+    'welcome' => array(
+      '#prefix' => '<p class="front-welcome">',
+      '#suffix' => '</p>',
+      '#markup' => t('Welcome to <strong>Integral Community Exchange System</strong>,')
+    ),
+    'intro' => array(
+      '#prefix' => '<p class="front-intro">',
+      '#suffix' => '</p>',
+      '#markup' => t('an open source platform featuring social currencies management for communities.')
+    ),
+    'features' => array(
+      '#theme' => 'item_list',
+      '#items' => array(
+        'local' => t('Boost local economy, return it to human scale.'),
+        'eco' => t('Help the environment, lower contamination.'),
+        'speculation' => t('Gain the control over money, prevent speculation and abuse.'),
+        'alternative' => t('Create a solid alternative to the current financial system.'),
+        'community' => t('Empower your community. Have fun playing with social currency.')
+      ),
+      '#attributes' => array('class'=>array('front-list')),
+    )
+  );
+}
+function ces_user_register(){
+  return 'Sorry! Not implemented yet!';
 }

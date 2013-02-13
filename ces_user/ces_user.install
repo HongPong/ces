@@ -3,7 +3,7 @@
  * Implements hook_install().
  */
 function ces_user_install() {
-  $ok4 = _ces_bank_create_user_fields();
+  $ok4 = _ces_user_create_user_fields();
   if (!$ok4) {
     drupal_set_message(st('Error creating user fields.'), 'error');
   }
@@ -37,7 +37,7 @@ function ces_user_uninstall() {
  *  - Website
  *  //- Notes for admin
  */
-function _ces_bank_create_user_fields() {
+function _ces_user_create_user_fields() {
   $textfields = array(
     'ces_firstname' => array('First Name', 'Your first name or the name of the organization.', TRUE, 5, 'hidden'),
     'ces_surname' => array('Surname', 'Leave blank for organization accounts.', FALSE, 10, 'hidden'),
