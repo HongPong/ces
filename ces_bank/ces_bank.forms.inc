@@ -1220,7 +1220,7 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
     if (in_array((int)$transaction['state'], array(3))) {
       $inibalance += $amount;
     }
-    $row[] = array('data' => $bank->formatAmount($amount, $exchange, true, false), 'class' => 'ces-currency-amount');
+    $row[] = array('data' => $bank->formatAmount($inibalance, $exchange, true, false), 'class' => 'ces-currency-amount');
     /*
     $actions = array();
     if ($transaction['state'] == Transaction::STATE_NEW || $transaction['state'] == Transaction::STATE_REJECTED) {
