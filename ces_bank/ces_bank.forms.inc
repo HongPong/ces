@@ -1092,7 +1092,11 @@ function ces_bank_transaction_delete_form_submit($form, &$form_state) {
  */
 function ces_bank_account_statement_form($form, &$form_state, $account_id) {
   $bank = new Bank();
-  $account = $bank->getAccount($account_id); //throws exception
+  try {
+    $account = $bank->getAccount($account_id); //throws exception
+  }catch(Exception $e){
+    return array('error' => array('#markup'=>$e->getMessage()));
+  }
   $exchange = $bank->getExchange($account['exchange']);
 
   $form = array();
