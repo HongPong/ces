@@ -43,9 +43,9 @@
           </a>
         </div>
         <div class="ces-offerwant-seller-phone">
-          <?php echo $ces_offerwant_seller_phone; ?>
+            <?php echo $ces_offerwant_seller_phone; ?>
         </div>
-        <?php if( $view_mode_full ): ?>
+        <?php if( $view_mode_full && $ces_offerwant_belongs_to_me == false ) : ?>
             <div class="ces-offerwant-seller-email">
             <?php echo $ces_offerwant_seller_mail; ?>
             </div>
