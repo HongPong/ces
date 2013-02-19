@@ -48,17 +48,21 @@ function ces_user_get_full_address($account = NULL) {
   $address = '';
   if(!empty($items)){
     $item = reset($items);
-    $address = $item['safe_value'] . ', ';
+    $address = $item['safe_value'];
   }
   $items = field_get_items('user', $account, 'ces_postcode');
   if(!empty($items)){
     $item = reset($items);
-    $address .= $item['safe_value'] . ', ';
+    if( $address != "")
+        $address .= ", ";
+    $address .= $item['safe_value'];
   }
   $items = field_get_items('user', $account, 'ces_town');
   if(!empty($items)){
     $item = reset($items);
-    $address .= $item['safe_value'] . ', ';
+    if( $address != "")
+        $address .= ", ";
+    $address .= $item['safe_value'];
   }
   return $address;
 }

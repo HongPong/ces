@@ -725,7 +725,7 @@ function template_preprocess_ces_offerwant(&$variables) {
   $variables['ces_offerwant_seller_name'] = ces_user_get_name($account);
   $variables['ces_offerwant_seller_phone'] = ces_user_get_main_phone($account);
   $variables['ces_offerwant_seller_mail'] = $account->mail;
-  
+  $variables['ces_offerwant_seller_address'] = ces_user_get_full_address($account); 
 }
 /**
  * @param operation one of 'view', 'use', 'edit', 'admin'.
