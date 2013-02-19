@@ -337,7 +337,7 @@ function ces_bank_schema() {
         'description' => 'A full description of this limit or to which accounts is it applied.',
         'type' => 'text',
         'size' => 'big',
-        'not null' => TRUE,
+        'not null' => FALSE,
       ),
     ),
     'primary key' => array( 'id'),
