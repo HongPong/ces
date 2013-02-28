@@ -1,0 +1,7 @@
+name = CES exchange blog
+description = CES exchange blog
+core = 7.x
+package = ces
+dependencies[] = ces
+files[] = 
+
