@@ -222,8 +222,7 @@ function ces_user_block_view($delta = '') {
 }
 function ces_user_main_page(){
   global $user;
-  //TODO: redirect to blog when is available.
-  if($user->uid) drupal_goto('ces/bank/account/transaction');
+  if($user->uid) drupal_goto('ces/bank/exchange/blog');
   return array(
     'welcome' => array(
       '#prefix' => '<p class="front-welcome">',

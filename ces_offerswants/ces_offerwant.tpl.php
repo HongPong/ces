@@ -50,7 +50,7 @@
     <div class="ces-offerwant-actions">
       <?php echo $ces_offerwant_actions; ?>
     </div>
-    <div class="clearfix"/>
+    <div class="clearfix"></div>
   </div>
   
 </div>

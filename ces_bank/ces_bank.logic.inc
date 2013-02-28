@@ -94,6 +94,16 @@ class Bank{
         'scopeid' => $exchange->admin,
       );
       $this->createPermission($perm);
+      //Let exchange users see blog posts and comment them.
+      $perm = array(
+        'permission' => Permission::PERMISSION_USE,
+        'object' => 'exchange blog',
+        'objectid' => $exchange->id,
+        'scope' => Permission::SCOPE_EXCHANGE,
+        'scopeid' => $exchange->id,
+      );
+      $this->createPermission($perm);
+
       //Create a new zero account for the admin of this exchange
       $account = $this->getDefaultAccount($exchange->id);
       $account['users'][0]['user'] = $exchange->admin;
