@@ -713,7 +713,8 @@ function template_preprocess_ces_offerwant(&$variables) {
   //actions
   $prefix = 'ces/bank/account/my' . $offerwant->type .'s/' . $offerwant->id;
   $actions = array();
-  $actions[] = l(t('Details'), $prefix . '/view');
+  if( $variables['view_mode_full'] == false ) 
+    $actions[] = l(t('Details'), $prefix . '/view');
   if(ces_offerwant_access('edit', $offerwant)) {
     $actions[] = l(t('Edit'), $prefix . '/edit');
     $actions[] = l(t('Delete'), $prefix . '/delete');
@@ -725,7 +726,10 @@ function template_preprocess_ces_offerwant(&$variables) {
   $variables['ces_offerwant_seller_name'] = ces_user_get_name($account);
   $variables['ces_offerwant_seller_phone'] = ces_user_get_main_phone($account);
   $variables['ces_offerwant_seller_mail'] = $account->mail;
-  
+  $variables['ces_offerwant_seller_address'] = ces_user_get_full_address($account);
+  // check if this offer belongs to me
+  global $user;
+  $variables['ces_offerwant_belongs_to_me'] = ( $offerwant->user == $user->uid );
 }
 /**
  * @param operation one of 'view', 'use', 'edit', 'admin'.

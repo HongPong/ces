@@ -43,8 +43,16 @@
           </a>
         </div>
         <div class="ces-offerwant-seller-phone">
-          <?php echo $ces_offerwant_seller_phone; ?>
+            <?php echo $ces_offerwant_seller_phone; ?>
         </div>
+        <?php if( $view_mode_full && $ces_offerwant_belongs_to_me == false ) : ?>
+            <div class="ces-offerwant-seller-email">
+            <?php echo $ces_offerwant_seller_mail; ?>
+            </div>
+            <div class="ces-offerwant-seller-address">
+            <?php echo $ces_offerwant_seller_address; ?>
+            </div>
+        <?php endif; ?>
       </div>
     </div>
     <div class="ces-offerwant-actions">
