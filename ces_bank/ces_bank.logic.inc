@@ -106,7 +106,12 @@ class Bank{
 
       //Create a new zero account for the admin of this exchange
       $account = $this->getDefaultAccount($exchange->id);
-      $account['users'][0]['user'] = $exchange->admin;
+      $account['users']= array(
+        $exchange->admin => array(
+          'user' => $exchange->admin,
+          'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+        )
+      );
       $account['name'] = $exchange->code . '0000';
       $this->createAccount($account);
       
@@ -161,6 +166,15 @@ class Bank{
    */
   public function getExchange($id) {
     return $this->getObjectRecord('Exchange', $id);
+  }
+  /**
+   * @return array an exchange given its name
+   * **/
+  public function getExchangeByName($name) {
+    $s = new Serializer('Exchange');
+    $exchange = $s->loadFromUniqueKey('code', $name);
+    if ($exchange === FALSE) return FALSE;
+    return $exchange->getRecord();
   }
   /**
    * Deletes an exchange
@@ -788,8 +802,10 @@ class Exchange extends DBObject{
   */
   public $modified;
   /**
-  @var int
+  @var array
   */
+  public $data;
+  
   const DEFAULT_EXCHANGE_ID = 1;
   const STATE_INACTIVE = 0;
   const STATE_ACTIVE = 1;
@@ -808,19 +824,37 @@ class Exchange extends DBObject{
    * exchanges. It is the exchange stored with id Exchange::DEFAULT_EXCHANGE_ID.
    */
   public static function getDefaultExchange() {
+    $record = array(
+      'id' => 0,
+      'code' => 'AAAA',
+      'active' => 0,
+      'shortname' => '',
+      'name' => '',
+      'country' => '',
+      'region' => '',
+      'town' => '',
+      'website' => '',
+      'map' => '',
+      'admin' => 1,
+      'limitchain' => 1,
+      'currencysymbol' => '',
+      'currencyname' => '',
+      'currenciesname' => '',
+      'currencyvalue' => '1',
+      'currencyscale' => 2,
+      'created' => REQUEST_TIME,
+      'modified' => REQUEST_TIME,
+      'data' => array(),
+    );
     $s = new Serializer('Exchange');
-    $default = $s->load(Exchange::DEFAULT_EXCHANGE_ID);
-    if ($default === FALSE)
-      throw new Exception(t('Default exchange ( id = %id ) not found', array('%id' => self::DEFAULT_EXCHANGE_ID)));
-    return $default;
+    $exchange = $s->loadFromRecord($record);
+    return $exchange;
   }
   /**
    * @return LocalAccount to be used as a prototype for new accounts.
    */
   public function getDefaultAccount() {
-    global $user;
     $record = array(
-      'id' => NULL,
       'exchange' => $this->id,
       'name' => $this->getFreeAccountName(),
       'balance' => 0.0,
@@ -830,12 +864,13 @@ class Exchange extends DBObject{
       'users' => array(
         array(
           'account' => NULL,
-          'user' => $user->uid,
+          'user' => 0,
           'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR
         ),
       )
     );
-    $account = new LocalAccount($record);
+    $s = new Serializer('LocalAccount');
+    $account = $s->loadFromRecord($record);
     return $account;
   }
   private function getFreeAccountName() {
@@ -873,13 +908,15 @@ class Exchange extends DBObject{
     $es = new Serializer('Exchange');
     //Setup default limit chain
     if (empty($this->limitchain)) {
-      //create default limit chain copying from the default exchange
-      $defExchange = Exchange::getDefaultExchange();
-      $defLimitChain = $defExchange->getDefaultAccount()->getLimitChain();
-      $defLimitChain->id = NULL;
-      $defLimitChain->exchange = $this->id;
+      //create default limit chain 
+      $record = array(
+        'exchange' => $this->id,
+        'name' => 'default'
+      );
       $ls = new Serializer('LimitChain');
+      $defLimitChain = $ls->loadFromRecord($record);
       $ls->save($defLimitChain);
+      //update this exchange with the default limit chain.
       $this->limitchain = $defLimitChain->id;
       $es->updateField($this, 'limitchain');
     }

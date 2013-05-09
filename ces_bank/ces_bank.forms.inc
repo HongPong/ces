@@ -19,6 +19,7 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     else {
       $exchange = $bank->getExchange($exchange_id);
     }
+    $form_state['values'] = $exchange;
   }
 
   $form['exchange'] = array(
@@ -182,23 +183,22 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#options' => array('0' => '0', '1' => '1', '2' => '2', '3' => '3', '4' => '4'),
     '#required' => TRUE
   );
-
+  $form['exchange']['users'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Members'),
+  );
   if ($exchange['state'] != 0) { //exchange has been activated
-    $form['exchange']['limits'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Limits'),
-    );
-
     $limitchains = $bank->getAllLimitChains($exchange['id']);
     $options = array();
     foreach ($limitchains as $id => $limit) {
       $options[$id] = $limit['name'];
     }
-    $form['exchange']['limits']['limitchain'] = array(
+    $form['exchange']['users']['limitchain'] = array(
       '#type' => 'select',
       '#title' => t('Default limit chain'),
       '#description' => t('The limit chain for new accounts.'),
       '#options' => $options,
+      '#default_value' => $exchange['limitchain'],
     );
   }
   switch ($op) {
@@ -226,8 +226,8 @@ function ces_bank_exchange_form_validate($form, &$form_state) {
     form_set_error('code', t('Code %code is invalid. Code must have exactly 4 letters.', array('%code' => $code)));
   for ($i=0;$i<drupal_strlen($code);$i++) {
     $ord = ord(drupal_substr($code, $i, 1));
-    if ($ord < ord('A') || $ord > ord('Z'))
-      form_set_error('code', t('Code %code is invalid. Code characters must be uppercase ASCII letters. No accents, no spaces, no special characters.', array('%code' => $code)));
+    if (($ord < ord('A') || $ord > ord('Z')) && ($ord < ord('0') || $ord > ord('9')))
+      form_set_error('code', t('Code %code is invalid. Code characters must be uppercase ASCII letters and numbers. No accents, no spaces, no special characters.', array('%code' => $code)));
   }
   //website
   $website = $form_state['values']['website'];
@@ -274,10 +274,11 @@ function ces_bank_limitchain_form($form, &$form_state, $limitchain = NULL) {
   }
   else {//First build. Take values from logic layer.
     if ($limitchain == NULL) {
-      $limitchain = $bank->getDefaultLimitChain($id);
+      $exchange = ces_bank_get_current_exchange();
+      $limitchain = $bank->getDefaultLimitChain($exchange['id']);
       $op = 'new';
     }
-    else{
+    else {
       $op = 'edit';
     }
   }
@@ -482,90 +483,118 @@ function ces_bank_limitchain_form_submit($form, &$form_state) {
   }
 }
 /**
- * @param id either the id of an exchange (if $op == new) or the id of an account
- * otherwise.
+ * @param 
+ * TODO other operations.
  */
-function ces_bank_account_form($form, &$form_state, $op, $id) {
-  // TODO: Acess control to some fields.
+function ces_bank_account_form($form, &$form_state, $account = NULL) {
   $bank = new Bank();
-  if ($op == 'new') {
-    $exchange = $bank->getExchange($id);
-    $account = $bank->getDefaultAccount($id);
-  }
-  elseif ($op == 'edit' || $op == 'view' || $op == 'activate') {
-    $account = $bank->getAccount($id);
+  if ($account != NULL) {
+    if(!is_array($account)) {
+      $account = $bank->getAccount($account);
+    }
     $exchange = $bank->getExchange($account['exchange']);
   }
-
+  else {
+    $exchange = ces_bank_get_current_exchange();
+    $account = $bank->getDefaultAccount($exchange['id']);
+  }
+  
   $admin = ces_bank_access('admin', 'exchange', $exchange['id']);
-  $virtual = ($account['kind'] == LocalAccount::TYPE_VIRTUAL);
-
+  
+  if(!empty($form_state['values'])) {
+    $account = array_merge($account, $form_state['values']);
+  }
+  
+  $form['bankaccount'] = array();
   if (isset($account['id'])) {
-    $form['account']['id'] = array(
+    $form['bankaccount']['id'] = array(
       '#type' => 'value',
-      '#value' => $account['id']
+      '#value' => $account['id'],
     );
   }
-  $form['account']['operation'] = array(
-    '#type' => 'value',
-    '#value' => $op
-  );
-  $form['account']['exchange'] = array(
-    '#type' => 'value',
-    '#value' => $account['exchange'],
-  );
-  $form['account']['exchangename'] = array(
+  $form['bankaccount']['exchangename'] = array(
     '#type' => 'item',
     '#title' => t('Exchange'),
     '#markup' => $exchange['code'] . ' - ' . $exchange['name'],
   );
-  $form['account']['name'] = array(
+  $form['bankaccount']['exchange'] = array(
+    '#type' => 'value',
+    '#value' => $exchange['id'],
+  );
+  $form['bankaccount']['name'] = array(
     '#type' => 'textfield',
     '#description' => t('Four digits code.'),
-    '#title' => t('name'),
+    '#title' => t('Code'),
     '#default_value' => $account['name'],
     '#required' => TRUE,
-    '#disabled' => !$admin || $virtual,
+    '#access' => $admin,
   );
-  //TODO: multiple users
-  $accuser = reset($account['users']);
-  $accdrupaluser = user_load($accuser['user']);
-  $form['account']['username'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Username'),
-    '#description' => t('Account administrator'),
-    '#autocomplete_path' => 'user/autocomplete',
-    '#default_value' => $accdrupaluser->name,
-    '#required' => TRUE,
-    '#disabled' => !$admin || $virtual,
+  //account users
+  $form['bankaccount']['users'] = array(
+    '#tree' => TRUE,
+    '#access' => $admin,
   );
-  if (isset($accuser['id'])) { //if op != new
-    $form['account']['accountuser'] = array(
+  foreach ($account['users'] as $accuser) {
+    $accuserform = array();
+    if (isset($accuser['id'])) {
+      $accuserform['id'] = array(
+        '#type' => 'value',
+        '#value' => $accuser['id'],
+      );
+    }
+    if (!empty($accuser['user'])) {
+      $accuserform['user'] = array(
+        '#type' => 'value',
+        '#value' => $accuser['user'],
+      );
+    }
+    else {
+      //drupal_add_js('misc/autocomplete.js'); 
+      $accuserform['username'] = array(
+         '#title' => t('Username'),
+         '#description' => t('The username of the owner of this account.'),
+         '#type' => 'textfield',
+         '#autocomplete_path' => 'ces/bank/user/autocomplete',
+         '#default_value' => isset($accuser['username'])?$accuser['username']:'',
+      );
+    }
+    $accuserform['privilege'] = array(
       '#type' => 'value',
-      '#value' => $accuser['id'],
+      '#value' => 0,
     );
+    $form['bankaccount']['users'][] = $accuserform;
   }
+  
   $options = array(
-      0 => t('Individual'),
-      1 => t('Shared'),
-      2 => t('Organization'),
-      3 => t('Company'),
-      4 => t('Public')
-    );
-  if ($account['kind'] == LocalAccount::TYPE_VIRTUAL) {
-    $options[5] = t('Virtual');
-  }
-  $form['account']['kind'] = array(
+    0 => t('Individual'),
+    1 => t('Shared'),
+    2 => t('Organization'),
+    3 => t('Company'),
+    4 => t('Public')
+  );
+  $form['bankaccount']['kind'] = array(
     '#type' => 'select',
     '#title' => t('Type'),
     '#description' => t('Select "Individual" for personal use, "Shared" if several people share this account, "Organization" for a non-profit organization, "Company" for a profit-pursuing company and "Public" for a public account.'),
     '#options' => $options,
     '#required' => TRUE,
     '#default_value' => $account['kind'],
-    '#disabled' => $virtual,
   );
-
-  $form['account']['state'] = array(
+  $limitchains = $bank->getAllLimitChains($exchange['id']);
+  $options = array();
+  foreach ($limitchains as $id => $limit) {
+    $options[$id] = $limit['name'];
+  }
+  $form['bankaccount']['limitchain'] = array(
+    '#type' => 'select',
+    '#title' => t('Limit chain'),
+    '#description' => t('The limit chain to apply to this account'),
+    '#options' => $options,
+    '#default_value' => $account['limitchain'],
+    '#access' => $admin,
+    '#required' => TRUE,
+  );
+  $form['bankaccount']['state'] = array(
     '#type' => 'select',
     '#title' => t('State'),
     '#description' => t('Active is the common state.'),
@@ -575,96 +604,64 @@ function ces_bank_account_form($form, &$form_state, $op, $id) {
       2 => t('Closed'),
       3 => t('Locked'),
     ),
-    '#default_value' => ($op == 'activate') ? 1 : $account['state'],
-    '#disabled' => $op != 'edit',
+    '#default_value' => $account['state'],
     '#access' => $admin,
     '#required' => TRUE,
   );
-
-  $limitchains = $bank->getAllLimitChains($exchange['id']);
-  $options = array();
-  foreach ($limitchains as $id => $limit) {
-    $options[$id] = $limit['name'];
-  }
-
-  $form['account']['limitchain'] = array(
-    '#type' => 'select',
-    '#title' => t('Limit chain'),
-    '#description' => t('The limit chain to apply to this account'),
-    '#options' => $options,
-    '#default_value' => $account['limitchain'],
-    '#access' => $admin,
-    '#required' => TRUE,
+  
+  $form['bankaccount']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
   );
-  if ($op == 'new') {
-    $submit = t('Create account');
-  }
-  elseif ($op == 'edit') {
-    $submit = t('Update account');
-  }
-  elseif ($op == 'activate') {
-    $submit = t('Activate account');
-  }
-  if (isset($submit)) {
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => $submit,
-    );
-  }
   return $form;
 }
 
 function ces_bank_account_form_validate($form, &$form_state) {
-  //TODO
   $record = &$form_state['values'];
-  $username = $record['username'];
-  $op = $record['op'];
-  $accuser = user_load_by_name($username);
-  if ($accuser === FALSE) {
-    form_set_error('username', t('Username %name does not exist.', array('%name' => $username)));
+  //validate username
+  $users = $record['users'];
+  foreach ($users as $key => $accuser) {
+    if (isset($accuser['username'])) {
+      $user = user_load_by_name($accuser['username']);
+      if ($user === FALSE) {
+        form_set_error('username', t('Username %name does not exist.', array('%name' => $accuser['username'])));
+      }
+      else {
+        $record['users'][$key]['user'] = $user->uid;
+      }
+    }
   }
+  //validate account number
   $name = $record['name'];
   $bank = new Bank();
   $account = $bank->getAccountByName($name);
-  if ($op == 'new') {
-    if ($account != FALSE) {
+  if ($account != FALSE && (!isset($record['id']) || $account['id'] != $record['id'])) {
       form_set_error('name', t('Account number %name already exists.', array('%name' => $name)));
-    }
   }
 }
 function ces_bank_account_form_submit($form, &$form_state) {
-  $record = $form_state['values'];
-  $op = $record['operation'];
+  $record = &$form_state['values'];
+  foreach($record['users'] as $key => $accuser) {
+    if (isset($record['id'])) {
+      $record['users'][$key]['account'] = $record['id'];
+    }
+  }
   $bank = new Bank();
-  $username = $record['username'];
-  $accuser = user_load_by_name($username);
-  $record['users'] = array(
-    array(
-      'user' => $accuser->uid,
-      'role' => 0,
-    ),
-  );
-  if (isset($record['accountuser'])) {
-    $record['users'][0]['id'] = $record['accountuser'];
-  }
-  if (isset($record['id'])) {
-    $record['users'][0]['account'] = $record['id'];
-  }
   try {
-    if ($op == 'new') {
+    if (!isset($record['id'])) {
+    //New account.
       $bank->createAccount($record);
       drupal_set_message(t('Account successfully created. The account will not be available until it is being activated by this exchange\'s administrator. You will recieve an email when this is done.'));
+      if ($record['state'] == LocalAccount::STATE_ACTIVE) {
+        $bank->activateAccount($record);
+      }
     }
-    elseif ($op == 'edit') {
+    else {
+      $previous = $bank->getAccount($record['id']);
       $bank->updateAccount($record);
-      drupal_set_message(t('Account sucessfully updated.'));
-    }
-    elseif ($op == 'delete') {
-      $bank->deleteAccount($record['id']);
-    }
-    elseif ($op == 'activate') {
-      $bank->activateAccount($record);
-      drupal_set_message(t('Account sucessfully activated.'));
+      if($previous['state'] == LocalAccount::STATE_HIDDEN && $record['state'] == LocalAccount::STATE_ACTIVE) {
+        $bank->activateAccount($record);
+      }
     }
   }
   catch (Exception $e) {

@@ -3,6 +3,9 @@
  * @file
  * All page callback functions for bank module.
  */
+/**
+ * @todo: redo all this page!
+ */
 function ces_bank_exchange_admin() {
   $bank = new Bank();
   $exchange = ces_bank_get_current_exchange();
@@ -36,96 +39,149 @@ function ces_bank_exchange_admin() {
   return $page;
 }
 /**
+ * 
+ */
+function ces_bank_accounts_admin() {
+  $bank = new Bank();
+  $exchange = ces_bank_get_current_exchange();
+  $page = array();
+  $page['table'] = array(
+    '#theme' => 'table',
+    '#header' => array(
+      array(
+        'data' => t('Account'),
+        'sort' => 'asc',
+        'field' => 'name'
+      ),
+      array(
+        'data' => t('Type'),
+        'sort' => 'asc',
+        'field' => 'kind'
+      ),
+      array(
+        'data' => t('State'),
+        'sort' => 'asc',
+        'field' => 'state',
+      ),
+      array(
+        'data' => t('Limit'),
+        'sort' => 'asc',
+        'field' => 'limitchain'
+      ),
+      array(
+        'data' => t('Balance'),
+        'sort' => 'asc',
+        'field' => 'balance'
+      ),
+      array(
+        'data' => t('Actions'),
+      ),
+    ),
+    '#rows' => array(),
+  );
+  $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id']));
+  $kinds = array(
+    0 => t('Individual'),
+    1 => t('Shared'),
+    2 => t('Organization'),
+    3 => t('Company'),
+    4 => t('Public'),
+    5 => t('Virtual'),
+  );
+  $states = array(
+    0 => t('Hidden'),
+    1 => t('Active'),
+    2 => t('Closed'),
+    3 => t('Locked')
+  );
+  $limitchains = $bank->getAllLimitChains($exchange['id']);
+  $limits = array();
+  foreach ($limitchains as $id => $limit) {
+    $limits[$id] = $limit['name'];
+  }
+  foreach ($accounts as $account) {
+    $row = array(
+      $account['name'],
+      $kinds[$account['kind']],
+      $states[$account['state']],
+      $limits[$account['limitchain']],
+      $bank->formatAmount($account['balance'], $exchange, true),
+      l(t('View'), 'ces/admin/account/'.$account['id'].'/view') . ' ' .
+      l(t('Edit'), 'ces/admin/account/'.$account['id'].'/edit') . ' ' .
+      l(t('Delete'), 'ces/admin/account/'.$account['id'].'/delete')
+    );
+    $page['table']['#rows'][] = $row;
+  }
+  return $page;
+}
+/**
  * Page with the list of all exchanges organized by country.
  */
-function ces_bank_exchange_list_page() {
+function ces_bank_exchange_list_page($country) {
   $bank = new Bank();
-  $exchanges = $bank->getAllExchanges();
+  $conditions = array(
+    'state' => 1,
+    'country' => $country,
+  );
+  $exchanges = $bank->getAllExchanges($conditions);
   $page = array();
   if (empty($exchanges)) {
+    require_once DRUPAL_ROOT . '/includes/locale.inc';
+    $countries = country_get_list();
     $page['text'] = array(
       '#type' => 'markup',
-      '#value' => t('There are no active exchanges'),
+      '#value' => t('There are no active exchanges in %country.', array('%country'=>$countries[$country])),
     );
   }
   else {
-    include_once DRUPAL_ROOT . '/includes/locale.inc';
-    $countries = country_get_list();
+    $page['table'] = array(
+      '#theme' => 'table',
+      '#header' => array(
+        array(
+          'data' => t('Code'),
+          'field' => 'code',
+          'sort' => 'asc'
+        ),
+        array(
+          'data' => t('Name'),
+          'field' => 'name',
+          'sort' => 'asc'
+        ),
+        array(
+          'data' => t('Region'),
+          'field' => 'region',
+          'sort' => 'asc'
+        ),
+        array(
+          'data' => t('Town'),
+          'field' => 'town',
+          'sort' => 'asc'
+        ),
+        array(
+          'data' => t('Accounts')  ,
+          'field' => 'accounts',
+          'sort' => 'asc'
+        ),
+        array(
+          'data' => t('Currency'),
+          'field' => 'currencysymbol',
+          'sort' => 'asc'
+        ),
+      ),
+      '#rows' => array(),
+    );
     foreach ($exchanges as $exchange) {
-      $country = $countries[$exchange['country']];
-      if (!isset($page[$country])) {
-        $page[$country] = array(
-          '#type' => 'fieldset',
-          '#title' => $country,
-          '#attached' => array(
-            'library' => array(
-              array('system', 'drupal.form'),
-              array('system', 'drupal.collapse')
-            )
-          ),
-          '#attributes' => array(
-            'class' => array('collapsible', 'collapsed'),
-          ),
-        );
-        $page[$country]['table'] = array(
-          '#theme' => 'table',
-          '#header' => array(
-            array(
-              'data' => t('Code'),
-              'field' => 'code',
-              'sort' => 'asc'
-            ),
-            array(
-              'data' => t('Name'),
-              'field' => 'name',
-              'sort' => 'asc'
-            ),
-            array(
-              'data' => t('Region'),
-              'field' => 'region',
-              'sort' => 'asc'
-            ),
-            array(
-              'data' => t('Town'),
-              'field' => 'town',
-              'sort' => 'asc'
-            ),
-            array(
-              'data' => t('Accounts')  ,
-              'field' => 'accounts',
-              'sort' => 'asc'
-            ),
-            array(
-              'data' => t('Currency'),
-              'field' => 'currencysymbol',
-              'sort' => 'asc'
-            ),
-            array(
-              'data' => t('Actions')
-            ),
-          ),
-          '#rows' => array(),
-        );
-      }
       $row = array(
         $exchange['code'],
-        $exchange['name'],
+        l($exchange['name'], 'user/register/' . $exchange['code'], array('title' => t('Click to open an account in this exchange'))),
         $exchange['region'],
         $exchange['town'],
         $exchange['accounts'],
-        $exchange['currencysymbol'],
-        l(t('Register'), 'ces/bank/exchange/' . $exchange['id'] . '/account/new', array('title' => t('Click to open an account in this exchange'))),
+        $exchange['currencysymbol']
       );
-      $page[$country]['table']['#rows'][] = $row;
+      $page['table']['#rows'][] = $row;
     }
-
-    foreach ($page as $country => $fieldset) {
-      $page[$country]['#title'] .= ' (' . count($fieldset['table']['#rows']) . ')';
-    }
-
-    ksort($page);
   }
-
   return $page;
 }
 function ces_bank_exchange_accounts_page() {

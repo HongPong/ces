@@ -28,8 +28,7 @@ db_delete('ces_permission')->execute();
 db_delete('ces_transaction')->execute();
 db_delete('ces_offerwant')->execute();
 db_delete('ces_category')->execute();
-_ces_bank_create_default_exchange();
-_ces_bank_create_default_permissions();
+ces_bank_install();
 //CREATE STUFF
 $bank = new Bank();
 
@@ -55,6 +54,7 @@ $net1 = array(
   'currencyvalue' => '1.0',
   'currencyscale' => '2',
   'admin' => $users['Riemann']->uid,
+  'data' => array(),
 );
 $bank->createExchange($net1);
 $bank->activateExchange($net1);
@@ -73,6 +73,7 @@ $net2 = array(
   'currencyvalue' => '0.1',
   'currencyscale' => '2',
   'admin' => $users['Fermat']->uid,
+  'data' => array(),
 );
 $bank->createExchange($net2);
 $bank->activateExchange($net2);

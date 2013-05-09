@@ -8,13 +8,12 @@ function ces_user_menu(){
     'page callback' => 'ces_user_main_page',
     'type' => MENU_CALLBACK,
   );
-  $menu['ces/register'] = array(
-    'title' => 'Register to Integral CES',
-    'access callback' => TRUE,
-    'page callback' => 'ces_user_register',
-    'type' => MENU_CALLBACK,
-  );
   return $menu;         
+}
+
+function ces_user_menu_alter(&$menu){
+  //gain control over registration page
+  $menu['user/register']['page arguments'] = array('ces_user_register_form');
 }
 
 function ces_user_get_name($account = NULL) {
@@ -82,26 +81,65 @@ function ces_user_get_main_phone($account = NULL) {
   }
   return '';
 }
+function ces_user_register_form($form, &$form_state) {
+  if (empty($form_state['page']) || $form_state['page'] == 'account') {
+    $form = user_register_form($form, $form_state);
+  }
+  else {
+    $form = array();
+    $form['actions'] = array(
+      '#weight' => 10000,
+    );
+    $form['actions']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Create new account'),
+      '#weight' => 1000,
+    );
+  }
+  $form['actions']['submit']['#submit'] = array('ces_user_register_save_values','ces_user_register_submit');
+  return $form;
+}
+function ces_user_register_save_values($form, &$form_state) {
+  if (!isset($form_state['page'])||$form_state['page']=='account') {
+    $form_state['page_values']['account'] = $form_state['values'];
+  }
+}
+function ces_user_register_submit($form, &$form_state) {
+  module_load_include('module', 'user');
+  $form_state['values'] = $form_state['page_values']['account'];
+  $form = user_register_form($form, $form_state);
+  user_register_submit($form, $form_state);
+  //nothing
+}
+
 /**
  * Implements hook_form_alter().
  */
 function ces_user_form_alter(&$form, &$form_state, $form_id) {
-  if($form_id == 'user_register_form' || $form_id == 'user_profile_form') {
-    //Move all ces fields to account fieldset
-    foreach ($form as $key => $field) {
-      if(strlen($key)>4 && substr($key,0,4) == 'ces_') {
-        $form['account'][$key] = $form[$key];
-        unset($form[$key]);
+  if($form_id == 'ces_user_register_form' || $form_id == 'user_profile_form') {
+    if (empty($form_state['page']) || $form_state['page'] == 'account') {
+      //Move all ces fields to account fieldset
+      foreach ($form as $key => $field) {
+        if(strlen($key)>4 && substr($key,0,4) == 'ces_') {
+          $form['account'][$key] = $form[$key];
+          unset($form[$key]);
+        }
       }
+      $form['account']['picture'] = $form['picture'];
+      unset($form['picture']);
+      //put default values in form elements (Drupal doesn't make it because we
+      //are registering)
+      if(isset($form_state['values'])) {
+        _ces_user_set_form_values($form['account'],$form_state['values']);
+      }
+      
+      //Set up weights
+      $form['account']['name']['#weight'] = -10;
+      $form['account']['current_pass']['#weight'] = -5;
+      $form['account']['pass']['#weight'] = 0;
+      $form['account']['status']['#weight'] = 60;
+      $form['account']['roles']['#weight'] = 65;
     }
-    $form['account']['picture'] = $form['picture'];
-    unset($form['picture']);
-    //Set up weights
-    $form['account']['name']['#weight'] = -10;
-    $form['account']['current_pass']['#weight'] = -5;
-    $form['account']['pass']['#weight'] = 0;
-    $form['account']['status']['#weight'] = 60;
-    $form['account']['roles']['#weight'] = 65;
   }else if($form_id == 'user_login_block') {
     //Override $form['links']
     $items = array();
@@ -117,7 +155,19 @@ function ces_user_form_alter(&$form, &$form_state, $form_id) {
     );
   }
 }
-
+function _ces_user_set_form_values(&$elements, $values) {
+  foreach($values as $key => $value) {
+    if(isset($elements[$key]) && is_array($elements[$key])) {
+      if (is_array($value)) {
+        //Call recursively.
+        _ces_user_set_form_values($elements[$key], $value);
+      }
+      else{
+        $elements[$key]['#default_value'] = $value;
+      }
+    }
+  }
+}
 function ces_user_user_view($account, $view_mode, $langcode) {
   //Set fields to be rendered with user profile item theme.
   $account->content['account'] = array(
@@ -167,15 +217,11 @@ function ces_user_block_info() {
   $block = array(
     'ces_user_register'=> array(
       'info' => t('CES register'),
-      'cache' => DRUPAL_CACHE_GLOBAL,
-      'visibility' => BLOCK_VISIBILITY_LISTED,
-      'pages' => '<front>',
+      'cache' => DRUPAL_CACHE_PER_ROLE,
     ),
     'ces_user_links' => array(
       'info' => t('CES front links'),
-      'cache' => DRUPAL_CACHE_GLOBAL,
-      'visibility' => BLOCK_VISIBILITY_LISTED,
-      'pages' => '<front>',
+      'cache' => DRUPAL_CACHE_PER_ROLE,
     ),
   );
   return $block;
@@ -184,47 +230,66 @@ function ces_user_block_info() {
  * Implements hook_block_view().
  */
 function ces_user_block_view($delta = '') {
+  global $user;
   $block = array();
   $block['subject'] = '';
+  $content = array();
   if($delta == 'ces_user_register') {
-    $content = array(
-      'text' => array(
-        '#type' => 'container',
-        'p1' => array(
-          '#markup' => t('New to Integal CES?'),
-          '#prefix' => '<p><strong>',
-          '#suffix' => '</strong></p>',
-        ),
-        'p2' => array(
-          '#markup' => t('Find an exchange network near you and start trading using social money!'),
-          '#prefix' => '<p>',
-          '#suffix' => '</p>',
-        ),
-        'actions' => array(
-          '#markup' => l('Register', 'ces/register'),
-          '#prefix' => '<p>',
-          '#suffix' => '</p>',
-        ),
-        '#attributes' => array(),
-      )
-    );
+    if (!$user->uid) {
+      $content = drupal_get_form('ces_user_register_block_form');
+    }
   } else if($delta == 'ces_user_links') {
+    if(!$user->uid){
     $content = array(
       '#theme' => 'item_list',
       '#attributes' => array('class' => array('front-links')),
       '#items' => array(
+        l(t('New exchange'), 'ces/bank/exchange/new'),
         l(t('Documentation'), 'http://www.integralces.net'),
         l(t('Developers'), 'http://drupal.org/sandbox/esteve/1367140'),
         l(t('Donate'), 'ces/donate'),
-        l(t('New exchange'), 'ces/bank/exchange/new'),
         l(t('About'), 'ces/about'),
       ),
     );
+    }
   }
   $block['content'] = $content;
   return $block;
 }
-function ces_user_main_page(){
+function ces_user_register_block_form($form, &$form_state) {
+  module_load_include('module', 'ces_bank');
+  $options = ces_bank_country_get_list();
+  array_unshift($options, t('Select country...'));
+  $form = array(
+    'text' => array(
+      '#type' => 'container',
+      'p1' => array(
+        '#markup' => t('New to Integal CES?'),
+        '#prefix' => '<p><strong>',
+        '#suffix' => '</strong></p>',
+      ),
+      'p2' => array(
+        '#markup' => t('Start trading using social money! Select your country to find an exchange near you:'),
+      ),
+      'country' => array(
+        '#type' => 'select',
+        '#options' => $options,
+        '#attributes' => array('onChange' => array('this.form.submit()')),
+      ),
+      'submit' => array(
+        '#type' => 'submit',
+        '#value' => t('Register'),
+        '#attributes' => array('style' => array('display: none;')),
+      ),
+      '#attributes' => array(),
+    ),
+  );
+  return $form;  
+}
+function ces_user_register_block_form_submit($form, &$form_state) {
+  drupal_goto('ces/bank/exchange/list/' . $form_state['values']['country']);
+}
+function ces_user_main_page() {
   global $user;
   if($user->uid) drupal_goto('ces/bank/exchange/blog');
   return array(
@@ -250,7 +315,4 @@ function ces_user_main_page(){
       '#attributes' => array('class'=>array('front-list')),
     )
   );
-}
-function ces_user_register(){
-  return 'Sorry! Not implemented yet!';
 }

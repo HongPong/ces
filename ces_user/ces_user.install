@@ -74,6 +74,9 @@ function _ces_user_create_user_fields() {
             'type' => $info[4],
             'weight' => $info[3],
           ),
+        ),
+        'settings' => array(
+          'user_register_form' => TRUE,
         )
       ));
     }

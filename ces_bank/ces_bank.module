@@ -20,6 +20,8 @@ function ces_bank_help($path, $arg) {
     case 'ces/bank/account/transaction':
       return '<p>' . t('Showing your transactions. Set the "From" and "To" 
         dates to see a specific time range.') .'</p>';
+    case 'ces/register/%':
+      return '<p>' . t('Click on the exchange you want to join.') . '</p>';
   }
 }
 /**
@@ -119,12 +121,13 @@ function ces_bank_menu() {
   );  
   $menu['ces/bank/account'] = array(
     'title' => 'My account',
-    'description' => 'Operations related to your banking account.',
-    'page callback' => 'ces_bank_account_view',
-    'file' => 'ces_bank.pages.inc',
+    'description' => 'View account details.',
+    'page callback' => '_ces_bank_get_form',
+    'page arguments' => array('ces_bank_account_statement_form', CES_CURRENT_ACCOUNT),
+    'file' => 'ces_bank.forms.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'account details', CES_CURRENT_ACCOUNT),
+    'access arguments' => array('view', 'account transactions', CES_CURRENT_ACCOUNT),
     'expanded' => TRUE,
     'weight' => 500,
   );
@@ -161,7 +164,17 @@ function ces_bank_menu() {
     'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
     'weight' => 620,
   );
-  
+  $menu['ces/bank/exchange/list/%'] = array(
+    'title' => 'Exchanges in your country',
+    'description' => 'List of exchanges in your country',
+    'page callback' => 'ces_bank_exchange_list_page',
+    'page arguments' => array(4),
+    'file' => 'ces_bank.pages.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('view', 'global statistics', 0),
+    'type' => MENU_CALLBACK,
+  );
   //Administrative menu items
   $menu['ces/admin'] = array(
     'title' => 'Administration',
@@ -174,6 +187,77 @@ function ces_bank_menu() {
     'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
     'weight' => 900,
     'expanded' => TRUE,
+  );
+  $menu['ces/admin/account'] = array(
+    'title' => 'Accounts',
+    'description' => 'Administer accounts',
+    'page callback' => 'ces_bank_accounts_admin',
+    'file' => 'ces_bank.pages.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_NORMAL_ITEM,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
+    'weight' => 905,
+    'expanded' => TRUE,
+  );
+  $menu['ces/admin/account/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $menu['ces/admin/account/new'] = array(
+    'title' => 'New',
+    'description' => 'New account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_form'),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
+    'weight' => 1,
+  );
+  $menu['ces/admin/account/%ces_account/view'] = array(
+    'title' => 'View',
+    'description' => 'View account',
+    'page callback' => 'ces_bank_account_view',
+    'page arguments' => array(3),
+    'file' => 'ces_bank.pages.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
+    'weight' => 2,
+  );
+  $menu['ces/admin/account/%ces_account/edit'] = array(
+    'title' => 'Edit',
+    'description' => 'Edit account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_form', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
+    'weight' => 3,
+  );
+  $menu['ces/admin/account/%ces_account/delete'] = array(
+    'title' => 'Delete',
+    'description' => 'Delete account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_delete_form', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
+    'weight' => 4,
+  );
+  $menu['ces/bank/user/autocomplete'] = array(
+    'type' => MENU_CALLBACK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('view', 'exchange accounts', CES_CURRENT_EXCHANGE),
+    'page callback' => 'ces_bank_user_autocomplete',
   );
   $menu['ces/admin/exchange'] = array(
     'title' => 'Edit exchange',
@@ -189,7 +273,7 @@ function ces_bank_menu() {
   );
   /* Begin limit chains */
   $menu['ces/admin/limit'] = array(
-    'title' => 'Account limits',
+    'title' => 'Limits',
     'description' => 'Types of debit and credit limits for accounts.',
     'page callback' => 'ces_bank_limitchain_list_page',
     'file' => 'ces_bank.pages.inc',
@@ -329,6 +413,7 @@ function ces_bank_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
   );
+
   
   return $menu;
 }
@@ -343,10 +428,16 @@ function ces_transaction_access($permission, $transaction, $account = NULL) {
       || ces_bank_access($permission, 'account seller', $transaction['toaccount'], $account);
 }
 function ces_limitchain_load($id = NULL) {
-  if(empty($id)) return FALSE;
+  if(empty($id) || !is_integer($id)) return FALSE;
   $bank = new Bank();
   $limitchain = $bank->getLimitChain($id);
   return $limitchain;
+}
+function ces_account_load($id = NULL) {
+  if(empty($id) || !is_integer($id)) return FALSE;
+  $bank = new Bank();
+  $account = $bank->getAccount($id);
+  return $account;
 }
 function _ces_bank_get_form() {
   $args = func_get_args();
@@ -400,10 +491,11 @@ function _ces_bank_menu() {
     'access arguments' => array('admin', 'global', 0),
     'type' => MENU_NORMAL_ITEM,
   );
-  $menu['ces/bank/exchange'] = array(
-    'title' => 'List exchanges',
-    'description' => 'List of active exchanges',
+  $menu['ces/register/%'] = array(
+    'title' => 'Exchanges in your country',
+    'description' => 'List of exchanges in your country',
     'page callback' => 'ces_bank_exchange_list_page',
+    'page arguments' => array(2),
     'file' => 'ces_bank.pages.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'access callback' => 'ces_bank_access',
@@ -713,17 +805,17 @@ function ces_bank_user_load($users){
 /**
  * Implements hook_block_info().
  */
-function ces_bank_block_info() {
+/*function ces_bank_block_info() {
   $block = array();
   $block['navigation']['info'] = t('CES bank navigation');
   $block['navigation']['cache'] = DRUPAL_CACHE_PER_USER;
 
   return $block;
-}
+}*/
 /**
  * Implements hook_block_view().
  */
-function ces_bank_block_view() {
+/*function ces_bank_block_view() {
   global $user;
   $bank = new Bank();
   $tree = array();
@@ -803,7 +895,7 @@ function _ces_bank_get_link_item($href, $title, $childs = array()) {
     'below' => $childs,
   );
   return $link;
-}
+}*/
 /**
  * Implements hook_token_info().
  */
@@ -1137,14 +1229,30 @@ function ces_bank_get_current_account($account = NULL) {
 }
 function ces_bank_get_current_exchange($account = NULL) {
   $bankaccount = ces_bank_get_current_account($account);
-  if($bankaccount === FALSE) 
-    return FALSE;
-  return ces_bank_get_exchange($bankaccount['exchange']);
+  if($bankaccount === FALSE) {
+    $path = arg();
+    if($path[0] == 'user' && $path[1] == 'register') {
+      $exchange = ces_bank_get_exchange_by_name($path[2]);
+    }
+    else{
+      $exchange = FALSE;
+    }
+  }
+  else{
+    $exchange = ces_bank_get_exchange($bankaccount['exchange']);
+  }
+  return $exchange;
 }
 
 function ces_bank_get_exchange($id) {
   $bank = new Bank();
   $exchange = $bank->getExchange($id);
+  return $exchange;
+}
+
+function ces_bank_get_exchange_by_name($name) {
+  $bank = new Bank();
+  $exchange = $bank->getExchangeByName($name);
   return $exchange;
 }
 
@@ -1216,7 +1324,7 @@ function ces_bank_user_view($user, $view_mode, $langcode) {
 /**
  * Implements hook_menu_alter().
  */
-function ces_user_menu_alter(&$items) {
+function ces_bank_menu_alter(&$items) {
   $items['user/%user']['access callback'] = 'ces_bank_user_access';
   $items['user/%user']['access arguments'] = array('view', 1);  
 }
@@ -1232,4 +1340,111 @@ function ces_bank_user_access($permission, $target, $account = NULL) {
     }
   }
   return FALSE;
+}
+
+function ces_bank_country_get_list() {
+  if($cache = cache_get('ces_bank_countries')){
+    $countries = $cache->data;
+  }else{
+    require_once DRUPAL_ROOT . '/includes/locale.inc';
+    $allcountries = country_get_list();
+    $bank = new Bank();
+    $exchanges = $bank->getAllExchanges();
+    $countries = array();
+    foreach($exchanges as $exchange) {
+      $countries[$exchange['country']] = $allcountries[$exchange['country']];
+    }
+    cache_set('ces_bank_countries', $countries, 'cache', REQUEST_TIME + 60*60);
+  }
+  return $countries;
+}
+
+function ces_bank_form_alter(&$form, &$form_state, $form_id) {
+  if($form_id == 'ces_user_register_form'){
+    if(empty($form_state['page']) || $form_state['page'] == 'account') {
+      //next button:
+      $form['actions']['next'] = array(
+        '#type' => 'submit',
+        '#value' => t('Next >>'),
+        '#submit' => array('ces_user_register_save_values','ces_bank_user_register_next'),
+        '#weight' => 1000,
+      );
+      $form['actions']['submit']['#access'] = FALSE;
+    }
+    else if($form_state['page'] == 'bankaccount') {
+      $name = arg(2);
+      $bank = new Bank();
+      $exchange = $bank->getExchangeByName($name);
+      if($exchange !== FALSE && $bank->access('use', 'exchange accountcreator', $exchange['id'])) {
+        
+        module_load_include('inc', 'ces_bank', 'ces_bank.forms');
+        $form += ces_bank_account_form($form, $form_state);
+        unset($form['bankaccount']['submit']);
+        $form['actions']['previous'] = array(
+          '#type' => 'submit',
+          '#value' => t('<< Previous'),
+          '#submit' => array('ces_bank_user_register_save_values','ces_bank_user_register_previous'),
+          '#weight' => 0,
+          '#limit_validation_errors' => array(),
+        );
+      }
+    }
+    array_unshift($form['actions']['submit']['#submit'],'ces_bank_user_register_save_values');
+    $form['actions']['submit']['#submit'][] = 'ces_bank_user_register_submit';
+    return $form;
+  }
+}
+function ces_bank_user_register_previous($form, &$form_state) {
+  $form_state['values'] = $form_state['page_values']['account'];
+  $form_state['page'] = 'account';
+  $form_state['rebuild'] = TRUE;
+}
+function ces_bank_user_register_next($form, &$form_state) {
+  if (!empty($form_state['page_values']['bankaccount'])) {
+    $form_state['values'] = $form_state['page_values']['bankaccount'];
+  }
+  else {
+    $form_state['values'] = array();
+  }
+
+  // When form rebuilds, it will look at this to figure which page to build.
+  $form_state['page'] = 'bankaccount';
+  $form_state['rebuild'] = TRUE;
+}
+function ces_bank_user_register_save_values($form, &$form_state) {
+  if($form_state['page'] == 'bankaccount') {
+    $form_state['page_values']['bankaccount'] = $form_state['values'];
+  }
+}
+function ces_bank_user_register_submit($form, &$form_state) {
+  //the user is already created. Create the banking account.
+  $form_state['values'] = $form_state['page_values']['bankaccount'];
+  $form_state['values']['operation'] = 'new';
+  $form_state['values']['users'][0]['user'] = $form_state['user']->uid;
+  module_load_include('inc', 'ces_bank', 'ces_bank.forms');
+  ces_bank_account_form_submit($form, $form_state);
+}
+function ces_bank_user_autocomplete($string){
+  $exchange = ces_bank_get_current_exchange();
+  $bank = new Bank();
+  $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'state' => 1));
+  $userids = array();
+  foreach($accounts as $account) {
+    foreach($account['users'] as $accuser) {
+      $userids[$accuser['user']] = $accuser['user'];
+    }
+  }
+  $query = db_select('users', 'u');
+  $matches = array();
+  $return = $query
+    ->fields('u', array('name'))
+    ->condition('u.name', '%' . db_like($string) . '%', 'LIKE')
+    ->condition('u.uid', array_values($userids), 'IN')
+    ->range(0, 10)
+    ->execute();
+  foreach ($return as $row) {
+    $matches[$row->name] = check_plain($row->name);
+  }
+  // return for JS
+  drupal_json_output($matches);
 }

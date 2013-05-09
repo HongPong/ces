@@ -7,15 +7,11 @@
  * Implements hook_install().
  */
 function ces_bank_install() {
-  $ok1 = _ces_bank_create_default_exchange();
-  if (!$ok1) {
-    drupal_set_message(st('Error creating default exchange.'), 'error');
-  }
   $ok3 = _ces_bank_create_default_permissions();
   if (!$ok3) {
     drupal_set_message(st('Error creating  default permissions.'), 'error');
   }
-  if ($ok1 && $ok3) {
+  if ($ok3) {
     drupal_set_message(st('Initial records created.'));
   }
 }
@@ -30,7 +26,7 @@ function _ces_bank_create_menu() {
   $ok3 = drupal_write_record('menu_custom', $record);
   return $ok3!==FALSE;
 }
-*/
+*//*
 function _ces_bank_create_default_exchange() {
   $record = array(
     'id' => 1,
@@ -66,7 +62,7 @@ function _ces_bank_create_default_exchange() {
   if ($ok2 === FALSE)
     drupal_set_message(st('Error installing default limit chain.'), 'error');
   return $ok1!==FALSE && $ok2!==FALSE;
-}
+}*/
 /**
  * Create permissions that, by default, all people will have. These include:
  *  - See global statistics
@@ -237,6 +233,12 @@ function ces_bank_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0
+      ),
+      'data' => array(
+        'description' => 'PHP-serialized exchange configuration.',
+        'type' => 'blob',
+        'not null' => TRUE,
+        'serialize' => TRUE
       )
     ),
     'primary key' => array('id'),

@@ -450,7 +450,7 @@ function ces_offerswants_field_formatter_view($entity_type, $entity, $field, $in
 function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $offerwant = NULL) {
   global $user;
   if ($offerwant == NULL) {
-    $offerwant = (object) array(
+    $offerwant = (object) (array(
       'type' => $offerwant_type,
       'title' => '',
       'body' => '',
@@ -460,9 +460,13 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
       'state' => 1,
       'created' => REQUEST_TIME,
       'expire' => REQUEST_TIME + 3600*24*365,
-    );
+    ));
   }
-  $form = array();
+  if(isset($form_state['values']['expire']) && is_array($form_state['values']['expire'])) {
+    $form_state['values']['expire'] = mktime(24, 0, 0, $form_state['values']['expire']['month'], $form_state['values']['expire']['day'], $form_state['values']['expire']['year']);      
+  }
+  $offerwant = (object)array_merge((array)$offerwant,$form_state['values']);
+    
   $values = array('id', 'type', 'created');
   foreach ($values as $key) {
     if (isset($offerwant->{$key})) {
@@ -476,7 +480,7 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
   // define form
   $options = _ces_offerswants_get_categories_options($offerwant_type);
   if (!empty($options) && count($options) > 1) {
-    $options[0] = t('Select a category...');
+    $options = array('' => t('Select a category...')) + $options;
     $form['category'] = array(
       '#type' => 'select',
       '#title' => t('Category'),
@@ -559,6 +563,7 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
   
   field_attach_form('ces_offerwant', $offerwant, $form, $form_state);
   $form['ces_offer_rate']['und'][0]['value']['#title'] = t('Rate');
+  $form['ces_offer_rate']['und'][0]['value']['#required'] = TRUE;
   $exchange = ces_offerswants_get_an_exchange();
   $form['ces_offer_rate']['und'][0]['value']['#description'] = t('Eg: \'2.5\' or \'5.00%symbol and transport\' or \'Contact me\' or \'Free\'.', array('%symbol' => $exchange['currencysymbol']));
   
@@ -569,6 +574,9 @@ function ces_offerwant_form_validate($form, &$form_state) {
   $expire = mktime(24, 0, 0, $form_state['values']['expire']['month'], $form_state['values']['expire']['day'], $form_state['values']['expire']['year']);
   if ($expire < REQUEST_TIME) {
     form_set_error('expire', t('Expire date must be in the future.'));
+  }
+  else{
+    $form_state['values']['expire'] = $expire;
   }
   if ($form_state['values']['category'] == 0) {
     form_set_error('category', t('Select a category.'));
@@ -1437,4 +1445,176 @@ function ces_offerswants_user_view($account, $view_mode, $langcode) {
     $wants['list']['#markup'] = t('No wants.');
   }
   $account->content['wants'] = $wants;
+}
+
+function ces_offerswants_form_alter(&$form, &$form_state, $form_id) {
+  if($form_id == 'ces_user_register_form') {
+    if(!empty($form_state['page']) && ($form_state['page'] == 'offer' || $form_state['page'] == 'want')){
+      $key = $form_state['page'] . 's'; //'offers' or 'wants'
+      $index = $form_state['offerwant_index'];
+      $offerform = array(
+        '#tree' => TRUE,
+        '#parents' => array($key, $index),
+      );
+      $form_state['values'] = (isset($form_state['values'][$key][$index]))?$form_state['values'][$key][$index]:array();
+      $form[$key][$index] = ces_offerwant_form($offerform, $form_state, $form_state['page']);
+      $form['#tree'] = TRUE;
+      unset($form[$key][$index]['submit']);
+      //Unset #parents in order for tree property to take effect. #parents is 
+      //set by field_attach in offerwant form function. It will be automatically
+      //recomputed later at form build.
+      //unset($offerform['#parents']);
+      $form['actions']['previous'] = array(
+        '#type' => 'submit',
+        '#value' => t('<< Previous'),
+        '#submit' => array('ces_offerswants_user_register_previous'),
+        '#weight' => 0,
+        '#limit_validation_errors' => array(),
+      );
+    }
+    if(!empty($form_state['page']) && ($form_state['page'] == 'offer' || $form_state['page'] == 'want' || $form_state['page'] == 'bankaccount')) {
+      $exchange = ces_bank_get_current_exchange();
+      $minoffers = $exchange['data']['registration_offers'];
+      $minwants = $exchange['data']['registration_wants'];
+      $numoffers = isset($form_state['page_values']['offers'])?count($form_state['page_values']['offers']):0;
+      $numwants = isset($form_state['page_values']['wants'])?count($form_state['page_values']['wants']):0;
+      //count the offer or want by this form.
+      if($form_state['page'] == 'offer' && $form_state['offerwant_index'] == $numoffers) {
+        $numoffers++;
+      }else if($form_state['page'] == 'want' && $form_state['offerwant_index'] == $numwants) {
+        $numwants++;
+      }
+      
+      $okoffers = ($numoffers >= $minoffers);
+      $okwants = ($numwants >= $minwants);
+      
+      if($form_state['page'] == 'bankaccount' || $form_state['page'] == 'offer') {
+        $form['actions']['anotheroffer'] = array(
+          '#type' => 'submit',
+          '#value' => t('Add offer >>'),
+          '#submit' => array('ces_bank_user_register_save_values', 'ces_offerswants_user_register_save_values', 'ces_offerswants_user_register_add_another_offer'),
+          '#weight' => 20,
+        );
+      }
+      if($okoffers){
+        $form['actions']['anotherwant'] = array(
+          '#type' => 'submit',
+          '#value' => t('Add want >>'),
+          '#submit' => array('ces_bank_user_register_save_values', 'ces_offerswants_user_register_save_values','ces_offerswants_user_register_add_another_want'),
+          '#weight' => 30,
+        );
+      }
+      $form['actions']['submit']['#access'] = $okoffers && $okwants;
+      array_unshift($form['actions']['submit']['#submit'], 'ces_offerswants_user_register_save_values');
+      $form['actions']['submit']['#submit'][] = 'ces_offerswants_user_register_submit';
+    }
+  }
+  else if($form_id == 'ces_bank_exchange_form') {
+    $form['exchange']['users']['registration_offers'] = array(
+      '#type' => 'select',
+      '#title' => t('Minimum offers on register'),
+      '#description' => t('The minimum number of offers that a member must fill in the registration form.'),
+      '#options' => array('0'=>t('None'), '1'=>'1', '2'=>'2', '3'=>'3', '4'=>'4'),
+      '#default_value' => isset($form_state['values']['data']['registration_offers'])?$form_state['values']['data']['registration_offers']:'1',
+    );
+    $form['exchange']['users']['registration_wants'] = array(
+      '#type' => 'select',
+      '#title' => t('Minimum wants on register'),
+      '#description' => t('The minimum number of wants that a member must fill in the registration form.'),
+      '#options' => array('0'=>t('None'), '1'=>'1', '2'=>'2', '3'=>'3', '4'=>'4'),
+      '#default_value' => isset($form_state['values']['data']['registration_wants'])?$form_state['values']['data']['registration_wants']:'0',
+    );
+    array_unshift($form['#submit'], 'ces_offerswants_exchange_form_submit');
+  }
+}
+function ces_offerswants_exchange_form_submit($form, &$form_state) {
+  if(!isset($form_state['values']['data'])){
+    $form_state['values']['data'] = array();
+  }
+  $form_state['values']['data']['registration_offers'] = $form_state['values']['registration_offers'];
+  $form_state['values']['data']['registration_wants'] = $form_state['values']['registration_wants'];
+}
+function ces_offerswants_user_register_add_another_offer($form, &$form_state) {
+  ces_offerswants_user_register_add_another($form, $form_state, 'offer');
+}
+function ces_offerswants_user_register_add_another_want($form, &$form_state) {
+  ces_offerswants_user_register_add_another($form, $form_state, 'want');
+}
+function ces_offerswants_user_register_add_another($form, &$form_state, $type){
+  if ($type == $form_state['page']) {
+    $form_state['offerwant_index']++;
+  }
+  else {
+    $form_state['offerwant_index'] = 0;
+  }
+  //Setup new form
+  $form_state['page'] = $type;
+  if(isset($form_state['page_values'][$type.'s'][$form_state['offerwant_index']])){
+    $form_state['values'][$type.'s'][$form_state['offerwant_index']] = $form_state['page_values'][$type.'s'][$form_state['offerwant_index']];
+  }
+  else {
+    $form_state['values'] = array();
+  }
+  $form_state['rebuild'] = TRUE;
+}
+function ces_offerswants_user_register_previous($form, &$form_state) {
+  $index = $form_state['offerwant_index'];
+  $page = $form_state['page'];
+  if($form_state['page'] == 'offer') {
+    if($index == 0) {
+      $form_state['page'] = 'bankaccount';
+      $form_state['values'] = $form_state['page_values']['bankaccount'];
+      unset($form_state['offerwant_index']);
+    }
+    else{
+      $form_state['values']['offers'][$index-1] = $form_state['page_values']['offers'][$index-1];
+      $form_state['offerwant_index'] = $index-1;
+    }
+  }else{ //want
+    if($index == 0) {
+      if(empty($form_state['page_values']['offers'])){
+        $form_state['page'] = 'bankaccount';
+        $form_state['values'] = $form_state['page_values']['bankaccount']; 
+        unset($form_state['offerwant_index']);
+      }else{
+        $form_state['page'] = 'offer';
+        $newindex = count($form_state['page_values']['offers'])-1;
+        $form_state['values']['offers'][$newindex] = $form_state['page_values']['offers'][$newindex];
+        $form_state['offerwant_index'] = $newindex;
+      }
+    }
+    else {
+      $form_state['values']['wants'][$index-1] = $form_state['page_values']['wants'][$index-1];
+    }
+  }
+  $form_state['rebuild'] = TRUE;
+}
+function ces_offerswants_user_register_save_values($form, &$form_state){
+  $page = $form_state['page'];
+  if ($page == 'offer' || $page == 'want') {
+    $type = $page.'s'; //offers or wants.
+    $index = $form_state['offerwant_index'];
+    if (!isset($form_state['page_values'][$type])) {
+      $form_state['page_values'][$type] = array();
+    }
+    $form_state['page_values'][$type][$index] = $form_state['values'][$type][$index];
+  }
+}
+function ces_offerswants_user_register_submit($form, &$form_state) {
+  //submit offers
+  if(!empty($form_state['page_values']['offers'])){
+    foreach($form_state['page_values']['offers'] as $offer) {
+      $form_state['values'] = $offer;
+      $form_state['values']['user'] = $form_state['user']->uid;
+      ces_offerwant_form_submit($form, $form_state);
+    }
+  }
+  //submit wants
+  if(!empty($form_state['page_values']['wants'])){
+    foreach($form_state['page_values']['wants'] as $want) {
+      $form_state['values'] = $want;
+      $form_state['values']['user'] = $form_state['user']->uid;
+      ces_offerwant_form_submit($form, $form_state);
+    }
+  }
 }
