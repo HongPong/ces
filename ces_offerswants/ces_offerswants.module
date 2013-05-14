@@ -462,10 +462,13 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
       'expire' => REQUEST_TIME + 3600*24*365,
     ));
   }
-  if(isset($form_state['values']['expire']) && is_array($form_state['values']['expire'])) {
-    $form_state['values']['expire'] = mktime(24, 0, 0, $form_state['values']['expire']['month'], $form_state['values']['expire']['day'], $form_state['values']['expire']['year']);      
+  
+  if(!empty($form_state['values'])){
+    if(isset($form_state['values']['expire']) && is_array($form_state['values']['expire'])) {
+      $form_state['values']['expire'] = mktime(24, 0, 0, $form_state['values']['expire']['month'], $form_state['values']['expire']['day'], $form_state['values']['expire']['year']);      
+    }
+    $offerwant = (object)array_merge((array)$offerwant,$form_state['values']);
   }
-  $offerwant = (object)array_merge((array)$offerwant,$form_state['values']);
     
   $values = array('id', 'type', 'created');
   foreach ($values as $key) {
