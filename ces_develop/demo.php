@@ -17,6 +17,11 @@ foreach( $users as $user) {
     user_delete($user->uid);
   }
 }
+$query = db_query('SELECT nid FROM {node} WHERE type = \'ces_blog\'');
+$posts = $query->fetchAllAssoc('nid');
+foreach($posts as $post) {
+  node_delete($post->nid);
+}
 //RESET CES
 db_delete('ces_account')->execute();
 db_delete('ces_accountuser')->execute();
@@ -230,6 +235,38 @@ foreach($offers as $offer) {
   ces_offerwant_save($o);
 }
 
+//Blog posts
+post_blog('Demo post','This is a demonstration blog post. 
+
+This space is intended for the administrator or a group of editors to publish relevant information about the trading community, such as markets, events and news.
+
+Happy testing!', $net1, $users['Riemann']);
+
+post_blog('Lorem ipsum', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net1, $users['Riemann']);
+post_blog('May exchange newsletter', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
+post_blog('Another post', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
+
+
+
+function post_blog($subject, $body, $exchange, $user) {
+  $node = new stdClass();
+  $node->title = $subject;
+  $node->type = 'ces_blog';
+  node_object_prepare($node);
+  $node->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
+  $node->uid = $user->uid; 
+  $node->status = 1; //(1 or 0): published or not
+  $node->promote = 0; //(1 or 0): promoted to front page
+  $node->comment = 2; //2 = comments on, 1 = comments off
+  $node->ces_blog_exchange['und'][0]['value'] = $exchange['id'];
+  $node->body['und'][0] = array(
+    'summary'=> '',
+    'value' => $body,
+    'format' => 'filtered_html',
+  );
+  $node = node_submit($node); // Prepare node for saving
+  node_save($node);
+}
 
 function register_user($name) {
   // register a new user

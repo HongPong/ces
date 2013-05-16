@@ -75,7 +75,7 @@ function ces_blog_page() {
     if (ces_bank_access('admin', 'exchange blog', CES_CURRENT_EXCHANGE)) {
       $page['p2'] = array(
         '#prefix' => '<p>',  
-        '#markup' => l(t('Add new post'), 'node/add/ces_blog'),
+        '#markup' => l(t('Add new post'), 'node/add/ces-blog'),
         '#suffix' => '</p>',
       );
     }
