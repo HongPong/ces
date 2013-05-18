@@ -1,1 +1,8 @@
 <?php
+/**
+ * @file
+ * The main virtual module called ces does not have any features.
+ *
+ * ces.module is used as a container for the other modules and contains
+ * several general purpose files.
+ */
