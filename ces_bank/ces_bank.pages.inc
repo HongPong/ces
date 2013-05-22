@@ -3,18 +3,23 @@
  * @file
  * All page callback functions for bank module.
  */
+
 /**
  * @todo: redo all this page!
  */
+
+ /**
+  * TODO: document.
+  */
 function ces_bank_exchange_admin() {
   $bank = new Bank();
   $exchange = ces_bank_get_current_exchange();
   $page = array();
-  //New accounts request
+  // New accounts request.
   $page['new_accounts'] = array(
     'type' => 'fieldset',
     'title' => t('New accounts'),
-    'description' => t('List of new account requests for this exchange. Activate or delete all them.')
+    'description' => t('List of new account requests for this exchange. Activate or delete all them.'),
   );
   $accounts = $bank->getAllAccounts(array('state' => 0, 'exchange' => $exchange['id']));
   if (!empty($accounts)) {
@@ -34,12 +39,12 @@ function ces_bank_exchange_admin() {
     );
   }
   $page['limitchains'] = array(
-      '#markup' => l(t('Administer limit chains'), 'ces/bank/exchange/' . $exchange['id'] . '/limitchain'),
+    '#markup' => l(t('Administer limit chains'), 'ces/bank/exchange/' . $exchange['id'] . '/limitchain'),
   );
   return $page;
 }
 /**
- * 
+ * TODO: document.
  */
 function ces_bank_accounts_admin() {
   $bank = new Bank();
@@ -51,12 +56,12 @@ function ces_bank_accounts_admin() {
       array(
         'data' => t('Account'),
         'sort' => 'asc',
-        'field' => 'name'
+        'field' => 'name',
       ),
       array(
         'data' => t('Type'),
         'sort' => 'asc',
-        'field' => 'kind'
+        'field' => 'kind',
       ),
       array(
         'data' => t('State'),
@@ -66,12 +71,12 @@ function ces_bank_accounts_admin() {
       array(
         'data' => t('Limit'),
         'sort' => 'asc',
-        'field' => 'limitchain'
+        'field' => 'limitchain',
       ),
       array(
         'data' => t('Balance'),
         'sort' => 'asc',
-        'field' => 'balance'
+        'field' => 'balance',
       ),
       array(
         'data' => t('Actions'),
@@ -92,7 +97,7 @@ function ces_bank_accounts_admin() {
     0 => t('Hidden'),
     1 => t('Active'),
     2 => t('Closed'),
-    3 => t('Locked')
+    3 => t('Locked'),
   );
   $limitchains = $bank->getAllLimitChains($exchange['id']);
   $limits = array();
@@ -105,10 +110,10 @@ function ces_bank_accounts_admin() {
       $kinds[$account['kind']],
       $states[$account['state']],
       $limits[$account['limitchain']],
-      $bank->formatAmount($account['balance'], $exchange, true),
-      l(t('View'), 'ces/admin/account/'.$account['id'].'/view') . ' ' .
-      l(t('Edit'), 'ces/admin/account/'.$account['id'].'/edit') . ' ' .
-      l(t('Delete'), 'ces/admin/account/'.$account['id'].'/delete')
+      $bank->formatAmount($account['balance'], $exchange, TRUE),
+      l(t('View'), 'ces/admin/account/' . $account['id'] . '/view') . ' ' .
+      l(t('Edit'), 'ces/admin/account/' . $account['id'] . '/edit') . ' ' .
+      l(t('Delete'), 'ces/admin/account/' . $account['id'] . '/delete'),
     );
     $page['table']['#rows'][] = $row;
   }
@@ -130,7 +135,7 @@ function ces_bank_exchange_list_page($country) {
     $countries = country_get_list();
     $page['text'] = array(
       '#type' => 'markup',
-      '#value' => t('There are no active exchanges in %country.', array('%country'=>$countries[$country])),
+      '#value' => t('There are no active exchanges in %country.', array('%country' => $countries[$country])),
     );
   }
   else {
@@ -140,32 +145,32 @@ function ces_bank_exchange_list_page($country) {
         array(
           'data' => t('Code'),
           'field' => 'code',
-          'sort' => 'asc'
+          'sort' => 'asc',
         ),
         array(
           'data' => t('Name'),
           'field' => 'name',
-          'sort' => 'asc'
+          'sort' => 'asc',
         ),
         array(
           'data' => t('Region'),
           'field' => 'region',
-          'sort' => 'asc'
+          'sort' => 'asc',
         ),
         array(
           'data' => t('Town'),
           'field' => 'town',
-          'sort' => 'asc'
+          'sort' => 'asc',
         ),
         array(
           'data' => t('Accounts')  ,
           'field' => 'accounts',
-          'sort' => 'asc'
+          'sort' => 'asc',
         ),
         array(
           'data' => t('Currency'),
           'field' => 'currencysymbol',
-          'sort' => 'asc'
+          'sort' => 'asc',
         ),
       ),
       '#rows' => array(),
@@ -177,23 +182,28 @@ function ces_bank_exchange_list_page($country) {
         $exchange['region'],
         $exchange['town'],
         $exchange['accounts'],
-        $exchange['currencysymbol']
+        $exchange['currencysymbol'],
       );
       $page['table']['#rows'][] = $row;
     }
   }
   return $page;
 }
+/**
+ * TODO: document.
+ */
 function ces_bank_exchange_accounts_page() {
   $bank = new Bank();
   $exchange = ces_bank_get_current_exchange();
   $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id']));
-  //accounts per user
+  // Accounts per user.
   $useraccounts = array();
-  foreach($accounts as $account) {
-    foreach($account['users'] as $user) {
+  foreach ($accounts as $account) {
+    foreach ($account['users'] as $user) {
       $uid = $user['user'];
-      if(!isset($useraccounts[$uid])) $useraccounts[$uid] = array();
+      if (!isset($useraccounts[$uid])) {
+        $useraccounts[$uid] = array();
+      }
       $useraccounts[$uid][] = $account;
     }
   }
@@ -223,9 +233,9 @@ function ces_bank_exchange_accounts_page() {
     ),
   );
   $counter = 1;
-  foreach($useraccounts as $uid => $accounts) {
+  foreach ($useraccounts as $uid => $accounts) {
     $user = user_load($uid);
-    $parity = ($counter % 2 == 0)?'even':'odd';
+    $parity = ($counter % 2 == 0) ? 'even' : 'odd';
     $row = array(
       '#type' => 'container',
       '#attributes' => array('class' => array('ces-account-user', $parity)),
@@ -245,12 +255,12 @@ function ces_bank_exchange_accounts_page() {
       '#type' => 'container',
       '#attributes' => array('class' => array('ces-accounts-column')),
     );
-    foreach($accounts as $account) {
+    foreach ($accounts as $account) {
       $row['accounts']['name'] = array('#type' => 'container', '#attributes' => array());
       $row['accounts']['name'][] = array('#markup' => $account['name']);
       $row['accounts']['balance'] = array('#type' => 'container', '#attributes' => array('class' => array('ces-currency-amount')));
       $row['accounts']['balance'][] = array(
-        '#markup' => $bank->formatAmount($account['balance'], $exchange, TRUE)
+        '#markup' => $bank->formatAmount($account['balance'], $exchange, TRUE),
       );
     }
     $page['table'][] = $row;
@@ -259,8 +269,8 @@ function ces_bank_exchange_accounts_page() {
   return $page;
   /*
   $page = array();
-  
-  
+
+
   $table = array(
     '#theme' => 'table',
     '#header' => array(
@@ -286,6 +296,9 @@ function ces_bank_exchange_accounts_page() {
   return $page;*/
 }
 
+/**
+ * TODO: document.
+ */
 function ces_bank_account_list_page() {
   global $user;
   $bank = new Bank();
@@ -294,8 +307,8 @@ function ces_bank_account_list_page() {
   foreach ($accounts as $account) {
     $exchange = $bank->getExchange($account['exchange']);
     $accform = array(
-        '#type' => 'fieldset',
-        '#title' => t('Account') . ' ' . $account['name'],
+      '#type' => 'fieldset',
+      '#title' => t('Account') . ' ' . $account['name'],
     );
     $accform['exchange'] = array(
       '#type' => 'item',
@@ -328,12 +341,15 @@ function ces_bank_account_list_page() {
   }
   return $page;
 }
+/**
+ * TODO: document.
+ */
 function ces_bank_admin_page() {
   $bank = new Bank();
   $page = array();
   $page['new_exchanges'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Exchange requests'),
+    '#type' => 'fieldset',
+    '#title' => t('Exchange requests'),
   );
   $exchanges = $bank->getAllExchanges(array('state' => 0));
   if (!empty($exchanges)) {
@@ -355,7 +371,7 @@ function ces_bank_admin_page() {
   return $page;
 }
 /**
- *
+ * TODO: Document.
  */
 function ces_bank_permissions_page() {
   $bank = new Bank();
@@ -380,7 +396,7 @@ function ces_bank_permissions_page() {
       array(
         'data' => t('Scope type'),
         'field' => 'scope',
-        'sort' => 'asc'
+        'sort' => 'asc',
       ),
       array(
         'data' => t('Scope identifier'),
@@ -400,7 +416,7 @@ function ces_bank_permissions_page() {
       $perm['object'],
       $perm['objectid'],
       $perm['scope'],
-      $perm['scopeid']
+      $perm['scopeid'],
     );
     $actions = array();
     if ($bank->access('admin', 'permission', $perm['id'])) {
@@ -466,9 +482,12 @@ function ces_bank_limitchain_list_page() {
   }
   return $page;
 }
+/**
+ * TODO: document.
+ */
 function ces_bank_limitchain_view($limitchain) {
   $bank = new Bank();
-  foreach($limitchain['limits'] as $key => $value){
+  foreach ($limitchain['limits'] as $key => $value) {
     $limitchain['limits'][$key]['value'] = $bank->formatAmount($value['value'], ces_bank_get_current_exchange(), TRUE);
   }
   $page = array(
@@ -476,9 +495,11 @@ function ces_bank_limitchain_view($limitchain) {
     'limitchain' => $limitchain,
     'limitclasses' => module_invoke_all('account_limit_classes'),
   );
-  
   return $page;
 }
+/**
+ * TODO: document.
+ */
 function ces_bank_exchange_view() {
   $exchange = ces_bank_get_current_exchange();
   $page = array(
@@ -487,6 +508,9 @@ function ces_bank_exchange_view() {
   );
   return $page;
 }
+/**
+ * TODO: document.
+ */
 function ces_bank_account_view() {
   $account = ces_bank_get_current_account();
   $page = array(
@@ -494,20 +518,20 @@ function ces_bank_account_view() {
     '#theme' => 'ces_bank_account_view',
   );
   $bank = new Bank();
-  //Add and override some items
+  // Add and override some items.
   $exchange = $bank->getExchange($account['exchange']);
   $page['account']['exchange'] = $exchange['name'];
   $users = reset($account['users']);
   $accuser = user_load($users['user']);
   $page['account']['username'] = $accuser->name;
-  //TODO: these arrays are repeated in ces_bank_account_form(). They should be
-  //shared.
+  // TODO: these arrays are repeated in ces_bank_account_form(). They should be
+  // shared.
   $kinds = array(
     0 => t('Individual'),
     1 => t('Shared'),
     2 => t('Organization'),
     3 => t('Company'),
-    4 => t('Public')
+    4 => t('Public'),
   );
   $states = array(
     0 => t('Hidden'),
@@ -522,27 +546,29 @@ function ces_bank_account_view() {
   return $page;
 }
 /**
- * @param $id int transaction id.
+ * TODO: Document.
+ *
+ * @param int $transaction
+ *   transaction id.
  */
 function ces_bank_transaction_view($transaction) {
   $bank = new Bank();
-  
+
   $fromaccount = $bank->getTransactionFromAccount($transaction);
   $toaccount = $bank->getTransactionToAccount($transaction);
   $page = array(
     '#theme' => 'ces_bank_transaction_view',
   );
   $page['transaction'] = $transaction;
-  $page['transaction']['amount'] = $bank->formatAmount($transaction['amount'], ces_bank_get_current_exchange(), true);
+  $page['transaction']['amount'] = $bank->formatAmount($transaction['amount'], ces_bank_get_current_exchange(), TRUE);
   $page['fromaccount'] = $fromaccount;
   $page['toaccount'] = $toaccount;
   $page['toexchange'] = $bank->getExchange($toaccount['exchange']);
-  if ($fromaccount['exchange'] != $toaccount['exchange']) {  
+  if ($fromaccount['exchange'] != $toaccount['exchange']) {
     $page['fromexchange'] = $bank->getExchange($fromaccount['exchange']);
   }
   else {
     $page['fromexchange'] = &$page['toexchange'];
   }
-  
   return $page;
 }

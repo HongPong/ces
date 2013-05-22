@@ -3,6 +3,7 @@
  * @file
  * CES banking logic layer.
  */
+
 /**
  * @ingroup ces.bank
  * @{
@@ -783,7 +784,7 @@ class Bank {
     return TRUE;
   }
   /**
-   * Auxiliar
+   * Auxiliar.
    * @see newTransaction
    */
   private function transactionFormToRecord($record) {
@@ -1289,10 +1290,10 @@ class LocalAccount extends DBObject implements Account {
     }
     return $record;
   }
-/**
- * Saves extra data.
- * @see createAccount
- */
+  /**
+   * Saves extra data.
+   * @see createAccount
+   */
   public function saveExtraData() {
     if (!empty($this->id)) {
       foreach ($this->users as $accuser) {
@@ -1341,7 +1342,7 @@ class LocalAccount extends DBObject implements Account {
   }
   /**
    * Changes local account state to active.
-   */  
+   */
   public function activate() {
     $this->state = LocalAccount::STATE_ACTIVE;
   }
@@ -1353,7 +1354,7 @@ class LocalAccount extends DBObject implements Account {
   }
   /**
    * TODO: document.
-   */  
+   */
   public function getCode() {
     return drupal_substr($this->name, 4);
   }
@@ -1364,6 +1365,7 @@ class LocalAccount extends DBObject implements Account {
     return $this->users;
   }
   /**
+   * TODO: Document.
    * @return Exchange
    *   the exchange object to which this account belongs.
    */
@@ -1407,6 +1409,7 @@ class LimitChain extends DBObject {
    */
   protected $limits;
   /**
+   * TODO: Document.
    * @override
    */
   public function loadRecord(&$record) {
@@ -1426,6 +1429,9 @@ class LimitChain extends DBObject {
       $this->limits = $s->loadCollection(array('limitchain' => $this->id));
     }
   }
+  /**
+   * TODO: Document.
+   */
   public function getRecord() {
     $record = parent::getRecord();
     $record['limits'] = array();
@@ -1435,12 +1441,13 @@ class LimitChain extends DBObject {
     return $record;
   }
   /**
+   * TODO: Document.
    * @override
    */
   public function saveExtraData() {
     $s = new Serializer('AccountLimit');
     $newids = array();
-    //create/update limits
+    // create/update limits.
     foreach ($this->limits as $limit) {
       $s->save($limit);
       $newids[] = $limit->id;
@@ -1502,7 +1509,7 @@ class LimitChain extends DBObject {
 /**
  * Generic class for account limits. Each account limit limites one aspect of accounts.
  */
-abstract class AccountLimit extends DBObject{
+abstract class AccountLimit extends DBObject {
   public static $table = 'ces_limit';
   /**
    * @var int
@@ -1547,7 +1554,7 @@ abstract class AccountLimit extends DBObject{
     if (!$this->block) {
       return TRUE;
     }
-      // Non-blocking limits always approve transactions.
+    // Non-blocking limits always approve transactions.
     else {
       $value = $this->getAccountValue($account);
       $newvalue = $value;
@@ -1674,7 +1681,7 @@ interface Transaction {
   /**
    * TODO: document.
    * @return int
-   * The id of the user who has created this transaction.
+   *   The id of the user who has created this transaction.
    */
   public function getUser();
   /**
@@ -1839,17 +1846,19 @@ class BasicTransaction extends DBObject implements Transaction {
   public static $table = 'ces_transaction';
   /**
    * TODO: document.
-   */  
-  public function getId(){
+   */
+  public function getId() {
     return $this->id;
   }
   /**
    * TODO: document.
    *
-   * @return the amount of this transaction in the given currency.
+   * @return float
+   *   the amount of this transaction in the given currency.
    *
-   * @param $currency The currency to be used. If ommited it returns the value
-   * in the seller's exchange currency.
+   * @param Currency $currency 
+   *   The currency to be used. If omitted it returns the value
+   *   in the seller's exchange currency.
    */
   public function getAmount(Currency $currency = NULL) {
     if ($currency != NULL) {
@@ -1970,7 +1979,7 @@ class BasicTransaction extends DBObject implements Transaction {
       if ($messagesFrom === TRUE) {
         $messages = $messagesTo;
       }
-      elseif ($messagesTo === TRUE ) {
+      elseif ($messagesTo === TRUE) {
         $messages = $messagesFrom;
       }
       else {
@@ -2008,7 +2017,7 @@ class BasicTransaction extends DBObject implements Transaction {
     $s = new Serializer('LocalAccount');
     $accountFrom = $s->load($this->fromaccount);
     $accountTo = $s->load($this->toaccount);
-    // Revoke transaction from both accounts
+    // Revoke transaction from both accounts.
     try {
       $this->amount = -$this->amount;
       $accountTo->applyTransaction($this);
@@ -2051,108 +2060,108 @@ class BasicTransaction extends DBObject implements Transaction {
  * Abstract class for transaction decorators.
  */
 abstract class DecoratedTransaction extends DBObject implements Transaction {
-    /**
-     * @var Transaction
-     */
-    private $parent;
-    public static $table = 'ces_transaction';
+  /**
+   * @var Transaction
+   */
+  private $parent;
+  public static $table = 'ces_transaction';
   /**
    * TODO: document.
    */
-    public function getId() {
-      return $this->parent->getId();
-    }
+  public function getId() {
+    return $this->parent->getId();
+  }
   /**
    * TODO: document.
    */
-    public function getAmount(Currency $currency = NULL) {
-      return $this->parent->getAmount($currency);
-    }
+  public function getAmount(Currency $currency = NULL) {
+    return $this->parent->getAmount($currency);
+  }
   /**
    * TODO: document.
    */
-    public function getUser() {
-      return $this->parent->getUser();
-    }
+  public function getUser() {
+    return $this->parent->getUser();
+  }
   /**
    * TODO: document.
    */
-    public function getConcept() {
-      return $this->parent->getConcept();
-    }
+  public function getConcept() {
+    return $this->parent->getConcept();
+  }
   /**
    * TODO: document.
    */
-    public function getFromAccountName() {
-      return $this->parent->getFromAccountName();
-    }
+  public function getFromAccountName() {
+    return $this->parent->getFromAccountName();
+  }
   /**
    * TODO: document.
    */
-    public function getToAccountName() {
-      return $this->parent->getToAccountName();
-    }
+  public function getToAccountName() {
+    return $this->parent->getToAccountName();
+  }
   /**
    * TODO: document.
    */
-    public function getParent() {
-      return $this->parent;
-    }
+  public function getParent() {
+    return $this->parent;
+  }
   /**
    * TODO: document.
    */
-    public function getState() {
-      return $this->parent->getState();
-    }
+  public function getState() {
+    return $this->parent->getState();
+  }
   /**
    * TODO: document.
    */
-    public function getLog($state) {
-      return $this->parent->getLog($state);
-    }
+  public function getLog($state) {
+    return $this->parent->getLog($state);
+  }
   /**
    * TODO: document.
    */
-    public function log($messages) {
-      return $this->parent->log($messages);
-    }
+  public function log($messages) {
+    return $this->parent->log($messages);
+  }
   /**
    * TODO: document.
    */
-    public function trigger() {
-      return $this->parent->trigger();
-    }
+  public function trigger() {
+    return $this->parent->trigger();
+  }
   /**
    * TODO: document.
    */
-    public function check() {
-      return $this->parent->check();
-    }
+  public function check() {
+    return $this->parent->check();
+  }
   /**
    * TODO: document.
    */
-    public function apply() {
-      return $this->parent->apply();
-    }
+  public function apply() {
+    return $this->parent->apply();
+  }
   /**
    * TODO: document.
    */
-    public function revoke() {
-      return $this->parent->revoke();
-    }
+  public function revoke() {
+    return $this->parent->revoke();
+  }
   /**
    * TODO: document.
    */
-    public function setState($state) {
-      return $this->parent->setState($state);
-    }
+  public function setState($state) {
+    return $this->parent->setState($state);
+  }
   /**
    * TODO: document.
    */
-    public function __construct($parent, $record) {
-      parent::__construct($record);
-      $this->parent = $parent;
-    }
+  public function __construct($parent, $record) {
+    parent::__construct($record);
+    $this->parent = $parent;
+  }
 }
 /**
  * This class extends the basic transaction features to allow transactions
@@ -2187,9 +2196,10 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $torecord['fromaccount'] = $toexchange->getVirtualAccount($fromexchange)->id;
     $totransaction = new InterExchangeTransaction(
             new BasicTransaction($torecord),
-            array('side' => InterExchangeTransaction::$TO,
-                  'pairid' => NULL,
-                 )
+            array(
+              'side' => InterExchangeTransaction::$TO,
+              'pairid' => NULL,
+            ),
             );
     $st = new Serializer('InterExchangeTransaction');
     $st->save($totransaction);
@@ -2199,9 +2209,10 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $fromrecord['amount'] = $totransaction->getAmount($fromexchange->getCurrency());
     $fromtransaction = new InterExchangeTransaction(
             new BasicTransaction($fromrecord),
-            array('side' => InterExchangeTransaction::$FROM,
-                  'pairid' => $totransaction->getId(),
-                 )
+            array(
+              'side' => InterExchangeTransaction::$FROM,
+              'pairid' => $totransaction->getId(),
+            ),
             );
     $st->save($fromtransaction);
     $totransaction->pairid = $fromtransaction->getId();
@@ -2235,7 +2246,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
    * TODO: document.
    */
   public function apply() {
-    //Apply the two virtual transactions.
+    // Apply the two virtual transactions.
     $this->getParent()->apply();
     $pair = $this->getPair();
     $pair->getParent()->apply();
@@ -2351,7 +2362,7 @@ class UserPermission {
   /**
    * TODO: document.
    *
-   * @param $user int
+   * @param int $userid
    */
   public function __construct($userid) {
     global $user;
@@ -2365,9 +2376,9 @@ class UserPermission {
   /**
    * Todo document this.
    *
-   * @param $permission int or string
-   * @param $object String
-   * @param $objectid int
+   * @param int or string $permission
+   * @param String $object
+   * @param int $objectid
    *
    * @return bool
    *   whether user of this Permissions object has access of type given by
@@ -2460,7 +2471,7 @@ class UserPermission {
   }
   /**
    * TODO document.
-   * @return boolean
+   * @return bool
    *   Whether (object1,objectid1) belongs to (object2, objectid2).
    */
   private function belongs($object1, $objectid1, $object2, $objectid2) {
