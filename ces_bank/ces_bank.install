@@ -3,6 +3,7 @@
  * @file
  * Install, update and uninstall functions for the ces bank module.
  */
+
 /**
  * Implements hook_install().
  */
@@ -64,7 +65,9 @@ function _ces_bank_create_default_exchange() {
   return $ok1!==FALSE && $ok2!==FALSE;
 }*/
 /**
- * Create permissions that, by default, all people will have. These include:
+ * Create permissions that, by default, all people will have. 
+ *
+ * These include:
  *  - See global statistics
  *  - Create a new exchange
  */
@@ -84,19 +87,19 @@ function _ces_bank_create_default_permissions() {
     'scope' => 'global',
     'scopeid' => 0,
   );
-  $ok = (drupal_write_record('ces_permission', $record) !== FALSE ) && $ok;
+  $ok = (drupal_write_record('ces_permission', $record) !== FALSE) && $ok;
   return $ok;
 }
 
 /**
  * Implements hook_enable().
  */
-function ces_bank_enable() {}
+function ces_bank_enable() {
+}
 /**
  * Implements hook_uninstall().
  */
 function ces_bank_uninstall() {
-
 }
 /**
  * Implements hook_schema().
@@ -117,95 +120,95 @@ function ces_bank_schema() {
         'type' => 'varchar',
         'length' => '4',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'state' => array(
         'description' => 'the state of this exchange',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'shortname' => array(
         'description' => 'Exchange short name',
         'type' => 'varchar',
         'length' => '31',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'name' => array(
         'description' => 'Exchange name',
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'country' => array(
         'description' => 'Exchange country',
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'region' => array(
         'description' => 'Exchange region',
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'town' => array(
         'description' => 'Exchange town',
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'website' => array(
         'description' => 'Exchange website',
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'map' => array(
         'description' => 'Exchange map',
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'admin' => array(
         'description' => 'UID of the exchange administrator.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'limitchain' => array(
         'description' => 'ID of the default limit chain for this exchange.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'currencysymbol' => array(
         'type' => 'varchar',
         'length' => '7',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'currencyname' => array(
         'type' => 'varchar',
         'length' => '31',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'currenciesname' => array(
         'type' => 'varchar',
         'length' => '31',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'currencyvalue' => array(
         'description' => 'Value of this currency.',
@@ -213,48 +216,48 @@ function ces_bank_schema() {
         'precision' => 31,
         'scale' => 4,
         'not null' => TRUE,
-        'default' => 1
+        'default' => 1,
       ),
       'currencyscale' => array(
         'description' => 'How many decimals use for this currency. Between 0 and 4.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'created' => array(
-         'type' => 'int',
-         'unsigned' => TRUE,
-         'not null' => TRUE,
-         'default' => 0
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
       ),
       'modified' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'data' => array(
         'description' => 'PHP-serialized exchange configuration.',
         'type' => 'blob',
         'not null' => TRUE,
-        'serialize' => TRUE
-      )
+        'serialize' => TRUE,
+      ),
     ),
     'primary key' => array('id'),
     'unique keys' => array(
-      'code' => array('code')
+      'code' => array('code'),
     ),
     'foreign keys' => array(
       'limitchain' => array(
         'table' => 'ces_limitchain',
-        'columns' => array('limitchain' => 'id')
+        'columns' => array('limitchain' => 'id'),
       ),
       'admin' => array(
         'table' => 'user',
-        'columns' => array('admin' => 'uid')
-      )
-    )
+        'columns' => array('admin' => 'uid'),
+      ),
+    ),
   );
   $schema['ces_limit'] = array(
     'description' => 'Acount limit objects',
@@ -270,14 +273,14 @@ function ces_bank_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'classname' => array(
         'description' => 'Limit type. The name of the class implementing it.',
         'type' => 'varchar',
         'length' => '31',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'value' => array(
         'description' => 'A value from which the account is in warning',
@@ -285,13 +288,13 @@ function ces_bank_schema() {
         'precision' => 31,
         'scale' => 4,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'block' => array(
         'description' => 'Whether to block transaction when the limit is reached.',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'weight' => array(
         'description' => 'Wheight of this limit within the chain.',
@@ -303,17 +306,16 @@ function ces_bank_schema() {
         'description' => 'PHP-serialized type-specific options.',
         'type' => 'blob',
         'not null' => TRUE,
-        'serialize' => TRUE
-      )
-        
+        'serialize' => TRUE,
+      ),
     ),
-    'primary key' => array( 'id' ),
+    'primary key' => array('id'),
     'foreign keys' => array(
       'limitchain' => array(
         'table' => 'ces_limitchain',
-        'columns' => array('limitchain' => 'id')
+        'columns' => array('limitchain' => 'id'),
       ),
-    )
+    ),
   );
   $schema['ces_limitchain'] = array(
     'description' => 'Chain of account limits.',
@@ -327,13 +329,13 @@ function ces_bank_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'name' => array(
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'description' => array(
         'description' => 'A full description of this limit or to which accounts is it applied.',
@@ -342,13 +344,13 @@ function ces_bank_schema() {
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array( 'id'),
+    'primary key' => array('id'),
     'foreign keys' => array(
       'exchange' => array(
-    'table' => 'ces_exchange',
-    'columns' => array('exchange' => 'id')
+        'table' => 'ces_exchange',
+        'columns' => array('exchange' => 'id'),
       ),
-    )
+    ),
   );
   $schema['ces_account'] = array(
     'description' => 'Exchange account',
@@ -363,14 +365,14 @@ function ces_bank_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'notnull' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'name' => array(
         'description' => 'Public Account ID. It is 4-letter exchange code + account number',
         'type' => 'varchar',
         'length' => '31',
         'notnull' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'balance' => array(
         'description' => 'Account balance.',
@@ -378,38 +380,38 @@ function ces_bank_schema() {
         'precision' => 31,
         'scale' => 4,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'limitchain' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'state' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'created' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'modified' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'kind' => array(
         'description' => 'One of INDIVIDUAL (0), SHARED (1), ORGANIZATION (2), COMPANY (3), PUBLIC (4)',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
     ),
     'primary key' => array('id'),
@@ -419,13 +421,13 @@ function ces_bank_schema() {
     'foreign keys' => array(
       'exchange' => array(
         'table' => 'ces_exchange',
-        'columns' => array('exchange', 'id')
+        'columns' => array('exchange', 'id'),
       ),
       'limitchain' => array(
         'table' => 'ces_limitchain',
-        'columns' => array('limitchain' , 'id' )
-      )
-    )
+        'columns' => array('limitchain', 'id'),
+      ),
+    ),
   );
   $schema['ces_accountuser'] = array(
     'description' => 'Relation n by n between users and accounts.',
@@ -439,21 +441,21 @@ function ces_bank_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'account' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'privilege' => array(
         'description' => 'Type of user relation with this account. 0 => user is owner.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
-      )
+        'default' => 0,
+      ),
     ),
     'primary key' => array('id'),
     'unique keys' => array(
@@ -462,13 +464,13 @@ function ces_bank_schema() {
     'foreign keys' => array(
       'user' => array(
         'table' => 'user',
-        'columns' => array('user', 'uid')
+        'columns' => array('user', 'uid'),
       ),
       'account' => array(
         'table' => 'ces_account',
-        'colums' => array('account', 'id')
-      )
-    )
+        'colums' => array('account', 'id'),
+      ),
+    ),
   );
   $schema['ces_transaction'] = array(
     'description' => 'Account transaction',
@@ -482,26 +484,26 @@ function ces_bank_schema() {
         'type' => 'varchar',
         'length' => '31',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'toaccount' => array(
         'type' => 'varchar',
         'length' => '31',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'amount' => array(
         'type' => 'numeric',
         'precision' => 31,
         'scale' => 4,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'user' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'concept' => array(
         'type' => 'text',
@@ -512,48 +514,48 @@ function ces_bank_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'created' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'modified' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'data' => array(
         'description' => 'PHP-serialized transaction extra data.',
         'type' => 'blob',
         'not null' => TRUE,
-        'serialize' => TRUE
+        'serialize' => TRUE,
       ),
       'decoration' => array(
         'description' => 'PHP-serialized transaction options.',
         'type' => 'blob',
         'not null' => TRUE,
-        'serialize' => TRUE
-      )
+        'serialize' => TRUE,
+      ),
     ),
     'primary key' => array('id'),
     'foreign keys' => array(
       'fromaccount' => array(
         'table' => 'ces_account',
-        'columns' => array( 'fromaccount' => 'name' )
+        'columns' => array('fromaccount' => 'name'),
       ),
       'toaccount' => array(
         'table' => 'ces_account',
-        'columns' => array( 'toaccount' => 'name' )
+        'columns' => array('toaccount' => 'name'),
       ),
       'user' => array(
         'table' => 'user',
-        'columns' => array( 'user' => 'uid' )
-      )
-    )
+        'columns' => array('user' => 'uid'),
+      ),
+    ),
   );
   $schema['ces_permission'] = array(
     'description' => 'Permissions',
@@ -573,7 +575,7 @@ function ces_bank_schema() {
         'type' => 'varchar',
         'length' => '31',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'objectid' => array(
         'type' => 'int',
@@ -585,7 +587,7 @@ function ces_bank_schema() {
         'type' => 'varchar',
         'length' => '31',
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
       ),
       'scopeid' => array(
         'type' => 'int',

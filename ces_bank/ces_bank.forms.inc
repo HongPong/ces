@@ -3,13 +3,15 @@
  * @file
  * Forms definition for ces_bank module
  */
+
 /**
  * Exchange form. Create, view and edit forms.
  */
 function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
   global $user;
   $bank = new Bank();
-  if (isset($form_state['values'])) {//form rebuild
+  if (isset($form_state['values'])) {
+    // Form rebuild.
     $exchange = $form_state['values'];
   }
   else {
@@ -27,17 +29,17 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
   }
 
   $form['exchange'] = array(
-    '#type' => 'vertical_tabs'
+    '#type' => 'vertical_tabs',
   );
 
   $form['exchange']['operation'] = array(
     '#type' => 'value',
-    '#value' => $op
+    '#value' => $op,
   );
 
   $form['exchange']['state'] = array(
     '#type' => 'value',
-    '#value' => isset($exchange['state'])?$exchange['state']:0,
+    '#value' => isset($exchange['state']) ? $exchange['state'] : 0,
   );
 
   if ($op != 'new') {
@@ -51,7 +53,7 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#type' => 'fieldset',
     '#title' => t('General')
   );
-  
+
   $form['exchange']['general']['code'] = array(
     '#type' => 'textfield',
     '#description' => t('Four uppercase letters identifying this exchange.'),
@@ -108,7 +110,7 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
 
   $form['exchange']['location'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Location')
+    '#title' => t('Location'),
   );
 
   include_once DRUPAL_ROOT . '/includes/locale.inc';
@@ -204,7 +206,8 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#type' => 'fieldset',
     '#title' => t('Members'),
   );
-  if (!empty($exchange['state'])) { //exchange has been activated
+  if (!empty($exchange['state'])) {
+    // Exchange has been activated.
     $limitchains = $bank->getAllLimitChains($exchange['id']);
     $options = array();
     foreach ($limitchains as $id => $limit) {
@@ -217,13 +220,7 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
       '#options' => $options,
       '#default_value' => $exchange['limitchain'],
     );
-    
-    $form['exchange']['messages'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Messages'),
-    );
   }
-
   switch ($op) {
     case 'activate':
       $value = t('Activate exchange');
@@ -272,13 +269,6 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
   $op = $form_state['values']['operation'];
   try{
     if ( $op == 'new') {
-      //Create admin user.
-      user_register_submit($form['exchange']['admin'], $form_state);
-      //Set the new user as the exchange administrator.
-      $form_state['values']['admin'] = $form_state['values']['uid'];
-    }
-    $form_state['values']['name'] = $form_state['values']['fullname'];
-    if ( $op == 'new') {
       $bank->createExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully created. You must wait for the system administrator to set up the exchange before it is operative. You will recive an e-mail notification within the next few days.', array('%code' => $form_state['values']['code'])));
     }
@@ -286,7 +276,7 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
       $bank->updateExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully updated.', array('%code' => $form_state['values']['code'])));
     }
-    elseif ($op == 'activate') {
+    if ($op == 'activate') {
       $bank->activateExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully activated. There has been sent an email to the new exchange administrator.', array('%code' => $form_state['values']['code'])));
     }
