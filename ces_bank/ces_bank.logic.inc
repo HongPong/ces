@@ -2238,12 +2238,10 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $torecord = $record;
     $torecord['fromaccount'] = $toexchange->getVirtualAccount($fromexchange)->id;
     $totransaction = new InterExchangeTransaction(
-            new BasicTransaction($torecord),
-            array(
-              'side' => InterExchangeTransaction::$TO,
-              'pairid' => NULL,
-            ),
-            );
+      new BasicTransaction($torecord), array(
+        'side' => InterExchangeTransaction::$TO,
+        'pairid' => NULL,
+      ));
     $st = new Serializer('InterExchangeTransaction');
     $st->save($totransaction);
 
@@ -2251,12 +2249,10 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $fromrecord['toaccount'] = $fromexchange->getVirtualAccount($toexchange)->id;
     $fromrecord['amount'] = $totransaction->getAmount($fromexchange->getCurrency());
     $fromtransaction = new InterExchangeTransaction(
-            new BasicTransaction($fromrecord),
-            array(
-              'side' => InterExchangeTransaction::$FROM,
-              'pairid' => $totransaction->getId(),
-            ),
-            );
+      new BasicTransaction($fromrecord), array(
+        'side' => InterExchangeTransaction::$FROM,
+        'pairid' => $totransaction->getId(),
+      ));
     $st->save($fromtransaction);
     $totransaction->pairid = $fromtransaction->getId();
     return $totransaction;
