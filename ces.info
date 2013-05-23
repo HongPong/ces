@@ -1,5 +1,6 @@
 name = CES
 description = A social currency exchange system including banking and shopping. 
 files[] = common.db.logic.inc
+files[] = ces.test
 core = 7.x
 package = ces

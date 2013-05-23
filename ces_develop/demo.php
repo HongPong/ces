@@ -59,7 +59,10 @@ $net1 = array(
   'currencyvalue' => '1.0',
   'currencyscale' => '2',
   'admin' => $users['Riemann']->uid,
-  'data' => array(),
+  'data' => array(
+    'registration_offers' => 1,
+    'registration_wants' => 0,
+  ),
 );
 $bank->createExchange($net1);
 $bank->activateExchange($net1);
@@ -78,7 +81,10 @@ $net2 = array(
   'currencyvalue' => '0.1',
   'currencyscale' => '2',
   'admin' => $users['Fermat']->uid,
-  'data' => array(),
+  'data' => array(
+    'registration_offers' => 0,
+    'registration_wants' => 0,
+  ),
 );
 $bank->createExchange($net2);
 $bank->activateExchange($net2);

@@ -826,7 +826,7 @@ class Exchange extends DBObject{
   public static function getDefaultExchange() {
     $record = array(
       'id' => 0,
-      'code' => 'AAAA',
+      'code' => '',
       'active' => 0,
       'shortname' => '',
       'name' => '',

@@ -342,7 +342,7 @@ function ces_bank_admin_page() {
       '#items' => array(),
     );
     foreach ($exchanges as $exchange) {
-      $list['#items'][] = l($exchange['code'] . ' - ' . $exchange['name'], 'ces/bank/exchange/' . $exchange['id'] . '/activate');
+      $list['#items'][] = l($exchange['code'] . ' - ' . $exchange['name'], 'ces/admin/exchange/' . $exchange['id'] . '/activate');
     }
     $page['new_exchanges']['new_exchanges_list'] = $list;
   }

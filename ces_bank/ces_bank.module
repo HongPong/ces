@@ -271,6 +271,17 @@ function ces_bank_menu() {
     'access arguments' => array('edit', 'exchange', CES_CURRENT_EXCHANGE),
     'weight' => 910,
   );
+  $menu['ces/admin/exchange/%/activate'] = array(
+    'title' => 'Activate exchange',
+    'description' => 'Activate exchange',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_exchange_form', 'activate', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'global', 0),
+  );
   /* Begin limit chains */
   $menu['ces/admin/limit'] = array(
     'title' => 'Limits',
@@ -469,6 +480,7 @@ function _ces_bank_replace_current_args(&$args) {
 /**
  * Implements hook_menu().
  */
+/*
 function _ces_bank_menu() {
   $menu = array();
   //DASHBOARD
@@ -762,7 +774,7 @@ function _ces_bank_menu() {
   }
   return $menu;
 }
-
+*/
 /**
  * Implements hook_account_limit_classes().
  */
@@ -1098,7 +1110,7 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
   return $replacements;
 }
 /**
- * Implements ces_motify_messages().
+ * Implements ces_notify_messages().
  */
 function ces_bank_ces_notify_messages($key, $langcode) {
   $a = array();
@@ -1106,7 +1118,7 @@ function ces_bank_ces_notify_messages($key, $langcode) {
   switch ($key) {
     case 'new exchange':
       return array(
-        'subject' => t('New Exchange [exchange:code] - [exchange:shortname] request', $a, $b),
+        'subject' => t('[Integral CES] New Exchange [exchange:code] - [exchange:shortname] request', $a, $b),
         'body' => t('A new exchange has been registered.
 
 Visit the CES administrative interface at [url:absolute]/admin/ces to activate or discard it. See some details below:
@@ -1124,12 +1136,28 @@ User: [exchange:admin:name] <[exchange:admin:mail]>
       );
     case 'exchange activated':
       return array(
-          'subject' => t('Exchange [exchange:code] activated', $a, $b),
-          'body' => t('Your new exchange request has been activated. bla bla bla', $a, $b),
+          'subject' => t('[Integral CES] Exchange [exchange:code] - [exchange:shortname] activated', $a, $b),
+          'body' => t('Dear [exchange:admin:name],
+The new [exchange:fullname] has been activated. So far we have only created the 
+administrator\'s account, [exchange:code]0000. Don\'t use this account for 
+personal operations. Create a new user and a new account for your personal 
+activity within the exchange network.
+
+As there is great demand for this web service we have to limit the period that 
+we can give you to get this new exchange operational. If there is no trading 
+activity within six months of today then unfortunately we will have to take the
+exchange down to make space for others.
+
+This is only the begining. You have a great work making this exchange network a
+really useful tool.
+
+Please confirm that you have received this welcome letter.
+
+IntegralCES', $a, $b),
       );
     case 'new account':
       return array(
-        'subject' => t('New account request for [exchange:code] - [exchange:shortname]', $a, $b),
+        'subject' => t('[[exchange:shortname]] New account request [account:name]', $a, $b),
         'body' => t('Another account request for [exchange:name]. Go to the administrative interface at [url:absolute]/ces/bank/exchange/admin to activate or discard it.
 
 See registration details below:
@@ -1137,49 +1165,108 @@ See registration details below:
 Exchange: [exchange:code]
 Account name: [account:name]
 Account type: [account:kind]
-User: [account:user:name]', $a, $b)
+User: [account:user:fullname]
+
+Integral CES
+', $a, $b)
       );
     case 'account activated':
       return array(
-        'subject' => t('Account activated'),
-        'body' => t('Your account [account:name] has been activated. You can now start using it and bla bla bla',
-                $a , $b)
+        'subject' => t('[[exchange:shortname]] Account activated'),
+        'body' => t('Dear [account:name],
+
+Welcome to the [exchange:fullname], your local exchange of the global Integral 
+Community Exchange System platform.
+Below are the details you need to access your account on the [exchange:code] 
+network. To get to the web site go to [url:absolute]. This will take you to the 
+login page.
+
+Enter the following information:
+
+Account No: [account:code]
+Password: *
+
+The web interface is available in several languages. If you wish to select 
+another language, click on the your name at the top right corner. In your 
+personal profile simply select the language of your preference.
+
+Please read the <a href="http://www.integralces.net/doc/user">User Guide</a> to 
+find out how the site works. 
+
+After looking around please enter your \'offers\' and \'wants\' by clicking on 
+the My offers and My wants buttons at the left menu. If you provided offers with 
+your application you may add as many additional offerings as you like. 
+
+You can also upload a photograph of yourself so that other users can see what 
+you look like.
+
+Feel free to contact any advertiser in the \'Offers\' list to purchase any goods 
+and services offered. Please don\'t wait for someone to buy from you before you 
+use the system. You don\'t need to be in credit before making a purchase; going 
+into debit is part of the system and simply represents your commitment to the 
+community.
+
+If you require any assistance please contact me. I will be glad to help.
+
+Happy trading!
+
+[exchange:shortname] administrator:
+[exchange:admin:fullname]
+[exchange:admin:mail]
+[exchange:admin:mainphone]
+', $a , $b)
       );
     case 'account debited':
       return array(
-        'subject' => t('Your account has been debited'),
+        'subject' => t('[[exchange:shortname]] Your account [transaction:fromaccount:name] has been debited'),
         'body' => t(
-'[transaction:fromaccount:exchange:name]: Your account [transaction:fromaccount:name] has been debited.
+'[transaction:fromaccount:exchange:name]: Your account [transaction:fromaccount:name] 
+has been debited.
 
-See transaction details below:
+Transaction details:
 
 Seller account: [transaction:toaccount:name]
-Seller name: [transaction:toaccount:user:name] <[transaction:toaccount:user:mail]>
+Seller name: [transaction:toaccount:user:fullname]
+
+Buyer account: [transaction:fromaccount:name]
+Buyer name: [transaction:fromaccount:user:fullname]
+
 Description: [transaction:concept]
 Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
-Ordered by: [transaction:user:name] <[transaction:user:mail]>
 
-If you were satisfied with this purchase please <a href="">leave a recommendation</a> for the seller.
+Ordered by: [transaction:user:fullname] <[transaction:user:mail]>
 
-View your current <a href="">statement of account</a>.
+View your current <a href="[url:absolute]/ces/bank/account/transaction">statement of account</a>.
 
-If this debit is incorrect contact the seller within 10 days to have it corrected.
+If this debit is incorrect contact the seller or the exchange administrator 
+within 10 days to have it corrected.
 
+Seller contact:
+[transaction:toaccount:user:fullname] 
+mail: <[transaction:toaccount:user:mail]>
+phone: [transaction:toaccount:user:mainphone]
 ', $a, $b),
       );
     case 'account credited':
       return array(
-        'subject' => t('Your account [transaction:toaccount:name] has been credited'),
+        'subject' => t('[[exchange:shortname]] Your account [transaction:toaccount:name] has been credited'),
         'body' => t('[transaction:toaccount:exchange:name]:Your account [transaction:toaccount:name] has been credited.
 
-See transaction details below:
+Transaction details:
+
+Seller account: [transaction:toaccount:name]
+Seller name: [transaction:toaccount:user:fullname]
 
 Buyer account: [transaction:fromaccount:name]
-Buyer name: [transaction:fromaccount:user:name] <[transaction:fromaccount:user:mail]>
-Description: [transaction:concept]
-Amount: [transaction:amount][transaction:toaccount:exchange:currencysymbol]
-Ordered by: [transaction:user:name] <[transaction:user:mail]>
+Buyer name: [transaction:fromaccount:user:fullname]
 
+Description: [transaction:concept]
+Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
+
+Ordered by: [transaction:user:fullname] <[transaction:user:mail]>
+
+If this credit is incorrect contact the seller or the exchange administrator 
+within 10 days to have it corrected.
 ', $a, $b),
       );
   }

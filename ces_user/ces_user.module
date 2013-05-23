@@ -316,3 +316,46 @@ function ces_user_main_page() {
     )
   );
 }
+
+/*
+ * Implements hook_token_info().
+ */
+function ces_user_token_info() {
+  return array(
+    'tokens' => array(
+      'user' => array(
+        'fullname' => array(
+          'name' => t('Full user name'),
+          'description' => t('The full real user name'),
+        ),
+        'mainphone' => array(
+          'name' => t('Main user telephone'),
+          'description' => t('The main user telephone'),
+        ),
+      )
+    )
+  );
+}
+/*
+ * Implements hook_tokens().
+ */
+function ces_user_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+  $sanitize = !empty($options['sanitize']);
+  if ($type == 'user' && !empty($data['user'])) {
+    $user = $data['user'];
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'fullame':
+          $fullname = ces_bank_get_full_username($user);
+          $replacements[$original] = $sanitize?check_plain($fullname):$fullname;
+          break;
+        case 'mainphone':
+          $mainphone = ces_user_get_main_phone($user);
+          $replacements[$original] = $sanitize?check_plain($mainphone):$mainphone;
+          break;
+      }
+    }
+  }
+  return $replacements;
+}
