@@ -65,7 +65,7 @@ function _ces_bank_create_default_exchange() {
   return $ok1!==FALSE && $ok2!==FALSE;
 }*/
 /**
- * Create permissions that, by default, all people will have. 
+ * Create permissions that, by default, all people will have.
  *
  * These include:
  *  - See global statistics

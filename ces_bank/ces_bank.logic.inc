@@ -411,6 +411,7 @@ class Bank {
    *
    * @param int $id
    *   transaction identifier.
+   *
    * @return TRUE
    */
   public function deleteTransaction($id) {
@@ -432,6 +433,7 @@ class Bank {
   }
   /**
    * Creates a banking account.
+   *
    * @param array $record
    *   account object record.
    */
@@ -476,6 +478,7 @@ class Bank {
   }
   /**
    * Gets a banking account.
+   *
    * @param int $id
    *   account identifier.
    * @return array
@@ -486,10 +489,12 @@ class Bank {
   }
   /**
    * Gets an account object record by its name.
+   *
    * @param string $name
    *   account name. 4 letters and 4 numbers.
-   * @return array 
-   *   an account given its name
+   *
+   * @return array
+   *   an account given its name.
    */
   public function getAccountByName($name) {
     $s = new Serializer('LocalAccount');
@@ -697,7 +702,7 @@ class Bank {
   }
   /*
    * Gets the names of classes that implement AccountLimit interface.
-   * @return array 
+   * @return array
    *   the names of classes that implement the AccountLimit interface.
    */
   /*
@@ -768,7 +773,7 @@ class Bank {
    * Get the records with permissions for this user id.
    * 
    * @param int $userid
-   *  the user identifier.
+   *   the user identifier.
    * @return array
    *   The records to which the userid has permissions.
    */
@@ -783,7 +788,7 @@ class Bank {
   }
   /**
    * Formats the amount for an exchange.
-   * @return string 
+   * @return string
    *   A string representation of $amount following $exchange preference
    *   and $format option.
    */
@@ -1085,7 +1090,7 @@ class Exchange extends DBObject {
     // single specific DB query if causes performance problems.
     $s = new Serializer('LocalAccount');
     $accounts = $s->loadCollection(array('exchange' => $this->id), 'name');
-    $start = floor((count($accounts) - 1) / 2); 
+    $start = floor((count($accounts) - 1) / 2);
     // This is a bit tricky.
     $code = !empty($accounts) ? $accounts[$start]->getCode() : 0;
     if (!is_numeric($code)) {
@@ -1231,7 +1236,9 @@ class Currency extends DBObject {
     return $newamount;
   }
 }
-
+/**
+ * TODO: document interface Account.
+ */
 interface Account {
   /**
    * In most implementations, gets name of account holder.
@@ -2238,12 +2245,10 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $torecord = $record;
     $torecord['fromaccount'] = $toexchange->getVirtualAccount($fromexchange)->id;
     $totransaction = new InterExchangeTransaction(
-            new BasicTransaction($torecord),
-            array(
-              'side' => InterExchangeTransaction::$TO,
-              'pairid' => NULL,
-            ),
-            );
+      new BasicTransaction($torecord), array(
+        'side' => InterExchangeTransaction::$TO,
+        'pairid' => NULL,
+      ));
     $st = new Serializer('InterExchangeTransaction');
     $st->save($totransaction);
 
@@ -2251,12 +2256,10 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $fromrecord['toaccount'] = $fromexchange->getVirtualAccount($toexchange)->id;
     $fromrecord['amount'] = $totransaction->getAmount($fromexchange->getCurrency());
     $fromtransaction = new InterExchangeTransaction(
-            new BasicTransaction($fromrecord),
-            array(
-              'side' => InterExchangeTransaction::$FROM,
-              'pairid' => $totransaction->getId(),
-            ),
-            );
+      new BasicTransaction($fromrecord), array(
+        'side' => InterExchangeTransaction::$FROM,
+        'pairid' => $totransaction->getId(),
+      ));
     $st->save($fromtransaction);
     $totransaction->pairid = $fromtransaction->getId();
     return $totransaction;

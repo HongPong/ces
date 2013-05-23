@@ -3,6 +3,10 @@
  * @file
  * Tests the functionality bank module.
  */
+
+/**
+ * TODO: Document BankTestCase for testing banking functionality.
+ */
 class BankTestCase extends DrupalWebTestCase {
   /**
    * @var user
@@ -52,7 +56,9 @@ class BankTestCase extends DrupalWebTestCase {
    * @var exchange2 record.
    */
   protected $exchange2;
-
+  /**
+   * Info for bank test function.
+   */
   public static function getInfo() {
     return array(
       'name' => 'ces_bank',
@@ -60,7 +66,9 @@ class BankTestCase extends DrupalWebTestCase {
       'group' => 'CES',
     );
   }
-
+  /**
+   * Set up for bank test function.
+   */
   public function setUp() {
     // Enable any modules required for the test. It also enables dependences.
     parent::setUp('ces_bank');
@@ -113,46 +121,48 @@ class BankTestCase extends DrupalWebTestCase {
       'currencyscale' => '2',
     );
   }
-
+  /**
+   * Main code for bank test function.
+   */
   public function testBank() {
-    //Setup menu block.
+    // Setup menu block.
     $this->setupMenuBlock();
-    //Create first exchange.
+    // Create first exchange.
     $this->exchange1 = $this->createExchange($this->exchange1Admin, $this->exchange1);
     $this->exchange1 = $this->activateExchange($this->globalAdminUser, $this->exchange1);
-    //Create two accounts for 1st exchange.
+    // Create two accounts for 1st exchange.
     $account11 = $this->createAccount($this->exchange1User1, $this->exchange1);
     $account12 = $this->createAccount($this->exchange1User2, $this->exchange1);
     $account11 = $this->activateAccount($this->exchange1Admin, $account11);
     $account12 = $this->activateAccount($this->exchange1Admin, $account12);
-    //Create three transactions between these two accounts.
+    // Create three transactions between these two accounts.
     $this->createTransaction($this->exchange1User1, $account11, $account12, '1.50', 'First transaction');
     $this->createTransaction($this->exchange1User1, $account11, $account12, '2.50', 'Second transaction');
     $this->createTransaction($this->exchange1User2, $account12, $account11, '1.00', 'Third transaction');
-    //Check balances.
+    // Check balances.
     $this->assertBalance($this->exchange1User1, $account11, '3.00');
     $this->assertBalance($this->exchange1User2, $account12, '-3.00');
-    //Create second exchange.
+    // Create second exchange.
     $this->exchange2 = $this->createExchange($this->exchange2Admin, $this->exchange2);
     $this->exchange2 = $this->activateExchange($this->globalAdminUser, $this->exchange2);
-    //Create two accounts for 2nd exchange.
+    // Create two accounts for 2nd exchange.
     $account21 = $this->createAccount($this->exchange2User1, $this->exchange2);
     $account22 = $this->createAccount($this->exchange2User2, $this->exchange2);
     $account21 = $this->activateAccount($this->exchange2Admin, $account21);
     $account22 = $this->activateAccount($this->exchange2Admin, $account22);
-    //Create a transaction between the two accounts.
+    // Create a transaction between the two accounts.
     $this->createTransaction($this->exchange2User1, $account21, $account22, '15', 'First transaction in ECOs');
-    //Create a failed transaction between exchanges.
+    // Create a failed transaction between exchanges.
     $this->createTransaction($this->exchange2User2, $account22, $account11, '25', 'First inter exchange transaction', FALSE);
-    //The two virtual should been created. Activate them.
+    // The two virtual should been created. Activate them.
     $this->activateAccount($this->exchange1Admin, array('name' => 'HORABCNA'));
     $this->activateAccount($this->exchange2Admin, array('name' => 'BCNAHORA'));
-    //Re-trigger transaction.
+    // Re-trigger transaction.
     $this->triggerTransaction($this->exchange2User2);
-    //Assert currency conversion.
+    // Assert currency conversion.
     $this->assertBalance($this->exchange2User2, $account11, '10.00');
     $this->assertBalance($this->exchange1User1, $account12, '0.50');
-    //Configure limit chains.
+    // Configure limit chains.
     $this->addLimit($this->exchange1Admin, 'default', 'AbsoluteDebitLimit', '-1.0', TRUE);
     $this->addLimit($this->exchange2Admin, 'default', 'AbsoluteDebitLimit', '0.0', TRUE);
     $this->createTransaction($this->exchange1User2, $account12, $account11, '1.0', 'Limit chain pass test', TRUE);
@@ -160,6 +170,9 @@ class BankTestCase extends DrupalWebTestCase {
     $this->createTransaction($this->exchange2User1, $account21, $account22, '10', 'Limit chain pass test', TRUE);
     $this->createTransaction($this->exchange2User1, $account21, $account22, '1', 'Limit chain fail test', FALSE);
   }
+  /**
+   * Add limit test function.
+   */
   protected function addLimit($user, $chain, $classname, $value, $block) {
     $this->drupalLogin($user);
     $this->drupalGet('ces/bank/dashboard');
@@ -177,6 +190,9 @@ class BankTestCase extends DrupalWebTestCase {
     $this->drupalPost(NULL, $edit, t('Update limit chain'));
     $this->assertRaw(t('Limit chain %chain successfully updated.', array('%chain' => $chain)));
   }
+  /**
+   * Set up menu block test function.
+   */
   protected function setupMenuBlock() {
     $this->drupalLogin($this->globalAdminUser);
     $this->drupalPost('admin/structure/block', array('blocks[ces_bank_navigation][region]' => 'sidebar_first'), t('Save blocks'));
@@ -184,13 +200,19 @@ class BankTestCase extends DrupalWebTestCase {
     $this->drupalGet('ces/bank/dashboard');
     $this->assertText(t('CES Navigation'));
   }
+  /**
+   * Assert balance test function.
+   */
   protected function assertBalance($user, $account, $amount) {
-    //TODO: assuere account is the given. Assert balance also in account statement.
+    // @TODO: assuere account is the given. Assert balance also in account statement.
     $this->drupalLogin($user);
     $this->drupalGet('ces/bank/dashboard');
     $this->clickLink(t('Dashboard'));
     $this->assertText($amount);
   }
+  /**
+   * Activate account test function.
+   */
   protected function activateAccount($admin, $record) {
     $this->drupalLogin($admin);
     $this->drupalGet('ces/bank/dashboard');
@@ -200,6 +222,9 @@ class BankTestCase extends DrupalWebTestCase {
     $this->assertRaw(t('Account sucessfully activated.'));
     return $record;
   }
+  /**
+   * Create exchange bank test function.
+   */
   protected function createExchange($admin, $record) {
     $this->drupalLogin($admin);
     $this->drupalGet('ces/bank/exchange/new');
@@ -210,6 +235,9 @@ class BankTestCase extends DrupalWebTestCase {
     $this->assertRaw(t('Exchange %code successfully created.', array('%code' => $record['code'])));
     return $record;
   }
+  /**
+   * Activate exchange bank test function.
+   */
   protected function activateExchange($globaladmin, $record) {
     $this->drupalLogin($globaladmin);
     $this->drupalGet('ces/bank/admin');
@@ -221,19 +249,23 @@ class BankTestCase extends DrupalWebTestCase {
     $this->assertText(t('Limits'));
     return $record;
   }
+  /**
+   * Create account bank test function.
+   */
   protected function createAccount($user, $exchange) {
     static $lastAccountId = array();
-    if (!isset($lastAccountId[$exchange['code']]))
+    if (!isset($lastAccountId[$exchange['code']])) {
       $lastAccountId[$exchange['code']] = 0;
+    }
     $this->drupalLogin($user);
     $this->drupalGet('ces/bank/exchange');
-    //little hack:
+    // Little hack:
     $index = ($exchange['code'] == $this->exchange1['code']) ? 0 : 1;
     $this->clickLink(t('Register'), $index);
     $record = array(
       'kind' => '0',
     );
-    $name = $exchange['code'] . '000' . ($lastAccountId[$exchange['code']]+1);
+    $name = $exchange['code'] . '000' . ($lastAccountId[$exchange['code']] + 1);
     $this->assertFieldByName('name', $name);
     $this->assertFieldByName('username', $user->name);
     $this->drupalPost(NULL, $record, t('Create account'));
@@ -243,23 +275,26 @@ class BankTestCase extends DrupalWebTestCase {
     $record['username'] = $user->name;
     return $record;
   }
+  /**
+   * Create transaction bank test function.
+   */
   protected function createTransaction($user, $seller, $buyer, $amount, $concept, $successful = TRUE) {
     $this->drupalLogin($user);
     $this->drupalGet('ces/bank/dashboard');
     $this->clickLink(t('Charge a sale'));
     $edit = array(
-        'fromaccountname' => $buyer['name'],
-        'concept' => $concept,
-        'amount' => $amount,
+      'fromaccountname' => $buyer['name'],
+      'concept' => $concept,
+      'amount' => $amount,
     );
     if (drupal_substr($seller['name'], 0, 4) != drupal_substr($buyer['name'], 0, 4)) {
-      //Interexchange transaction
+      // Interexchange transaction.
       $name = drupal_substr($buyer['name'], 0, 4);
       $element = current($this->xpath($this->constructFieldXpath('name', 'fromexchange')));
       $options = $this->getAllOptions($element);
       foreach ($options as $option) {
-        if (((string)$option) == $name) {
-          $this->drupalPostAJAX(NULL, array('fromexchange' => ((string)$option['value'])), 'fromexchange');
+        if (((string) $option) == $name) {
+          $this->drupalPostAJAX(NULL, array('fromexchange' => ((string) $option['value'])), 'fromexchange');
           break;
         }
       }
@@ -278,6 +313,9 @@ class BankTestCase extends DrupalWebTestCase {
       $this->assertNoText($okmessage);
     }
   }
+  /**
+   * Trigger transaction bank test function.
+   */
   protected function triggerTransaction($user, $successful = TRUE) {
     $this->drupalLogin($user);
     $this->drupalGet('ces/bank/dashboard');

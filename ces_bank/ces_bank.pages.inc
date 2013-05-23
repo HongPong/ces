@@ -229,7 +229,7 @@ function ces_bank_exchange_accounts_page() {
         '#type' => 'container',
         '#attributes' => array('class' => array('ces-currency-amount')),
         'title' => array('#markup' => t('Balance')),
-      )
+      ),
     ),
   );
   $counter = 1;

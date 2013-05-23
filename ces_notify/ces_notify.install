@@ -3,6 +3,10 @@
  * @file
  * Install, update and uninstall functions for the ces_notify module.
  */
+
+/**
+ * Notify DB schema.
+ */
 function ces_notify_schema() {
   $schema = array();
   $schema['ces_messages'] = array(

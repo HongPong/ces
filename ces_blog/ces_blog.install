@@ -1,5 +1,12 @@
 <?php
+/**
+ * @file
+ * DB install for CES blog.
+ */
 
+/**
+ * Installer for CES blog.
+ */
 function ces_blog_install() {
   // During installation, the t() function is unavailable, so we use get_t()
   // to store the name of the translation function.
@@ -26,9 +33,8 @@ function ces_blog_install() {
   $content_type = node_type_set_defaults($blog);
   node_add_body_field($content_type);
 
-  // Save the content type
+  // Save the content type.
   node_type_save($content_type);
-
 
   // Load the instance definition for our content type's body
   // http://api.drupal.org/api/function/field_info_instance/7
@@ -37,12 +43,12 @@ function ces_blog_install() {
   // Save our changes to the body field instance.
   // http://api.drupal.org/api/function/field_update_instance/7
   field_update_instance($body_instance);
-  
-  if(!field_info_field('ces_blog_exchange')) {
+
+  if (!field_info_field('ces_blog_exchange')) {
     field_create_field(array(
-      'field_name' => 'ces_blog_exchange', 
-      'type' => 'number_integer', 
-      'cardinality' => 1
+      'field_name' => 'ces_blog_exchange',
+      'type' => 'number_integer',
+      'cardinality' => 1,
     ));
     field_create_instance(array(
       'field_name' => 'ces_blog_exchange',
@@ -52,17 +58,19 @@ function ces_blog_install() {
       'description' => 'The id of the exchange the entry is associated to',
       'required' => TRUE,
       'widget' => array(
-        'type' => 'ces_blog_exchange'
+        'type' => 'ces_blog_exchange',
       ),
       'display' => array(
         'default' => array(
-          'type' => 'ces_blog_exchange'
+          'type' => 'ces_blog_exchange',
         ),
-      )
+      ),
     ));
   }
 }
-
+/**
+ * Uninstaller function for CES blog.
+ */
 function ces_blog_uninstall() {
   $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
   $result = db_query($sql, array(':type' => 'ces_blog'));
