@@ -509,7 +509,7 @@ function ces_bank_limitchain_form_submit($form, &$form_state) {
 function ces_bank_account_form($form, &$form_state, $account = NULL) {
   $bank = new Bank();
   if ($account != NULL) {
-    if(!is_array($account)) {
+    if (!is_array($account)) {
       $account = $bank->getAccount($account);
     }
     $exchange = $bank->getExchange($account['exchange']);
@@ -521,7 +521,7 @@ function ces_bank_account_form($form, &$form_state, $account = NULL) {
   
   $admin = ces_bank_access('admin', 'exchange', $exchange['id']);
   
-  if(!empty($form_state['values'])) {
+  if (!empty($form_state['values'])) {
     $account = array_merge($account, $form_state['values']);
   }
   
@@ -661,7 +661,7 @@ function ces_bank_account_form_validate($form, &$form_state) {
 }
 function ces_bank_account_form_submit($form, &$form_state) {
   $record = &$form_state['values'];
-  foreach($record['users'] as $key => $accuser) {
+  foreach ($record['users'] as $key => $accuser) {
     if (isset($record['id'])) {
       $record['users'][$key]['account'] = $record['id'];
     }
@@ -679,7 +679,7 @@ function ces_bank_account_form_submit($form, &$form_state) {
     else {
       $previous = $bank->getAccount($record['id']);
       $bank->updateAccount($record);
-      if($previous['state'] == LocalAccount::STATE_HIDDEN && $record['state'] == LocalAccount::STATE_ACTIVE) {
+      if ($previous['state'] == LocalAccount::STATE_HIDDEN && $record['state'] == LocalAccount::STATE_ACTIVE) {
         $bank->activateAccount($record);
       }
     }
@@ -709,7 +709,8 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
   }
   if ($op == 'new') {
     $exchangeid = $arg;
-  } else if ($op == 'edit') {
+  }
+  elseif ($op == 'edit') {
     $from = $bank->getTransactionFromAccount($arg);
     $to = $bank->getTransactionToAccount($arg);
     $toexchange = $exchanges[$to['exchange']];
@@ -726,7 +727,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
     '#type' => 'value',
     '#value' => $op,
   );
-  if(isset($form_state['values']['id'])){
+  if (isset($form_state['values']['id'])) {
    $form['id'] = array(
      '#type' => 'value',
      '#value' => $form_state['values']['id'], 
@@ -1111,8 +1112,9 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
   $bank = new Bank();
   try {
     $account = $bank->getAccount($account_id); //throws exception
-  }catch(Exception $e){
-    return array('error' => array('#markup'=>$e->getMessage()));
+  }
+  catch (Exception $e) {
+    return array('error' => array('#markup' => $e->getMessage()));
   }
   $exchange = $bank->getExchange($account['exchange']);
 
@@ -1233,15 +1235,15 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
     $uid = $useracc['user'];
     
     $row[] = array('data' => $other_account['name'] . ' - ' . l(ces_user_get_name(user_load($uid)), 'user/' . $uid));
-    $row[] = array('data' => l(check_plain($transaction['concept']),'ces/bank/account/transaction/' . $transaction['id'] . '/view'));
+    $row[] = array('data' => l(check_plain($transaction['concept']), 'ces/bank/account/transaction/' . $transaction['id'] . '/view'));
     
-    $amount = ($transaction['amount'])*($type==0?1:-1);
-    $row[] = array('data' => $bank->formatAmount($amount, $exchange, true, true), 'class' => 'ces-currency-amount');
+    $amount = ($transaction['amount']) * ($type == 0 ? 1 : -1);
+    $row[] = array('data' => $bank->formatAmount($amount, $exchange, TRUE, TRUE), 'class' => 'ces-currency-amount');
     
     if (in_array((int)$transaction['state'], array(3))) {
       $inibalance += $amount;
     }
-    $row[] = array('data' => $bank->formatAmount($inibalance, $exchange, true, false), 'class' => 'ces-currency-amount');
+    $row[] = array('data' => $bank->formatAmount($inibalance, $exchange, TRUE, FALSE), 'class' => 'ces-currency-amount');
     /*
     $actions = array();
     if ($transaction['state'] == Transaction::STATE_NEW || $transaction['state'] == Transaction::STATE_REJECTED) {
