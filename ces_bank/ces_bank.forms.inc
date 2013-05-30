@@ -268,11 +268,18 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
   $bank = new Bank();
   $op = $form_state['values']['operation'];
   try{
-    if ( $op == 'new') {
+    if ($op == 'new') {
+      // Create admin user.
+-     user_register_submit($form['exchange']['admin'], $form_state);
+-     // Set the new user as the exchange administrator.
+-     $form_state['values']['admin'] = $form_state['values']['uid'];
+    }
+    $form_state['values']['name'] = $form_state['values']['fullname'];
+    if ($op == 'new') {
       $bank->createExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully created. You must wait for the system administrator to set up the exchange before it is operative. You will recive an e-mail notification within the next few days.', array('%code' => $form_state['values']['code'])));
     }
-    elseif ( $op == 'edit') {
+    elseif ($op == 'edit') {
       $bank->updateExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully updated.', array('%code' => $form_state['values']['code'])));
     }
