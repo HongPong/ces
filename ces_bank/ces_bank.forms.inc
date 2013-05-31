@@ -21,8 +21,8 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     else {
       $exchange = $bank->getExchange($exchange_id);
     }
-    //We change the exchange field name from "name" to "fullname" so it doesn't
-    //conflict with user's form "name" field.
+    // We change the exchange field name from "name" to "fullname" so it doesn't
+    // conflict with user's form "name" field.
     $exchange['fullname'] = $exchange['name'];
     unset($exchange['name']);
     $form_state['values'] = $exchange;
@@ -30,6 +30,7 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
 
   $form['exchange'] = array(
     '#type' => 'vertical_tabs',
+    '#description' => t('Settings for an individual exchange in Community Exchange System.'),
   );
 
   $form['exchange']['operation'] = array(
@@ -51,12 +52,13 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
 
   $form['exchange']['general'] = array(
     '#type' => 'fieldset',
-    '#title' => t('General')
+    '#title' => t('General'),
+    '#description' => t('General settings for this exchange.'),
   );
 
   $form['exchange']['general']['code'] = array(
     '#type' => 'textfield',
-    '#description' => t('Four uppercase letters identifying this exchange.'),
+    '#description' => t('Four numbers or uppercase letters identifying this exchange.'),
     '#title' => t('Code'),
     '#default_value' => $exchange['code'],
     '#size' => 4,
@@ -84,18 +86,19 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
 
   $form['exchange']['general']['website'] = array(
     '#type' => 'textfield',
-    '#description' => t('Website or blog of this exchange.'),
+    '#description' => t('Website or blog of this exchange. Include http:// or https://'),
     '#title' => t('Website'),
     '#default_value' => $exchange['website'],
     '#required' => FALSE,
   );
 
-  //Create new exclusive user for administer this exchange. Later it will be
-  //editable from the standard user form.
+  // Create new exclusive user for administer this exchange. Later it will be
+  // editable from the standard user form.
   if ($op == 'new') {
     $form['exchange']['admin'] = array(
       '#type' => 'fieldset',
       '#title' => t('Administrator'),
+      '#description' => t('Administrator settings for this exchange. One Drupal user is the administrator.'),
     );
     $adminform = &$form['exchange']['admin'];
     $adminform['#user'] = $user;
@@ -105,12 +108,16 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     $form['exchange']['admin'] = array(
       '#type' => 'value',
       '#value' => $exchange['admin'],
+      '#description' => t('Administrator settings for this exchange. One Drupal user is the administrator.'),
+
     );
   }
 
   $form['exchange']['location'] = array(
     '#type' => 'fieldset',
     '#title' => t('Location'),
+    '#description' => t('Location settings for this exchange.'),
+
   );
 
   include_once DRUPAL_ROOT . '/includes/locale.inc';
@@ -146,17 +153,19 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#description' => t('Paste here a Google Map URL pointing to your location. Something like http://maps.google.com/maps?...'),
     '#title' => t('Map'),
     '#default_value' => $exchange['map'],
-    '#required' => TRUE,
+    '#required' => FALSE,
   );
 
   $form['exchange']['currency'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Currency')
+    '#title' => t('Currency'),
+    '#description' => t('Currency settings for this exchange.'),
+
   );
 
   $form['exchange']['currency']['currencysymbol'] = array(
     '#type' => 'textfield',
-    '#description' => t('Symbol for the currency of this exchange. It can be any unicode character.'),
+    '#description' => t('Symbol for the currency of this exchange. It can be any 3 unicode characters.'),
     '#title' => t('Symbol'),
     '#default_value' => $exchange['currencysymbol'],
     '#required' => TRUE,
@@ -186,7 +195,7 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
 
   $form['exchange']['currency']['currencyvalue'] = array(
     '#type' => 'textfield',
-    '#description' => t('Value of this currency against the value of an average hour of labour. This is used to convert amounts between two currecies. If your currency worths 10u/hour then put "0.1". If you want to use your national currency as standard of value, look for the average cost of an our of labour or choose an approximation based on your community reality.'),
+    '#description' => t('Value of this currency against the value of an average hour of labor. This is used to convert amounts between two currencies. If your currency is worth 10u/hour then put "0.1". If you want to use your national currency as standard of value, look for the average cost of an hour of labor or choose an approximation based on your community reality.'),
     '#title' => t('Value'),
     '#default_value' => $exchange['currencyvalue'],
     '#required' => TRUE,
@@ -205,6 +214,8 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
   $form['exchange']['users'] = array(
     '#type' => 'fieldset',
     '#title' => t('Members'),
+    '#description' => t('Settings for users registering with exchange. Sub-modules add settings here.'),
+
   );
   if (!empty($exchange['state'])) {
     // Exchange has been activated.
@@ -267,7 +278,7 @@ function ces_bank_exchange_form_validate($form, &$form_state) {
 function ces_bank_exchange_form_submit($form, &$form_state) {
   $bank = new Bank();
   $op = $form_state['values']['operation'];
-  try{
+  try {
     if ($op == 'new') {
       // Create admin user.
 -     user_register_submit($form['exchange']['admin'], $form_state);
@@ -695,6 +706,26 @@ function ces_bank_account_form_submit($form, &$form_state) {
     drupal_set_message(t('An error occurred while saving the account record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
   }
 }
+/**
+ * Form for deleting an account in an exchange. TODO.
+ */
+function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
+  $bank = new Bank();
+  if ($account != NULL) {
+    if (!is_array($account)) {
+      $account = $bank->getAccount($account);
+    }
+    $exchange = $bank->getExchange($account['exchange']);
+  }
+  $admin = ces_bank_access('admin', 'exchange', $exchange['id']);
+  $form['bankaccount'] = array();
+  $form['bankaccount']['title'] = array(
+    '#type' => 'item',
+    '#title' => t('Delete Exchange Account'),
+    '#markup' => t('Deleting accounts is not implemented yet.'),
+  );
+  return $form;
+}
 
 /**
  * Single transaction form
@@ -1042,7 +1073,7 @@ function ces_bank_transaction_confirm_form_submit($form, &$form_state) {
   $result = TRUE;
   $op = $form_state['values']['operation'];
   $id = '';
-  try{
+  try {
     switch ($op) {
       case 'new':
         $record = $form_state['edit_page'];
@@ -1400,7 +1431,7 @@ function ces_bank_permission_form_validate($form, &$form_state) {
 function ces_bank_permission_form_submit($form, &$form_state) {
   $bank = new Bank();
   $op = $form_state['values']['operation'];
-  try{
+  try {
     if ( $op == 'new') {
       $bank->createPermission($form_state['values']);
       drupal_set_message(t('Permission successfully created.'));

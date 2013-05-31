@@ -136,6 +136,11 @@ class Serializer {
    * @return array Objects with attribute $key = $value ordered by $order field.
    */
   public function loadCollection(array $conditions, $order = NULL) {
+    if (!db_table_exists($this->table)) {
+      // This prevents a fatal error in case CES table is gone.
+      drupal_set_message(t('WARNING: CES table @table is missing. You probably need to reinstall CES.'), array('@table' => $this->table));
+      return FALSE;
+    }
     $query = db_select($this->table, 't')->fields('t');
     if (isset($conditions['createdsince'])) {
       $query = $query->condition('created', $conditions['createdsince'], '>=');

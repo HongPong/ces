@@ -2,7 +2,7 @@
 /**
  * @file
  * This file is a script for filling the database with initial data for
- * demo pruposes. It empties the users and all ces tables and populates
+ * demo purposes. It empties the users and all ces tables and populates
  * it with 10 users with their respective accounts in two exchanges and
  * applies random transactions between them.
  */
@@ -31,8 +31,12 @@ db_delete('ces_limitchain')->execute();
 db_delete('ces_messages')->execute();
 db_delete('ces_permission')->execute();
 db_delete('ces_transaction')->execute();
-db_delete('ces_offerwant')->execute();
-db_delete('ces_category')->execute();
+if (db_table_exists('ces_offerwant')) {
+  db_delete('ces_offerwant')->execute();
+}
+if (db_table_exists('ces_category')) {
+  db_delete('ces_category')->execute();
+}
 ces_bank_install();
 //CREATE STUFF
 $bank = new Bank();

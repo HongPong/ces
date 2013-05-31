@@ -29,7 +29,9 @@ class Bank {
     $t = Serializer::DBTransaction();
     try {
       // Create exchange record.
-      unset($record['id']);
+      if (isset($record['id'])) {
+        unset($record['id']);
+      }
       $record['state'] = Exchange::STATE_INACTIVE;
       $this->updateObject('Exchange', $record);
       $notifier = new Notifier();
@@ -632,7 +634,13 @@ class Bank {
    *   accounts for this exchange.
    */
   public function getDefaultAccount($exchangeId) {
+    if ($exchangeId == '') {
+      drupal_set_message(t('CES Debug: getDefaultAccount: No exchangeId.'));
+    }
     $exchange = $this->getObject('Exchange', $exchangeId);
+    if ($exchange == FALSE) {
+      drupal_set_message(t('CES Debug: getDefaultAccount: exchange is false.'));
+    }
     return $exchange->getDefaultAccount()->getRecord();
   }
   /**
@@ -994,7 +1002,7 @@ class Exchange extends DBObject {
   /**
    * @var array
    */
-  public $data;
+  public $data = array();
 
   const DEFAULT_EXCHANGE_ID = 1;
   const STATE_INACTIVE = 0;
@@ -1025,20 +1033,20 @@ class Exchange extends DBObject {
   public static function getDefaultExchange() {
     $record = array(
       'id' => 0,
-      'code' => '',
+      'code' => 'XCHG',
       'active' => 0,
-      'shortname' => '',
-      'name' => '',
-      'country' => '',
-      'region' => '',
-      'town' => '',
-      'website' => '',
-      'map' => '',
+      'shortname' => 'Xchange',
+      'name' => 'Xchange Default',
+      'country' => 'Spain',
+      'region' => 'Barcelonès',
+      'town' => 'Barcelona',
+      'website' => 'http://www.example.com',
+      'map' => 'https://maps.google.com/maps?q=barcelona,+spain',
       'admin' => 1,
       'limitchain' => 1,
-      'currencysymbol' => '',
-      'currencyname' => '',
-      'currenciesname' => '',
+      'currencysymbol' => 'XCR',
+      'currencyname' => 'Xcredit',
+      'currenciesname' => 'Xcredits',
       'currencyvalue' => '1',
       'currencyscale' => 2,
       'created' => REQUEST_TIME,
@@ -1706,7 +1714,7 @@ class AbsoluteCreditLimit extends AccountLimit {
  * A transaction is an amount of money to be transferred from one account to
  * another account. The basic transaction moves certanin quantity of money through
  * two accounts within the same exchange. There are other king of transactions
- * moving currency between servers or third party applications. In each echange
+ * moving currency between servers or third party applications. In each exchange
  * there is an special account called 'virtual account'. This account acts as the
  * foreign account for all inter-exchange transactions. It is also used to
  * temporally save the money in delayed transactions.

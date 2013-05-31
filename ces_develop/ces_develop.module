@@ -9,7 +9,7 @@ function ces_develop_menu() {
     'page callback' => 'ces_develop_run_script',
     'page arguments' => array(3),
     'access callback' => 'user_access',
-    'access argunents' => array('administer users'),
+    'access arguments' => array('administer users'),
   );
   return $menu;
 }

@@ -346,7 +346,7 @@ function ces_user_tokens($type, $tokens, array $data = array(), array $options =
     $user = $data['user'];
     foreach ($tokens as $name => $original) {
       switch ($name) {
-        case 'fullame':
+        case 'fullname':
           $fullname = ces_bank_get_full_username($user);
           $replacements[$original] = $sanitize?check_plain($fullname):$fullname;
           break;

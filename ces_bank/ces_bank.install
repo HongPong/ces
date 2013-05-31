@@ -570,6 +570,7 @@ function ces_bank_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
+        'description' => 'view=10, use=20, edit=30, admin=40',
       ),
       'object' => array(
         'type' => 'varchar',
