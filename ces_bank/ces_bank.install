@@ -10,7 +10,7 @@
 function ces_bank_install() {
   $ok3 = _ces_bank_create_default_permissions();
   if (!$ok3) {
-    drupal_set_message(st('Error creating  default permissions.'), 'error');
+    drupal_set_message(st('Error creating default permissions.'), 'error');
   }
   if ($ok3) {
     drupal_set_message(st('Initial records created.'));
@@ -65,7 +65,7 @@ function _ces_bank_create_default_exchange() {
   return $ok1!==FALSE && $ok2!==FALSE;
 }*/
 /**
- * Create permissions that, by default, all people will have. 
+ * Create permissions that, by default, all people will have.
  *
  * These include:
  *  - See global statistics
@@ -123,7 +123,7 @@ function ces_bank_schema() {
         'default' => '',
       ),
       'state' => array(
-        'description' => 'the state of this exchange',
+        'description' => 'The state of this exchange',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,

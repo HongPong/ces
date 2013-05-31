@@ -65,7 +65,7 @@ class BankTestCase extends DrupalWebTestCase {
     $this->createExchanges();
   }
   protected function createExchanges() {
-    //Create first exchange.
+    // Create first exchange.
     $this->exchange1 = array(
       'code' => 'HORA',
       'shortname' => 'EX Bages',
@@ -87,7 +87,7 @@ class BankTestCase extends DrupalWebTestCase {
     );
     $this->createExchange($this->exchange1);
     $this->activateExchange($this->exchange1);
-    //Create second exchange.
+    // Create second exchange.
     $this->exchange2 = array(
       'code' => 'BCNA',
       'shortname' => 'EX Barna',
