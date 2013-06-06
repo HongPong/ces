@@ -9,7 +9,10 @@
  * This file contains the "active record" (approximately) pattern for loading
  * and saving objects.
  */
-
+/**
+ * Loads and saves to db objects of class DBObject. It gives a unified and
+ * drupal-indevendent way for bank logic objects to be loaded and saved.
+ */
 class Serializer {
 
   protected $className;
@@ -21,13 +24,19 @@ class Serializer {
    *      value => record
    */
   static protected $cache = array();
-
+  /**
+   * Creates a new serializer for a specific object class.
+   */
   public function __construct($className) {
     $this->className = $className;
     $class = new ReflectionClass($this->className);
     $this->table = $class->getStaticPropertyValue('table');
   }
-
+  /**
+   * Loads an object given its identifier.
+   * @return DBObject|boolean
+   *   The loaded object on success or FALSE if object can not be loaded.
+   */
   public function load($id) {
     if (!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
     if (!isset(Serializer::$cache[$this->className]['id'])) $cache[$this->className]['id'] = array();
@@ -41,6 +50,7 @@ class Serializer {
   }
   /**
    * @return int
+   *   The number of objects taht have value $value in field $key.
    */
   public function count($key, $value) {
     $query = db_select($this->table, 't')->condition($key, $value)->countQuery();
@@ -49,6 +59,7 @@ class Serializer {
   }
   /**
    * @return DBObject
+   *   A loaded object from its database record.
    */
   public function loadFromRecord($record) {
     $this->handleSerialized($record);
@@ -67,7 +78,9 @@ class Serializer {
     }
     return $obj;
   }
-
+  /**
+   * Saves an object to database.
+   */
   public function save(DBObject &$object) {
     $record = $object->getRecord();
     //Call save extra data to all implied objects.
@@ -106,9 +119,9 @@ class Serializer {
    * Performs a SQL function such as COUNT(*), SUM(*), ... on a table field for
    * those rows meeting conditions.
    *
-   * @param $key 
+   * @param $key
    *   must be SQL safe.
-   * @param array $conditions 
+   * @param array $conditions
    *   Each entry is a condition. A condition is an array of three therms.
    */
   public function selectFunctionField($function, $key, array $conditions) {
@@ -136,7 +149,7 @@ class Serializer {
    * @param string $order
    *   A field to order by.
    *
-   * @return array 
+   * @return array
    *   Objects with attribute $key = $value ordered by $order field.
    */
   public function loadCollection(array $conditions, $order = NULL) {
@@ -164,7 +177,6 @@ class Serializer {
     if ($order != NULL) {
       $query->orderBy($order);
     }
-    
     $result = $query->execute();
     $loads = array();
     while (($record = $result->fetchAssoc()) !== FALSE) {
@@ -205,6 +217,9 @@ class Serializer {
   public static function DBTransaction() {
     return db_transaction();
   }
+  /**
+   * Unserializes serialized database record fields.
+   */
   private function handleSerialized(array &$record) {
     // It would be nice if it was done automatically by Drupal, but...
     $serialized = array('data', 'decoration');
@@ -214,6 +229,9 @@ class Serializer {
       }
     }
   }
+  /**
+   * Deletes record from static cache.
+   */
   private function deleteRecordFromCache(array $record) {
     if (isset(Serializer::$cache[$this->className])) {
       foreach (Serializer::$cache[$this->className] as $key => $value) {
@@ -223,15 +241,27 @@ class Serializer {
       }
     }
   }
+  /**
+   * Deletes whole static cache.
+   */
   private function deleteCache() {
     Serializer::$cache[$this->className] = array();
   }
 }
-
+/**
+ * Special class of Serializer for those objects needing transactional load and
+ * save process. It uses drupal lock framework.
+ */
 class LockSerializer extends Serializer {
+  /**
+   * Not implemented.
+   */
   public function loadCollection(array $conditions, $order = NULL) {
     throw new Exception('Not implemented');
   }
+  /**
+   * Not implemented.
+   */
   public function loadFromUniqueKey($key, $value) {
     throw new Exception('Not implemented');
   }
@@ -266,9 +296,15 @@ class LockSerializer extends Serializer {
     return $res;
   }
 }
-
+/**
+ * Base class for all objects that are serializable with this framework.
+ */
 abstract class DBObject {
   public static $table;
+  /**
+   * @return array
+   *   The database record.
+   */
   public function getRecord() {
     // Handle decorator pattern.
     $object = $this;
@@ -302,6 +338,9 @@ abstract class DBObject {
     }
     return $record;
   }
+  /**
+   * Loads a database record to this object.
+   */
   protected function loadRecord($record) {
     $reflect = new ReflectionObject($this);
     foreach ($record as $key => $value) {
@@ -316,16 +355,30 @@ abstract class DBObject {
    */
   public function saveExtraData() {
   }
+  /**
+   * Called when this object is to be deleted. If the overrider has other
+   * DBObject objects as class members override this function to delete them.
+   */
   public function deleteExtraData() {
   }
+  /**
+   * Create a new object given its database record.
+   */
   public function __construct($record) {
     $this->loadRecord($record);
   }
+  /**
+   * The parent object for those objects using the decorator pattern.
+   * @return DBobject
+   *   The parent object or NULL if it doesn't exist.
+   */
   public function getParent() {
     return NULL;
   }
 }
-
+/**
+ * A wrapper interface for Drupal transaction objects.
+ */
 interface DBTransaction {
   public function rollback();
 }

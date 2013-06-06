@@ -1,6 +1,10 @@
 <?php
 /**
- * Implements of hook_mail().
+ * @file
+ * Implements the drupal hooks for this module.
+ */
+/**
+ * Implements hook_mail().
  */
 function ces_notify_mail($key, &$message, $params) {
   list($module, $name) = explode(' ', $key, 2);

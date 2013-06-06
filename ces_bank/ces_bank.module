@@ -7,19 +7,19 @@ define('CES_CURRENT_ACCOUNT', 'ces_current_account');
 define('CES_CURRENT_EXCHANGE', 'ces_current_exchange');
 
 /**
- * 
+ * Implements hook_help().
  */
 function ces_bank_help($path, $arg) {
   switch ($path) {
     case 'ces/bank/selleractions/sell':
-      return '<p>' . t('Charge a sale. Select the payer account, enter a short 
-        decription and the amount of the transaction. This amount will be 
+      return '<p>' . t('Charge a sale. Select the payer account, enter a short
+        decription and the amount of the transaction. This amount will be
         trasferred to your account.') . '</p>';
     case 'ces/bank/exchange/accounts':
       return '<p>' . t('All users and banking accounts of your exchange.') . '</p>';
     case 'ces/bank/account/transaction':
-      return '<p>' . t('Showing your transactions. Set the "From" and "To" 
-        dates to see a specific time range.') .'</p>';
+      return '<p>' . t('Showing your transactions. Set the "From" and "To"
+        dates to see a specific time range.') . '</p>';
     case 'ces/register/%':
       return '<p>' . t('Click on the exchange you want to join.') . '</p>';
   }
@@ -52,8 +52,7 @@ function ces_bank_theme() {
   );
 }
 /**
- * Special permissions access callback for CES banking functions. 
- * 
+ * Special permissions access callback for CES banking functions.
  */
 function ces_bank_access($permission, $object, $objectid, $account = NULL) {
   global $user;
@@ -83,7 +82,6 @@ function ces_bank_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => 990,
   );
-  
   // Superglobal menu (before login). Creating new exchange.
   $menu['ces/bank/exchange/new'] = array(
     'title' => 'New exchange',
@@ -174,7 +172,7 @@ function ces_bank_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
     'weight' => 4,
-  );  
+  );
   $menu['ces/bank/selleractions'] = array(
     'title' => 'Seller actions',
     'description' => 'Operations related to sell from your account.',
@@ -222,7 +220,7 @@ function ces_bank_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'account details', CES_CURRENT_ACCOUNT),
     'weight' => 410,
-  );  
+  );
   $menu['ces/bank/account'] = array(
     'title' => 'My account',
     'description' => 'View account details.',
@@ -247,7 +245,6 @@ function ces_bank_menu() {
     'expanded' => TRUE,
     'weight' => 600,
   );
-  
   $menu['ces/bank/exchange/accounts'] = array(
     'title' => 'Accounts',
     'description' => 'Vieu exchange accounts list',
@@ -385,7 +382,6 @@ function ces_bank_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => 990,
   );
-  
   //Superglobal menu (before login)
   $menu['ces/bank/exchange/new'] = array(
     'title' => 'New exchange',
@@ -411,7 +407,7 @@ function ces_bank_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
   $menu['ces/bank/account/transaction/list'] = array(
-    'title' => t('Account statement'),
+    'title' => 'Account statement',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 0,
   );
@@ -426,7 +422,6 @@ function ces_bank_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
   );
-  
   $menu['ces/bank/account/transaction/%ces_transaction/edit'] = array(
     'title' => 'Edit',
     'description' => 'Edit transaction.',
@@ -453,45 +448,70 @@ function ces_bank_menu() {
   );
   return $menu;
 }
+/**
+ * Implements hook_load().
+ */
 function ces_transaction_load($id = NULL) {
-  if(empty($id)) return FALSE;
+  if (empty($id) || !is_numeric($id)) {
+    return FALSE;
+  }
   $bank = new Bank();
   $transaction =  $bank->getTransaction($id);
   return $transaction;
 }
+/**
+ * Access transaction information or use.
+ */
 function ces_transaction_access($permission, $transaction, $account = NULL) {
   return ces_bank_access($permission, 'account buyer', $transaction['fromaccount'], $account)
       || ces_bank_access($permission, 'account seller', $transaction['toaccount'], $account);
 }
+/**
+ * Implements hook_load().
+ */
 function ces_limitchain_load($id = NULL) {
-  if(empty($id) || !is_numeric($id)) return FALSE;
+  if (empty($id) || !is_numeric($id)) {
+    return FALSE;
+  }
   $bank = new Bank();
   $limitchain = $bank->getLimitChain($id);
   return $limitchain;
 }
+/**
+ * Implements hook_load().
+ */
 function ces_account_load($id = NULL) {
-  if(empty($id) || !is_numeric($id)) return FALSE;
+  if (empty($id) || !is_numeric($id)) {
+    return FALSE;
+  }
   $bank = new Bank();
   $account = $bank->getAccount($id);
   return $account;
 }
+/**
+ * Calls drupal_get_form() replacing some of its arguments by the default
+ * exchange or account.
+ */
 function _ces_bank_get_form() {
   $args = func_get_args();
   _ces_bank_replace_current_args($args);
-  return call_user_func_array('drupal_get_form',$args);
+  return call_user_func_array('drupal_get_form', $args);
 }
+/**
+ * Helper function for replacing menu callback arguments.
+ */
 function _ces_bank_replace_current_args(&$args) {
   foreach ($args as $i => $arg) {
     if ($arg === CES_CURRENT_ACCOUNT) {
-      if(($account = ces_bank_get_current_account()) !== FALSE) {
+      if (($account = ces_bank_get_current_account()) !== FALSE) {
         $args[$i] = $account['id'];
       }
       else {
         $args[$i] = FALSE;
       }
     }
-    else if ($arg === CES_CURRENT_EXCHANGE) {
-      if(($account = ces_bank_get_current_account()) !== FALSE) {
+    elseif ($arg === CES_CURRENT_EXCHANGE) {
+      if (($account = ces_bank_get_current_account()) !== FALSE) {
         $args[$i] = $account['exchange'];
       }
       else {
@@ -501,312 +521,13 @@ function _ces_bank_replace_current_args(&$args) {
   }
   return $args;
 }
-
-/**
- * Implements hook_menu().
- */
-/*
-function _ces_bank_menu() {
-  $menu = array();
-  //DASHBOARD
-  $menu['ces/bank/dashboard'] = array(
-    'title' => 'Dashboard' ,
-    'description' => 'User dashboard',
-    'page callback' => 'ces_bank_account_list_page',
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => TRUE,
-    'type' => MENU_NORMAL_ITEM,
-  );
-  $menu['ces/bank/admin'] = array(
-    'title' => 'Administer CES bank',
-    'description' => 'Top administer interface for CES Bank',
-    'page callback' => 'ces_bank_admin_page',
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'global', 0),
-    'type' => MENU_NORMAL_ITEM,
-  );
-  $menu['ces/register/%'] = array(
-    'title' => 'Exchanges in your country',
-    'description' => 'List of exchanges in your country',
-    'page callback' => 'ces_bank_exchange_list_page',
-    'page arguments' => array(2),
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'global statistics', 0),
-    'type' => MENU_NORMAL_ITEM,
-  );
-  $menu['ces/bank/exchange/new'] = array(
-    'title' => 'New exchange',
-    'description' => 'Create a new exchange',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_exchange_form', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'global exchangecreator', 0),
-    'type' => MENU_LOCAL_ACTION,
-  );
-  $menu['ces/bank/exchange/%'] = array(
-    'title' => 'View exchange',
-    'description' => 'View exchange',
-    'page callback' => 'ces_bank_exchange_view',
-    'page arguments' => array(3),
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_NORMAL_ITEM,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange details', 3),
-  );
-  $menu['ces/bank/exchange/%/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-  $menu['ces/bank/exchange/%/activate'] = array(
-    'title' => 'Activate exchange',
-    'description' => 'Activate exchange',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_exchange_form', 'activate', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'global exchangeactivator', 0),
-  );
-  $menu['ces/bank/exchange/%/edit'] = array(
-    'title' => 'Edit exchange',
-    'description' => 'Edit exchange',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_exchange_form', 'edit', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('edit', 'exchange', 3),
-  );
-  $menu['ces/bank/exchange/%/admin'] = array(
-    'title' => 'Administer exchange',
-    'description' => 'Exchange administrative interface',
-    'page callback' => 'ces_bank_exchange_admin',
-    'page arguments' => array(3),
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', 3),
-  );
-  //TODO
-  $menu['ces/bank/exchange/%/delete'] = array(
-    'title' => 'Delete exchange',
-    'description' => 'Delete exchange',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_exchange_form', 'delete', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', 3),
-  );
-  //TODO
-  $menu['ces/bank/exchange/%/account'] = array(
-    'title' => 'Exchange accounts',
-    'description' => 'Exchange accounts list',
-    'page callback' => 'ces_bank_exchange_accounts_page',
-    'page arguments' => array(3),
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_NORMAL_ITEM,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange accounts', 3),
-  );
-  $menu['ces/bank/exchange/%/account/new'] = array(
-    'title' => 'New account',
-    'description' => 'Create a new account',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_account_form', 'new', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_ACTION,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'exchange accountcreator', 3),
-  );
-  //TODO
-  $menu['ces/bank/exchange/%/account/%'] = array(
-    'title' => 'View',
-    'description' => 'View account details',
-    'page callback' => 'ces_bank_account_view',
-    'page arguments' => array(5),
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_NORMAL_ITEM,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'account details', 5),
-  );
-  $menu['ces/bank/exchange/%/account/%/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-  $menu['ces/bank/exchange/%/account/%/edit'] = array(
-    'title' => 'Edit account',
-    'description' => 'Edit account details',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_account_form', 'edit', 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('edit', 'account', 5),
-  );
-  $menu['ces/bank/exchange/%/account/%/activate'] = array(
-    'title' => 'Activate account',
-    'description' => 'Activate account',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_account_form', 'activate', 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'exchange accountactivator', 3),
-  );
-  //TODO
-  $menu['ces/bank/exchange/%/account/%/delete'] = array(
-    'title' => 'Delete',
-    'description' => 'Delete account',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_account_form', 'delete', 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'account', 5),
-  );
-  $menu['ces/bank/exchange/%/account/%/transaction'] = array(
-    'title' => 'Account statement' ,
-    'description' => 'Last transactions with this account',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_account_statement_form', 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_NORMAL_ITEM,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'account transactions', 5),
-  );
-  $menu['ces/bank/exchange/%/account/%/transaction/sell'] = array(
-    'title' => 'Charge a sale',
-    'description' => 'Create a transaction in order to charge a sale',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_transaction_form', 'new', 3, 5, NULL),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_ACTION,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'account seller', 5),
-  );
-  $menu['ces/bank/exchange/%/account/%/transaction/buy'] = array(
-    'title' => 'Pay for a purchase',
-    'description' => 'Create a transaction in order to pay for a purchase',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_transaction_form', 'new', 3, NULL, 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_ACTION,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'account buyer', 5),
-  );
-  $menu['ces/bank/exchange/%/transaction'] = array(
-    'title' => 'Exchange transactions',
-    'description' => 'View exchange transactions list',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_exchange_statement_form', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_NORMAL_ITEM,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange transactions', 3),
-  );
-  $menu['ces/bank/exchange/%/transaction/new'] = array(
-    'title' => 'Create transaction',
-    'description' => 'Create a transaction between two accounts',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_transaction_form', 'new'),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_ACTION,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'exchange transactioncreator', 3),
-  );
-  $menu['ces/bank/exchange/%/transaction/%'] = array(
-    'title' => 'View transaction',
-    'description' => 'View transaction details',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_transaction_form', 'view', 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_NORMAL_ITEM,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'transaction details', 5),
-  );
-  $menu['ces/bank/exchange/%/transaction/%/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-  $menu['ces/bank/exchange/%/transaction/%/trigger'] = array(
-    'title' => 'Apply transaction',
-    'description' => 'Apply transaction',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_transaction_confirm_form', 'trigger', 5),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_CALLBACK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'transaction', 5),
-  );
-  $menu['ces/bank/permission'] = array(
-    'title' => 'Permissions',
-    'description' => 'Adminiser permissions',
-    'page callback' => 'ces_bank_permissions_page',
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => TRUE,
-    'type' => MENU_NORMAL_ITEM,
-  );
-  $menu['ces/bank/permission/new'] = array(
-    'title' => 'New',
-    'description' => 'New permission',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_permission_form', 'new'),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_ACTION,
-    'access callback' => TRUE,
-  );
-  $menu['ces/bank/permission/%/edit'] = array(
-    'title' => 'Edit permission',
-    'description' => 'Edit permission',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_permission_form', 'edit', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('edit', 'permission', 3),
-  );
-  foreach ($menu as $key => $value) {
-    $menu[$key]['menu_name'] = 'ces';
-  }
-  return $menu;
-}
-*/
 /**
  * Implements hook_account_limit_classes().
  */
 function ces_bank_account_limit_classes() {
   return array(
-   'AbsoluteCreditLimit' => t('Absolute credit limit'), 
-   'AbsoluteDebitLimit' => t('Absolute debit limit')
+   'AbsoluteCreditLimit' => t('Absolute credit limit'),
+   'AbsoluteDebitLimit' => t('Absolute debit limit'),
   );
 }
 
@@ -827,112 +548,18 @@ function ces_bank_user_presave(&$edit, $account, $category) {
 /**
  * Implements hook_user_load().
  */
-function ces_bank_user_load($users){
+function ces_bank_user_load($users) {
   $bank = new Bank();
   foreach ($users as $uid => $account) {
-    if(!isset($account->data['ces_current_account'])){
+    if (!isset($account->data['ces_current_account'])) {
       $bankaccounts = $bank->getUserAccounts($uid);
-      if(!empty($bankaccounts)){
+      if (!empty($bankaccounts)) {
         $firstbankaccount = reset($bankaccounts);
         $users[$uid]->data['ces_current_account'] = $firstbankaccount['id'];
       }
     }
   }
 }
-/**
- * Implements hook_block_info().
- */
-/*function ces_bank_block_info() {
-  $block = array();
-  $block['navigation']['info'] = t('CES bank navigation');
-  $block['navigation']['cache'] = DRUPAL_CACHE_PER_USER;
-
-  return $block;
-}*/
-/**
- * Implements hook_block_view().
- */
-/*function ces_bank_block_view() {
-  global $user;
-  $bank = new Bank();
-  $tree = array();
-  $tree[] = _ces_bank_get_link_item('ces/bank/dashboard', t('Dashboard'));
-  $tree[] = _ces_bank_get_link_item('ces/bank/exchange', t('All exchanges'));
-  $tree[] = _ces_bank_get_link_item('ces/bank/permission', t('Permissions'));
-  $exchanges = array();
-  $accounts = array();
-  //Compute relevant exchanges and accounts from permissions.
-  $perms = $bank->getAdministrablePermissions($user->uid);
-  foreach ($perms as $perm) {
-    if ($perm['scope']!='global') { //discard global permissions.
-      if (substr($perm['object'], 0, strlen('exchange')) == 'exchange') {
-        if (!isset($exchanges[$perm['objectid']])) {
-          $exchanges[$perm['objectid']] = $bank->getExchange($perm['objectid']);
-        }
-      }
-      if (substr($perm['object'], 0, strlen('account')) == 'account') {
-        if (!isset($accounts[$perm['objectid']])) {
-          $accounts[$perm['objectid']] = $bank->getAccount($perm['objectid']);
-        }
-      }
-    }
-  }
-  //Add account exchanges.
-  foreach ($accounts as $account) {
-    if (!isset($exchanges[$account['exchange']])) {
-      $exchanges[$account['exchange']] = $bank->getExchange($account['exchange']);
-    }
-  }
-  //Build exchange-related menu.
-  foreach ($exchanges as $exchange) {
-    $exhref = 'ces/bank/exchange/' . $exchange['id'];
-    $exchilds = array();
-    foreach ($accounts as $account) {
-      if ($account['exchange'] == $exchange['id']) {
-        $achref = $exhref . '/account/' . $account['id'];
-        $acchilds = array();
-        $acchilds[] = _ces_bank_get_link_item($achref . '/transaction', t('Statement'));
-        $acchilds[] = _ces_bank_get_link_item($achref . '/transaction/sell', t('Charge a sale'));
-        $acchilds[] = _ces_bank_get_link_item($achref . '/transaction/buy', t('Pay for a purchase'));
-        $aclink = _ces_bank_get_link_item($achref, $account['name'], $acchilds);
-        $exchilds[] = $aclink;
-      }
-    }
-    if (ces_bank_access('admin', 'exchange', $exchange['id'])) {
-      $exchilds[] = _ces_bank_get_link_item($exhref . '/admin', t('Administrative interface'));
-    }
-    $exlink = _ces_bank_get_link_item($exhref, $exchange['shortname'], $exchilds);
-    $tree[] = $exlink;
-  }
-  $block = array(
-    'subject' => t('CES Navigation'),
-    'content' => menu_tree_output($tree),
-  );
-  return $block;
-}
-function _ces_bank_get_link_item($href, $title, $childs = array()) {
-  static $counter = 0;
-  $path = $_GET['q'];
-  $link = array(
-    'link' => array(
-      'access' => TRUE,
-      'hidden' => FALSE,
-      'has_children' => !empty($childs),
-      'in_active_trail' => (strpos($path, $href)!=-1),
-      'localized_options' => array(
-        'attributes' => array(
-          'class' => array(),
-        ),
-      ),
-      'href' => $href,
-      'menu_name' => 'ces',
-      'title' => $title,
-      'mlid' => $counter++,
-    ),
-    'below' => $childs,
-  );
-  return $link;
-}*/
 /**
  * Implements hook_token_info().
  */
@@ -1106,8 +733,8 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
       }
     }
     if ($user_tokens = token_find_with_prefix($tokens, 'user')) {
-      $accountUser = reset($account['users']);
-      $uid = $accountUser['user'];
+      $account_user = reset($account['users']);
+      $uid = $account_user['user'];
       $replacements += token_generate('user', $user_tokens, array('user' => user_load($uid)), $options);
     }
   }
@@ -1163,13 +790,13 @@ User: [exchange:admin:name] <[exchange:admin:mail]>
       return array(
           'subject' => t('[Integral CES] Exchange [exchange:code] - [exchange:shortname] activated', $a, $b),
           'body' => t('Dear [exchange:admin:name],
-The new [exchange:fullname] has been activated. So far we have only created the 
-administrator\'s account, [exchange:code]0000. Don\'t use this account for 
-personal operations. Create a new user and a new account for your personal 
+The new [exchange:fullname] has been activated. So far we have only created the
+administrator\'s account, [exchange:code]0000. Don\'t use this account for
+personal operations. Create a new user and a new account for your personal
 activity within the exchange network.
 
-As there is great demand for this web service we have to limit the period that 
-we can give you to get this new exchange operational. If there is no trading 
+As there is great demand for this web service we have to limit the period that
+we can give you to get this new exchange operational. If there is no trading
 activity within six months of today then unfortunately we will have to take the
 exchange down to make space for others.
 
@@ -1200,10 +827,10 @@ Integral CES
         'subject' => t('[[exchange:shortname]] Account activated'),
         'body' => t('Dear [account:name],
 
-Welcome to the [exchange:fullname], your local exchange of the global Integral 
+Welcome to the [exchange:fullname], your local exchange of the global Integral
 Community Exchange System platform.
-Below are the details you need to access your account on the [exchange:code] 
-network. To get to the web site go to [url:absolute]. This will take you to the 
+Below are the details you need to access your account on the [exchange:code]
+network. To get to the web site go to [url:absolute]. This will take you to the
 login page.
 
 Enter the following information:
@@ -1211,24 +838,24 @@ Enter the following information:
 Account No: [account:code]
 Password: *
 
-The web interface is available in several languages. If you wish to select 
-another language, click on the your name at the top right corner. In your 
+The web interface is available in several languages. If you wish to select
+another language, click on the your name at the top right corner. In your
 personal profile simply select the language of your preference.
 
-Please read the <a href="http://www.integralces.net/doc/user">User Guide</a> to 
-find out how the site works. 
+Please read the <a href="http://www.integralces.net/doc/user">User Guide</a> to
+find out how the site works.
 
-After looking around please enter your \'offers\' and \'wants\' by clicking on 
-the My offers and My wants buttons at the left menu. If you provided offers with 
-your application you may add as many additional offerings as you like. 
+After looking around please enter your \'offers\' and \'wants\' by clicking on
+the My offers and My wants buttons at the left menu. If you provided offers with
+your application you may add as many additional offerings as you like.
 
-You can also upload a photograph of yourself so that other users can see what 
+You can also upload a photograph of yourself so that other users can see what
 you look like.
 
-Feel free to contact any advertiser in the \'Offers\' list to purchase any goods 
-and services offered. Please don\'t wait for someone to buy from you before you 
-use the system. You don\'t need to be in credit before making a purchase; going 
-into debit is part of the system and simply represents your commitment to the 
+Feel free to contact any advertiser in the \'Offers\' list to purchase any goods
+and services offered. Please don\'t wait for someone to buy from you before you
+use the system. You don\'t need to be in credit before making a purchase; going
+into debit is part of the system and simply represents your commitment to the
 community.
 
 If you require any assistance please contact me. I will be glad to help.
@@ -1245,7 +872,7 @@ Happy trading!
       return array(
         'subject' => t('[[exchange:shortname]] Your account [transaction:fromaccount:name] has been debited'),
         'body' => t(
-'[transaction:fromaccount:exchange:name]: Your account [transaction:fromaccount:name] 
+'[transaction:fromaccount:exchange:name]: Your account [transaction:fromaccount:name]
 has been debited.
 
 Transaction details:
@@ -1263,11 +890,11 @@ Ordered by: [transaction:user:fullname] <[transaction:user:mail]>
 
 View your current <a href="[url:absolute]/ces/bank/account/transaction">statement of account</a>.
 
-If this debit is incorrect contact the seller or the exchange administrator 
+If this debit is incorrect contact the seller or the exchange administrator
 within 10 days to have it corrected.
 
 Seller contact:
-[transaction:toaccount:user:fullname] 
+[transaction:toaccount:user:fullname]
 mail: <[transaction:toaccount:user:mail]>
 phone: [transaction:toaccount:user:mainphone]
 ', $a, $b),
@@ -1290,7 +917,7 @@ Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
 
 Ordered by: [transaction:user:fullname] <[transaction:user:mail]>
 
-If this credit is incorrect contact the seller or the exchange administrator 
+If this credit is incorrect contact the seller or the exchange administrator
 within 10 days to have it corrected.
 ', $a, $b),
       );
@@ -1308,9 +935,11 @@ function ces_bank_get_full_username($account) {
     $item = reset($items);
     $userfullname .= $item['safe_value'];
   }
-  if(($items = field_get_items('user', $account, 'ces_surname')) !== FALSE) {
+  if (($items = field_get_items('user', $account, 'ces_surname')) !== FALSE) {
     $item = reset($items);
-    if(!empty($userfullname)) $userfullname .= ' ';
+    if (!empty($userfullname)) {
+      $userfullname .= ' ';
+    }
     $userfullname .= $item['safe_value'];
   }
   if (empty($userfullname)) {
@@ -1319,10 +948,11 @@ function ces_bank_get_full_username($account) {
   return $userfullname;
 }
 /**
- * 
+ * @return array
+ *   The current user's account.
  */
 function ces_bank_get_current_account($account = NULL) {
-  if($account == NULL) {
+  if ($account == NULL) {
     global $user;
     $account = user_load($user->uid);
   }
@@ -1330,7 +960,8 @@ function ces_bank_get_current_account($account = NULL) {
   if (isset($account->data['ces_current_account'])) {
     try {
       $bankaccount = $bank->getAccount($account->data['ces_current_account']);
-    } catch(Exception $e) {
+    }
+    catch (Exception $e) {
       $bankaccount = FALSE;
     }
   }
@@ -1339,14 +970,18 @@ function ces_bank_get_current_account($account = NULL) {
   }
   return $bankaccount;
 }
+/**
+ * @return array
+ *   The current user's exchange
+ */
 function ces_bank_get_current_exchange($account = NULL) {
   $bankaccount = ces_bank_get_current_account($account);
-  if($bankaccount === FALSE) {
+  if ($bankaccount === FALSE) {
     $path = arg();
-    if($path[0] == 'user' && $path[1] == 'register') {
+    if ($path[0] == 'user' && $path[1] == 'register') {
       $exchange = ces_bank_get_exchange_by_name($path[2]);
     }
-    else{
+    else {
       $exchange = FALSE;
     }
   }
@@ -1355,26 +990,34 @@ function ces_bank_get_current_exchange($account = NULL) {
   }
   return $exchange;
 }
-
+/**
+ * Returns exchange given its id.
+ */
 function ces_bank_get_exchange($id) {
   $bank = new Bank();
   $exchange = $bank->getExchange($id);
   return $exchange;
 }
-
+/**
+ * Returns exchange given its name.
+ */
 function ces_bank_get_exchange_by_name($name) {
   $bank = new Bank();
   $exchange = $bank->getExchangeByName($name);
   return $exchange;
 }
-
+/**
+ * Returns all exchanges.
+ */
 function ces_bank_get_exchanges() {
   $bank = new Bank();
   $exchanges = $bank->getAllExchanges();
   return $exchanges;
 }
-
-function ces_bank_not_yet_implemented(){
+/**
+ * Helper function.
+ */
+function ces_bank_not_yet_implemented() {
   return array(
     '#markup' => t('Not yet implemented. Sorry!'),
   );
@@ -1387,7 +1030,7 @@ function ces_bank_user_view($user, $view_mode, $langcode) {
   $bank = new Bank();
   $accounts = $bank->getUserAccounts($user->uid);
   foreach ($accounts as $account) {
-    if(!ces_bank_access('view', 'exchange accounts', $account['exchange'])) {
+    if (!ces_bank_access('view', 'exchange accounts', $account['exchange'])) {
       continue;
     }
     $exchange = $bank->getExchange($account['exchange']);
@@ -1430,7 +1073,7 @@ function ces_bank_user_view($user, $view_mode, $langcode) {
       '#markup' => $limitchain['name'],
       '#weight' => 40,
     );
-    $user->content['account_'.$account['name']] = $accounting;
+    $user->content['account_' . $account['name']] = $accounting;
   }
 }
 /**
@@ -1438,14 +1081,14 @@ function ces_bank_user_view($user, $view_mode, $langcode) {
  */
 function ces_bank_menu_alter(&$items) {
   $items['user/%user']['access callback'] = 'ces_bank_user_access';
-  $items['user/%user']['access arguments'] = array('view', 1);  
+  $items['user/%user']['access arguments'] = array('view', 1);
 }
 /**
  */
 function ces_bank_user_access($permission, $target, $account = NULL) {
   $bank = new Bank();
   $accounts = $bank->getUserAccounts($target->uid);
-  
+
   foreach ($accounts as $acc) {
     if (ces_bank_access($permission, 'exchange accounts', $acc['exchange'], $account)) {
       return TRUE;
@@ -1453,7 +1096,9 @@ function ces_bank_user_access($permission, $target, $account = NULL) {
   }
   return FALSE;
 }
-
+/**
+ * Returns the list of countries having at least one exchange.
+ */
 function ces_bank_country_get_list() {
   if (($cache = cache_get('ces_bank_countries')) !== FALSE) {
     $countries = $cache->data;
@@ -1464,14 +1109,16 @@ function ces_bank_country_get_list() {
     $bank = new Bank();
     $exchanges = $bank->getAllExchanges();
     $countries = array();
-    foreach($exchanges as $exchange) {
+    foreach ($exchanges as $exchange) {
       $countries[$exchange['country']] = $allcountries[$exchange['country']];
     }
     cache_set('ces_bank_countries', $countries, 'cache', REQUEST_TIME + 60*60);
   }
   return $countries;
 }
-
+/**
+ * Implements hook_form_alter().
+ */
 function ces_bank_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'ces_user_register_form') {
     if (empty($form_state['page']) || $form_state['page'] == 'account') {
@@ -1479,7 +1126,7 @@ function ces_bank_form_alter(&$form, &$form_state, $form_id) {
       $form['actions']['next'] = array(
         '#type' => 'submit',
         '#value' => t('Next >>'),
-        '#submit' => array('ces_user_register_save_values','ces_bank_user_register_next'),
+        '#submit' => array('ces_user_register_save_values', 'ces_bank_user_register_next'),
         '#weight' => 1000,
       );
       $form['actions']['submit']['#access'] = FALSE;
@@ -1488,30 +1135,35 @@ function ces_bank_form_alter(&$form, &$form_state, $form_id) {
       $name = arg(2);
       $bank = new Bank();
       $exchange = $bank->getExchangeByName($name);
-      if($exchange !== FALSE && $bank->access('use', 'exchange accountcreator', $exchange['id'])) {
-        
+      if ($exchange !== FALSE && $bank->access('use', 'exchange accountcreator', $exchange['id'])) {
         module_load_include('inc', 'ces_bank', 'ces_bank.forms');
         $form += ces_bank_account_form($form, $form_state);
         unset($form['bankaccount']['submit']);
         $form['actions']['previous'] = array(
           '#type' => 'submit',
           '#value' => t('<< Previous'),
-          '#submit' => array('ces_bank_user_register_save_values','ces_bank_user_register_previous'),
+          '#submit' => array('ces_bank_user_register_save_values', 'ces_bank_user_register_previous'),
           '#weight' => 0,
           '#limit_validation_errors' => array(),
         );
       }
     }
-    array_unshift($form['actions']['submit']['#submit'],'ces_bank_user_register_save_values');
+    array_unshift($form['actions']['submit']['#submit'], 'ces_bank_user_register_save_values');
     $form['actions']['submit']['#submit'][] = 'ces_bank_user_register_submit';
     return $form;
   }
 }
+/**
+ * Implements hook_form_submit().
+ */
 function ces_bank_user_register_previous($form, &$form_state) {
   $form_state['values'] = $form_state['page_values']['account'];
   $form_state['page'] = 'account';
   $form_state['rebuild'] = TRUE;
 }
+/**
+ * Implements hook_form_submit().
+ */
 function ces_bank_user_register_next($form, &$form_state) {
   if (!empty($form_state['page_values']['bankaccount'])) {
     $form_state['values'] = $form_state['page_values']['bankaccount'];
@@ -1524,11 +1176,17 @@ function ces_bank_user_register_next($form, &$form_state) {
   $form_state['page'] = 'bankaccount';
   $form_state['rebuild'] = TRUE;
 }
+/**
+ * Helper for register form submit functions.
+ */
 function ces_bank_user_register_save_values($form, &$form_state) {
-  if($form_state['page'] == 'bankaccount') {
+  if ($form_state['page'] == 'bankaccount') {
     $form_state['page_values']['bankaccount'] = $form_state['values'];
   }
 }
+/**
+ * Implements hook_form_submit().
+ */
 function ces_bank_user_register_submit($form, &$form_state) {
   //the user is already created. Create the banking account.
   $form_state['values'] = $form_state['page_values']['bankaccount'];
@@ -1537,13 +1195,18 @@ function ces_bank_user_register_submit($form, &$form_state) {
   module_load_include('inc', 'ces_bank', 'ces_bank.forms');
   ces_bank_account_form_submit($form, $form_state);
 }
-function ces_bank_user_autocomplete($string){
+/**
+ * AJAX autocomplete callback.
+ * @return string
+ *   Users in current exchange.
+ */
+function ces_bank_user_autocomplete($string) {
   $exchange = ces_bank_get_current_exchange();
   $bank = new Bank();
   $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'state' => 1));
   $userids = array();
-  foreach($accounts as $account) {
-    foreach($account['users'] as $accuser) {
+  foreach ($accounts as $account) {
+    foreach ($account['users'] as $accuser) {
       $userids[$accuser['user']] = $accuser['user'];
     }
   }

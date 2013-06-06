@@ -1,5 +1,9 @@
 <?php
 /**
+ * @file
+ * Implements the drupal hooks for this module.
+ */
+/**
  * Implements hook_menu().
  */
 function ces_develop_menu() {
@@ -13,6 +17,9 @@ function ces_develop_menu() {
   );
   return $menu;
 }
+/**
+ * Run the given script.
+ */
 function ces_develop_run_script($file) {
   $path = drupal_get_path('module', 'ces_develop');
   ob_start();

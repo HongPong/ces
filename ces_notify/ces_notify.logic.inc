@@ -16,7 +16,7 @@
 /**
  * This class is the public interface for this module.
  */
-class Notifier{
+class Notifier {
   /**
    * Creates or updates a message template.
    * @param $record array with the following (mandatory) entries:

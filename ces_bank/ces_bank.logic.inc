@@ -261,7 +261,7 @@ class Bank {
     return $records;
   }
   /**
-   * Creates a transaction object. 
+   * Creates a transaction object.
    *
    * The transaction is not made effective until it is applied calling:
    * <code>
@@ -283,7 +283,7 @@ class Bank {
     }
   }
   /**
-   * Updates the transaction record. 
+   * Updates the transaction record.
    *
    * In fact it deletes the old transaction and creates and applies a new one.
    * The <code>$record['id']</code> will change.
@@ -945,7 +945,7 @@ class Bank {
 
   /**
    * Triggers notification for transaction account.
-   * @see Notifier()
+   * @see Notifier
    */
   private function notifyTransactionAccount($message_key, $account_name, $transaction_user, $params) {
     $s = new Serializer('LocalAccount');
@@ -1253,7 +1253,7 @@ class Currency extends DBObject {
    */
   public $currencyscale;
   /**
-   * Converts amount from a currency into a new amount. 
+   * Converts amount from a currency into a new amount.
    * @see BasicTransaction
    * @return float
    *   the amount in this currency of the value represented by the
@@ -2317,7 +2317,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $pair->getParent()->trigger();
     $s = new Serializer('BasicTransaction');
     $s->save($pair);
-    // @TODO: If the first transaction fails, don't try the second. 
+    // @TODO: If the first transaction fails, don't try the second.
     // If the second fails, undo the first.
   }
   /**

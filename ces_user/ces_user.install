@@ -1,5 +1,9 @@
 <?php
 /**
+ * @file
+ * Install and uninstall ces user module.
+ */
+/**
  * Implements hook_install().
  */
 function ces_user_install() {
@@ -12,17 +16,17 @@ function ces_user_install() {
  * Implements hook_uninstall().
  */
 function ces_user_uninstall() {
-    //Delete user fields
+  // Delete user fields.
   $instances = field_info_instances('user', 'user');
   foreach ($instances as $instance) {
-    if(substr($instance['field_name'], 0, 4) == 'ces_') {
+    if (substr($instance['field_name'], 0, 4) == 'ces_') {
       field_delete_instance($instance, TRUE);
     }
   }
 }
 
 /**
- * Add some fields to the user profile. Some of them are mandatory for all 
+ * Add some fields to the user profile. Some of them are mandatory for all
  * networks and some of them are configurable for each network.
  * Concretely:
  *  - Firstname
@@ -51,12 +55,12 @@ function _ces_user_create_user_fields() {
     //'ces_subarea' => 'Subarea',
     //'ces_adminnotes' => t('Notes for admin purposes'),
   );
-  foreach($textfields as $name => $info) {
-    if(!field_info_field($name)) {
+  foreach ($textfields as $name => $info) {
+    if (!field_info_field($name)) {
       field_create_field(array(
-        'field_name' => $name, 
-        'type' => 'text', 
-        'cardinality' => 1
+        'field_name' => $name,
+        'type' => 'text',
+        'cardinality' => 1,
       ));
       field_create_instance(array(
         'field_name' => $name,
@@ -67,7 +71,7 @@ function _ces_user_create_user_fields() {
         'required' => $info[2],
         'widget' => array(
           'type' => 'text_textfield',
-          'weight' => $info[3]
+          'weight' => $info[3],
         ),
         'display' => array(
           'default' => array(

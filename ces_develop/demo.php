@@ -149,96 +149,96 @@ $bank->applyTransaction($trans['id']);
 $names = array('Food', 'Hygiene', 'Professional services', 'Reparation', 'Education');
 $exchanges = array($net1, $net2);
 $categories = array();
-foreach($exchanges as $e){
+foreach ($exchanges as $e) {
   $categories[$e['id']] = array();
-  foreach($names as $c){
+  foreach ($names as $c) {
     $cat = array(
       'parent' => 0,
       'title' => $c,
       'description' => $c,
-      'exchange'=> $e['id'],
+      'exchange' => $e['id'],
       'context' => 1,
     );
     $categories[$e['id']][$c] = ces_category_save((object)$cat);
   }
 }
 
-//Add some offers 
+//Add some offers.
 
 $offers = array(array(
-  'type'=>'offer',
-  'user'=>$users['Riemann']->uid, 
-  'title'=>'Cow\'s milk', 
-  'body'=>'Natural cow\'s milk. Probably the best you\'ve ever tasted.',
-  'category'=>$categories[$net1['id']]['Food']->id,
-  'keywords'=>'',
-  'state'=>1,
+  'type' => 'offer',
+  'user' => $users['Riemann']->uid,
+  'title' => 'Cow\'s milk',
+  'body' => 'Natural cow\'s milk. Probably the best you\'ve ever tasted.',
+  'category' => $categories[$net1['id']]['Food']->id,
+  'keywords' => '',
+  'state' => 1,
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
   'rate' => '0.2',
-),array(
-  'type'=>'offer',
-  'user'=>$users['Euclides']->uid, 
-  'title'=>'Bicycle mechanic', 
-  'body'=>'I fix or setup your bike in less than an hour.',
-  'category'=>$categories[$net1['id']]['Reparation']->id,
-  'keywords'=>'',
-  'state'=>1,
+), array(
+  'type' => 'offer',
+  'user' => $users['Euclides']->uid,
+  'title' => 'Bicycle mechanic',
+  'body' => 'I fix or setup your bike in less than an hour.',
+  'category' => $categories[$net1['id']]['Reparation']->id,
+  'keywords' => '',
+  'state' => 1,
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
   'rate' => '1h/hour',
-),array(
-  'type'=>'offer',
-  'user'=>$users['Gauss']->uid, 
-  'title'=>'Natural soap', 
-  'body'=>'Natural soap with smell of Alpine flowers. Very good for your skin.',
-  'category'=>$categories[$net1['id']]['Hygiene']->id,
-  'keywords'=>'',
-  'state'=>1,
+), array(
+  'type' => 'offer',
+  'user' => $users['Gauss']->uid,
+  'title' => 'Natural soap',
+  'body' => 'Natural soap with smell of Alpine flowers. Very good for your skin.',
+  'category' => $categories[$net1['id']]['Hygiene']->id,
+  'keywords' => '',
+  'state' => 1,
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
   'rate' => '0.40',
-),array(
-  'type'=>'offer',
-  'user'=>$users['Gauss']->uid, 
-  'title'=>'Cow\'s milk', 
-  'body'=>'Natural sheep\'s milk. Probably the best you\'ve ever tasted.',
-  'category'=>$categories[$net2['id']]['Food']->id,
-  'keywords'=>'',
-  'state'=>1,
+), array(
+  'type' => 'offer',
+  'user' => $users['Gauss']->uid,
+  'title' => 'Cow\'s milk',
+  'body' => 'Natural sheep\'s milk. Probably the best you\'ve ever tasted.',
+  'category' => $categories[$net2['id']]['Food']->id,
+  'keywords' => '',
+  'state' => 1,
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
   'rate' => '2.5',
-),array(
-  'type'=>'offer',
-  'user'=>$users['Noether']->uid, 
-  'title'=>'Car mechanic', 
-  'body'=>'I fix or setup your car in less than an hour.',
-  'category'=>$categories[$net2['id']]['Reparation']->id,
-  'keywords'=>'',
-  'state'=>1,
+), array(
+  'type' => 'offer',
+  'user' => $users['Noether']->uid,
+  'title' => 'Car mechanic',
+  'body' => 'I fix or setup your car in less than an hour.',
+  'category' => $categories[$net2['id']]['Reparation']->id,
+  'keywords' => '',
+  'state' => 1,
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
   'rate' => 'it depends'
-),array(
-  'type'=>'offer',
-  'user'=>$users['Fermat']->uid, 
-  'title'=>'Natural shampoo', 
-  'body'=>'Natural shampoo with smell of Pyrinee flowers. Very good for your hair.',
-  'category'=>$categories[$net2['id']]['Hygiene']->id,
-  'keywords'=>'',
-  'state'=>1,
+), array(
+  'type' => 'offer',
+  'user' => $users['Fermat']->uid,
+  'title' => 'Natural shampoo',
+  'body' => 'Natural shampoo with smell of Pyrinee flowers. Very good for your hair.',
+  'category' => $categories[$net2['id']]['Hygiene']->id,
+  'keywords' => '',
+  'state' => 1,
   'created' => time(),
   'modified' => time(),
   'expire' => time()+3600*24*365,
   'rate' => '6ECO each'
 ));
-foreach($offers as $offer) {
+foreach ($offers as $offer) {
   $o = (object)$offer;
   $o->ces_offer_rate = array('und' => array(array('value' => $offer['rate'])));
   unset($o->rate);
@@ -246,7 +246,7 @@ foreach($offers as $offer) {
 }
 
 //Blog posts
-post_blog('Demo post','This is a demonstration blog post. 
+post_blog('Demo post', 'This is a demonstration blog post.
 
 This space is intended for the administrator or a group of editors to publish relevant information about the trading community, such as markets, events and news.
 
@@ -257,27 +257,31 @@ post_blog('May exchange newsletter', 'Lorem ipsum dolor sit amet, consectetur ad
 post_blog('Another post', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
 
 
-
+/**
+ * Create a blog post.
+ */
 function post_blog($subject, $body, $exchange, $user) {
   $node = new stdClass();
   $node->title = $subject;
   $node->type = 'ces_blog';
   node_object_prepare($node);
-  $node->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
-  $node->uid = $user->uid; 
-  $node->status = 1; //(1 or 0): published or not
-  $node->promote = 0; //(1 or 0): promoted to front page
-  $node->comment = 2; //2 = comments on, 1 = comments off
+  $node->language = LANGUAGE_NONE;
+  $node->uid = $user->uid;
+  $node->status = 1;
+  $node->promote = 0;
+  $node->comment = 2;
   $node->ces_blog_exchange['und'][0]['value'] = $exchange['id'];
   $node->body['und'][0] = array(
-    'summary'=> '',
+    'summary' => '',
     'value' => $body,
     'format' => 'filtered_html',
   );
-  $node = node_submit($node); // Prepare node for saving
+  $node = node_submit($node);
   node_save($node);
 }
-
+/**
+ * Create new user.
+ */
 function register_user($name) {
   // register a new user
   if (!user_load_by_name($name)) {
@@ -295,7 +299,9 @@ function register_user($name) {
   }
   return user_load_by_name($name);
 }
-
+/**
+ * Create new bank account.
+ */
 function register_account($user, $exchange, $i) {
   $bank = new Bank();
   $limit = $bank->getDefaultLimitChain($exchange['id']);

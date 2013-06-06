@@ -1,6 +1,12 @@
 <?php
-
-function ces_user_menu(){
+/**
+ * @file
+ * Drupal hooks for this module.
+ */
+/**
+ * Implements hook_menu().
+ */
+function ces_user_menu() {
   $menu = array();
   $menu['ces'] = array(
     'title' => 'Welcome to Integral CES',
@@ -8,14 +14,18 @@ function ces_user_menu(){
     'page callback' => 'ces_user_main_page',
     'type' => MENU_CALLBACK,
   );
-  return $menu;         
+  return $menu;
 }
-
-function ces_user_menu_alter(&$menu){
+/**
+ * Implements hook_menu_alter().
+ */
+function ces_user_menu_alter(&$menu) {
   //gain control over registration page
   $menu['user/register']['page arguments'] = array('ces_user_register_form');
 }
-
+/**
+ * Returns the full name for given account, or the current one if NULL.
+ */
 function ces_user_get_name($account = NULL) {
   if ($account == NULL) {
     global $user;
@@ -23,21 +33,23 @@ function ces_user_get_name($account = NULL) {
   }
   $items = field_get_items('user', $account, 'ces_firstname');
   $userfullname = '';
-  if(!empty($items)){
+  if (!empty($items)) {
     $item = reset($items);
     $userfullname = $item['safe_value'] . ' ';
   }
   $items = field_get_items('user', $account, 'ces_surname');
-  if(!empty($items)){
+  if (!empty($items)) {
     $item = reset($items);
     $userfullname .= $item['safe_value'];
   }
-  if(empty($userfullname)) {
+  if (empty($userfullname)) {
     $userfullname = $account->name;
   }
   return $userfullname;
 }
-
+/**
+ * Returns the address for given account, or the current one if NULL.
+ */
 function ces_user_get_full_address($account = NULL) {
   if ($account == NULL) {
     global $user;
@@ -45,42 +57,49 @@ function ces_user_get_full_address($account = NULL) {
   }
   $items = field_get_items('user', $account, 'ces_address');
   $address = '';
-  if(!empty($items)){
+  if (!empty($items)) {
     $item = reset($items);
     $address = $item['safe_value'];
   }
   $items = field_get_items('user', $account, 'ces_postcode');
-  if(!empty($items)){
+  if (!empty($items)) {
     $item = reset($items);
-    if( $address != "")
-        $address .= ", ";
+    if ($address != '') {
+      $address .= ', ';
+    }
     $address .= $item['safe_value'];
   }
   $items = field_get_items('user', $account, 'ces_town');
-  if(!empty($items)){
+  if (!empty($items)) {
     $item = reset($items);
-    if( $address != "")
-        $address .= ", ";
+    if ( $address != '') {
+        $address .= ', ';
+    }
     $address .= $item['safe_value'];
   }
   return $address;
 }
-
+/**
+ * Returns the main phone number for given account, or the curent one if NULL.
+ */
 function ces_user_get_main_phone($account = NULL) {
   if ($account == NULL) {
     global $user;
     $account = user_load($user->uid);
   }
   $order = array('ces_phonemobile', 'ces_phonework', 'ces_phonehome');
-  foreach($order as $name) {
+  foreach ($order as $name) {
     $items = field_get_items('user', $account, $name);
-    if(!empty($items)){
+    if (!empty($items)) {
       $item = reset($items);
       return $item['safe_value'];
-    }  
+    }
   }
   return '';
 }
+/**
+ * Tweaked register form.
+ */
 function ces_user_register_form($form, &$form_state) {
   if (empty($form_state['page']) || $form_state['page'] == 'account') {
     $form = user_register_form($form, $form_state);
@@ -96,52 +115,56 @@ function ces_user_register_form($form, &$form_state) {
       '#weight' => 1000,
     );
   }
-  $form['actions']['submit']['#submit'] = array('ces_user_register_save_values','ces_user_register_submit');
+  $form['actions']['submit']['#submit'] = array('ces_user_register_save_values', 'ces_user_register_submit');
   return $form;
 }
+/**
+ * Save values in register form account page.
+ */
 function ces_user_register_save_values($form, &$form_state) {
   if (!isset($form_state['page'])||$form_state['page']=='account') {
     $form_state['page_values']['account'] = $form_state['values'];
   }
 }
+/**
+ * Submit register form.
+ */
 function ces_user_register_submit($form, &$form_state) {
   module_load_include('module', 'user');
   $form_state['values'] = $form_state['page_values']['account'];
   $form = user_register_form($form, $form_state);
   user_register_submit($form, $form_state);
-  //nothing
 }
-
 /**
  * Implements hook_form_alter().
  */
 function ces_user_form_alter(&$form, &$form_state, $form_id) {
-  if($form_id == 'ces_user_register_form' || $form_id == 'user_profile_form') {
+  if ($form_id == 'ces_user_register_form' || $form_id == 'user_profile_form') {
     if (empty($form_state['page']) || $form_state['page'] == 'account') {
       //Move all ces fields to account fieldset
       foreach ($form as $key => $field) {
-        if(strlen($key)>4 && substr($key,0,4) == 'ces_') {
+        if (strlen($key) > 4 && substr($key, 0, 4) == 'ces_') {
           $form['account'][$key] = $form[$key];
           unset($form[$key]);
         }
       }
       $form['account']['picture'] = $form['picture'];
       unset($form['picture']);
-      //put default values in form elements (Drupal doesn't make it because we
-      //are registering)
-      if(isset($form_state['values'])) {
-        _ces_user_set_form_values($form['account'],$form_state['values']);
+      // Put default values in form elements (Drupal doesn't make it because we
+      // are registering).
+      if (isset($form_state['values'])) {
+        _ces_user_set_form_values($form['account'], $form_state['values']);
       }
-      
-      //Set up weights
+      // Set up weights.
       $form['account']['name']['#weight'] = -10;
       $form['account']['current_pass']['#weight'] = -5;
       $form['account']['pass']['#weight'] = 0;
       $form['account']['status']['#weight'] = 60;
       $form['account']['roles']['#weight'] = 65;
     }
-  }else if($form_id == 'user_login_block') {
-    //Override $form['links']
+  }
+  elseif ($form_id == 'user_login_block') {
+    // Override $form['links'].
     $items = array();
     $items[] = l(t('Forgot password?'), 'user/password', array('attributes' => array('title' => t('Request new password via e-mail.'))));
     $form['actions']['#weight'] = 90;
@@ -155,33 +178,39 @@ function ces_user_form_alter(&$form, &$form_state, $form_id) {
     );
   }
 }
+/**
+ * Helper function. Sets default values to form elements.
+ */
 function _ces_user_set_form_values(&$elements, $values) {
-  foreach($values as $key => $value) {
-    if(isset($elements[$key]) && is_array($elements[$key])) {
+  foreach ($values as $key => $value) {
+    if (isset($elements[$key]) && is_array($elements[$key])) {
       if (is_array($value)) {
         //Call recursively.
         _ces_user_set_form_values($elements[$key], $value);
       }
-      else{
+      else {
         $elements[$key]['#default_value'] = $value;
       }
     }
   }
 }
+/**
+ * User view.
+ */
 function ces_user_user_view($account, $view_mode, $langcode) {
-  //Set fields to be rendered with user profile item theme.
+  // Set fields to be rendered with user profile item theme.
   $account->content['account'] = array(
     '#type' => 'container',
     '#attributes' => array(
       'class' => array(
-        'user-profile-account-items'
-      )
-    )
+        'user-profile-account-items',
+      ),
+    ),
   );
-  foreach($account->content as $key => $item) {
-    if(substr($key,0,4) == 'ces_') {
+  foreach ($account->content as $key => $item) {
+    if (substr($key, 0, 4) == 'ces_') {
       $account->content[$key]['#theme'] = 'user_profile_item';
-      if(isset($account->content[$key][0])) {
+      if (isset($account->content[$key][0])) {
         $account->content[$key]['#markup'] = $account->content[$key][0]['#markup'];
       }
       $account->content['account'][$key] = $account->content[$key];
@@ -195,14 +224,12 @@ function ces_user_user_view($account, $view_mode, $langcode) {
     '#markup' => ces_user_get_name($account),
     'weight' => 0,
   );
-  
   $account->content['account']['ces_fulladdress'] = array(
     '#theme' => 'user_profile_item',
     '#title' => t('Address'),
     '#markup' => ces_user_get_full_address($account),
     '#weight' => 15,
   );
-  
   $account->content['account']['ces_email'] = array(
     '#theme' => 'user_profile_item',
     '#title' => t('Email'),
@@ -215,7 +242,7 @@ function ces_user_user_view($account, $view_mode, $langcode) {
  */
 function ces_user_block_info() {
   $block = array(
-    'ces_user_register'=> array(
+    'ces_user_register' => array(
       'info' => t('CES register'),
       'cache' => DRUPAL_CACHE_PER_ROLE,
     ),
@@ -234,28 +261,32 @@ function ces_user_block_view($delta = '') {
   $block = array();
   $block['subject'] = '';
   $content = array();
-  if($delta == 'ces_user_register') {
+  if ($delta == 'ces_user_register') {
     if (!$user->uid) {
       $content = drupal_get_form('ces_user_register_block_form');
     }
-  } else if($delta == 'ces_user_links') {
-    if(!$user->uid){
-    $content = array(
-      '#theme' => 'item_list',
-      '#attributes' => array('class' => array('front-links')),
-      '#items' => array(
-        l(t('New exchange'), 'ces/bank/exchange/new'),
-        l(t('Documentation'), 'http://www.integralces.net'),
-        l(t('Developers'), 'http://drupal.org/sandbox/esteve/1367140'),
-        l(t('Donate'), 'ces/donate'),
-        l(t('About'), 'ces/about'),
-      ),
-    );
+  }
+  elseif ($delta == 'ces_user_links') {
+    if (!$user->uid) {
+      $content = array(
+        '#theme' => 'item_list',
+        '#attributes' => array('class' => array('front-links')),
+        '#items' => array(
+          l(t('New exchange'), 'ces/bank/exchange/new'),
+          l(t('Documentation'), 'http://www.integralces.net'),
+          l(t('Developers'), 'http://drupal.org/sandbox/esteve/1367140'),
+          l(t('Donate'), 'ces/donate'),
+          l(t('About'), 'ces/about'),
+        ),
+      );
     }
   }
   $block['content'] = $content;
   return $block;
 }
+/**
+ * Form for choosing country on registering.
+ */
 function ces_user_register_block_form($form, &$form_state) {
   module_load_include('module', 'ces_bank');
   $options = ces_bank_country_get_list();
@@ -284,14 +315,22 @@ function ces_user_register_block_form($form, &$form_state) {
       '#attributes' => array(),
     ),
   );
-  return $form;  
+  return $form;
 }
+/**
+ * Submit function.
+ */
 function ces_user_register_block_form_submit($form, &$form_state) {
   drupal_goto('ces/bank/exchange/list/' . $form_state['values']['country']);
 }
+/**
+ * Menu callback.
+ */
 function ces_user_main_page() {
   global $user;
-  if($user->uid) drupal_goto('ces/bank/exchange/blog');
+  if ($user->uid) {
+    drupal_goto('ces/bank/exchange/blog');
+  }
   return array(
     'welcome' => array(
       '#prefix' => '<p class="front-welcome">',
@@ -310,14 +349,13 @@ function ces_user_main_page() {
         'eco' => t('Help the environment, lower contamination.'),
         'speculation' => t('Gain the control over money, prevent speculation and abuse.'),
         'alternative' => t('Create a solid alternative to the current financial system.'),
-        'community' => t('Empower your community. Have fun playing with social currency.')
+        'community' => t('Empower your community. Have fun playing with social currency.'),
       ),
-      '#attributes' => array('class'=>array('front-list')),
+      '#attributes' => array('class' => array('front-list')),
     )
   );
 }
-
-/*
+/**
  * Implements hook_token_info().
  */
 function ces_user_token_info() {
@@ -336,7 +374,7 @@ function ces_user_token_info() {
     )
   );
 }
-/*
+/**
  * Implements hook_tokens().
  */
 function ces_user_tokens($type, $tokens, array $data = array(), array $options = array()) {

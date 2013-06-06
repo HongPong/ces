@@ -736,7 +736,7 @@ function ces_bank_account_form_submit($form, &$form_state) {
       $bank->createAccount($record);
       drupal_set_message(t('Account successfully created.'));
       if ($record['state'] == LocalAccount::STATE_HIDDEN) {
-         drupal_set_message(t('The account will not be available until it is being activated by this exchange\'s administrator. You will recieve an email when this is done.'));
+        drupal_set_message(t('The account will not be available until it is being activated by this exchange\'s administrator. You will recieve an email when this is done.'));
       }
       elseif ($record['state'] == LocalAccount::STATE_ACTIVE) {
         $activate = TRUE;
@@ -1375,7 +1375,7 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
     $uid = $useracc['user'];
 
     $row[] = array('data' => $other_account['name'] . ' - ' . l(ces_user_get_name(user_load($uid)), 'user/' . $uid));
-    $row[] = array('data' => l(check_plain($transaction['concept']), 'ces/bank/account/transaction/' . $transaction['id'] . '/view'));
+    $row[] = array('data' => l($transaction['concept'], 'ces/bank/account/transaction/' . $transaction['id'] . '/view'));
     $amount = ($transaction['amount']) * ($type == 0 ? 1 : -1);
     $row[] = array(
       'data' => $bank->formatAmount($amount, $exchange, TRUE, TRUE),

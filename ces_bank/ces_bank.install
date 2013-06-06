@@ -16,54 +16,6 @@ function ces_bank_install() {
     drupal_set_message(st('Initial records created.'));
   }
 }
-/*
-function _ces_bank_create_menu() {
-  //create menu
-  $record = array(
-      'menu_name' => 'ces',
-      'title' => 'CES Menu',
-      'description' => 'Navigation menu for CES',
-  );
-  $ok3 = drupal_write_record('menu_custom', $record);
-  return $ok3!==FALSE;
-}
-*//*
-function _ces_bank_create_default_exchange() {
-  $record = array(
-    'id' => 1,
-    'code' => '0000',
-    'active' => 0,
-    'shortname' => '',
-    'name' => '',
-    'country' => '',
-    'region' => '',
-    'town' => '',
-    'website' => '',
-    'map' => '',
-    'admin' => 1,
-    'limitchain' => 1,
-    'currencysymbol' => '',
-    'currencyname' => '',
-    'currenciesname' => '',
-    'currencyvalue' => '1',
-    'currencyscale' => 2,
-    'created' => REQUEST_TIME,
-    'modified' => REQUEST_TIME,
-  );
-  $ok1 = drupal_write_record('ces_exchange', $record);
-  if ($ok1 === FALSE)
-    drupal_set_message(st('Error installing default exchange.'), 'error');
-  //create default limit chain
-  $record = array(
-    'id' => 1,
-    'name' => 'default',
-    'exchange' => 1
-  );
-  $ok2 = drupal_write_record('ces_limitchain', $record);
-  if ($ok2 === FALSE)
-    drupal_set_message(st('Error installing default limit chain.'), 'error');
-  return $ok1!==FALSE && $ok2!==FALSE;
-}*/
 /**
  * Create permissions that, by default, all people will have.
  *

@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * @file
+ * Install, update and uninstall functions for the ces blog module.
+ */
+/**
+ * Implements hook_install().
+ */
 function ces_blog_install() {
   // During installation, the t() function is unavailable, so we use get_t()
   // to store the name of the translation function.
@@ -37,12 +43,12 @@ function ces_blog_install() {
   // Save our changes to the body field instance.
   // http://api.drupal.org/api/function/field_update_instance/7
   field_update_instance($body_instance);
-  
-  if(!field_info_field('ces_blog_exchange')) {
+
+  if (!field_info_field('ces_blog_exchange')) {
     field_create_field(array(
-      'field_name' => 'ces_blog_exchange', 
-      'type' => 'number_integer', 
-      'cardinality' => 1
+      'field_name' => 'ces_blog_exchange',
+      'type' => 'number_integer',
+      'cardinality' => 1,
     ));
     field_create_instance(array(
       'field_name' => 'ces_blog_exchange',
@@ -62,7 +68,9 @@ function ces_blog_install() {
     ));
   }
 }
-
+/**
+ * Implements hook_uninstall().
+ */
 function ces_blog_uninstall() {
   $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
   $result = db_query($sql, array(':type' => 'ces_blog'));

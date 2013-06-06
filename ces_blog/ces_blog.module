@@ -1,7 +1,17 @@
 <?php
+/**
+ * @file
+ * Implements the drupal hooks for this module.
+ */
+/**
+ * Implements hook_help().
+ */
 function ces_blog_help($path, $arg) {
-  
+
 }
+/**
+ * Implements hook_menu().
+ */
 function ces_blog_menu() {
   $menu = array();
   $menu['ces/bank/exchange/blog'] = array(
@@ -24,13 +34,12 @@ function ces_blog_menu() {
     'expanded' => TRUE,
     'weight' => 0,
   );
-  return $menu; 
+  return $menu;
 }
-function ces_blog_list(){
-  $page = array();
-  
-}
-function ces_blog_add_post(){
+/**
+ * Page callback for adding new from exchange admin menu.
+ */
+function ces_blog_add_post() {
   drupal_goto('node/add/ces-blog');
 }
 /**
@@ -66,7 +75,8 @@ function ces_blog_page() {
       $node = node_load($nid);
       $page['list'][]= node_view($node, 'teaser');
     }
-  }else{
+  }
+  else {
     $page['p1'] = array(
       '#prefix' => '<p>',
       '#markup' => t('There are no blog posts yet.'),
@@ -74,7 +84,7 @@ function ces_blog_page() {
     );
     if (ces_bank_access('admin', 'exchange blog', CES_CURRENT_EXCHANGE)) {
       $page['p2'] = array(
-        '#prefix' => '<p>',  
+        '#prefix' => '<p>',
         '#markup' => l(t('Add new post'), 'node/add/ces-blog'),
         '#suffix' => '</p>',
       );
@@ -82,7 +92,7 @@ function ces_blog_page() {
   }
   return $page;
 }
-/*
+/**
  * Implements hook_field_widget_info().
  */
 function ces_blog_field_widget_info() {
@@ -94,23 +104,23 @@ function ces_blog_field_widget_info() {
   );
 }
 
-/*
+/**
  * Implements hook_field_widget_form().
  */
 function ces_blog_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $widget = $element;
   $widget['#delta'] = $delta;
   switch ($instance['widget']['type']) {
-   case 'ces_blog_exchange':
-     $exchange = ces_bank_get_current_exchange();
-     $widget += array(
-       '#type' => 'value',
-       '#value' => array('value' => $exchange['id']),
-     );
+    case 'ces_blog_exchange':
+      $exchange = ces_bank_get_current_exchange();
+      $widget += array(
+        '#type' => 'value',
+        '#value' => array('value' => $exchange['id']),
+      );
   }
   return $widget;
 }
-/*
+/**
  * Implements hook_field_formatter_info().
  */
 function ces_blog_field_formatter_info() {
@@ -118,10 +128,10 @@ function ces_blog_field_formatter_info() {
     'ces_blog_exchange' => array(
       'label' => t('Hidden formatter'),
       'field types' => array('ces_blog_exchange'),
-     ),
+    ),
   );
 }
-/*
+/**
  * Implements hook_field_formatter_view().
  */
 function ces_blog_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
@@ -133,26 +143,28 @@ function ces_blog_field_formatter_view($entity_type, $entity, $field, $instance,
   }
   return $element;
 }
-/*
+/**
  * Implements hook_node_access().
  */
 function ces_blog_node_access($node, $op, $account) {
   $type = is_object($node) ? $node->type : $node;
   if ($type == 'ces_blog') {
-    if($op != 'view') 
+    if ($op != 'view') {
       $op = 'admin';
-    if(ces_bank_access($op, 'exchange blog', CES_CURRENT_EXCHANGE, $account->uid)){
+    }
+    if (ces_bank_access($op, 'exchange blog', CES_CURRENT_EXCHANGE, $account->uid)) {
       return NODE_ACCESS_ALLOW;
-    }else{
+    }
+    else {
       return NODE_ACCESS_DENY;
     }
   }
   return NULL;
 }
-/*
- * Implements hook_menu_alter(). 
+/**
+ * Implements hook_menu_alter().
  */
-function ces_blog_menu_alter(&$items){
+function ces_blog_menu_alter(&$items) {
   //Remove Add content from menu.
   $items['node/add']['type'] = MENU_LOCAL_TASK;
 }

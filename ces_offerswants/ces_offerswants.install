@@ -1,5 +1,9 @@
 <?php
 /**
+ * @file
+ * Install and uninstall ces offerswants module.
+ */
+/**
  * Implements hook_schema().
  */
 function ces_offerswants_schema() {
@@ -28,9 +32,9 @@ function ces_offerswants_schema() {
       ),
       'title' => array(
         'description' => 'The title of this offer or want, always treated as non-markup plain text.',
-        'type' => 'varchar', 
-        'length' => 255, 
-        'not null' => TRUE, 
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
         'default' => '',
       ),
       'body' => array(
@@ -140,7 +144,7 @@ function ces_offerswants_schema() {
  * Implements hook_install().
  */
 function ces_offerswants_install() {
-  $t = get_t();  
+  $t = get_t();
 
   //Create root category
   $category = (object) array(

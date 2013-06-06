@@ -1,3 +1,9 @@
+<?php
+/**
+ * @file
+ * Template for rendering offers and wants.
+ */
+?>
 <div class="ces-offerwant">
   <div class="ces-offerwant-display" >
     <div class="ces-offerwant-title"><?php echo $ces_offerwant_title; ?></div>
