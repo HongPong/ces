@@ -9,7 +9,9 @@
       endif;
       ?></div>
       <div class="ces-offerwant-body"><?php echo $ces_offerwant_body; ?></div>
+      <?php if (isset($ces_offer_rate)): ?>
       <div class="ces-offerwant-rate"><?php echo $ces_offer_rate ?></div>
+      <?php endif; ?>
     </div>
   </div>
   <?php if ($view_mode_full): ?>

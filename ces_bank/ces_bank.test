@@ -19,7 +19,35 @@ class BankTestCase extends DrupalWebTestCase {
    * Second exchange propeties.
    */
   protected $exchange2;
+  /**
+   * @var $admin1
+   * Administrator user for exchange 1.
+   */
+  protected $admin1;
+  /**
+   * @var $account11;
+   * First account from exchange 1.
+   */
+  protected $account11;
+  /**
+   * @var $account12
+   * Second account from exchange 1.
+   */
+  protected $account12;
+  /**
+   * @var $admin2
+   * Administrator user for exchange 2.
+   */
+  protected $admin2;
+  /**
+   * @var $account21;
+   * First account from exchange 2.
+   */
+  protected $account21;
 
+  /**
+   * Implementation of getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'ces',
@@ -27,6 +55,10 @@ class BankTestCase extends DrupalWebTestCase {
       'group' => 'CES',
     );
   }
+  /**
+   * Setup CES modules, creates the admin user, configures blocks and user
+   * preferences.
+   */
   public function setUp() {
     // Enable any modules required for the test.
     parent::setUp(array(
@@ -42,10 +74,18 @@ class BankTestCase extends DrupalWebTestCase {
     $this->globalAdminUser = $this->drupalCreateUser(array(
       'administer blocks',
       'access administration pages',
+      'administer users',
     ));
     $this->drupalLogin($this->globalAdminUser);
+    // Setup blocks.
+    $edit = array();
     $edit['blocks[ces_user_ces_user_links][region]'] = 'footer';
+    $edit['blocks[ces_user_ces_user_register][region]'] = 'sidebar_first';
     $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
+    // Setup users.
+    $edit = array();
+    $edit['user_email_verification'] = FALSE;
+    $this->drupalPost('admin/config/people/accounts', $edit, t('Save configuration'));
     $permission = array(
       'permission' => Permission::PERMISSION_ADMIN,
       'object' => 'global',
@@ -58,21 +98,29 @@ class BankTestCase extends DrupalWebTestCase {
   }
   /**
    * This function performs all tests. Since we have to perform heavy operations
-   * (create and activate exchanges, accounts, etc) before we can actually test 
+   * (create and activate exchanges, accounts, etc) before we can actually test
    * critical features we join all in one test function to save resources.
    */
   protected function testAll() {
     $this->createExchanges();
+    $this->createAccounts();
+    $this->doTransactions();
   }
+  /**
+   * Creates two exchanges.
+   */
   protected function createExchanges() {
     //Create first exchange.
+    $this->admin1 = (object) array(
+      'name' => 'adminhora',
+      'mail' => 'test.adminhora@integralces.net',
+      'pass_raw' => 'integralces',
+    );
     $this->exchange1 = array(
       'code' => 'HORA',
       'shortname' => 'EX Bages',
       'fullname' => 'A bona hora - Ecoxarxa del Bages',
       'website' => 'http://abonahora.wordpress.com',
-      'name' => 'adminhora',
-      'mail' => 'test.adminhora@integralces.net',
       'country' => 'ES',
       'region' => 'Bages',
       'town' => 'Manresa',
@@ -85,16 +133,19 @@ class BankTestCase extends DrupalWebTestCase {
       'registration_offers' => '1',
       'registration_wants' => '1',
     );
-    $this->createExchange($this->exchange1);
+    $this->createExchange(array_merge($this->exchange1, (array) $this->admin1));
     $this->activateExchange($this->exchange1);
     //Create second exchange.
+    $this->admin2 = (object) array(
+      'name' => 'adminbcna',
+      'mail' => 'test.adminbcna@integralces.net',
+      'pass_raw' => 'integralces',
+    );
     $this->exchange2 = array(
       'code' => 'BCNA',
       'shortname' => 'EX Barna',
       'fullname' => 'Ecoxarxa de Barcelona',
       'website' => 'http://cooperativa.ecoxarxes.cat',
-      'name' => 'adminbcna',
-      'mail' => 'test.adminbcna@integralces.net',
       'country' => 'ES',
       'region' => 'Barcelonès',
       'town' => 'Barcelona',
@@ -107,8 +158,270 @@ class BankTestCase extends DrupalWebTestCase {
       'registration_offers' => '0',
       'registration_wants' => '0',
     );
-    $this->createExchange($this->exchange2);
+    $this->createExchange(array_merge($this->exchange2, (array) $this->admin2));
     $this->activateExchange($this->exchange2);
+  }
+  /**
+   * Creates three accounts.
+   */
+  protected function createAccounts() {
+    $this->account11 = array(
+      'exchange' => $this->exchange1,
+      'account' => array(
+        'name' => 'account11',
+        'mail' => 'account11@integralces.net',
+        'pass_raw' => 'integralces',
+        'firstname' => 'John',
+        'surname' => 'Smith',
+        'address' => 'Main street 68',
+        'town' => 'Manresa',
+        'postcode' => '08241',
+        'phonemobile' => '123456789',
+        'phonework' => '987654321',
+        'phonehome' => '135792468',
+        'website' => 'http://www.integralces.net',
+      ),
+      'bankaccount' => array(
+        'kind' => '0',
+      ),
+      'offer' => array(
+        array(
+          'title' => 'First test offer',
+          'body' => 'This is the first test offer from John Smith account.',
+          'rate' => '0.35',
+          'keywords' => 'test'
+        ),
+      ),
+      'want' => array(
+        array(
+          'title' => 'First test want',
+          'body' => 'This is the first test want from John Smith account.',
+          'keywords' => 'test'
+        ),
+      ),
+    );
+    $this->createAccount($this->account11);
+    $this->activateAccount($this->account11, $this->admin1, 1);
+    $this->account12 = array(
+      'exchange' => $this->exchange1,
+      'account' => array(
+        'name' => 'account12',
+        'mail' => 'account12@integralces.net',
+        'pass_raw' => 'integralces',
+        'firstname' => 'Ofelia',
+        'surname' => 'Tia',
+        'address' => 'Gran vía 25',
+        'town' => 'St. vicenç de castellet',
+        'postcode' => '08321',
+        'phonemobile' => '11111111',
+        'phonework' => '22222222',
+        'phonehome' => '',
+        'website' => '',
+      ),
+      'bankaccount' => array(
+        'kind' => '0',
+      ),
+      'offer' => array(
+        array(
+          'title' => 'Second test offer',
+          'body' => 'This is the second test offer from Ofelia Tia account.',
+          'rate' => 'contact me',
+          'keywords' => 'test'
+        ),
+      ),
+      'want' => array(
+        array(
+          'title' => 'Second test want',
+          'body' => 'This is the second test want from Ofelia Tia account.',
+          'keywords' => 'test'
+        ),
+      ),
+    );
+    $this->createAccount($this->account12);
+    $this->activateAccount($this->account12, $this->admin1, 2);
+    $this->account22 = array(
+      'exchange' => $this->exchange2,
+      'account' => array(
+        'name' => 'account22',
+        'mail' => 'account22@integralces.net',
+        'pass_raw' => 'integralces',
+        'firstname' => 'Emmy',
+        'surname' => 'Noether',
+        'address' => 'Gran vía 25',
+        'town' => 'Barcelona',
+        'postcode' => '08015',
+        'phonemobile' => '333333333',
+        'phonework' => '444444444',
+        'phonehome' => '',
+        'website' => '',
+      ),
+      'bankaccount' => array(
+        'kind' => '0',
+      ),
+      'offer' => array(),
+      'want' => array(),
+    );
+    $this->createAccount($this->account22);
+    $this->activateAccount($this->account22, $this->admin2, 1);
+  }
+  /**
+   * Do several transactions.
+   */
+  protected function doTransactions() {
+    $user1 = $this->accountUser($this->account11);
+    $user2 = $this->accountUser($this->account12);
+    $record = array(
+      'buyer' => 'HORA0002',
+      'concept' => 'First test transaction.',
+      'amount' => '1.25',
+    );
+    $this->doTransaction($user1, $record);
+    $this->assertBalance($user1, '1.25');
+    $this->assertBalance($user2, '-1.25');
+    $record = array(
+      'buyer' => 'HORA0002',
+      'concept' => 'Second test transaction.',
+      'amount' => '0.75',
+    );
+    $this->doTransaction($this->accountUser($this->account11), $record);
+    $this->assertBalance($user1, '2');
+    $this->assertBalance($user2, '-2');
+    $record = array(
+      'buyer' => 'HORA0001',
+      'concept' => 'Third test transaction.',
+      'amount' => '0.5',
+    );
+    $this->doTransaction($user2, $record);
+    $this->assertBalance($user1, '1.5');
+    $this->assertBalance($user2, '-1.5');
+  }
+  /**
+   * Helper function
+   * @return object
+   *   A user object suitable for drupalLogin() function.
+   */
+  protected function accountUser($record) {
+    $user = (object) array(
+      'name' => $record['account']['name'],
+      'pass_raw' => $record['account']['pass_raw'],
+      'mail' => $record['account']['mail'],
+    );
+    return $user;
+  }
+ /**
+  * Create a new user request.
+  * @param array $record
+  *   associative array with entries:
+  *   - exchange: associative array with entries
+  *     - country
+  *     - fullname
+  *   - account: associative array with entries:
+  *     - name
+  *     - mail
+  *     - firstname
+  *     - surname
+  *     - address
+  *     - town
+  *     - postcode
+  *     - phonemobile
+  *     - phonework
+  *     - phonehome
+  *     - website
+  *   - bankaccount: associative array with entries:
+  *     - kind: type of account. Options are 0 (Individual), 1 (Shared),
+  *             2 (Organization), 3 (Company), 4 (Public).
+  *   - offer: array with zero or more entries. Each of them is an associative
+  *   array with entries:
+  *     - title
+  *     - body
+  *     - rate
+  *     - keywords
+  *   - want: array with zero or more entries. Each of them is an associative
+  *   array with entries:
+  *     - title
+  *     - body
+  *     - keywords
+  */
+  protected function createAccount($record) {
+    // Choose country from first page.
+    $this->drupalGet('');
+    $country = array(
+      'country' => $record['exchange']['country'],
+    );
+    $this->drupalPost(NULL, $country, t('Register'));
+    // Choose exchange.
+    $this->clickLink($record['exchange']['fullname']);
+    // User account. Change field names.
+    $account = array(
+      'name' => $record['account']['name'],
+      'mail' => $record['account']['mail'],
+      'pass[pass1]' => $record['account']['pass_raw'],
+      'pass[pass2]' => $record['account']['pass_raw'],
+      'ces_firstname[und][0][value]' => $record['account']['firstname'],
+      'ces_surname[und][0][value]' => $record['account']['surname'],
+      'ces_address[und][0][value]' => $record['account']['address'],
+      'ces_town[und][0][value]' => $record['account']['town'],
+      'ces_postcode[und][0][value]' => $record['account']['postcode'],
+      'ces_phonemobile[und][0][value]' => $record['account']['phonemobile'],
+      'ces_phonework[und][0][value]' => $record['account']['phonework'],
+      'ces_phonehome[und][0][value]' => $record['account']['phonehome'],
+      'ces_website[und][0][value]' => $record['account']['website'],
+    );
+    $this->drupalPost(NULL, $account, t('Next >>'));
+    // Bank account, offers and wants.
+    $offers = 0;
+    $wants = 0;
+    $edit = $record['bankaccount'];
+    while ($edit !== FALSE) {
+      if ($offers < count($record['offer'])) {
+        $op = t('Add offer >>');
+        $this->drupalPost(NULL, $edit, $op);
+        // Offer.
+        $offer = $record['offer'][$offers];
+        $edit = array();
+        $edit['offers[' . $offers . '][title]'] = $offer['title'];
+        $edit['offers[' . $offers . '][body]'] = $offer['body'];
+        $edit['offers[' . $offers . '][ces_offer_rate][und][0][value]'] = $offer['rate'];
+        $edit['offers[' . $offers . '][keywords]'] = $offer['keywords'];
+        $offers++;
+      }
+      elseif ($wants < count($record['want'])) {
+        $op = t('Add want >>');
+        $this->drupalPost(NULL, $edit, $op);
+        // Want.
+        $want = $record['want'][$wants];
+        $edit = array();
+        $edit['wants[' . $wants . '][title]'] = $want['title'];
+        $edit['wants[' . $wants . '][body]'] = $want['body'];
+        $edit['wants[' . $wants . '][keywords]'] = $want['keywords'];
+        $wants++;
+      }
+      else {
+        $op = t('Create new account');
+        $this->drupalPost(NULL, $edit, $op);
+        $edit = FALSE;
+      }
+    }
+  }
+  /**
+   * Activate a requested account.
+   * @param array $record
+   *   The account record.
+   * @param object $admin
+   *   The exchange admin user.
+   * @param int $index
+   *   The index of this user in the ces/admin/account page, in order to click
+   *   the proper 'Edit' link.
+   */
+  protected function activateAccount($record, $admin, $index) {
+    // Login exchange admin,
+    $this->drupalLogin($admin);
+    // Go to accounts admin page.
+    $this->drupalGet('ces/admin/account');
+    $this->assertText(t('Hidden'));
+    $this->clickLink(t('Edit'), $index);
+    $this->drupalPost(NULL, array('state' => '1'), t('Save'));
+    $this->drupalLogout();
   }
  /**
   * Create a new exchange request.
@@ -121,6 +434,9 @@ class BankTestCase extends DrupalWebTestCase {
     $this->assertText(t('Location'));
     $this->assertText(t('Currency'));
     $this->assertText(t('Members'));
+    $record['pass[pass1]'] = $record['pass_raw'];
+    $record['pass[pass2]'] = $record['pass_raw'];
+    unset($record['pass_raw']);
     $this->drupalPost(NULL, $record, t('Create exchange'));
     $this->assertRaw(t('Exchange %code successfully created.', array('%code' => $record['code'])));
   }
@@ -138,184 +454,70 @@ class BankTestCase extends DrupalWebTestCase {
     $this->assertText(t('Limits'));
     $this->drupalLogout();
   }
-/*
-  public function testBank() {
-    //Setup menu block.
-    $this->setupMenuBlock();
-    //Create first exchange.
-    $this->exchange1 = $this->createExchange($this->exchange1Admin, $this->exchange1);
-    $this->exchange1 = $this->activateExchange($this->globalAdminUser, $this->exchange1);
-    //Create two accounts for 1st exchange.
-    $account11 = $this->createAccount($this->exchange1User1, $this->exchange1);
-    $account12 = $this->createAccount($this->exchange1User2, $this->exchange1);
-    $account11 = $this->activateAccount($this->exchange1Admin, $account11);
-    $account12 = $this->activateAccount($this->exchange1Admin, $account12);
-    //Create three transactions between these two accounts.
-    $this->createTransaction($this->exchange1User1, $account11, $account12, '1.50', 'First transaction');
-    $this->createTransaction($this->exchange1User1, $account11, $account12, '2.50', 'Second transaction');
-    $this->createTransaction($this->exchange1User2, $account12, $account11, '1.00', 'Third transaction');
-    //Check balances.
-    $this->assertBalance($this->exchange1User1, $account11, '3.00');
-    $this->assertBalance($this->exchange1User2, $account12, '-3.00');
-    //Create second exchange.
-    $this->exchange2 = $this->createExchange($this->exchange2Admin, $this->exchange2);
-    $this->exchange2 = $this->activateExchange($this->globalAdminUser, $this->exchange2);
-    //Create two accounts for 2nd exchange.
-    $account21 = $this->createAccount($this->exchange2User1, $this->exchange2);
-    $account22 = $this->createAccount($this->exchange2User2, $this->exchange2);
-    $account21 = $this->activateAccount($this->exchange2Admin, $account21);
-    $account22 = $this->activateAccount($this->exchange2Admin, $account22);
-    //Create a transaction between the two accounts.
-    $this->createTransaction($this->exchange2User1, $account21, $account22, '15', 'First transaction in ECOs');
-    //Create a failed transaction between exchanges.
-    $this->createTransaction($this->exchange2User2, $account22, $account11, '25', 'First inter exchange transaction', FALSE);
-    //The two virtual should been created. Activate them.
-    $this->activateAccount($this->exchange1Admin, array('name' => 'HORABCNA'));
-    $this->activateAccount($this->exchange2Admin, array('name' => 'BCNAHORA'));
-    //Re-trigger transaction.
-    $this->triggerTransaction($this->exchange2User2);
-    //Assert currency conversion.
-    $this->assertBalance($this->exchange2User2, $account11, '10.00');
-    $this->assertBalance($this->exchange1User1, $account12, '0.50');
-    //Configure limit chains.
-    $this->addLimit($this->exchange1Admin, 'default', 'AbsoluteDebitLimit', '-1.0', TRUE);
-    $this->addLimit($this->exchange2Admin, 'default', 'AbsoluteDebitLimit', '0.0', TRUE);
-    $this->createTransaction($this->exchange1User2, $account12, $account11, '1.0', 'Limit chain pass test', TRUE);
-    $this->createTransaction($this->exchange1User2, $account12, $account11, '1.0', 'Limit chain fail test', FALSE);
-    $this->createTransaction($this->exchange2User1, $account21, $account22, '10', 'Limit chain pass test', TRUE);
-    $this->createTransaction($this->exchange2User1, $account21, $account22, '1', 'Limit chain fail test', FALSE);
-  }
-  protected function addLimit($user, $chain, $classname, $value, $block) {
+  /**
+   * Create a transaction.
+   * @param object $user
+   *   The user who performs the transaction.
+   * @param array $record
+   *   An associative array with entries:
+   *   - buyer: buyer' account number.
+   *   - concept
+   *   - amount
+   *   - seller: seller's account number. If ommited, the default user's account
+   *             will be used.
+   * @param boolean $success
+   *   Whether this transaction should be permitted by the system.
+   */
+  protected function doTransaction($user, $record, $success = TRUE) {
     $this->drupalLogin($user);
-    $this->drupalGet('ces/bank/dashboard');
-    $this->clickLink(t('Administrative interface'));
-    $this->clickLink(t('Administer limit chains'));
-    $this->clickLink(t('Edit'));
+    $this->clickLink(t('Seller actions'));
+    $this->clickLink(t('Enter transaction'));
     $edit = array(
-      'newlimit[classname]' => $classname,
+      'fromaccountname' => $record['buyer'],
+      'concept' => $record['concept'],
+      'amount' => $record['amount'],
     );
-    $this->drupalPost(NULL, $edit, t('Add limit'));
-    $edit = array(
-      'limits[0][block]' => $block,
-      'limits[0][value]' => $value,
-    );
-    $this->drupalPost(NULL, $edit, t('Update limit chain'));
-    $this->assertRaw(t('Limit chain %chain successfully updated.', array('%chain' => $chain)));
-  }
-  protected function setupMenuBlock() {
-    $this->drupalLogin($this->globalAdminUser);
-    $this->drupalPost('admin/structure/block', array('blocks[ces_bank_navigation][region]' => 'sidebar_first'), t('Save blocks'));
-    $this->assertFieldByName('blocks[ces_bank_navigation][region]', 'sidebar_first');
-    $this->drupalGet('ces/bank/dashboard');
-    $this->assertText(t('CES Navigation'));
-  }
-  protected function assertBalance($user, $account, $amount) {
-    //TODO: assuere account is the given. Assert balance also in account statement.
-    $this->drupalLogin($user);
-    $this->drupalGet('ces/bank/dashboard');
-    $this->clickLink(t('Dashboard'));
-    $this->assertText($amount);
-  }
-  protected function activateAccount($admin, $record) {
-    $this->drupalLogin($admin);
-    $this->drupalGet('ces/bank/dashboard');
-    $this->clickLink(t('Administrative interface'));
-    $this->clickLink($record['name']);
-    $this->drupalPost(NULL, array(), t('Activate account'));
-    $this->assertRaw(t('Account sucessfully activated.'));
-    return $record;
-  }
-  protected function createExchange($admin, $record) {
-    $this->drupalLogin($admin);
-    $this->drupalGet('ces/bank/exchange/new');
-    $this->assertText(t('General'));
-    $this->assertText(t('Location'));
-    $this->assertText(t('Currency'));
-    $this->drupalPost(NULL, $record, t('Create exchange'));
-    $this->assertRaw(t('Exchange %code successfully created.', array('%code' => $record['code'])));
-    return $record;
-  }
-  protected function activateExchange($globaladmin, $record) {
-    $this->drupalLogin($globaladmin);
-    $this->drupalGet('ces/bank/admin');
-    $this->clickLink($record['code'] . ' - ' . $record['name']);
-    $this->assertFieldByName('code', $record['code']);
-    $this->assertFieldByName('name', $record['name']);
-    $this->drupalPost(NULL, array(), t('Activate exchange'));
-    $this->assertRaw(t('Exchange %code successfully activated.', array('%code' => $record['code'])));
-    $this->assertText(t('Limits'));
-    return $record;
-  }
-  protected function createAccount($user, $exchange) {
-    static $lastAccountId = array();
-    if (!isset($lastAccountId[$exchange['code']]))
-      $lastAccountId[$exchange['code']] = 0;
-    $this->drupalLogin($user);
-    $this->drupalGet('ces/bank/exchange');
-    //little hack:
-    $index = ($exchange['code'] == $this->exchange1['code']) ? 0 : 1;
-    $this->clickLink(t('Register'), $index);
-    $record = array(
-      'kind' => '0',
-    );
-    $name = $exchange['code'] . '000' . ($lastAccountId[$exchange['code']]+1);
-    $this->assertFieldByName('name', $name);
-    $this->assertFieldByName('username', $user->name);
-    $this->drupalPost(NULL, $record, t('Create account'));
-    $this->assertText(t('Account successfully created.'));
-    $lastAccountId[$exchange['code']]++;
-    $record['name'] = $name;
-    $record['username'] = $user->name;
-    return $record;
-  }
-  protected function createTransaction($user, $seller, $buyer, $amount, $concept, $successful = TRUE) {
-    $this->drupalLogin($user);
-    $this->drupalGet('ces/bank/dashboard');
-    $this->clickLink(t('Charge a sale'));
-    $edit = array(
-        'fromaccountname' => $buyer['name'],
-        'concept' => $concept,
-        'amount' => $amount,
-    );
-    if (drupal_substr($seller['name'], 0, 4) != drupal_substr($buyer['name'], 0, 4)) {
-      //Interexchange transaction
-      $name = drupal_substr($buyer['name'], 0, 4);
-      $element = current($this->xpath($this->constructFieldXpath('name', 'fromexchange')));
-      $options = $this->getAllOptions($element);
-      foreach ($options as $option) {
-        if (((string)$option) == $name) {
-          $this->drupalPostAJAX(NULL, array('fromexchange' => ((string)$option['value'])), 'fromexchange');
-          break;
+    if (!empty($record['seller'])) {
+      $edit['toaccountname'] = $record['seller'];
+      if (drupal_substr($record['seller'], 0, 4) != drupal_substr($record['buyer'], 0, 4)) {
+        // Interexchange transaction.
+        $name = drupal_substr($record['buyer'], 0, 4);
+        $element = current($this->xpath($this->constructFieldXpath('name', 'fromexchange')));
+        $options = $this->getAllOptions($element);
+        foreach ($options as $option) {
+          if (((string)$option) == $name) {
+            $this->drupalPostAJAX(NULL, array('fromexchange' => ((string)$option['value'])), 'fromexchange');
+            break;
+          }
         }
       }
     }
     $this->drupalPost(NULL, $edit, t('Create transaction'));
-    $this->assertText($seller['name']);
-    $this->assertText($buyer['name']);
-    $this->assertText($amount);
-    $this->assertText($concept);
+    $this->assertText($record['buyer']);
+    if (isset($record['seller'])) {
+      $this->assertText($record['seller']);
+    }
+    $this->assertText($record['amount']);
+    $this->assertText($record['amount']);
     $this->drupalPost(NULL, array(), t('Confirm transaction'));
     $okmessage = t('Transaction successfully applied.');
-    if ($successful) {
+    if ($success) {
       $this->assertText($okmessage);
     }
     else {
       $this->assertNoText($okmessage);
     }
+    $this->drupalLogout();
   }
-  protected function triggerTransaction($user, $successful = TRUE) {
+  /**
+   * Asserts that the default account of given user has the correct balance in
+   * his account.
+   */
+  public function assertBalance($user, $amount) {
     $this->drupalLogin($user);
-    $this->drupalGet('ces/bank/dashboard');
-    $this->clickLink(t('Statement'));
-    $this->clickLink('Trigger');
-    $this->drupalPost(NULL, array(), t('Trigger transaction'));
-    $okmessage = t('Transaction successfully applied.');
-    if ($successful) {
-      $this->assertText($okmessage);
-    }
-    else {
-      $this->assertNoText($okmessage);
-    }
+    $this->clickLink('My account');
+    $this->clickLink('Account statement');
+    $this->assertText($amount);
+    $this->drupalLogout();
   }
- */
 }

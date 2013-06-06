@@ -1595,7 +1595,8 @@ function ces_offerswants_user_register_previous($form, &$form_state) {
 function ces_offerswants_user_register_save_values($form, &$form_state){
   $page = $form_state['page'];
   if ($page == 'offer' || $page == 'want') {
-    $type = $page.'s'; //offers or wants.
+    // Offers or wants.
+    $type = $page.'s';
     $index = $form_state['offerwant_index'];
     if (!isset($form_state['page_values'][$type])) {
       $form_state['page_values'][$type] = array();
@@ -1604,7 +1605,7 @@ function ces_offerswants_user_register_save_values($form, &$form_state){
   }
 }
 function ces_offerswants_user_register_submit($form, &$form_state) {
-  //submit offers
+  // Submit offers.
   if(!empty($form_state['page_values']['offers'])){
     foreach($form_state['page_values']['offers'] as $offer) {
       $form_state['values'] = $offer;
@@ -1612,7 +1613,7 @@ function ces_offerswants_user_register_submit($form, &$form_state) {
       ces_offerwant_form_submit($form, $form_state);
     }
   }
-  //submit wants
+  // Submit wants.
   if(!empty($form_state['page_values']['wants'])){
     foreach($form_state['page_values']['wants'] as $want) {
       $form_state['values'] = $want;
@@ -1620,4 +1621,5 @@ function ces_offerswants_user_register_submit($form, &$form_state) {
       ces_offerwant_form_submit($form, $form_state);
     }
   }
+  $form_state['redirect'] = 'ces';
 }

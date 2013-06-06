@@ -109,7 +109,6 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
       '#type' => 'value',
       '#value' => $exchange['admin'],
       '#description' => t('Administrator settings for this exchange. One Drupal user is the administrator.'),
-
     );
   }
 
@@ -117,7 +116,6 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#type' => 'fieldset',
     '#title' => t('Location'),
     '#description' => t('Location settings for this exchange.'),
-
   );
 
   include_once DRUPAL_ROOT . '/includes/locale.inc';
@@ -160,7 +158,6 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#type' => 'fieldset',
     '#title' => t('Currency'),
     '#description' => t('Currency settings for this exchange.'),
-
   );
 
   $form['exchange']['currency']['currencysymbol'] = array(
@@ -215,7 +212,6 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#type' => 'fieldset',
     '#title' => t('Members'),
     '#description' => t('Settings for users registering with exchange. Sub-modules add settings here.'),
-
   );
   if (!empty($exchange['state'])) {
     // Exchange has been activated.
@@ -281,9 +277,9 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
   try {
     if ($op == 'new') {
       // Create admin user.
--     user_register_submit($form['exchange']['admin'], $form_state);
--     // Set the new user as the exchange administrator.
--     $form_state['values']['admin'] = $form_state['values']['uid'];
+      user_register_submit($form['exchange']['admin'], $form_state);
+      // Set the new user as the exchange administrator.
+      $form_state['values']['admin'] = $form_state['values']['uid'];
     }
     $form_state['values']['name'] = $form_state['values']['fullname'];
     if ($op == 'new') {
@@ -294,8 +290,14 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
       $bank->updateExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully updated.', array('%code' => $form_state['values']['code'])));
     }
-    if ($op == 'activate') {
+    elseif ($op == 'activate') {
       $bank->activateExchange($form_state['values']);
+      // Activate admin Drupal user.
+      $admin = user_load($form_state['values']['admin']);
+      $admin->status = 1;
+      user_save($admin);
+      // Clear cache so register block includes the new exchange.
+      cache_clear_all('ces_bank_countries', 'cache');
       drupal_set_message(t('Exchange %code successfully activated. There has been sent an email to the new exchange administrator.', array('%code' => $form_state['values']['code'])));
     }
   }
@@ -527,7 +529,7 @@ function ces_bank_limitchain_form_submit($form, &$form_state) {
 function ces_bank_account_form($form, &$form_state, $account = NULL) {
   $bank = new Bank();
   if ($account != NULL) {
-    if (!is_array($account)) {
+    if (is_int($account)) {
       $account = $bank->getAccount($account);
     }
     $exchange = $bank->getExchange($account['exchange']);
@@ -686,20 +688,37 @@ function ces_bank_account_form_submit($form, &$form_state) {
   }
   $bank = new Bank();
   try {
+    $activate = FALSE;
     if (!isset($record['id'])) {
-    //New account.
+      // New account.
       $bank->createAccount($record);
-      drupal_set_message(t('Account successfully created. The account will not be available until it is being activated by this exchange\'s administrator. You will recieve an email when this is done.'));
-      if ($record['state'] == LocalAccount::STATE_ACTIVE) {
-        $bank->activateAccount($record);
+      drupal_set_message(t('Account successfully created.'));
+      if ($record['state'] == LocalAccount::STATE_HIDDEN) {
+         drupal_set_message(t('The account will not be available until it is being activated by this exchange\'s administrator. You will recieve an email when this is done.'));
+      }
+      elseif ($record['state'] == LocalAccount::STATE_ACTIVE) {
+        $activate = TRUE;
       }
     }
     else {
       $previous = $bank->getAccount($record['id']);
       $bank->updateAccount($record);
       if ($previous['state'] == LocalAccount::STATE_HIDDEN && $record['state'] == LocalAccount::STATE_ACTIVE) {
-        $bank->activateAccount($record);
+        $activate = TRUE;
       }
+    }
+    if ($activate) {
+      // Activate Drupal user(s).
+      foreach ($record['users'] as $key => $accuser) {
+        $user = user_load($accuser['user']);
+        if ($user->status == 0) {
+          $user->status = 1;
+          user_save($user);
+        }
+      }
+      // Activate banking account.
+      $bank->activateAccount($record);
+      drupal_set_message(t('Account successfully activated.'));
     }
   }
   catch (Exception $e) {
