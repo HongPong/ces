@@ -78,7 +78,7 @@ class Serializer {
       $inner = $auxobject;
       $auxobject = $auxobject->getParent();
     } while ($auxobject != NULL && ($auxobject instanceof DBObject));
-    //Decide between insert and update, and automatically populate temporal fields.
+    // Decide between insert and update, and automatically populate temporal fields.
     $record['modified'] = REQUEST_TIME;
     if (empty($record['id'])) {
       $record['created'] = REQUEST_TIME;
@@ -105,9 +105,11 @@ class Serializer {
   /**
    * Performs a SQL function such as COUNT(*), SUM(*), ... on a table field for
    * those rows meeting conditions.
-   * @param $key must be SQL safe.
-   * @param $conditions array Each entry is a condition. A condition is an array
-   * of three therms
+   *
+   * @param $key 
+   *   must be SQL safe.
+   * @param array $conditions 
+   *   Each entry is a condition. A condition is an array of three therms.
    */
   public function selectFunctionField($function, $key, array $conditions) {
     $functions = array('COUNT', 'SUM');
@@ -124,16 +126,18 @@ class Serializer {
     return $query->execute()->fetchField();
   }
   /**
-   * @param $conditions array
-   * Associative array with field names as keys. There are two special conditions
-   * for those objects having the created [time] field:
-   * - createdsince: the smaller created time to return.
-   * - createduntil: the largest created time to return.
+   * @param array $conditions
+   *   Associative array with field names as keys. There are two special conditions
+   *   for those objects having the created [time] field:
+   *   - createdsince: the smaller created time to return.
+   *   - createduntil: the largest created time to return.
    * @TODO: remove these two exceptions and change the conditions to be an array
    * of three elements: (key, value, $cmp='=').
-   * @param $order string
-   * A field to order by.
-   * @return array Objects with attribute $key = $value ordered by $order field.
+   * @param string $order
+   *   A field to order by.
+   *
+   * @return array 
+   *   Objects with attribute $key = $value ordered by $order field.
    */
   public function loadCollection(array $conditions, $order = NULL) {
     if (!db_table_exists($this->table)) {
@@ -185,7 +189,7 @@ class Serializer {
     return Serializer::$cache[$this->className][$key][$value];
   }
   /**
-   * Deletes a database record
+   * Deletes a database record.
    * @param id int the record id.
    */
   public function delete(DBObject $object) {
@@ -202,7 +206,7 @@ class Serializer {
     return db_transaction();
   }
   private function handleSerialized(array &$record) {
-    //It would be nice if it was done automatically by Drupal, but...
+    // It would be nice if it was done automatically by Drupal, but...
     $serialized = array('data', 'decoration');
     foreach ($serialized as $field) {
       if (isset($record[$field]) && is_string($record[$field])) {
@@ -224,7 +228,7 @@ class Serializer {
   }
 }
 
-class LockSerializer extends Serializer{
+class LockSerializer extends Serializer {
   public function loadCollection(array $conditions, $order = NULL) {
     throw new Exception('Not implemented');
   }
@@ -246,7 +250,7 @@ class LockSerializer extends Serializer{
     return parent::load($id);
   }
   /**
-   * Saves object and releases lock
+   * Saves object and releases lock.
    */
   public function save(DBObject $object) {
     $res = parent::save($object);
@@ -254,7 +258,7 @@ class LockSerializer extends Serializer{
     return $res;
   }
   /**
-   * updates field and releases lock
+   * Updates field and releases lock.
    */
   public function updateField(DBObject $object, $key) {
     $res = parent::updateField($object, $key);
@@ -263,10 +267,10 @@ class LockSerializer extends Serializer{
   }
 }
 
-abstract class DBObject{
+abstract class DBObject {
   public static $table;
   public function getRecord() {
-    //Handle decorator pattern.
+    // Handle decorator pattern.
     $object = $this;
     $parent = $object->getParent();
     $decoration = array();
@@ -281,7 +285,7 @@ abstract class DBObject{
       } while ($parent != NULL && ($parent instanceof DBObject));
       array_reverse($decoration);
     }
-    //Get record.
+    // Get record.
     $record = $object->getSimpleRecord();
     $record['decoration'] = $decoration;
     return $record;
