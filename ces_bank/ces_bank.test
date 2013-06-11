@@ -115,6 +115,15 @@ class BankTestCase extends DrupalWebTestCase {
       'name' => 'adminhora',
       'mail' => 'test.adminhora@integralces.net',
       'pass_raw' => 'integralces',
+      'firstname' => 'Admin',
+      'surname' => 'Hora',
+      'address' => 'Major square',
+      'town' => 'Manresa',
+      'postcode' => '08241',
+      'phonemobile' => '7777777',
+      'phonework' => '88888888',
+      'phonehome' => '99999999',
+      'website' => 'http://www.integralces.net',
     );
     $this->exchange1 = array(
       'code' => 'HORA',
@@ -133,13 +142,22 @@ class BankTestCase extends DrupalWebTestCase {
       'registration_offers' => '1',
       'registration_wants' => '1',
     );
-    $this->createExchange(array_merge($this->exchange1, (array) $this->admin1));
+    $this->createExchange(array_merge($this->exchange1, $this->accountRecord((array) $this->admin1)));
     $this->activateExchange($this->exchange1);
     //Create second exchange.
     $this->admin2 = (object) array(
       'name' => 'adminbcna',
       'mail' => 'test.adminbcna@integralces.net',
       'pass_raw' => 'integralces',
+      'firstname' => 'Admin',
+      'surname' => 'Barcelona',
+      'address' => 'Catalunya square',
+      'town' => 'Barcelona',
+      'postcode' => '08000',
+      'phonemobile' => '11111111',
+      'phonework' => '22222222',
+      'phonehome' => '33333333',
+      'website' => 'http://www.integralces.net',
     );
     $this->exchange2 = array(
       'code' => 'BCNA',
@@ -158,7 +176,7 @@ class BankTestCase extends DrupalWebTestCase {
       'registration_offers' => '0',
       'registration_wants' => '0',
     );
-    $this->createExchange(array_merge($this->exchange2, (array) $this->admin2));
+    $this->createExchange(array_merge($this->exchange2, $this->accountRecord((array) $this->admin2)));
     $this->activateExchange($this->exchange2);
   }
   /**
@@ -308,6 +326,29 @@ class BankTestCase extends DrupalWebTestCase {
     );
     return $user;
   }
+  /**
+   * Helper function
+   * @return array
+   *   User account form array with proper keys.
+   */
+  protected function accountRecord($record) {
+    $ret = array(
+      'name' => $record['name'],
+      'mail' => $record['mail'],
+      'pass[pass1]' => $record['pass_raw'],
+      'pass[pass2]' => $record['pass_raw'],
+      'ces_firstname[und][0][value]' => $record['firstname'],
+      'ces_surname[und][0][value]' => $record['surname'],
+      'ces_address[und][0][value]' => $record['address'],
+      'ces_town[und][0][value]' => $record['town'],
+      'ces_postcode[und][0][value]' => $record['postcode'],
+      'ces_phonemobile[und][0][value]' => $record['phonemobile'],
+      'ces_phonework[und][0][value]' => $record['phonework'],
+      'ces_phonehome[und][0][value]' => $record['phonehome'],
+      'ces_website[und][0][value]' => $record['website'],
+    );
+    return $ret;
+  }
  /**
   * Create a new user request.
   * @param array $record
@@ -352,21 +393,7 @@ class BankTestCase extends DrupalWebTestCase {
     // Choose exchange.
     $this->clickLink($record['exchange']['fullname']);
     // User account. Change field names.
-    $account = array(
-      'name' => $record['account']['name'],
-      'mail' => $record['account']['mail'],
-      'pass[pass1]' => $record['account']['pass_raw'],
-      'pass[pass2]' => $record['account']['pass_raw'],
-      'ces_firstname[und][0][value]' => $record['account']['firstname'],
-      'ces_surname[und][0][value]' => $record['account']['surname'],
-      'ces_address[und][0][value]' => $record['account']['address'],
-      'ces_town[und][0][value]' => $record['account']['town'],
-      'ces_postcode[und][0][value]' => $record['account']['postcode'],
-      'ces_phonemobile[und][0][value]' => $record['account']['phonemobile'],
-      'ces_phonework[und][0][value]' => $record['account']['phonework'],
-      'ces_phonehome[und][0][value]' => $record['account']['phonehome'],
-      'ces_website[und][0][value]' => $record['account']['website'],
-    );
+    $account = $this->accountRecord($record['account']);
     $this->drupalPost(NULL, $account, t('Next >>'));
     // Bank account, offers and wants.
     $offers = 0;
@@ -434,9 +461,6 @@ class BankTestCase extends DrupalWebTestCase {
     $this->assertText(t('Location'));
     $this->assertText(t('Currency'));
     $this->assertText(t('Members'));
-    $record['pass[pass1]'] = $record['pass_raw'];
-    $record['pass[pass2]'] = $record['pass_raw'];
-    unset($record['pass_raw']);
     $this->drupalPost(NULL, $record, t('Create exchange'));
     $this->assertRaw(t('Exchange %code successfully created.', array('%code' => $record['code'])));
   }

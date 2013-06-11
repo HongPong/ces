@@ -1038,7 +1038,7 @@ class Exchange extends DBObject {
   /**
    * Loads record.
    */
-  public function loadRecord(&$record) {
+  public function loadRecord($record) {
     parent::loadRecord($record);
     $this->currency = new Currency($record);
   }
@@ -1350,7 +1350,7 @@ class LocalAccount extends DBObject implements AccountInterface {
   /**
    * LoadRecord loads loadRecord function from the parent DBObject.
    */
-  public function loadRecord(&$record) {
+  public function loadRecord($record) {
     parent::loadRecord($record);
     if (isset($record['users']) && is_array($record['users'])) {
       $this->users = array();
@@ -1500,7 +1500,7 @@ class LimitChain extends DBObject {
    * TODO: Document.
    * @override
    */
-  public function loadRecord(&$record) {
+  public function loadRecord($record) {
     // Load fields.
     parent::loadRecord($record);
     // Load limits.
@@ -2527,13 +2527,13 @@ class UserPermission {
         $permissions = array();
         // Get permissions directly granted to this user.
         $userperms = $sp->loadCollection(array('scope' => 'user', 'scopeid' => $this->userid));
-        $permissions = &array_merge($permissions, $userperms);
+        $permissions = array_merge($permissions, $userperms);
         // Get permissions granted to user's accounts. Compute exchanges.
         $sau = new Serializer('AccountUser');
         $useraccounts = $sau->loadCollection(array('user' => $this->userid));
         foreach ($useraccounts as $useraccount) {
           $accountperms = $sp->loadCollection(array('scope' => 'account', 'scopeid' => $useraccount->account));
-          $permissions = &array_merge($permissions, $accountperms);
+          $permissions = array_merge($permissions, $accountperms);
 
         }
         // Compute exchanges.
@@ -2548,11 +2548,11 @@ class UserPermission {
         // Get permissions granted to user's accounts exchanges.
         foreach ($exchanges as $exchange) {
           $exchangeperms = $sp->loadCollection(array('scope' => 'exchange', 'scopeid' => $exchange));
-          $permissions = &array_merge($permissions, $exchangeperms);
+          $permissions = array_merge($permissions, $exchangeperms);
         }
         // Get global permissions.
         $globalperms = $sp->loadCollection(array('scope' => 'global'));
-        $permissions = &array_merge($permissions, $globalperms);
+        $permissions = array_merge($permissions, $globalperms);
       }
       // Set the static variable.
       self::$permissions[$this->userid] = &$permissions;

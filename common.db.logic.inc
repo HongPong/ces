@@ -81,7 +81,7 @@ class Serializer {
   /**
    * Saves an object to database.
    */
-  public function save(DBObject &$object) {
+  public function save(DBObject $object) {
     $record = $object->getRecord();
     //Call save extra data to all implied objects.
     $auxobject = $object; //Don't loose the main reference!
@@ -109,7 +109,7 @@ class Serializer {
   /**
    * Updates a single database field from a single row.
    */
-  public function updateField(DBObject &$object, $key) {
+  public function updateField(DBObject $object, $key) {
     $id = $object->id;
     $value = $object->{$key};
     $this->deleteCache();

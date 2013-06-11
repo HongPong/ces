@@ -98,11 +98,10 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     $form['exchange']['admin'] = array(
       '#type' => 'fieldset',
       '#title' => t('Administrator'),
-      '#description' => t('Administrator settings for this exchange. One Drupal user is the administrator.'),
+      '#description' => t('Administrator settings for this exchange. One Drupal user is the administrator. It is recommended not to use a real person name here.'),
     );
-    $adminform = &$form['exchange']['admin'];
-    $adminform['#user'] = $user;
-    user_account_form($adminform, $form_state);
+    $form['exchange']['admin'] = user_register_form($form['exchange']['admin'], $form_state);
+    unset($form['exchange']['admin']['actions']);
   }
   else {
     $form['exchange']['admin'] = array(
@@ -283,7 +282,10 @@ function ces_bank_exchange_form_validate($form, &$form_state) {
   if (!is_numeric($currencyvalue)) {
     form_set_error('currencyvalue', t('Currency value %value is invalid. Enter a numeric value like 0.1, 0.0666666667 or 1', array('%value' => $currencyvalue)));
   }
-
+  if ($form_state['values']['operation'] == 'new') {
+    user_register_validate($form['exchange']['admin'], $form_state);
+    user_account_form_validate($form['exchange']['admin'], $form_state);
+  }
 }
 /**
  * Processes bank exchange form for new or existing exchanges.
