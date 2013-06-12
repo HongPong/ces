@@ -1031,6 +1031,9 @@ function ces_offerswants_admin_categories_page() {
   }
   $page['table'] = array(
     '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
+    ),
     '#header' => array(
       array(
         'data' => '#',

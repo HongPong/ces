@@ -52,6 +52,9 @@ function ces_bank_accounts_admin() {
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
+    ),
     '#header' => array(
       array(
         'data' => t('Account'),
@@ -141,6 +144,9 @@ function ces_bank_exchange_list_page($country) {
   else {
     $page['table'] = array(
       '#theme' => 'table',
+      '#attributes' => array(
+        'class' => array('ces-table'),
+      ),
       '#header' => array(
         array(
           'data' => t('Code'),
@@ -267,33 +273,6 @@ function ces_bank_exchange_accounts_page() {
     $counter++;
   }
   return $page;
-  /*
-  $page = array();
-
-
-  $table = array(
-    '#theme' => 'table',
-    '#header' => array(
-      '#', 'Account', 'User', 'Balance'
-    ),
-    '#rows' => array(),
-  );
-  $counter = 1;
-  foreach ($accounts as $account) {
-    if ($account['state'] == 0) continue;//LocalAccount::STATE_HIDDEN)
-    $acchref = 'ces/bank/exchange/' . $exchange['id'] . '/account/' . $account['id'];
-    $accuser = reset($account['users']);
-    $user = user_load($accuser['user']);
-    $row = array(
-      $counter++,
-      $account['name'],
-      l(ces_user_get_name($user), 'user/' . $user->uid),
-      $account['balance']
-    );
-    $table['#rows'][] = $row;
-  }
-  $page['table'] = $table;
-  return $page;*/
 }
 
 /**
@@ -378,6 +357,9 @@ function ces_bank_permissions_page() {
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
+    ),
     '#header' => array(
       array(
         'data' => t('Permission type'),
@@ -438,6 +420,9 @@ function ces_bank_limitchain_list_page() {
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
+    ),
     '#header' => array(
       array(
         'data' => t('Name'),

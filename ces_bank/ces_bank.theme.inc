@@ -125,6 +125,9 @@ function theme_ces_bank_limitchain_view($variables) {
   else {
     $table = array(
       '#theme' => 'table',
+      '#attributes' => array(
+        'class' => array('ces-table'),
+      ),
       '#header' => array(t('Type'), t('Value'), t('Action'), t('Weight')),
       '#rows' => array(),
       '#attributes' => array(

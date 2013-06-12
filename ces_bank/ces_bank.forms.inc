@@ -1299,6 +1299,9 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
   );
   $form['transactions']['table'] = array(
     '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
+    ),
     '#header' => array(
       array(
         'data' => t('Date'),

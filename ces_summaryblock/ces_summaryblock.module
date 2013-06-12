@@ -152,7 +152,8 @@ function _ces_summaryblock_get_interesting_offer($account) {
             ->range(0, 1);
       $result = $query->execute();
       if (isset($result['ces_offerwant']) && count($result['ces_offerwant'])>0) {
-        $id = reset(array_keys($result['ces_offerwant']));
+        $keys = array_keys($result['ces_offerwant']);
+        $id = reset($keys);
         $account->data['ces_interesting_offer']= array(
           'time' => REQUEST_TIME,
           'id' => $id,

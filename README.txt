@@ -13,6 +13,13 @@ Bug tracker:
 http://drupal.org/project/issues/1367140?status=All&categories=All
 
 =======
+Installation:
+
+1) Install and enable this module.
+2) Setup the initial page to /ces
+3) Setup blocks.
+
+=======
 
 Module structure:
 
