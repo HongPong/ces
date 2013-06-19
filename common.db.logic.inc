@@ -41,16 +41,17 @@ class Serializer {
     if (!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
     if (!isset(Serializer::$cache[$this->className]['id'])) $cache[$this->className]['id'] = array();
     if (!isset(Serializer::$cache[$this->className]['id'][$id])) {
-      $record = db_query('SELECT * FROM {' . $this->table . '} WHERE id = :id', array(':id' => $id))->fetchAssoc();
-      if ($record === FALSE)
+      $record = db_select($this->table, 't')->fields('t')->condition('id', $id)->execute()->fetchAssoc();
+      if ($record === FALSE) {
         return FALSE;
+      }
       Serializer::$cache[$this->className]['id'][$id] = $this->loadFromRecord($record);
     }
     return Serializer::$cache[$this->className]['id'][$id];
   }
   /**
    * @return int
-   *   The number of objects taht have value $value in field $key.
+   *   The number of objects that have value $value in field $key.
    */
   public function count($key, $value) {
     $query = db_select($this->table, 't')->condition($key, $value)->countQuery();

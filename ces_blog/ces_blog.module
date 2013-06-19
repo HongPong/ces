@@ -45,7 +45,7 @@ function ces_blog_add_post() {
 /**
  * Implements hook_node_info().
  */
-function blog_node_info() {
+function ces_blog_node_info() {
   return array(
     'ces_blog' => array(
       'name' => t('Exchange blog entry'),

@@ -45,7 +45,7 @@ $bank = new Bank();
 $usernames = array('Riemann', 'Euclides', 'Gauss' , 'Noether', 'Fermat');
 $users = array();
 foreach ($usernames as $name) {
-  $users[$name] = register_user($name);
+  $users[$name] = ces_develop_register_user($name);
 }
 //CREATE EXCHANGE
 $net1 = array(
@@ -96,11 +96,11 @@ $bank->activateExchange($net2);
 $accounts = array();
 for ($i=0; $i<3; $i++) {
   $name = $usernames[$i];
-  $accounts[$name] = register_account($users[$name], $net1, $i+1);
+  $accounts[$name] = ces_develop_register_account($users[$name], $net1, $i+1);
 }
 for ($i=0; $i<3; $i++) {
   $name = $usernames[$i+2];
-  $accounts[$name] = register_account($users[$name], $net2, $i+1);
+  $accounts[$name] = ces_develop_register_account($users[$name], $net2, $i+1);
 }
 //CREATE LOCAL TRANSACTIONS
 $transactions = array(
@@ -246,21 +246,21 @@ foreach ($offers as $offer) {
 }
 
 //Blog posts
-post_blog('Demo post', 'This is a demonstration blog post.
+ces_develop_post_blog('Demo post', 'This is a demonstration blog post.
 
 This space is intended for the administrator or a group of editors to publish relevant information about the trading community, such as markets, events and news.
 
 Happy testing!', $net1, $users['Riemann']);
 
-post_blog('Lorem ipsum', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net1, $users['Riemann']);
-post_blog('May exchange newsletter', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
-post_blog('Another post', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
+ces_develop_post_blog('Lorem ipsum', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net1, $users['Riemann']);
+ces_develop_post_blog('May exchange newsletter', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
+ces_develop_post_blog('Another post', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
 
 
 /**
  * Create a blog post.
  */
-function post_blog($subject, $body, $exchange, $user) {
+function ces_develop_post_blog($subject, $body, $exchange, $user) {
   $node = new stdClass();
   $node->title = $subject;
   $node->type = 'ces_blog';
@@ -282,7 +282,7 @@ function post_blog($subject, $body, $exchange, $user) {
 /**
  * Create new user.
  */
-function register_user($name) {
+function ces_develop_register_user($name) {
   // register a new user
   if (!user_load_by_name($name)) {
     $form_state = array();
@@ -302,7 +302,7 @@ function register_user($name) {
 /**
  * Create new bank account.
  */
-function register_account($user, $exchange, $i) {
+function ces_develop_register_account($user, $exchange, $i) {
   $bank = new Bank();
   $limit = $bank->getDefaultLimitChain($exchange['id']);
   $account = array(
