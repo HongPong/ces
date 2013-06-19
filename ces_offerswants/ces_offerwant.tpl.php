@@ -23,8 +23,10 @@
   <?php if ($view_mode_full): ?>
   <div class="ces-offerwant-properties">
     <dl class="ces-offerwant-properties-list">
+      <?php if (!empty($ces_offerwant_category)): ?>
       <dt><?php echo t('Category'); ?></dt>
       <dd><?php echo $ces_offerwant_category; ?></dd>
+      <?php endif; ?>
       <dt><?php echo t('Status'); ?></dt>
       <dd><?php echo $ces_offerwant_state; ?></dd>
       <dt><?php echo t('Updated'); ?></dt>

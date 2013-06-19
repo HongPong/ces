@@ -717,8 +717,12 @@ function template_preprocess_ces_offerwant(&$variables) {
     $variables['ces_offerwant_image'] = '';
   }
   // Category.
-  $category = ces_category_load($offerwant->category);
-  $variables['ces_offerwant_category'] = $category->title;
+  if (!empty($offerwant->category)) {
+    $category = ces_category_load($offerwant->category);
+    if ($category !== FALSE) {
+      $variables['ces_offerwant_category'] = $category->title;
+    }
+  }
   // Status.
   $variables['ces_offerwant_state'] = $offerwant->state?t('Visible') : t('Hidden');
   // Modified.
