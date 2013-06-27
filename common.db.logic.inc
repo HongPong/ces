@@ -221,7 +221,7 @@ class Serializer {
   /**
    * Unserializes serialized database record fields.
    */
-  private function handleSerialized(array &$record) {
+  protected function handleSerialized(array &$record) {
     // It would be nice if it was done automatically by Drupal, but...
     $serialized = array('data', 'decoration');
     foreach ($serialized as $field) {
@@ -233,7 +233,7 @@ class Serializer {
   /**
    * Deletes record from static cache.
    */
-  private function deleteRecordFromCache(array $record) {
+  protected function deleteRecordFromCache(array $record) {
     if (isset(Serializer::$cache[$this->className])) {
       foreach (Serializer::$cache[$this->className] as $key => $value) {
         if (isset($record[$key]) && isset($value[$record[$key]])) {
@@ -245,7 +245,7 @@ class Serializer {
   /**
    * Deletes whole static cache.
    */
-  private function deleteCache() {
+  protected function deleteCache() {
     Serializer::$cache[$this->className] = array();
   }
 }
@@ -330,7 +330,7 @@ abstract class DBObject {
   /**
    * @returns The fields directly hanging from this object.
    */
-  private function getSimpleRecord() {
+  protected function getSimpleRecord() {
     $record = get_object_vars($this);
     foreach ($record as $key => $value) {
       if ($value === NULL) {

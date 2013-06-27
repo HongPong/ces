@@ -3,6 +3,7 @@
  * @file
  * Install, update and uninstall functions for the ces blog module.
  */
+
 /**
  * Implements hook_install().
  */
@@ -32,11 +33,10 @@ function ces_blog_install() {
   $content_type = node_type_set_defaults($blog);
   node_add_body_field($content_type);
 
-  // Save the content type
+  // Save the content type.
   node_type_save($content_type);
 
-
-  // Load the instance definition for our content type's body
+  // Load the instance definition for our content type's body.
   // http://api.drupal.org/api/function/field_info_instance/7
   $body_instance = field_info_instance('node', 'body', 'ces_blog');
 
@@ -58,13 +58,13 @@ function ces_blog_install() {
       'description' => 'The id of the exchange the entry is associated to',
       'required' => TRUE,
       'widget' => array(
-        'type' => 'ces_blog_exchange'
+        'type' => 'ces_blog_exchange',
       ),
       'display' => array(
         'default' => array(
-          'type' => 'ces_blog_exchange'
+          'type' => 'ces_blog_exchange',
         ),
-      )
+      ),
     ));
   }
 }

@@ -3,6 +3,7 @@
  * @file
  * Tests the functionality bank module.
  */
+
 class BankTestCase extends DrupalWebTestCase {
   /**
    * @var user
@@ -56,8 +57,7 @@ class BankTestCase extends DrupalWebTestCase {
     );
   }
   /**
-   * Setup CES modules, creates the admin user, configures blocks and user
-   * preferences.
+   * Setup CES modules, creates the admin user, configures blocks and user preferences.
    */
   public function setUp() {
     // Enable any modules required for the test.
@@ -97,9 +97,11 @@ class BankTestCase extends DrupalWebTestCase {
     $this->drupalLogout();
   }
   /**
-   * This function performs all tests. Since we have to perform heavy operations
-   * (create and activate exchanges, accounts, etc) before we can actually test
-   * critical features we join all in one test function to save resources.
+   * This function performs all tests. 
+   * 
+   * Since we have to perform heavy operations (create and activate exchanges, 
+   * accounts, etc) before we can actually test critical features we join all in
+   * one test function to save resources.
    */
   protected function testAll() {
     $this->createExchanges();
@@ -110,7 +112,7 @@ class BankTestCase extends DrupalWebTestCase {
    * Creates two exchanges.
    */
   protected function createExchanges() {
-    //Create first exchange.
+    // Create first exchange.
     $this->admin1 = (object) array(
       'name' => 'adminhora',
       'mail' => 'test.adminhora@integralces.net',
@@ -144,7 +146,7 @@ class BankTestCase extends DrupalWebTestCase {
     );
     $this->createExchange(array_merge($this->exchange1, $this->accountRecord((array) $this->admin1)));
     $this->activateExchange($this->exchange1);
-    //Create second exchange.
+    // Create second exchange.
     $this->admin2 = (object) array(
       'name' => 'adminbcna',
       'mail' => 'test.adminbcna@integralces.net',
@@ -207,14 +209,14 @@ class BankTestCase extends DrupalWebTestCase {
           'title' => 'First test offer',
           'body' => 'This is the first test offer from John Smith account.',
           'rate' => '0.35',
-          'keywords' => 'test'
+          'keywords' => 'test',
         ),
       ),
       'want' => array(
         array(
           'title' => 'First test want',
           'body' => 'This is the first test want from John Smith account.',
-          'keywords' => 'test'
+          'keywords' => 'test',
         ),
       ),
     );
@@ -244,14 +246,14 @@ class BankTestCase extends DrupalWebTestCase {
           'title' => 'Second test offer',
           'body' => 'This is the second test offer from Ofelia Tia account.',
           'rate' => 'contact me',
-          'keywords' => 'test'
+          'keywords' => 'test',
         ),
       ),
       'want' => array(
         array(
           'title' => 'Second test want',
           'body' => 'This is the second test want from Ofelia Tia account.',
-          'keywords' => 'test'
+          'keywords' => 'test',
         ),
       ),
     );
@@ -314,7 +316,7 @@ class BankTestCase extends DrupalWebTestCase {
     $this->assertBalance($user2, '-1.5');
   }
   /**
-   * Helper function
+   * Helper function.
    * @return object
    *   A user object suitable for drupalLogin() function.
    */
@@ -327,7 +329,7 @@ class BankTestCase extends DrupalWebTestCase {
     return $user;
   }
   /**
-   * Helper function
+   * Helper function.
    * @return array
    *   User account form array with proper keys.
    */
@@ -351,6 +353,7 @@ class BankTestCase extends DrupalWebTestCase {
   }
  /**
   * Create a new user request.
+  * 
   * @param array $record
   *   associative array with entries:
   *   - exchange: associative array with entries
@@ -432,6 +435,7 @@ class BankTestCase extends DrupalWebTestCase {
   }
   /**
    * Activate a requested account.
+   * 
    * @param array $record
    *   The account record.
    * @param object $admin
@@ -441,7 +445,7 @@ class BankTestCase extends DrupalWebTestCase {
    *   the proper 'Edit' link.
    */
   protected function activateAccount($record, $admin, $index) {
-    // Login exchange admin,
+    // Login exchange admin.
     $this->drupalLogin($admin);
     // Go to accounts admin page.
     $this->drupalGet('ces/admin/account');
@@ -509,8 +513,8 @@ class BankTestCase extends DrupalWebTestCase {
         $element = current($this->xpath($this->constructFieldXpath('name', 'fromexchange')));
         $options = $this->getAllOptions($element);
         foreach ($options as $option) {
-          if (((string)$option) == $name) {
-            $this->drupalPostAJAX(NULL, array('fromexchange' => ((string)$option['value'])), 'fromexchange');
+          if (((string) $option) == $name) {
+            $this->drupalPostAJAX(NULL, array('fromexchange' => ((string) $option['value'])), 'fromexchange');
             break;
           }
         }

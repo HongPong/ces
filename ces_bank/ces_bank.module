@@ -1,6 +1,7 @@
 <?php
 /**
  * @file
+ * 
  * Implements the drupal hooks for this module.
  */
 define('CES_CURRENT_ACCOUNT', 'ces_current_account');
@@ -382,7 +383,7 @@ function ces_bank_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => 990,
   );
-  //Superglobal menu (before login)
+  // Superglobal menu (before login).
   $menu['ces/bank/exchange/new'] = array(
     'title' => 'New exchange',
     'description' => 'Create a new exchange',
@@ -456,7 +457,7 @@ function ces_transaction_load($id = NULL) {
     return FALSE;
   }
   $bank = new Bank();
-  $transaction =  $bank->getTransaction($id);
+  $transaction = $bank->getTransaction($id);
   return $transaction;
 }
 /**
@@ -489,8 +490,7 @@ function ces_account_load($id = NULL) {
   return $account;
 }
 /**
- * Calls drupal_get_form() replacing some of its arguments by the default
- * exchange or account.
+ * Calls drupal_get_form() replacing some of its arguments by the default exchange or account.
  */
 function _ces_bank_get_form() {
   $args = func_get_args();
@@ -682,37 +682,37 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
     foreach ($tokens as $name => $original) {
       switch ($name) {
         case 'code':
-          $replacements[$original] = $sanitize?check_plain($exchange['code']):$exchange['code'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['code']) : $exchange['code'];
           break;
         case 'shortname':
-          $replacements[$original] = $sanitize?check_plain($exchange['shortname']):$exchange['shortname'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['shortname']) : $exchange['shortname'];
           break;
         case 'name':
-          $replacements[$original] = $sanitize?check_plain($exchange['name']):$exchange['name'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['name']) : $exchange['name'];
           break;
         case 'country':
-          $replacements[$original] = $sanitize?check_plain($exchange['country']):$exchange['country'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['country']) : $exchange['country'];
           break;
         case 'town':
-          $replacements[$original] = $sanitize?check_plain($exchange['town']):$exchange['town'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['town']) : $exchange['town'];
           break;
         case 'region':
-          $replacements[$original] = $sanitize?check_plain($exchange['region']):$exchange['region'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['region']) : $exchange['region'];
           break;
         case 'website':
-          $replacements[$original] = $sanitize?check_plain($exchange['website']):$exchange['website'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['website']) : $exchange['website'];
           break;
         case 'currencysymbol':
-          $replacements[$original] = $sanitize?check_plain($exchange['currencysymbol']):$exchange['currencysymbol'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['currencysymbol']) : $exchange['currencysymbol'];
           break;
         case 'currencyname':
-          $replacements[$original] = $sanitize?check_plain($exchange['currencyname']):$exchange['currencyname'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['currencyname']) : $exchange['currencyname'];
           break;
         case 'currenciesname':
-          $replacements[$original] = $sanitize?check_plain($exchange['currenciesname']):$exchange['currenciesname'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['currenciesname']) : $exchange['currenciesname'];
           break;
         case 'currencyvalue':
-          $replacements[$original] = $sanitize?check_plain($exchange['currencyvalue']):$exchange['currencyvalue'];
+          $replacements[$original] = $sanitize ? check_plain($exchange['currencyvalue']) : $exchange['currencyvalue'];
           break;
       }
     }
@@ -788,8 +788,8 @@ User: [exchange:admin:name] <[exchange:admin:mail]>
       );
     case 'exchange activated':
       return array(
-          'subject' => t('[Integral CES] Exchange [exchange:code] - [exchange:shortname] activated', $a, $b),
-          'body' => t('Dear [exchange:admin:name],
+        'subject' => t('[Integral CES] Exchange [exchange:code] - [exchange:shortname] activated', $a, $b),
+        'body' => t('Dear [exchange:admin:name],
 The new [exchange:fullname] has been activated. So far we have only created the
 administrator\'s account, [exchange:code]0000. Don\'t use this account for
 personal operations. Create a new user and a new account for your personal
@@ -985,7 +985,7 @@ function ces_bank_get_current_exchange($account = NULL) {
       $exchange = FALSE;
     }
   }
-  else{
+  else {
     $exchange = ces_bank_get_exchange($bankaccount['exchange']);
   }
   return $exchange;
@@ -1112,7 +1112,7 @@ function ces_bank_country_get_list() {
     foreach ($exchanges as $exchange) {
       $countries[$exchange['country']] = $allcountries[$exchange['country']];
     }
-    cache_set('ces_bank_countries', $countries, 'cache', REQUEST_TIME + 60*60);
+    cache_set('ces_bank_countries', $countries, 'cache', REQUEST_TIME + 60 * 60);
   }
   return $countries;
 }
@@ -1122,7 +1122,7 @@ function ces_bank_country_get_list() {
 function ces_bank_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'ces_user_register_form') {
     if (empty($form_state['page']) || $form_state['page'] == 'account') {
-      //next button:
+      // Next button.
       $form['actions']['next'] = array(
         '#type' => 'submit',
         '#value' => t('Next >>'),
@@ -1188,7 +1188,7 @@ function ces_bank_user_register_save_values($form, &$form_state) {
  * Implements hook_form_submit().
  */
 function ces_bank_user_register_submit($form, &$form_state) {
-  //the user is already created. Create the banking account.
+  // The user is already created. Create the banking account.
   $form_state['values'] = $form_state['page_values']['bankaccount'];
   $form_state['values']['operation'] = 'new';
   $form_state['values']['users'][0]['user'] = $form_state['user']->uid;
@@ -1221,6 +1221,6 @@ function ces_bank_user_autocomplete($string) {
   foreach ($return as $row) {
     $matches[$row->name] = check_plain($row->name);
   }
-  // return for JS
+  // Return for JS.
   drupal_json_output($matches);
 }

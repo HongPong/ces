@@ -6,4 +6,3 @@ package = ces
 dependencies[] = ces
 dependencies[] = ces_bank
 dependencies[] = ces_notify
-

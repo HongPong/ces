@@ -6,23 +6,24 @@
  * it with 10 users with their respective accounts in two exchanges and
  * applies random transactions between them.
  */
+
 include_once DRUPAL_ROOT . '/includes/install.inc';
-require_once(drupal_get_path('module', 'ces_bank') . '/ces_bank.install');
-require_once(drupal_get_path('module', 'ces_offerswants') . '/ces_offerswants.module');
-//RESET USERS
+require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.install';
+require_once drupal_get_path('module', 'ces_offerswants') . '/ces_offerswants.module';
+// Reset users.
 $query = db_query('SELECT uid FROM {users}');
 $users = $query->fetchAllAssoc('uid');
-foreach( $users as $user) {
-  if (((int)($user->uid)) > 1) {
+foreach ($users as $user) {
+  if (((int) ($user->uid)) > 1) {
     user_delete($user->uid);
   }
 }
 $query = db_query('SELECT nid FROM {node} WHERE type = \'ces_blog\'');
 $posts = $query->fetchAllAssoc('nid');
-foreach($posts as $post) {
+foreach ($posts as $post) {
   node_delete($post->nid);
 }
-//RESET CES
+// Reset CES.
 db_delete('ces_account')->execute();
 db_delete('ces_accountuser')->execute();
 db_delete('ces_exchange')->execute();
@@ -38,16 +39,16 @@ if (db_table_exists('ces_category')) {
   db_delete('ces_category')->execute();
 }
 ces_bank_install();
-//CREATE STUFF
+// Create stuff.
 $bank = new Bank();
 
-//CREATE USERS
+// Create users.
 $usernames = array('Riemann', 'Euclides', 'Gauss' , 'Noether', 'Fermat');
 $users = array();
 foreach ($usernames as $name) {
   $users[$name] = ces_develop_register_user($name);
 }
-//CREATE EXCHANGE
+// Create exchange.
 $net1 = array(
   'code' => 'NET1',
   'shortname' => 'Net 1',
@@ -92,17 +93,17 @@ $net2 = array(
 );
 $bank->createExchange($net2);
 $bank->activateExchange($net2);
-//CREATE ACCOUNTS
+// Create accounts.
 $accounts = array();
-for ($i=0; $i<3; $i++) {
+for ($i = 0; $i < 3; $i++) {
   $name = $usernames[$i];
-  $accounts[$name] = ces_develop_register_account($users[$name], $net1, $i+1);
+  $accounts[$name] = ces_develop_register_account($users[$name], $net1, $i + 1);
 }
-for ($i=0; $i<3; $i++) {
-  $name = $usernames[$i+2];
-  $accounts[$name] = ces_develop_register_account($users[$name], $net2, $i+1);
+for ($i = 0; $i < 3; $i++) {
+  $name = $usernames[$i + 2];
+  $accounts[$name] = ces_develop_register_account($users[$name], $net2, $i + 1);
 }
-//CREATE LOCAL TRANSACTIONS
+// Create local transactions.
 $transactions = array(
     array('NET10001', 'NET10002', 1.2, '3kg of potatoes.', $users['Euclides']->uid),
     array('NET10002', 'NET10003', 0.8, 'Standard haircut.', $users['Gauss']->uid),
@@ -111,7 +112,7 @@ $transactions = array(
     array('NET20002', 'NET20003', 6, 'Natural soap.', $users['Fermat']->uid),
     array('NET20003', 'NET20001', 5.5, 'Ecologic carrots', $users['Gauss']->uid),
 );
-foreach($transactions as $t) {
+foreach ($transactions as $t) {
   $trans = array(
     'fromaccountname' => $t[0],
     'toaccountname' => $t[1],
@@ -122,7 +123,7 @@ foreach($transactions as $t) {
   $bank->createTransaction($trans);
   $bank->applyTransaction($trans['id']);
 }
-//CREATE ONE INTER-TRANSACTION
+// Create one interexchange transaction.
 $trans = array(
   'fromaccountname' => 'NET10001',
   'toaccountname' => 'NET20001',
@@ -132,19 +133,17 @@ $trans = array(
 );
 $bank->createTransaction($trans);
 $bank->applyTransaction($trans['id']);
-//ACTIVATE VIRTUAL ACCOUNTS
+// Activate virtual accounts.
 $account = $bank->getAccountByName('NET1NET2');
 $bank->activateAccount($account);
 $account = $bank->getAccountByName('NET2NET1');
 $bank->activateAccount($account);
-//RE-TRIGGER INTEREXCHANGE TRANSACTION
+// Re-trigger interexchange transaction.
 $bank->applyTransaction($trans['id']);
 
-//
-// OFFERWANTS
-//
+// OFFERWANTS.
 
-//Add categories
+// Add categories.
 
 $names = array('Food', 'Hygiene', 'Professional services', 'Reparation', 'Education');
 $exchanges = array($net1, $net2);
@@ -159,12 +158,10 @@ foreach ($exchanges as $e) {
       'exchange' => $e['id'],
       'context' => 1,
     );
-    $categories[$e['id']][$c] = ces_category_save((object)$cat);
+    $categories[$e['id']][$c] = ces_category_save((object) $cat);
   }
 }
-
-//Add some offers.
-
+// Add some offers.
 $offers = array(array(
   'type' => 'offer',
   'user' => $users['Riemann']->uid,
@@ -175,9 +172,10 @@ $offers = array(array(
   'state' => 1,
   'created' => time(),
   'modified' => time(),
-  'expire' => time()+3600*24*365,
+  'expire' => time() + 3600 * 24 * 365,
   'rate' => '0.2',
-), array(
+),
+array(
   'type' => 'offer',
   'user' => $users['Euclides']->uid,
   'title' => 'Bicycle mechanic',
@@ -187,9 +185,10 @@ $offers = array(array(
   'state' => 1,
   'created' => time(),
   'modified' => time(),
-  'expire' => time()+3600*24*365,
+  'expire' => time() + 3600 * 24 * 365,
   'rate' => '1h/hour',
-), array(
+),
+array(
   'type' => 'offer',
   'user' => $users['Gauss']->uid,
   'title' => 'Natural soap',
@@ -199,9 +198,10 @@ $offers = array(array(
   'state' => 1,
   'created' => time(),
   'modified' => time(),
-  'expire' => time()+3600*24*365,
+  'expire' => time() + 3600 * 24 * 365,
   'rate' => '0.40',
-), array(
+),
+array(
   'type' => 'offer',
   'user' => $users['Gauss']->uid,
   'title' => 'Cow\'s milk',
@@ -211,9 +211,10 @@ $offers = array(array(
   'state' => 1,
   'created' => time(),
   'modified' => time(),
-  'expire' => time()+3600*24*365,
+  'expire' => time() + 3600 * 24 * 365,
   'rate' => '2.5',
-), array(
+),
+array(
   'type' => 'offer',
   'user' => $users['Noether']->uid,
   'title' => 'Car mechanic',
@@ -223,9 +224,10 @@ $offers = array(array(
   'state' => 1,
   'created' => time(),
   'modified' => time(),
-  'expire' => time()+3600*24*365,
+  'expire' => time() + 3600 * 24 * 365,
   'rate' => 'it depends'
-), array(
+),
+array(
   'type' => 'offer',
   'user' => $users['Fermat']->uid,
   'title' => 'Natural shampoo',
@@ -235,16 +237,15 @@ $offers = array(array(
   'state' => 1,
   'created' => time(),
   'modified' => time(),
-  'expire' => time()+3600*24*365,
+  'expire' => time() + 3600 * 24 * 365,
   'rate' => '6ECO each'
 ));
 foreach ($offers as $offer) {
   $o = (object)$offer;
-  $o->ces_offer_rate = array('und' => array(array('value' => $offer['rate'])));
+  $o->ces_offer_rate = array(LANGUAGE_NONE => array(array('value' => $offer['rate'])));
   unset($o->rate);
   ces_offerwant_save($o);
 }
-
 //Blog posts
 ces_develop_post_blog('Demo post', 'This is a demonstration blog post.
 
@@ -255,7 +256,6 @@ Happy testing!', $net1, $users['Riemann']);
 ces_develop_post_blog('Lorem ipsum', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net1, $users['Riemann']);
 ces_develop_post_blog('May exchange newsletter', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
 ces_develop_post_blog('Another post', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
-
 
 /**
  * Create a blog post.
@@ -270,8 +270,8 @@ function ces_develop_post_blog($subject, $body, $exchange, $user) {
   $node->status = 1;
   $node->promote = 0;
   $node->comment = 2;
-  $node->ces_blog_exchange['und'][0]['value'] = $exchange['id'];
-  $node->body['und'][0] = array(
+  $node->ces_blog_exchange[LANGUAGE_NONE][0]['value'] = $exchange['id'];
+  $node->body[LANGUAGE_NONE][0] = array(
     'summary' => '',
     'value' => $body,
     'format' => 'filtered_html',
@@ -290,10 +290,10 @@ function ces_develop_register_user($name) {
     $form_state['values']['mail'] = strtolower($name) . '@integralces.net';
     $form_state['values']['pass']['pass1'] = 'integralces';
     $form_state['values']['pass']['pass2'] = 'integralces';
-    $form_state['values']['ces_firstname']['und'][0]['value'] = $name;
-    $form_state['values']['ces_town']['und'][0]['value'] = 'Somewhere';
-    $form_state['values']['ces_postcode']['und'][0]['value'] = '12345';
-    $form_state['values']['ces_phonemobile']['und']['0']['value'] = '123456789';
+    $form_state['values']['ces_firstname'][LANGUAGE_NONE][0]['value'] = $name;
+    $form_state['values']['ces_town'][LANGUAGE_NONE][0]['value'] = 'Somewhere';
+    $form_state['values']['ces_postcode'][LANGUAGE_NONE][0]['value'] = '12345';
+    $form_state['values']['ces_phonemobile'][LANGUAGE_NONE]['0']['value'] = '123456789';
     $form_state['values']['op'] = t('Create new account');
     drupal_form_submit('user_register_form', $form_state);
   }

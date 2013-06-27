@@ -205,11 +205,11 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#title' => t('Scale'),
     '#default_value' => $exchange['currencyscale'],
     '#options' => array(
-      '0' => '0',
-      '1' => '1',
-      '2' => '2',
-      '3' => '3',
-      '4' => '4'),
+      '0' => t('0'),
+      '1' => t('1'),
+      '2' => t('2'),
+      '3' => t('3'),
+      '4' => t('4')),
     '#required' => TRUE,
   );
   $form['exchange']['users'] = array(
@@ -261,7 +261,7 @@ function ces_bank_exchange_form_validate($form, &$form_state) {
   if (drupal_strlen($code) != 4) {
     form_set_error('code', t('Code %code is invalid. Code must have exactly 4 letters.', array('%code' => $code)));
   }
-  for ($i=0; $i < drupal_strlen($code); $i++) {
+  for ($i = 0; $i < drupal_strlen($code); $i++) {
     $ord = ord(drupal_substr($code, $i, 1));
     if (($ord < ord('A') || $ord > ord('Z')) && ($ord < ord('0') || $ord > ord('9'))) {
       form_set_error('code', t('Code %code is invalid. Code characters must be uppercase ASCII letters and numbers. No accents, no spaces, no special characters.', array('%code' => $code)));
@@ -738,7 +738,7 @@ function ces_bank_account_form_submit($form, &$form_state) {
       $bank->createAccount($record);
       drupal_set_message(t('Account successfully created.'));
       if ($record['state'] == LocalAccount::STATE_HIDDEN) {
-        drupal_set_message(t('The account will not be available until it is being activated by this exchange\'s administrator. You will recieve an email when this is done.'));
+        drupal_set_message(t("The account will not be available until it is being activated by this exchange's administrator. You will recieve an email when this is done."));
       }
       elseif ($record['state'] == LocalAccount::STATE_ACTIVE) {
         $activate = TRUE;
@@ -841,7 +841,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
   if ($to_account_id == NULL) {
     $form['toexchange'] = array(
       '#title' => t('Seller exchange'),
-      '#description' => t('The seller\'s account exchange.'),
+      '#description' => t("The seller's account exchange."),
       '#type' => 'select',
       '#options' => $exoptions,
       '#default_value' => $toexchangeid,
@@ -902,7 +902,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
     // Select buyer's exchange.
     $form['fromexchange'] = array(
       '#title' => t('Buyer exchange'),
-      '#description' => t('The buyer\'s account exchange.'),
+      '#description' => t("The buyer's account exchange."),
       '#type' => 'select',
       '#options' => $exoptions,
       '#default_value' => $fromexchangeid,
@@ -1394,14 +1394,6 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
       'data' => $bank->formatAmount($inibalance, $exchange, TRUE, FALSE),
       'class' => 'ces-currency-amount',
     );
-    /*
-    $actions = array();
-    if ($transaction['state'] == Transaction::STATE_NEW || $transaction['state'] == Transaction::STATE_REJECTED) {
-      $actions[]=l(t('Edit'), 'ces/bank/exchange/' . $account['exchange'] . '/transaction/' . $transaction['id'] . '/edit');
-      $actions[]=l(t('Trigger'), 'ces/bank/exchange/' . $account['exchange'] . '/transaction/' . $transaction['id'] . '/trigger');
-      $actions[]=l(t('Discard'), 'ces/bank/exchange/' . $account['exchange'] . '/transaction/' . $transaction['id'] . '/discard');
-    }
-    $row[] = implode(' ', $actions); */
     $form['transactions']['table']['#rows'][] = $row;
   }
   return $form;

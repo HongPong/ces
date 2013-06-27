@@ -8,12 +8,13 @@
  * Implements hook_install().
  */
 function ces_bank_install() {
+  $t = get_t();
   $ok3 = _ces_bank_create_default_permissions();
   if (!$ok3) {
-    drupal_set_message(st('Error creating default permissions.'), 'error');
+    drupal_set_message($t('Error creating default permissions.'), 'error');
   }
   if ($ok3) {
-    drupal_set_message(st('Initial records created.'));
+    drupal_set_message($t('Initial records created.'));
   }
 }
 /**
@@ -47,11 +48,6 @@ function _ces_bank_create_default_permissions() {
  * Implements hook_enable().
  */
 function ces_bank_enable() {
-}
-/**
- * Implements hook_uninstall().
- */
-function ces_bank_uninstall() {
 }
 /**
  * Implements hook_schema().

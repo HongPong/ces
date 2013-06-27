@@ -74,24 +74,24 @@ function theme_ces_bank_transaction_view($variables) {
     $out .= '<dd>' . $fex['name'] . '</dd>';
   }
   if ($fex['id'] != $tex['id']) {
-    $out .= '<dt>' . t('Buyer\'s exchange') . '</dt>';
+    $out .= '<dt>' . t("Buyer's exchange") . '</dt>';
     $out .= '<dd>' . $fex['name'] . '</dd>';
   }
-  $out .= '<dt>' . t('Buyer\'s account') . '</dt>';
+  $out .= '<dt>' . t("Buyer's account") . '</dt>';
   $out .= '<dd>' . $from['name'] . '</dd>';
 
-  $out .= '<dt>' . t('Buyer\'s account user') . '</dt>';
+  $out .= '<dt>' . t("Buyer's account user") . '</dt>';
   foreach ($from['users'] as $accuser) {
     $out .= '<dd>' . l(ces_user_get_name(user_load($accuser['user'])), 'user/' . $accuser['user']) . '</dd>';
   }
   if ($fex['id'] != $tex['id']) {
-    $out .= '<dt>' . t('Seller\'s exchange') . '</dt>';
+    $out .= '<dt>' . t("Seller's exchange") . '</dt>';
     $out .= '<dd>' . $tex['name'] . '</dd>';
   }
-  $out .= '<dt>' . t('Seller\'s account') . '</dt>';
+  $out .= '<dt>' . t("Seller's account") . '</dt>';
   $out .= '<dd>' . ($to['name']) . '</dd>';
 
-  $out .= '<dt>' . t('Seller\'s account user') . '</dt>';
+  $out .= '<dt>' . t("Seller's account user") . '</dt>';
   foreach ($to['users'] as $accuser) {
     $out .= '<dd>' . l(ces_user_get_name(user_load($accuser['user'])), 'user/' . $accuser['user']) . '</dd>';
   }

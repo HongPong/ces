@@ -19,25 +19,28 @@
 class Notifier {
   /**
    * Creates or updates a message template.
-   * @param $record array with the following (mandatory) entries:
-   *  - 'module': message name.
-   *  - 'name': message name.
-   *  - 'lang': message lang code.
-   *  - 'sender': sender id
-   *  - 'subject': message subject
-   *  - 'body': message body
+   * 
+   * @param $record array 
+   *   With the following (mandatory) entries:
+   *   - 'module': message name.
+   *   - 'name': message name.
+   *   - 'lang': message lang code.
+   *   - 'sender': sender id
+   *   - 'subject': message subject
+   *   - 'body': message body
    */
   public function updateMessageTemplate($record) {
     $s = new Serializer('Message');
     $message = $s->loadFromRecord($record);
-    if (($oldMessage = $this->loadMessageTemplate($record['module'], $record['name'], $record['lang'], $record['sender']))!==FALSE) {
-      //message alredy exists
-      $message->id = $oldMessage->id;
+    if (($old_factor = $this->loadMessageTemplate($record['module'], $record['name'], $record['lang'], $record['sender'])) !== FALSE) {
+      // Message alredy exists.
+      $message->id = $old_factor->id;
     }
     $s->save($message);
   }
   /**
    * Sets the subject and body and the language of a message.
+   * 
    * The most appropiate template is choosen to be the one that first meets one
    * of the following conditions:
    * 1. Sender's template exists with language = $record['lang']
@@ -62,15 +65,15 @@ class Notifier {
   public function getMessageTemplate(&$record) {
     $module = $record['module'];
     $name = $record['name'];
-    $sender = isset($record['sender'])?$record['sender']:1;
-    if (isset($record['lang'])) {//1
+    $sender = isset($record['sender']) ? $record['sender'] : 1;
+    if (isset($record['lang'])) {
       $message = $this->loadMessageTemplate($module, $name, $record['lang'], $sender);
     }
-    if (empty($message) && isset($record['recipient'])) {//2
+    if (empty($message) && isset($record['recipient'])) {
       $recipientlang = user_load($record['recipient'])->language;
       $message = $this->loadMessageTemplate($module, $name, $recipientlang, $sender);
     }
-    if (empty($message) && isset($record['sender'])) {//3
+    if (empty($message) && isset($record['sender'])) {
       $senderlang = user_load($record['sender'])->language;
       $message = $this->loadMessageTemplate($module, $name, $senderlang, $sender);
     }
@@ -79,7 +82,8 @@ class Notifier {
       $record['body'] = $message->body;
       $record['lang'] = $message->lang;
     }
-    else {//customized message does not exist. Try module translations.
+    else {
+      // Customized message does not exist. Try module translations.
       $default_eng = module_invoke($module, 'ces_notify_messages', $name, 'en');
       if (empty($default_eng)) {
         throw new Exception(t('Module %module does not implement key %key in hook_ces_notify_messages', array('%module' => $module, '%key' => $name)));
@@ -94,7 +98,7 @@ class Notifier {
       if (empty($default) && isset($senderlang)) {
         $default = $this->loadDefaultTemplateHelper($module, $name, $senderlang, $default_eng);
       }
-      if (empty($default) && language_default('language')!='en') {
+      if (empty($default) && language_default('language') != 'en') {
         $default = $this->loadDefaultTemplateHelper($module, $name, language_default('language'), $default_eng);
       }
       if (empty($default)) {
@@ -108,13 +112,14 @@ class Notifier {
   /**
    * @return array
    */
-  private function loadDefaultTemplateHelper($module, $name, $lang, $default_eng) {
+  protected function loadDefaultTemplateHelper($module, $name, $lang, $default_eng) {
     if ($lang == 'en') {
       $res = $default_eng;
     }
     else {
       $default_aux = module_invoke($module, 'ces_notify_messages', $name, $lang);
-      if ($default_aux != $default_eng) {//depth array comparison
+      if ($default_aux != $default_eng) {
+        // Indepth array comparison.
         $res = $default_aux;
         $res['lang'] = $lang;
       }
@@ -127,7 +132,7 @@ class Notifier {
   /**
    * @return Message or FALSE if template does not exist.
    */
-  private function loadMessageTemplate($module, $name, $lang, $sender) {
+  protected function loadMessageTemplate($module, $name, $lang, $sender) {
     $conditions = array(
       'module' => $module,
       'name' => $name,
@@ -135,28 +140,31 @@ class Notifier {
       'sender' => $sender,
     );
     $s = new Serializer('Message');
-    $records = $s->loadCollection($conditions);//it has zero or one result
-    if (!empty($records))
+    // It has zero or one result.
+    $records = $s->loadCollection($conditions);
+    if (!empty($records)) {
       return reset($records);
-    else
+    }
+    else {
       return FALSE;
+    }
   }
   /**
    * Senda an e-mail to a user.
    * @param $key string the message key
    * @param $recipients int the recipient user id. May be an array for multiple
    * notifications.
-   * @param $senderId int the sender user id
+   * @param $senderid int the sender user id
    * @param $params array Associative array with the placeholder values for this
    * message
    */
-  public function notify($module, $key, $recipients, $senderId, array $params) {
+  public function notify($module, $key, $recipients, $senderid, array $params) {
     if (!is_array($recipients)) {
       $recipients = array($recipients);
     }
-    foreach ($recipients as $recipientId) {
-      $recipient = user_load($recipientId);
-      $sender = user_load($senderId);
+    foreach ($recipients as $recipientid) {
+      $recipient = user_load($recipientid);
+      $sender = user_load($senderid);
       drupal_mail('ces_notify', $module . ' ' . $key, $recipient->mail, NULL, $params, $sender->mail, TRUE);
     }
   }
@@ -165,7 +173,7 @@ class Notifier {
 /**
  * This class is the persistent object that represents a message template.
  */
-class Message extends DBObject{
+class Message extends DBObject {
   public static $table = 'ces_messages';
   /**
    * @var int

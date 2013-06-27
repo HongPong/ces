@@ -3,6 +3,7 @@
  * @file
  * Implements the drupal hooks for this module.
  */
+
 /**
  * Implements hook_help().
  */
@@ -68,12 +69,12 @@ function ces_blog_page() {
         ->propertyOrderBy('created', 'DESC')
         ->pager(10);
   $result = $query->execute();
-  if (isset($result['node']) && count($result['node'])>0) {
+  if (isset($result['node']) && count($result['node']) > 0) {
     $nids = array_keys($result['node']);
     $page['list'] = array();
     foreach ($nids as $nid) {
       $node = node_load($nid);
-      $page['list'][]= node_view($node, 'teaser');
+      $page['list'][] = node_view($node, 'teaser');
     }
   }
   else {
@@ -139,7 +140,7 @@ function ces_blog_field_formatter_view($entity_type, $entity, $field, $instance,
 
   switch ($display['type']) {
     case 'ces_blog_exchange':
-    //nothing
+      // Nothing.
   }
   return $element;
 }
@@ -165,6 +166,6 @@ function ces_blog_node_access($node, $op, $account) {
  * Implements hook_menu_alter().
  */
 function ces_blog_menu_alter(&$items) {
-  //Remove Add content from menu.
+  // Remove Add content from menu.
   $items['node/add']['type'] = MENU_LOCAL_TASK;
 }

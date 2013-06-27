@@ -198,6 +198,7 @@ class Bank {
    *   Four letters exchange code.
    * @return array
    *   an exchange object record, or FALSE if not available.
+   * 
    */
   public function getExchangeByName($name) {
     $s = new Serializer('Exchange');
@@ -348,6 +349,7 @@ class Bank {
   }
   /**
    * Get a transaction amount in a specific exchange currency.
+   * 
    * @param array $transaction
    *   transaction object record.
    * @param array $exchange
@@ -431,6 +433,7 @@ class Bank {
    *   Transaction identifier.
    *
    * @return TRUE
+   *   If a problem occurs an exception is thrown.
    */
   public function deleteTransaction($id) {
     $t = Serializer::DBTransaction();
@@ -527,7 +530,7 @@ class Bank {
    * Gets an account's historic value.
    * @todo: Use protected function?
    */
-  private function getAccountHistoricValue($id, $field, $from, $to) {
+  protected function getAccountHistoricValue($id, $field, $from, $to) {
     $s = new Serializer('LocalAccount');
     $account = $s->load($id);
     $st = new Serializer('BasicTransaction');
@@ -836,14 +839,14 @@ class Bank {
   /**
    * TODO: document.
    */
-  private function getObject($class_name, $id) {
+  protected function getObject($class_name, $id) {
     $s = new Serializer($class_name);
     return $s->load($id);
   }
   /**
    * Get record in object based on id with given classname.
    */
-  private function getObjectRecord($class_name, $id) {
+  protected function getObjectRecord($class_name, $id) {
     $object = $this->getObject($class_name, $id);
     if ($object === FALSE) {
       throw new Exception(t('Object of type %classname with id %id does not exist.', array('%classname' => $class_name, '%id' => $id)));
@@ -853,7 +856,7 @@ class Bank {
   /**
    * Update object in classname with array of records.
    */
-  private function updateObject($class_name, array &$record) {
+  protected function updateObject($class_name, array &$record) {
     $s = new Serializer($class_name);
     $object = $s->loadFromRecord($record);
     $s->save($object);
@@ -866,7 +869,7 @@ class Bank {
    * Auxiliar.
    * @see newTransaction()
    */
-  private function transactionFormToRecord($record) {
+  protected function transactionFormToRecord($record) {
     $record['state'] = TransactionInterface::STATE_NEW;
     // Load accounts.
     if (isset($record['toaccount'])) {
@@ -906,7 +909,7 @@ class Bank {
    * @return TransactionInterface
    *   New transaction object based on the record array.
    */
-  private function newTransaction(array &$record) {
+  protected function newTransaction(array &$record) {
     unset($record['id']);
     $record = $this->transactionFormToRecord($record);
     $fromaccount = $this->getObject('LocalAccount', $record['fromaccount']);
@@ -926,7 +929,7 @@ class Bank {
    * @return TransactionInterface
    * @see Bank::notifyTransactionAccount()
    */
-  private function notifyTransaction(TransactionInterface $transaction) {
+  protected function notifyTransaction(TransactionInterface $transaction) {
     $notifier = new Notifier();
     $account_from_name = $transaction->getFromAccountName();
     $account_to_name = $transaction->getToAccountName();
@@ -947,7 +950,7 @@ class Bank {
    * Triggers notification for transaction account.
    * @see Notifier
    */
-  private function notifyTransactionAccount($message_key, $account_name, $transaction_user, $params) {
+  protected function notifyTransactionAccount($message_key, $account_name, $transaction_user, $params) {
     $s = new Serializer('LocalAccount');
     $account = $s->loadFromUniqueKey('name', $account_name);
     $account_users = $account->getUsers();
@@ -1116,7 +1119,7 @@ class Exchange extends DBObject {
    * TODO: Document.
    * @see getDefaultAccount()
    */
-  private function getFreeAccountName() {
+  protected function getFreeAccountName() {
     // NOTE: this function is highly inefficient. It can be changed with a
     // single specific DB query if causes performance problems.
     $s = new Serializer('LocalAccount');
@@ -1335,7 +1338,7 @@ class LocalAccount extends DBObject implements AccountInterface {
    * singleton with the account's administrator user. Each entry is an
    * AccountUser object.
    */
-  private $users;
+  protected $users;
   public static $table = 'ces_account';
   const STATE_HIDDEN = 0;
   const STATE_ACTIVE = 1;
@@ -2129,7 +2132,7 @@ class BasicTransaction extends DBObject implements TransactionInterface {
   /**
    * TODO: document.
    */
-  private static function getStateString($state) {
+  protected static function getStateString($state) {
     $string = array(
       0 => 'NEW',
       1 => 'TRIGGERED',
@@ -2154,7 +2157,7 @@ abstract class DecoratedTransaction extends DBObject implements TransactionInter
   /**
    * @var Transaction
    */
-  private $parent;
+  protected $parent;
   public static $table = 'ces_transaction';
   /**
    * TODO: document.
@@ -2274,8 +2277,10 @@ class InterExchangeTransaction extends DecoratedTransaction {
   public static $FROM = 0;
   public static $TO = 1;
   /**
-   * TODO: document.
+   * Creates a transaction between two accounts from distinct exchanges.
+   * 
    * @return InterExchangeTransaction
+   *   A new transaction object between two distinct exchanges.
    */
   public static function newInterExchangeTransaction($record) {
     $sa = new Serializer('LocalAccount');
@@ -2308,8 +2313,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     return $totransaction;
   }
   /**
-   * TODO: document.
-   * @return InterExchangeTransaction
+   * Implements trigger().
    */
   public function trigger() {
     $this->getParent()->trigger();
@@ -2321,7 +2325,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     // If the second fails, undo the first.
   }
   /**
-   * TODO: document.
+   * Implements check().
    */
   public function check() {
     // Check two virtual transactions.
@@ -2332,7 +2336,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $s->save($pair);
   }
   /**
-   * TODO: document.
+   * Implements apply().
    */
   public function apply() {
     // Apply the two virtual transactions.
@@ -2343,7 +2347,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $s->save($pair);
   }
   /**
-   * TODO: document. Revoke the two virtual transactions.
+   * Implements revoke().
    */
   public function revoke() {
     // Revoke the two virtual transactions.
@@ -2354,7 +2358,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $s->save($pair);
   }
   /**
-   * TODO: document.
+   * Deletes the associated transaction.
    */
   public function deleteExtraData() {
     $pair = $this->getPair()->getParent();
@@ -2362,19 +2366,19 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $s->delete($pair);
   }
   /**
-   * TODO: document.
+   * The seller account name.
    */
   public function getToAccountName() {
     return $this->getVirtualTransactionTo()->getToAccountName();
   }
   /**
-   * TODO: document.
+   * The buyer account name.
    */
   public function getFromAccountName() {
     return $this->getVirtualTransactionFrom()->getFromAccountName();
   }
   /**
-   * TODO: document.
+   * The virtual transaction in buyer's exchange.
    */
   protected function getVirtualTransactionFrom() {
     if ($this->side == InterExchangeTransaction::$FROM) {
@@ -2387,7 +2391,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     }
   }
   /**
-   * TODO: document.
+   * The virtual transaction in seller's exchange.
    */
   protected function getVirtualTransactionTo() {
     if ($this->side == InterExchangeTransaction::$TO) {
@@ -2400,7 +2404,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     }
   }
   /**
-   * TODO: document.
+   * The associated transaction.
    */
   protected function getPair() {
     $s = new Serializer('BasicTransaction');
@@ -2443,11 +2447,11 @@ class UserPermission {
   /**
    * @var int
    */
-  private $userid;
+  protected $userid;
   /**
    * @var array of Permission
    */
-  private static $permissions = array();
+  protected static $permissions = array();
   /**
    * TODO: document.
    *
@@ -2510,7 +2514,7 @@ class UserPermission {
   /**
    * Compute the user's permissions and set up internal $permissions.
    *
-   * Compute the user's permissions and populate the private internal variable
+   * Compute the user's permissions and populate the protected internal variable
    * $permissions.
    * Note: this function easily needs 10 or 15 database queries. It is
    * recommendable to make cache of its result. Further, it could be easily
@@ -2564,7 +2568,7 @@ class UserPermission {
    * @return bool
    *   Whether (object1,objectid1) belongs to (object2, objectid2).
    */
-  private function belongs($object1, $objectid1, $object2, $objectid2) {
+  protected function belongs($object1, $objectid1, $object2, $objectid2) {
     // Case permission. Permission belongs to A if the object of that permission
     // belongs to A.
     if ($objectid1 == 'permission') {

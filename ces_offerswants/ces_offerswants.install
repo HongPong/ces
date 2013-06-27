@@ -3,6 +3,7 @@
  * @file
  * Install and uninstall ces offerswants module.
  */
+
 /**
  * Implements hook_schema().
  */
@@ -71,19 +72,19 @@ function ces_offerswants_schema() {
          'type' => 'int',
          'unsigned' => TRUE,
          'not null' => TRUE,
-         'default' => 0
+         'default' => 0,
       ),
       'modified' => array(
          'type' => 'int',
          'unsigned' => TRUE,
          'not null' => TRUE,
-         'default' => 0
+         'default' => 0,
       ),
       'expire' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
     ),
     'primary key' => array('id'),
@@ -120,13 +121,13 @@ function ces_offerswants_schema() {
         'description' => 'The id of the exchange where this category belongs',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'context' => array(
         'description'   => 'Whether this category is applicable to offers (1), wants (2), both (3) or none (0)',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
     ),
     'primary key' => array('id'),
@@ -134,8 +135,8 @@ function ces_offerswants_schema() {
       'parent' => array(
         'table' => 'ces_category',
         'columns' => array('parent' => 'id'),
-      )
-    )
+      ),
+    ),
   );
   return $schema;
 }
@@ -146,7 +147,7 @@ function ces_offerswants_schema() {
 function ces_offerswants_install() {
   $t = get_t();
 
-  //Create root category
+  // Create root category.
   $category = (object) array(
     'title' => 'root',
     'parent' => 0,
@@ -156,7 +157,7 @@ function ces_offerswants_install() {
   );
   ces_category_save($category);
 
-  //Create price field
+  // Create price field.
   $field = array(
     'field_name' => 'ces_offer_rate',
     'type' => 'text',
@@ -174,7 +175,7 @@ function ces_offerswants_install() {
     ),
     'display' => array(
       'default' => array('type' => 'ces_offer_rate'),
-    )
+    ),
   );
   $instance = field_create_instance($instance);
 }
@@ -182,7 +183,7 @@ function ces_offerswants_install() {
  * Implements hook_uninstall().
  */
 function ces_offerswants_uninstall() {
-  //Delete price field.
+  // Delete price field.
   field_delete_field('ces_offer_rate');
   $instances = field_info_instances('ces_offerwant', 'ces_offer_rate');
   foreach ($instances as $instance) {

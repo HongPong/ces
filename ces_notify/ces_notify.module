@@ -15,10 +15,10 @@ function ces_notify_mail($key, &$message, $params) {
   if (isset($message['language']) && !empty($message['language'])) {
     $record['lang'] = $message['language']->langcode;
   }
-  if (isset($message['from']) && (($sender = user_load_by_mail($message['from']))!==FALSE)) {
+  if (isset($message['from']) && (($sender = user_load_by_mail($message['from'])) !== FALSE)) {
     $record['sender'] = $sender->uid;
   }
-  if (isset($message['to']) && (($recipient = user_load_by_mail($message['to']))!==FALSE)) {
+  if (isset($message['to']) && (($recipient = user_load_by_mail($message['to'])) !== FALSE)) {
     $record['recipient'] = $recipient->uid;
   }
 
