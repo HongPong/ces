@@ -3,6 +3,7 @@
  * @file
  * Drupal hooks for this module.
  */
+
 /**
  * Implements hook_menu().
  */
@@ -20,7 +21,7 @@ function ces_user_menu() {
  * Implements hook_menu_alter().
  */
 function ces_user_menu_alter(&$menu) {
-  //gain control over registration page
+  // Gain control over registration page.
   $menu['user/register']['page arguments'] = array('ces_user_register_form');
 }
 /**
@@ -72,8 +73,8 @@ function ces_user_get_full_address($account = NULL) {
   $items = field_get_items('user', $account, 'ces_town');
   if (!empty($items)) {
     $item = reset($items);
-    if ( $address != '') {
-        $address .= ', ';
+    if ($address != '') {
+      $address .= ', ';
     }
     $address .= $item['safe_value'];
   }
@@ -122,7 +123,7 @@ function ces_user_register_form($form, &$form_state) {
  * Save values in register form account page.
  */
 function ces_user_register_save_values($form, &$form_state) {
-  if (!isset($form_state['page'])||$form_state['page']=='account') {
+  if (!isset($form_state['page']) || $form_state['page'] == 'account') {
     $form_state['page_values']['account'] = $form_state['values'];
   }
 }
@@ -141,7 +142,7 @@ function ces_user_register_submit($form, &$form_state) {
 function ces_user_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'ces_user_register_form' || $form_id == 'user_profile_form') {
     if (empty($form_state['page']) || $form_state['page'] == 'account') {
-      //Move all ces fields to account fieldset
+      // Move all ces fields to account fieldset.
       foreach ($form as $key => $field) {
         if (strlen($key) > 4 && substr($key, 0, 4) == 'ces_') {
           $form['account'][$key] = $form[$key];
@@ -185,7 +186,7 @@ function _ces_user_set_form_values(&$elements, $values) {
   foreach ($values as $key => $value) {
     if (isset($elements[$key]) && is_array($elements[$key])) {
       if (is_array($value)) {
-        //Call recursively.
+        // Call recursively.
         _ces_user_set_form_values($elements[$key], $value);
       }
       else {
@@ -335,12 +336,12 @@ function ces_user_main_page() {
     'welcome' => array(
       '#prefix' => '<p class="front-welcome">',
       '#suffix' => '</p>',
-      '#markup' => t('Welcome to <strong>Integral Community Exchange System</strong>,')
+      '#markup' => t('Welcome to <strong>Integral Community Exchange System</strong>,'),
     ),
     'intro' => array(
       '#prefix' => '<p class="front-intro">',
       '#suffix' => '</p>',
-      '#markup' => t('an open source platform featuring social currencies management for communities.')
+      '#markup' => t('an open source platform featuring social currencies management for communities.'),
     ),
     'features' => array(
       '#theme' => 'item_list',
@@ -370,8 +371,8 @@ function ces_user_token_info() {
           'name' => t('Main user telephone'),
           'description' => t('The main user telephone'),
         ),
-      )
-    )
+      ),
+    ),
   );
 }
 /**
@@ -386,11 +387,12 @@ function ces_user_tokens($type, $tokens, array $data = array(), array $options =
       switch ($name) {
         case 'fullname':
           $fullname = ces_bank_get_full_username($user);
-          $replacements[$original] = $sanitize?check_plain($fullname):$fullname;
+          $replacements[$original] = $sanitize ? check_plain($fullname) : $fullname;
           break;
+
         case 'mainphone':
           $mainphone = ces_user_get_main_phone($user);
-          $replacements[$original] = $sanitize?check_plain($mainphone):$mainphone;
+          $replacements[$original] = $sanitize ? check_plain($mainphone) : $mainphone;
           break;
       }
     }

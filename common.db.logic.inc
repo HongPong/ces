@@ -1,14 +1,15 @@
 <?php
 /**
- * @ingroup ces.common.db
- * @{
- */
-
-/**
  * @file
  * This file contains the "active record" (approximately) pattern for loading
  * and saving objects.
  */
+
+/**
+ * @ingroup ces.common.db
+ * @{
+ */
+
 /**
  * Loads and saves to db objects of class DBObject. It gives a unified and
  * drupal-indevendent way for bank logic objects to be loaded and saved.
@@ -38,8 +39,12 @@ class Serializer {
    *   The loaded object on success or FALSE if object can not be loaded.
    */
   public function load($id) {
-    if (!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
-    if (!isset(Serializer::$cache[$this->className]['id'])) $cache[$this->className]['id'] = array();
+    if (!isset(Serializer::$cache[$this->className])) {
+      $cache[$this->className] = array();
+    }
+    if (!isset(Serializer::$cache[$this->className]['id'])) {
+      $cache[$this->className]['id'] = array();
+    }
     if (!isset(Serializer::$cache[$this->className]['id'][$id])) {
       $record = db_select($this->table, 't')->fields('t')->condition('id', $id)->execute()->fetchAssoc();
       if ($record === FALSE) {
@@ -50,6 +55,8 @@ class Serializer {
     return Serializer::$cache[$this->className]['id'][$id];
   }
   /**
+   * Count entries.
+   *
    * @return int
    *   The number of objects that have value $value in field $key.
    */
@@ -70,7 +77,8 @@ class Serializer {
     else {
       $obj = new $this->className($record);
     }
-    if (!empty($record['decoration']) && is_array($record['decoration'])) {//load decorator pattern
+    if (!empty($record['decoration']) && is_array($record['decoration'])) {
+      // Load decorator pattern.
       foreach ($record['decoration'] as $value) {
         if (isset($value['classname']) && class_exists($value['classname'])) {
           $obj = new $value['classname']($obj, $value['data']);
@@ -84,10 +92,11 @@ class Serializer {
    */
   public function save(DBObject $object) {
     $record = $object->getRecord();
-    //Call save extra data to all implied objects.
-    $auxobject = $object; //Don't loose the main reference!
+    // Call save extra data to all implied objects.
+    // Don't loose the main reference!
+    $auxobject = $object;
     $inner = NULL;
-    do{
+    do {
       $auxobject->saveExtraData();
       $inner = $auxobject;
       $auxobject = $auxobject->getParent();
@@ -97,7 +106,7 @@ class Serializer {
     if (empty($record['id'])) {
       $record['created'] = REQUEST_TIME;
       drupal_write_record($this->table, $record);
-      //Update the inserted object with the id parameter.
+      // Update the inserted object with the id parameter.
       if (isset($record['id'])) {
         $inner->id = $record['id'];
       }
@@ -117,6 +126,8 @@ class Serializer {
     return db_update($this->table)->condition('id', $id)->fields(array($key => $value))->execute();
   }
   /**
+   * Select function.
+   *
    * Performs a SQL function such as COUNT(*), SUM(*), ... on a table field for
    * those rows meeting conditions.
    *
@@ -127,26 +138,29 @@ class Serializer {
    */
   public function selectFunctionField($function, $key, array $conditions) {
     $functions = array('COUNT', 'SUM');
-    if (!in_array($function, $functions))
+    if (!in_array($function, $functions)) {
       throw new Exception('Invalid database function.');
+    }
     $query = db_select($this->table, 't');
     $query->addExpression($function . '(' . $key . ')');
     foreach ($conditions as $condition) {
-      if (count($condition) == 3)
+      if (count($condition) == 3) {
         $query->condition($condition[0], $condition[1], $condition[2]);
-      elseif (count($condition) == 2)
+      }
+      elseif (count($condition) == 2) {
         $query->condition($condition[0], $condition[1]);
+      }
     }
     return $query->execute()->fetchField();
   }
   /**
+   * Load many objects.
+   *
    * @param array $conditions
    *   Associative array with field names as keys. There are two special conditions
    *   for those objects having the created [time] field:
    *   - createdsince: the smaller created time to return.
    *   - createduntil: the largest created time to return.
-   * @TODO: remove these two exceptions and change the conditions to be an array
-   * of three elements: (key, value, $cmp='=').
    * @param string $order
    *   A field to order by.
    *
@@ -189,21 +203,28 @@ class Serializer {
    * @return DBObject
    */
   public function loadFromUniqueKey($key, $value) {
-    if (!isset(Serializer::$cache[$this->className])) $cache[$this->className] = array();
-    if (!isset(Serializer::$cache[$this->className][$key])) $cache[$this->className][$key] = array();
+    if (!isset(Serializer::$cache[$this->className])) {
+      $cache[$this->className] = array();
+    }
+    if (!isset(Serializer::$cache[$this->className][$key])) {
+      $cache[$this->className][$key] = array();
+    }
     if (!isset(Serializer::$cache[$this->className][$key][$value])) {
       $query = db_select($this->table, 't')->fields('t')->condition($key, $value)->range(0, 1);
       $result = $query->execute();
       $record = $result->fetchAssoc();
-      if ($record === FALSE)
+      if ($record === FALSE) {
         return FALSE;
+      }
       Serializer::$cache[$this->className][$key][$value] = $this->loadFromRecord($record);
     }
     return Serializer::$cache[$this->className][$key][$value];
   }
   /**
    * Deletes a database record.
-   * @param id int the record id.
+   *
+   * @param DBobject $object
+   *   The object to be deleted.
    */
   public function delete(DBObject $object) {
     $object->deleteExtraData();
@@ -213,7 +234,10 @@ class Serializer {
     return $query->execute();
   }
   /**
+   * Start database transaction.
+   *
    * @return object
+   *   The transaction reference.
    */
   public static function DBTransaction() {
     return db_transaction();
@@ -274,8 +298,9 @@ class LockSerializer extends Serializer {
     $times = 0;
     while (!lock_acquire($lockname)) {
       $times++;
-      if ($times > 5)
+      if ($times > 5) {
         throw new Exception(t('Impossible to get the database lock %lock', array('%lock' => $lockname)));
+      }
       lock_wait($lockname);
     }
     return parent::load($id);
@@ -303,6 +328,8 @@ class LockSerializer extends Serializer {
 abstract class DBObject {
   public static $table;
   /**
+   * Return object record.
+   *
    * @return array
    *   The database record.
    */
@@ -314,9 +341,9 @@ abstract class DBObject {
     if ($parent != NULL && ($parent instanceof DBObject)) {
       do {
         $decoration[] = array(
-                          'classname' => get_class($object),
-                          'data' => $object->getSimpleRecord(),
-                        );
+          'classname' => get_class($object),
+          'data' => $object->getSimpleRecord(),
+        );
         $object = $parent;
         $parent = $object->getParent();
       } while ($parent != NULL && ($parent instanceof DBObject));
@@ -328,7 +355,10 @@ abstract class DBObject {
     return $record;
   }
   /**
-   * @returns The fields directly hanging from this object.
+   * Object simple record.
+   *
+   * @return array
+   *   The fields directly hanging from this object.
    */
   protected function getSimpleRecord() {
     $record = get_object_vars($this);
@@ -351,12 +381,16 @@ abstract class DBObject {
     }
   }
   /**
+   * Save object data.
+   *
    * If the overrider has other DBObject objects as class members override
    * this function to save them.
    */
   public function saveExtraData() {
   }
   /**
+   * Delete object data.
+   *
    * Called when this object is to be deleted. If the overrider has other
    * DBObject objects as class members override this function to delete them.
    */
@@ -370,6 +404,7 @@ abstract class DBObject {
   }
   /**
    * The parent object for those objects using the decorator pattern.
+   *
    * @return DBobject
    *   The parent object or NULL if it doesn't exist.
    */
@@ -380,7 +415,7 @@ abstract class DBObject {
 /**
  * A wrapper interface for Drupal transaction objects.
  */
-interface DBTransaction {
+interface DBTransactionInterface {
   public function rollback();
 }
 

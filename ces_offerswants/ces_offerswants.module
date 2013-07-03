@@ -359,7 +359,7 @@ function _ces_offerswants_user_page($type, $uid, $view_mode) {
           'class' => array(
             'ces_myofferwant_wrapper',
             $odd ? 'odd' : 'even',
-          )
+          ),
         ),
       );
       $myofferwant[] = ces_offerwant_view($offer, $view_mode);
@@ -381,7 +381,7 @@ function _ces_offerswants_my_page($type) {
                        . ' ' . l(t('Add offer'), 'ces/bank/account/myoffers/add');
     }
     else {
-    // Type == want.
+      // Type == want.
       $text['#markup'] = t("You don't have any want yet. Publishing a want is useful not only for you but also for other members searching for valued goods and skills.")
                        . ' ' . l(t('Add want'), 'ces/bank/account/mywants/add');
     }
@@ -447,7 +447,7 @@ function ces_offerswants_field_formatter_view($entity_type, $entity, $field, $in
   $element = array();
   foreach ($items as $delta => $item) {
     // Getting the actual value.
-    $rate = $item['safe_value']; 
+    $rate = $item['safe_value'];
   }
   if (isset($rate)) {
     if ($entity->category != 1 && is_numeric($rate)) {
@@ -510,7 +510,7 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
       '#required' => TRUE,
       '#options' => $options,
       '#default_value' => $offerwant->category,
-      '#weight' => 0
+      '#weight' => 0,
     );
   }
   else {
@@ -570,7 +570,7 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
   $form['hide'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide'),
-    '#description' => t('Check it if you don\'t want to publish the announcememnt.'),
+    '#description' => t("Check it if you don't want to publish the announcememnt."),
     '#default_value' => !$offerwant->state,
     '#weight' => 23,
   );
@@ -583,7 +583,7 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
   $form['ces_offer_rate'][LANGUAGE_NONE][0]['value']['#title'] = t('Rate');
   $form['ces_offer_rate'][LANGUAGE_NONE][0]['value']['#required'] = TRUE;
   $exchange = ces_offerswants_get_an_exchange();
-  $form['ces_offer_rate'][LANGUAGE_NONE][0]['value']['#description'] = t('Eg: \'2.5\' or \'5.00%symbol and transport\' or \'Contact me\' or \'Free\'.', array('%symbol' => $exchange['currencysymbol']));
+  $form['ces_offer_rate'][LANGUAGE_NONE][0]['value']['#description'] = t("Eg: '2.5' or '5.00%symbol and transport' or 'Contact me' or 'Free\'.", array('%symbol' => $exchange['currencysymbol']));
 
   return $form;
 }
@@ -625,7 +625,7 @@ function ces_offerwant_form_submit($form, &$form_state) {
     // make it permanent.
     if (!$file->status) {
       $info = image_get_info($file->uri);
-      $directory =  file_default_scheme() . '://' . variable_get('ces_offerswants_picture_path', 'ces_offerswants_pictures');
+      $directory = file_default_scheme() . '://' . variable_get('ces_offerswants_picture_path', 'ces_offerswants_pictures');
       // Prepare the pictures directory.
       file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
       $destination = file_stream_wrapper_uri_normalize($directory . '/picture-' . $offerwant->id . '-' . REQUEST_TIME . '.' . $info['extension']);
@@ -706,7 +706,7 @@ function ces_offerswants_file_download($uri) {
   return array('Content-type' => 'image/png');
 }
 /**
- * Process variables for ces_offerwant.tpl.php
+ * Process variables for ces_offerwant.tpl.php.
  */
 function template_preprocess_ces_offerwant(&$variables) {
   $offerwant = $variables['element']['#ces_offerwant'];
@@ -767,10 +767,17 @@ function template_preprocess_ces_offerwant(&$variables) {
   $variables['ces_offerwant_seller_address'] = ces_user_get_full_address($account);
   // Check if this offer belongs to me.
   global $user;
-  $variables['ces_offerwant_belongs_to_me'] = ($offerwant->user == $user->uid );
+  $variables['ces_offerwant_belongs_to_me'] = ($offerwant->user == $user->uid);
 }
 /**
- * @param operation one of 'view', 'use', 'edit', 'admin'.
+ * Checks access to offerwant entity.
+ *
+ * @param string $operation
+ *   One of 'view', 'use', 'edit', 'admin'.
+ * @param object $offerwant
+ *   The entity.
+ * @param object $account
+ *   The Drupal user.
  */
 function ces_offerwant_access($operation, $offerwant, $account = NULL) {
   if ($account == NULL) {
@@ -863,7 +870,7 @@ function ces_category_form($form, &$form_state, $category = NULL) {
  * @TODO
  */
 function ces_category_form_validate($form, &$form_state) {
-  //TODO
+  // TODO.
 }
 /**
  * Form submit.
@@ -935,12 +942,14 @@ function ces_category_access($permission, $category) {
   return ces_bank_access($permission, 'exchange', $category->exchange);
 }
 /**
+ * Returns current exchange id.
+ *
  * This is a triky function in order to avoid explicit dependence on ces_bank
  * module. Form this module point of view, an exchange is an array having an
  * id field. Nothing more.
  */
 function ces_offerswants_get_current_exchage_id($account = NULL) {
-  //Invoke in fact ces_bank module, but we avoid explicit dependence.
+  // Invoke in fact ces_bank module, but we avoid explicit dependence.
   $result = ces_offerswants_get_an_exchange();
   if (isset($result['id'])) {
     return $result['id'];
@@ -967,6 +976,7 @@ function ces_offerswants_get_an_exchange($id = NULL) {
 }
 /**
  * Return all exchanges.
+ *
  * Warning: indexs aren't ids.
  */
 function ces_offerswants_get_all_exchanges() {
@@ -987,8 +997,12 @@ function _ces_offerswants_get_all_exchanges_options() {
   return $options;
 }
 /**
- * @param $offerwant_type string 'offer' or 'want'.
- * @param $exchange int exchange identifier.
+ * Helper.
+ *
+ * @param string $offerwant_type
+ *   'offer' or 'want'.
+ * @param int $exchange
+ *   Exchange identifier.
  */
 function _ces_offerswants_get_categories_options($offerwant_type = NULL, $exchange = NULL) {
   $options = array();
@@ -1024,6 +1038,8 @@ function ces_offerswants_get_categories_ids($offerwant_type = NULL, $exchange = 
   return array();
 }
 /**
+ * Get category entities.
+ *
  * @param $offerwant_type
  *   - NULL for all $offerwant type's categories.
  *   - 'offer' for offer's categories.
@@ -1042,7 +1058,7 @@ function ces_offerswants_admin_categories_page() {
   if (empty($categories)) {
     return array(
       '#markup' => t('Your exchange does not have any category yet. It is very recommended to divide the offers and/or wants into several categories. A good first approach is to create 10-15 categories for offers but a single category for wants.')
-                   . ' ' . l(t('Add category'), 'ces/admin/categories/add'),
+      . ' ' . l(t('Add category'), 'ces/admin/categories/add'),
     );
   }
   $page['table'] = array(
@@ -1365,10 +1381,14 @@ function ces_offerswants_block_form_submit($form, &$form_state) {
   }
 }
 /**
- * If action is empty or is 'filter'
- * @param $arg1 string filter by exchange id (only used if arg2 is null or is 'all').
- * @param $arg2 string filter by category id.
- * @param $arg3 string order by property. Defaults to 'modified'.
+ * If action is empty or is 'filter'.
+ *
+ * @param string $arg1
+ *   Filter by exchange id (only used if arg2 is null or is 'all').
+ * @param string $arg2
+ *   Filter by category id.
+ * @param string $arg3
+ *   Order by property. Defaults to 'modified'.
  */
 function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $arg1 = NULL, $arg2 = NULL, $arg3 = NULL) {
   if (empty($action)) {
@@ -1378,7 +1398,7 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
   $page = array();
 
   if ($action == 'filter') {
-    //Build entity query.
+    // Build entity query.
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'ces_offerwant');
     $query->entityCondition('bundle', $offerwant_type);
@@ -1400,7 +1420,7 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
     }
     $direction = _ces_offerswants_get_orderby_direction($arg3);
     $query->propertyOrderBy($arg3, $direction);
-    //Get and render results
+    // Get and render results.
     $result = $query->execute();
     if (isset($result['ces_offerwant']) && count($result['ces_offerwant']) > 0) {
       $offerids = array_keys($result['ces_offerwant']);
@@ -1409,7 +1429,7 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
     }
     else {
       $text = array(
-        '#markup' => t('There are no results. Try broaden your search criteria in order to get some results.')
+        '#markup' => t('There are no results. Try broaden your search criteria in order to get some results.'),
       );
       $page[] = $text;
     }
@@ -1449,7 +1469,7 @@ function _ces_offerwants_render_list($offers) {
         'class' => array(
           'ces_myofferwant_wrapper',
           $odd ? 'odd' : 'even',
-        )
+        ),
       ),
     );
     $offerwant[] = ces_offerwant_view($offer, 'list');
@@ -1478,7 +1498,7 @@ function ces_offerswants_search_execute($keys = NULL, $conditions = NULL) {
   $find = array();
   // Replace wildcards with MySQL/PostgreSQL wildcards.
   $keys = preg_replace('!\*+!', '%', $keys);
-  // Select database
+  // Select database.
   $query = db_select('ces_offerwant');
   $query->fields('ces_offerwant', array('id'));
   $keys = explode(' ', $keys);
@@ -1533,7 +1553,7 @@ function ces_offerswants_user_view($account, $view_mode, $langcode) {
   $offers = array(
     '#type' => 'container',
     '#attributes' => array(),
-    '#weight' => 2
+    '#weight' => 2,
   );
   $offers['title'] = array(
     '#type' => 'markup',
@@ -1550,7 +1570,7 @@ function ces_offerswants_user_view($account, $view_mode, $langcode) {
   $wants = array(
     '#type' => 'container',
     '#attributes' => array(),
-    '#weight' => 3
+    '#weight' => 3,
   );
   $wants['title'] = array(
     '#type' => 'markup',
@@ -1570,7 +1590,8 @@ function ces_offerswants_user_view($account, $view_mode, $langcode) {
 function ces_offerswants_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'ces_user_register_form') {
     if (!empty($form_state['page']) && ($form_state['page'] == 'offer' || $form_state['page'] == 'want')) {
-      $key = $form_state['page'] . 's'; //'offers' or 'wants'
+      // 'offers' or 'wants'.
+      $key = $form_state['page'] . 's';
       $index = $form_state['offerwant_index'];
       $offerform = array(
         '#tree' => TRUE,
@@ -1636,7 +1657,7 @@ function ces_offerswants_form_alter(&$form, &$form_state, $form_id) {
       '#title' => t('Minimum offers on register'),
       '#description' => t('The minimum number of offers that a member must fill in the registration form.'),
       '#options' => array('0' => t('None'), '1' => t('1'), '2' => t('2'), '3' => t('3'), '4' => t('4')),
-      '#default_value' => isset($form_state['values']['data']['registration_offers'])?$form_state['values']['data']['registration_offers']:'1',
+      '#default_value' => isset($form_state['values']['data']['registration_offers']) ? $form_state['values']['data']['registration_offers'] : '1',
     );
     $form['exchange']['users']['registration_wants'] = array(
       '#type' => 'select',

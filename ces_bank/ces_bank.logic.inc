@@ -196,9 +196,9 @@ class Bank {
    *
    * @param string $name
    *   Four letters exchange code.
+   *
    * @return array
    *   an exchange object record, or FALSE if not available.
-   * 
    */
   public function getExchangeByName($name) {
     $s = new Serializer('Exchange');
@@ -349,11 +349,12 @@ class Bank {
   }
   /**
    * Get a transaction amount in a specific exchange currency.
-   * 
+   *
    * @param array $transaction
    *   transaction object record.
    * @param array $exchange
    *   exchange object record.
+   *
    * @return float
    *   the transaction amount.
    */
@@ -731,23 +732,6 @@ class Bank {
       throw $e;
     }
   }
-  /*
-   * Gets the names of classes that implement AccountLimit interface.
-   * @return array
-   *   the names of classes that implement the AccountLimit interface.
-   */
-  /*
-  public function getAccountLimitClasses() {
-    $classes = module_invoke_all('account_limit_classes');
-    $limits = array();
-    foreach ($classes as $className) {
-      if (class_exists($className)) {
-        $limits[$className] = $className::getName();
-      }
-    }
-    return $limits;
-  }*/
-
   /**
    * Get the names of classes implementing DecoratedTransaction interface.
    * @return array
@@ -767,8 +751,6 @@ class Bank {
   }
   /**
    * Create permission object.
-   *
-   * @param array $record
    */
   public function createPermission(array &$record) {
     $t = Serializer::DBTransaction();
@@ -925,8 +907,11 @@ class Bank {
     return $transaction;
   }
   /**
-   * Creates notifier from transaction.
-   * @return TransactionInterface
+   * Notifies the applied transaction.
+   *
+   * Sends a message to both buyer and seller noticing that their balances have
+   * changed.
+   *
    * @see Bank::notifyTransactionAccount()
    */
   protected function notifyTransaction(TransactionInterface $transaction) {
@@ -1172,18 +1157,6 @@ class Exchange extends DBObject {
       $this->limitchain = $def_limit_chain->id;
       $es->updateField($this, 'limitchain');
     }
-    /*
-    $virtAccount = $this->getVirtualAccount();
-    if (empty($virtAccount)) {
-      // Create virtual account.
-      $virtAccount = $this->getDefaultAccount();
-      $virtAccount->kind = LocalAccount::TYPE_VIRTUAL;
-      $virtAccount->state = LocalAccount::STATE_HIDDEN;
-      $virtAccount->name = $this->code . 'VIRT';
-      $as = new Serializer('LocalAccount');
-      $as->save($virtAccount);
-    }
-    */
     $this->state = Exchange::STATE_ACTIVE;
   }
   /**
@@ -2278,7 +2251,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
   public static $TO = 1;
   /**
    * Creates a transaction between two accounts from distinct exchanges.
-   * 
+   *
    * @return InterExchangeTransaction
    *   A new transaction object between two distinct exchanges.
    */
@@ -2468,11 +2441,16 @@ class UserPermission {
     }
   }
   /**
-   * Todo document this.
+   * Checks whether the user has access to certain permission.
    *
    * @param int|string $permission
+   *   The type of action: 'view', 'use', 'edit' or 'admin', or teir respective
+   *   numeric equivalents.
    * @param string $object
+   *   The name of the object class to be accessed: 'echange', 'account',
+   *   'transaction', etc.
    * @param int $objectid
+   *   The identifier of the object instance to be accessed.
    *
    * @return bool
    *   whether user of this Permissions object has access of type given by

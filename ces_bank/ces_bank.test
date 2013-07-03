@@ -4,6 +4,9 @@
  * Tests the functionality bank module.
  */
 
+/**
+ * Implements DrupalWebTestCase.
+ */
 class BankTestCase extends DrupalWebTestCase {
   /**
    * @var user
@@ -97,9 +100,9 @@ class BankTestCase extends DrupalWebTestCase {
     $this->drupalLogout();
   }
   /**
-   * This function performs all tests. 
-   * 
-   * Since we have to perform heavy operations (create and activate exchanges, 
+   * This function performs all tests.
+   *
+   * Since we have to perform heavy operations (create and activate exchanges,
    * accounts, etc) before we can actually test critical features we join all in
    * one test function to save resources.
    */
@@ -351,9 +354,9 @@ class BankTestCase extends DrupalWebTestCase {
     );
     return $ret;
   }
- /**
+  /**
   * Create a new user request.
-  * 
+  *
   * @param array $record
   *   associative array with entries:
   *   - exchange: associative array with entries
@@ -435,7 +438,7 @@ class BankTestCase extends DrupalWebTestCase {
   }
   /**
    * Activate a requested account.
-   * 
+   *
    * @param array $record
    *   The account record.
    * @param object $admin
@@ -454,7 +457,7 @@ class BankTestCase extends DrupalWebTestCase {
     $this->drupalPost(NULL, array('state' => '1'), t('Save'));
     $this->drupalLogout();
   }
- /**
+  /**
   * Create a new exchange request.
   */
   protected function createExchange($record) {
@@ -484,6 +487,7 @@ class BankTestCase extends DrupalWebTestCase {
   }
   /**
    * Create a transaction.
+   *
    * @param object $user
    *   The user who performs the transaction.
    * @param array $record
@@ -493,7 +497,7 @@ class BankTestCase extends DrupalWebTestCase {
    *   - amount
    *   - seller: seller's account number. If ommited, the default user's account
    *             will be used.
-   * @param boolean $success
+   * @param bool $success
    *   Whether this transaction should be permitted by the system.
    */
   protected function doTransaction($user, $record, $success = TRUE) {
@@ -538,8 +542,7 @@ class BankTestCase extends DrupalWebTestCase {
     $this->drupalLogout();
   }
   /**
-   * Asserts that the default account of given user has the correct balance in
-   * his account.
+   * Check that the given user has the given balance in his/her default account.
    */
   public function assertBalance($user, $amount) {
     $this->drupalLogin($user);

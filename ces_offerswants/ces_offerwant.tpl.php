@@ -11,7 +11,7 @@
       <div class="ces-offerwant-image"><?php 
       if (!empty($ces_offerwant_image)):
         $ces_offerwant_image['width'] = '200px';
-        echo theme('image', $ces_offerwant_image); 
+        echo theme('image', $ces_offerwant_image);
       endif;
       ?></div>
       <div class="ces-offerwant-body"><?php echo $ces_offerwant_body; ?></div>
@@ -42,20 +42,20 @@
     <div class="ces-offerwant-seller">
       <?php global $base_path; ?>
       <div class="ces-offerwant-seller-picture">
-        <a href="<?php print $base_path; ?>user/<?php echo $ces_offerwant_seller_uid; ?>"  title="<?php echo t('Seller\'s info'); ?>">
+        <a href="<?php print $base_path; ?>user/<?php echo $ces_offerwant_seller_uid; ?>"  title="<?php echo t("Seller's info"); ?>">
       <?php print theme('user_picture', array('account' => user_load($ces_offerwant_seller_uid))); ?>
         </a>
       </div>
       <div class="ces-offerwant-seller-name-and-phone">
         <div class="ces-offerwant-seller-name">
-          <a href="<?php print $base_path; ?>user/<?php echo $ces_offerwant_seller_uid; ?>" title="<?php echo t('Seller\'s info'); ?>">
+          <a href="<?php print $base_path; ?>user/<?php echo $ces_offerwant_seller_uid; ?>" title="<?php echo t("Seller's info"); ?>">
           <?php echo $ces_offerwant_seller_name; ?>
           </a>
         </div>
         <div class="ces-offerwant-seller-phone">
             <?php echo $ces_offerwant_seller_phone; ?>
         </div>
-        <?php if( $view_mode_full && $ces_offerwant_belongs_to_me == false ) : ?>
+        <?php if ($view_mode_full && $ces_offerwant_belongs_to_me == false) : ?>
             <div class="ces-offerwant-seller-email">
             <?php echo $ces_offerwant_seller_mail; ?>
             </div>
@@ -70,5 +70,4 @@
     </div>
     <div class="clearfix"></div>
   </div>
-  
 </div>

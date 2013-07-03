@@ -1,9 +1,9 @@
 <?php
 /**
  * @file
- * 
  * Implements the drupal hooks for this module.
  */
+
 define('CES_CURRENT_ACCOUNT', 'ces_current_account');
 define('CES_CURRENT_EXCHANGE', 'ces_current_exchange');
 
@@ -16,11 +16,14 @@ function ces_bank_help($path, $arg) {
       return '<p>' . t('Charge a sale. Select the payer account, enter a short
         decription and the amount of the transaction. This amount will be
         trasferred to your account.') . '</p>';
+
     case 'ces/bank/exchange/accounts':
       return '<p>' . t('All users and banking accounts of your exchange.') . '</p>';
+
     case 'ces/bank/account/transaction':
       return '<p>' . t('Showing your transactions. Set the "From" and "To"
         dates to see a specific time range.') . '</p>';
+
     case 'ces/register/%':
       return '<p>' . t('Click on the exchange you want to join.') . '</p>';
   }
@@ -526,8 +529,8 @@ function _ces_bank_replace_current_args(&$args) {
  */
 function ces_bank_account_limit_classes() {
   return array(
-   'AbsoluteCreditLimit' => t('Absolute credit limit'),
-   'AbsoluteDebitLimit' => t('Absolute debit limit'),
+    'AbsoluteCreditLimit' => t('Absolute credit limit'),
+    'AbsoluteDebitLimit' => t('Absolute debit limit'),
   );
 }
 
@@ -572,11 +575,11 @@ function ces_bank_token_info() {
       ),
       'account' => array(
         'name'  => t('Account'),
-        'description' => t('Tokens for bank accounts.')
+        'description' => t('Tokens for bank accounts.'),
       ),
       'transaction' => array(
         'name' => t('Transaction'),
-        'description' => t('Tokens for bank transactions.')
+        'description' => t('Tokens for bank transactions.'),
       )
     ),
     'tokens' => array(
@@ -644,7 +647,7 @@ function ces_bank_token_info() {
           'name' => t('Account user'),
           'description' => t('Account user.'),
           'type' => 'user',
-        )
+        ),
       ),
       'transaction' => array(
         'fromaccount' => array(
@@ -663,7 +666,7 @@ function ces_bank_token_info() {
         ),
         'concept' => array(
           'name' => t('Description'),
-          'description' => t('The concept of the transaction.')
+          'description' => t('The concept of the transaction.'),
         ),
       ),
     ),
@@ -684,37 +687,48 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
         case 'code':
           $replacements[$original] = $sanitize ? check_plain($exchange['code']) : $exchange['code'];
           break;
+
         case 'shortname':
           $replacements[$original] = $sanitize ? check_plain($exchange['shortname']) : $exchange['shortname'];
           break;
+
         case 'name':
           $replacements[$original] = $sanitize ? check_plain($exchange['name']) : $exchange['name'];
           break;
+
         case 'country':
           $replacements[$original] = $sanitize ? check_plain($exchange['country']) : $exchange['country'];
           break;
+
         case 'town':
           $replacements[$original] = $sanitize ? check_plain($exchange['town']) : $exchange['town'];
           break;
+
         case 'region':
           $replacements[$original] = $sanitize ? check_plain($exchange['region']) : $exchange['region'];
           break;
+
         case 'website':
           $replacements[$original] = $sanitize ? check_plain($exchange['website']) : $exchange['website'];
           break;
+
         case 'currencysymbol':
           $replacements[$original] = $sanitize ? check_plain($exchange['currencysymbol']) : $exchange['currencysymbol'];
           break;
+
         case 'currencyname':
           $replacements[$original] = $sanitize ? check_plain($exchange['currencyname']) : $exchange['currencyname'];
           break;
+
         case 'currenciesname':
           $replacements[$original] = $sanitize ? check_plain($exchange['currenciesname']) : $exchange['currenciesname'];
           break;
+
         case 'currencyvalue':
           $replacements[$original] = $sanitize ? check_plain($exchange['currencyvalue']) : $exchange['currencyvalue'];
           break;
-      }
+
+        }
     }
     if ($admin_tokens = token_find_with_prefix($tokens, 'admin')) {
       $replacements += token_generate('user', $admin_tokens, array('user' => user_load($exchange['admin'])), $options);
@@ -725,10 +739,11 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
     foreach ($tokens as $name => $original) {
       switch ($name) {
         case 'name':
-          $replacements[$original] = $sanitize?check_plain($account['name']):$account['name'];
+          $replacements[$original] = $sanitize ? check_plain($account['name']) : $account['name'];
           break;
+
         case 'kind':
-          $replacements[$original] = $sanitize?check_plain($account['kind']):$account['kind'];
+          $replacements[$original] = $sanitize ? check_plain($account['kind']) : $account['kind'];
           break;
       }
     }
@@ -743,10 +758,11 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
     foreach ($tokens as $name => $original) {
       switch ($name) {
         case 'amount':
-          $replacements[$original] = $sanitize?check_plain($transaction['amount']):$transaction['amount'];
+          $replacements[$original] = $sanitize ? check_plain($transaction['amount']) : $transaction['amount'];
           break;
+
         case 'concept':
-          $replacements[$original] = $sanitize?check_plain($transaction['concept']):$transaction['concept'];
+          $replacements[$original] = $sanitize ? check_plain($transaction['concept']) : $transaction['concept'];
           break;
       }
       if ($fromaccount_tokens = token_find_with_prefix($tokens, 'fromaccount')) {
@@ -784,7 +800,7 @@ Web site: [exchange:website]
 Currency: [exchange:currencysymbol] ( [exchange:currencyname] ), value [exchange:currencyvalue]
 User: [exchange:admin:name] <[exchange:admin:mail]>
 
-', $a, $b)
+', $a, $b),
       );
     case 'exchange activated':
       return array(
@@ -820,7 +836,7 @@ Account type: [account:kind]
 User: [account:user:fullname]
 
 Integral CES
-', $a, $b)
+', $a, $b),
       );
     case 'account activated':
       return array(
@@ -866,7 +882,7 @@ Happy trading!
 [exchange:admin:fullname]
 [exchange:admin:mail]
 [exchange:admin:mainphone]
-', $a , $b)
+', $a , $b),
       );
     case 'account debited':
       return array(

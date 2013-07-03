@@ -3,13 +3,15 @@
  * @file
  * Install and uninstall ces user module.
  */
+
 /**
  * Implements hook_install().
  */
 function ces_user_install() {
+  $t = get_t();
   $ok4 = _ces_user_create_user_fields();
   if (!$ok4) {
-    drupal_set_message(st('Error creating user fields.'), 'error');
+    drupal_set_message($t('Error creating user fields.'), 'error');
   }
 }
 /**
@@ -26,6 +28,8 @@ function ces_user_uninstall() {
 }
 
 /**
+ * Create user entity fields.
+ *
  * Add some fields to the user profile. Some of them are mandatory for all
  * networks and some of them are configurable for each network.
  * Concretely:
@@ -52,8 +56,6 @@ function _ces_user_create_user_fields() {
     'ces_phonework' => array('Phone (work)', 'Will only be displayed in your account details', FALSE, 45, 'text_default'),
     'ces_phonehome' => array('Phone (home)', 'Will only be displayed in your account details', FALSE, 50, 'text_default'),
     'ces_website' => array('Website', 'Your personal or organization website address', FALSE, 55, 'text_default'),
-    //'ces_subarea' => 'Subarea',
-    //'ces_adminnotes' => t('Notes for admin purposes'),
   );
   foreach ($textfields as $name => $info) {
     if (!field_info_field($name)) {
@@ -81,7 +83,7 @@ function _ces_user_create_user_fields() {
         ),
         'settings' => array(
           'user_register_form' => TRUE,
-        )
+        ),
       ));
     }
   }

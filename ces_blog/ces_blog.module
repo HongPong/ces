@@ -52,7 +52,7 @@ function ces_blog_node_info() {
       'name' => t('Exchange blog entry'),
       'base' => 'ces_blog',
       'description' => t('Blog post for members of your exchange'),
-    )
+    ),
   );
 }
 /**
@@ -101,7 +101,7 @@ function ces_blog_field_widget_info() {
     'ces_blog_exchange' => array(
       'label' => t('CES blog exchange'),
       'field types' => array('ces_blog_exchange'),
-    )
+    ),
   );
 }
 

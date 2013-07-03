@@ -105,12 +105,12 @@ for ($i = 0; $i < 3; $i++) {
 }
 // Create local transactions.
 $transactions = array(
-    array('NET10001', 'NET10002', 1.2, '3kg of potatoes.', $users['Euclides']->uid),
-    array('NET10002', 'NET10003', 0.8, 'Standard haircut.', $users['Gauss']->uid),
-    array('NET10003', 'NET10001', 2.1, 'Yearly website mantainment', $users['Riemann']->uid),
-    array('NET20001', 'NET20002', 25, 'Bike revision.', $users['Noether']->uid),
-    array('NET20002', 'NET20003', 6, 'Natural soap.', $users['Fermat']->uid),
-    array('NET20003', 'NET20001', 5.5, 'Ecologic carrots', $users['Gauss']->uid),
+  array('NET10001', 'NET10002', 1.2, '3kg of potatoes.', $users['Euclides']->uid),
+  array('NET10002', 'NET10003', 0.8, 'Standard haircut.', $users['Gauss']->uid),
+  array('NET10003', 'NET10001', 2.1, 'Yearly website mantainment', $users['Riemann']->uid),
+  array('NET20001', 'NET20002', 25, 'Bike revision.', $users['Noether']->uid),
+  array('NET20002', 'NET20003', 6, 'Natural soap.', $users['Fermat']->uid),
+  array('NET20003', 'NET20001', 5.5, 'Ecologic carrots', $users['Gauss']->uid),
 );
 foreach ($transactions as $t) {
   $trans = array(
@@ -142,9 +142,7 @@ $bank->activateAccount($account);
 $bank->applyTransaction($trans['id']);
 
 // OFFERWANTS.
-
 // Add categories.
-
 $names = array('Food', 'Hygiene', 'Professional services', 'Reparation', 'Education');
 $exchanges = array($net1, $net2);
 $categories = array();
@@ -241,12 +239,12 @@ array(
   'rate' => '6ECO each'
 ));
 foreach ($offers as $offer) {
-  $o = (object)$offer;
+  $o = (object) $offer;
   $o->ces_offer_rate = array(LANGUAGE_NONE => array(array('value' => $offer['rate'])));
   unset($o->rate);
   ces_offerwant_save($o);
 }
-//Blog posts
+// Blog posts.
 ces_develop_post_blog('Demo post', 'This is a demonstration blog post.
 
 This space is intended for the administrator or a group of editors to publish relevant information about the trading community, such as markets, events and news.
@@ -283,7 +281,7 @@ function ces_develop_post_blog($subject, $body, $exchange, $user) {
  * Create new user.
  */
 function ces_develop_register_user($name) {
-  // register a new user
+  // Register a new user.
   if (!user_load_by_name($name)) {
     $form_state = array();
     $form_state['values']['name'] = $name;
@@ -315,8 +313,8 @@ function ces_develop_register_account($user, $exchange, $i) {
       array(
         'user' => $user->uid,
         'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
-      )
-    )
+      ),
+    ),
   );
   $bank->createAccount($account);
   $bank->activateAccount($account);

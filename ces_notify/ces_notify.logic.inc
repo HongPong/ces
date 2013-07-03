@@ -19,8 +19,8 @@
 class Notifier {
   /**
    * Creates or updates a message template.
-   * 
-   * @param $record array 
+   *
+   * @param array $record
    *   With the following (mandatory) entries:
    *   - 'module': message name.
    *   - 'name': message name.
@@ -40,7 +40,7 @@ class Notifier {
   }
   /**
    * Sets the subject and body and the language of a message.
-   * 
+   *
    * The most appropiate template is choosen to be the one that first meets one
    * of the following conditions:
    * 1. Sender's template exists with language = $record['lang']
@@ -110,7 +110,7 @@ class Notifier {
     }
   }
   /**
-   * @return array
+   * Get default message.
    */
   protected function loadDefaultTemplateHelper($module, $name, $lang, $default_eng) {
     if ($lang == 'en') {
@@ -130,7 +130,10 @@ class Notifier {
     return $res;
   }
   /**
-   * @return Message or FALSE if template does not exist.
+   * Get message.
+   *
+   * @return Message
+   *   or FALSE if template does not exist.
    */
   protected function loadMessageTemplate($module, $name, $lang, $sender) {
     $conditions = array(
@@ -151,12 +154,17 @@ class Notifier {
   }
   /**
    * Senda an e-mail to a user.
-   * @param $key string the message key
-   * @param $recipients int the recipient user id. May be an array for multiple
+   *
+   * @param string $key
+   *   The message key.
+   * @param int $recipients
+   *   The recipient user id. May be an array for multiple
    * notifications.
-   * @param $senderid int the sender user id
-   * @param $params array Associative array with the placeholder values for this
-   * message
+   * @param int $senderid
+   *   The sender user id.
+   * @param array $params
+   *   Associative array with the placeholder values for this
+   * message.
    */
   public function notify($module, $key, $recipients, $senderid, array $params) {
     if (!is_array($recipients)) {
