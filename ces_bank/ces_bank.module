@@ -215,7 +215,7 @@ function ces_bank_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'account details', CES_CURRENT_ACCOUNT),
     'weight' => 400,
-    'expanded' => TRUE
+    'expanded' => TRUE,
   );
   $menu['ces/bank/buyeractions/order'] = array(
     'title' => 'Send order',
@@ -580,7 +580,7 @@ function ces_bank_token_info() {
       'transaction' => array(
         'name' => t('Transaction'),
         'description' => t('Tokens for bank transactions.'),
-      )
+      ),
     ),
     'tokens' => array(
       'exchange' => array(
@@ -632,7 +632,7 @@ function ces_bank_token_info() {
           'name'   => t('Exchange administrator'),
           'description' => t('Exchange administrator user.'),
           'type' => 'user',
-        )
+        ),
       ),
       'account' => array(
         'name' => array(
@@ -728,7 +728,7 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
           $replacements[$original] = $sanitize ? check_plain($exchange['currencyvalue']) : $exchange['currencyvalue'];
           break;
 
-        }
+      }
     }
     if ($admin_tokens = token_find_with_prefix($tokens, 'admin')) {
       $replacements += token_generate('user', $admin_tokens, array('user' => user_load($exchange['admin'])), $options);
@@ -823,6 +823,7 @@ Please confirm that you have received this welcome letter.
 
 IntegralCES', $a, $b),
       );
+
     case 'new account':
       return array(
         'subject' => t('[[exchange:shortname]] New account request [account:name]', $a, $b),
@@ -838,6 +839,7 @@ User: [account:user:fullname]
 Integral CES
 ', $a, $b),
       );
+
     case 'account activated':
       return array(
         'subject' => t('[[exchange:shortname]] Account activated'),
@@ -882,8 +884,9 @@ Happy trading!
 [exchange:admin:fullname]
 [exchange:admin:mail]
 [exchange:admin:mainphone]
-', $a , $b),
+', $a, $b),
       );
+
     case 'account debited':
       return array(
         'subject' => t('[[exchange:shortname]] Your account [transaction:fromaccount:name] has been debited'),
@@ -915,6 +918,7 @@ mail: <[transaction:toaccount:user:mail]>
 phone: [transaction:toaccount:user:mainphone]
 ', $a, $b),
       );
+
     case 'account credited':
       return array(
         'subject' => t('[[exchange:shortname]] Your account [transaction:toaccount:name] has been credited'),
@@ -943,7 +947,9 @@ within 10 days to have it corrected.
 
 /**
  * Given a drupal account, returns its full username.
- * @param $account Drupal account object.
+ * 
+ * @param object $account
+ *   Drupal user object.
  */
 function ces_bank_get_full_username($account) {
   $userfullname = '';
@@ -964,6 +970,8 @@ function ces_bank_get_full_username($account) {
   return $userfullname;
 }
 /**
+ * Get current bank account.
+ * 
  * @return array
  *   The current user's account.
  */
@@ -987,6 +995,8 @@ function ces_bank_get_current_account($account = NULL) {
   return $bankaccount;
 }
 /**
+ * Get current exchange.
+ * 
  * @return array
  *   The current user's exchange
  */
@@ -1100,6 +1110,7 @@ function ces_bank_menu_alter(&$items) {
   $items['user/%user']['access arguments'] = array('view', 1);
 }
 /**
+ * Checks access to bank account.
  */
 function ces_bank_user_access($permission, $target, $account = NULL) {
   $bank = new Bank();

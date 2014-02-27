@@ -355,40 +355,40 @@ class BankTestCase extends DrupalWebTestCase {
     return $ret;
   }
   /**
-  * Create a new user request.
-  *
-  * @param array $record
-  *   associative array with entries:
-  *   - exchange: associative array with entries
-  *     - country
-  *     - fullname
-  *   - account: associative array with entries:
-  *     - name
-  *     - mail
-  *     - firstname
-  *     - surname
-  *     - address
-  *     - town
-  *     - postcode
-  *     - phonemobile
-  *     - phonework
-  *     - phonehome
-  *     - website
-  *   - bankaccount: associative array with entries:
-  *     - kind: type of account. Options are 0 (Individual), 1 (Shared),
-  *             2 (Organization), 3 (Company), 4 (Public).
-  *   - offer: array with zero or more entries. Each of them is an associative
-  *   array with entries:
-  *     - title
-  *     - body
-  *     - rate
-  *     - keywords
-  *   - want: array with zero or more entries. Each of them is an associative
-  *   array with entries:
-  *     - title
-  *     - body
-  *     - keywords
-  */
+   * Create a new user request.
+   *
+   * @param array $record
+   *   associative array with entries:
+   *   - exchange: associative array with entries
+   *     - country
+   *     - fullname
+   *   - account: associative array with entries:
+   *     - name
+   *     - mail
+   *     - firstname
+   *     - surname
+   *     - address
+   *     - town
+   *     - postcode
+   *     - phonemobile
+   *     - phonework
+   *     - phonehome
+   *     - website
+   *   - bankaccount: associative array with entries:
+   *     - kind: type of account. Options are 0 (Individual), 1 (Shared),
+   *             2 (Organization), 3 (Company), 4 (Public).
+   *   - offer: array with zero or more entries. Each of them is an associative
+   *   array with entries:
+   *     - title
+   *     - body
+   *     - rate
+   *     - keywords
+   *   - want: array with zero or more entries. Each of them is an associative
+   *   array with entries:
+   *     - title
+   *     - body
+   *     - keywords
+   */
   protected function createAccount($record) {
     // Choose country from first page.
     $this->drupalGet('');
@@ -458,8 +458,8 @@ class BankTestCase extends DrupalWebTestCase {
     $this->drupalLogout();
   }
   /**
-  * Create a new exchange request.
-  */
+   * Create a new exchange request.
+   */
   protected function createExchange($record) {
     $this->drupalGet('');
     $this->clickLink(t('New exchange'));

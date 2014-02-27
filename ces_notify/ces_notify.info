@@ -3,4 +3,5 @@ description = Community Exchange System Messaging
 dependencies[] = ces
 files[] = ces_notify.logic.inc
 core = 7.x
-package = ces 
+package = ces
+ 
