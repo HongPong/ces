@@ -6,3 +6,39 @@
  * ces.module is used as a container for the other modules and contains
  * several general purpose files.
  */
+function ces_preprocess_page(&$variables, $hook) {
+  if (!module_exists('ces_bank')) {
+    drupal_set_message(t('Module CES Bank required'), 'error');
+    return;
+  }
+  global $user;
+  $user = user_load($user->uid);
+  require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.module';
+  $variables['account'] = ces_bank_get_current_account();
+  if ($variables['account'] !== FALSE) {
+    $exchange = ces_bank_get_current_exchange();
+    $variables['site_name'] = $exchange['name'];
+    $variables['site_slogan'] = 'Integral Community Exchange System';
+    $items = field_get_items('user', $user, 'ces_firstname');
+    $userfullname = '';
+    if(!empty($items)){
+      $item = reset($items);
+      $userfullname = $item['safe_value'] . ' ';
+    }
+    $items = field_get_items('user', $user, 'ces_surname');
+    if(!empty($items)){
+      $item = reset($items);
+      $userfullname .= $item['safe_value'];
+    }
+    if(!empty($userfullname)) {
+      $user->name = $userfullname;
+    }
+  }
+  else {
+    $variables['site_name'] = variable_get('site_name');
+    $variables['site_slogan'] = variable_get('site_slogan');  	
+  }
+  if($variables['is_front']) {
+    $variables['title'] = '';
+  }
+}
