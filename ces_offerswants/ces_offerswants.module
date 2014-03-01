@@ -1371,13 +1371,13 @@ function ces_offerswants_block_form($form, &$form_state, $offerwant_type = 'offe
 function ces_offerswants_block_form_submit($form, &$form_state) {
   $values = $form_state['values'];
 
-  if ($values['op'] == t('Filter')) {
-    $form_state['redirect'] = 'ces/' . $values['offerwant_type'] . 's/filter/' . $values['exchange']
-              . '/' . $values['category'] . '/' . $values['orderby'];
-  }
-  elseif ($values['op'] == t('Search')) {
+  if ( isset($values['search']) && ! empty($values['search']) ) {
     $form_state['redirect'] = 'ces/' . $values['offerwant_type'] . 's/search/' . $values['exchange']
               . '/' . $values['search'] . '/' . $values['orderby'];
+  }
+    elseif ($values['op'] == t('Filter')) {
+    $form_state['redirect'] = 'ces/' . $values['offerwant_type'] . 's/filter/' . $values['exchange']
+              . '/' . $values['category'] . '/' . $values['orderby'];
   }
 }
 /**
