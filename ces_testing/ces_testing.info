@@ -1,0 +1,7 @@
+name = CES testing module
+description = Tests CES modules
+core = 7.x
+package = ces
+dependencies[] = ces
+files[] = tests/ces_offerswants.test 
+files[] = tests/ces_bank.test

@@ -890,9 +890,9 @@ function ces_category_delete_form($form, &$form_state, $category) {
 
   $message = '<p>' . t('Are you sure you want to delete the category %category?', array('%category' => $category->title)) . '</p>';
   $caption = '';
-  $has_rows = (bool) db_query_range('SELECT 1 FROM {ces_offerwant} WHERE category = :category', array(':category' => $category->id), 0, 1)->fetchField();
-  if ($has_rows) {
-    $caption .= '<p>' . t('%category is used by %count offers or wants. It is highly recommended that you change the category of these offers or wants before you delete it. If the category is deleted now they may become unusable or may not display correctly.', array('%category' => $category->title, '%count' => $num)) . '</p>';
+  $num_rows = db_query_range('SELECT count(id) FROM {ces_offerwant} WHERE category = :category', 0, 1, array(':category' => $category->id))->fetchField();
+  if ($num_rows) {
+    $caption .= '<p>' . t('%category is used by %count offers or wants. It is highly recommended that you change the category of these offers or wants before you delete it. If the category is deleted now they may become unusable or may not display correctly.', array('%category' => $category->title, '%count' => $num_rows)) . '</p>';
   }
   $caption .= '<p>' . t('This action cannot be undone.') . '</p>';
 
