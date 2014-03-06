@@ -554,7 +554,7 @@ function ces_bank_user_presave(&$edit, $account, $category) {
 function ces_bank_user_load($users) {
   $bank = new Bank();
   foreach ($users as $uid => $account) {
-    if (!isset($account->data['ces_current_account'])) {
+    if (ces_bank_get_current_account($account) === FALSE) {
       $bankaccounts = $bank->getUserAccounts($uid);
       if (!empty($bankaccounts)) {
         $firstbankaccount = reset($bankaccounts);
