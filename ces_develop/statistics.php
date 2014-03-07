@@ -3,9 +3,16 @@
  * @file
  * This file is a script for filling the database with initial data for
  * statistics purposes. It empties the users and all ces tables and populates
- * it with 100 users with their respective accounts in one exchange and
- * applies random transactions between them.
+ * it with ($numaccounts) users with their respective accounts in one exchange and
+ * applies ($numtransactions) random transactions between them.
+ * Randomizes 'created' field for accounts and transactions, 
+ * between ($firsttime) and ($lasttime).
  */
+
+$numaccounts = 20; //number of accounts to create
+$numtransactions = 100; //number of transactions to create
+$lasttime = time(); //now
+$firsttime = $lasttime - 31536000; //randomize along this time (one year= 31536000segs)
 
 ces_develop_clean();
 
@@ -14,7 +21,7 @@ $bank = new Bank();
 
 // Create users.
 $usernames = array();
-for ($i = 1; $i <= 20; $i++) {
+for ($i = 1; $i <= $numaccounts; $i++) {
   $usernames[$i] = 'user' . $i;
 }
 $users = array();
@@ -47,7 +54,7 @@ $bank->activateExchange($net1);
 
 // Create accounts.
 $accounts = array();
-for ($i = 1; $i <= 20; $i++) {
+for ($i = 1; $i <= $numaccounts; $i++) {
   $name = $usernames[$i];
   $accounts[$name] = ces_develop_register_account($users[$name], $net1, $i);
 }
@@ -72,9 +79,7 @@ for ($i = 1; $i <= 20; $i++) {
   $bank->activateAccount($account);
 
 // Randomize created date in accounts
-$lasttime = time();
-$firsttime = $lasttime - 31536000; //one year
-for ($i = 1; $i <= 20; $i++) {
+for ($i = 1; $i <= $numaccounts; $i++) {
   $rndcreated = rand($firsttime, $lasttime);
    db_update('ces_account')
     ->condition('name','NET1' . sprintf('%04d', $i))
@@ -87,11 +92,11 @@ for ($i = 1; $i <= 20; $i++) {
 $rndtransaction = array();
 $rndfromuser = 0;
 $rndtouser = 0;
-for ($i = 1; $i <= 100; $i++) {
-  $rndfromuser = rand(1, 20);
-  $rndtouser = rand(1, 20);
+for ($i = 1; $i <= $numtransactions; $i++) {
+  $rndfromuser = rand(1, $numaccounts);
+  $rndtouser = rand(1, $numaccounts);
   while ($rndtouser == $rndfromuser) {
-    $rndtouser = rand(1, 20);	
+    $rndtouser = rand(1, $numaccounts);	
   }
   $rndvalue = rand(1, 1000)/100;
   $rndtransaction[$i] = array(
@@ -116,16 +121,12 @@ foreach ($rndtransaction as $t) {
 }
 
 // Randomize created date in transactions
-$lasttime = time();
-$firsttime = $lasttime - 31536000; //one year
-$i = 1;
-foreach ($rndtransaction as $t) {
+for ($i = 1; $i <= $numtransactions; $i++) {
   $rndcreated = rand($firsttime, $lasttime);
    db_update('ces_transaction')
     ->condition('concept','concept' . $i)
     ->fields(array('created' => $rndcreated))
     ->execute();
-    $i++;
 }
 
 // OFFERWANTS.
