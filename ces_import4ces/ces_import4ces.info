@@ -1,0 +1,8 @@
+name = ces_import4ces
+description = Import data from CES
+core = 7.x
+package = ces
+
+dependencies[] = ces
+dependencies[] = ces_bank
+dependencies[] = ces_notify
