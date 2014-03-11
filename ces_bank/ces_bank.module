@@ -260,15 +260,6 @@ function ces_bank_menu() {
     'access arguments' => array('view', 'exchange accounts', CES_CURRENT_EXCHANGE),
     'weight' => 610,
   );
-  $menu['ces/bank/exchange/stats'] = array(
-    'title' => 'Statistics',
-    'description' => 'View exchange statistics.',
-    'page callback' => 'ces_bank_not_yet_implemented',
-    'type' => MENU_NORMAL_ITEM,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
-    'weight' => 620,
-  );
   $menu['ces/bank/exchange/list/%'] = array(
     'title' => 'Exchanges in your country',
     'description' => 'List of exchanges in your country',

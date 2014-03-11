@@ -1,0 +1,180 @@
+<?php
+/**
+ * @file
+ * Implements the drupal hooks for this module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function ces_statistics_menu() {
+  $menu['ces/bank/exchange/statistics'] = array(
+    'title' => 'Statistics',
+    'description' => 'View exchange statistics.',
+    'page callback' => 'ces_statistics_page',
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 630,
+  );
+  return $menu;
+}  
+
+function ces_statistics_page() {
+  global $user;
+  $user = user_load($user->uid);
+  require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.module';
+  $variables['account'] = ces_bank_get_current_account();
+  if ($variables['account'] !== FALSE) {
+    $exchange = ces_bank_get_current_exchange();
+
+// js and css files
+    $pathmodule = drupal_get_path('module', 'ces_statistics');
+    drupal_add_js($pathmodule . '/js/jquery.jqplot.min.js');
+    drupal_add_js($pathmodule . '/js/jqplot.dateAxisRenderer.min.js');
+    drupal_add_js($pathmodule . '/js/jqplot.barRenderer.min.js');
+    drupal_add_js($pathmodule . '/js/jqplot.canvasTextRenderer.min.js');
+    drupal_add_js($pathmodule . '/js/jqplot.canvasAxisLabelRenderer.min.js');
+    drupal_add_js($pathmodule . '/js/jqplot.canvasAxisTickRenderer.min.js');
+    drupal_add_js($pathmodule . '/js/jqplot.categoryAxisRenderer.min.js');
+    drupal_add_js($pathmodule . '/js/jqplot.pointLabels.min.js');
+    drupal_add_js($pathmodule . '/js/jqplot.pieRenderer.min.js');
+    drupal_add_js($pathmodule . '/js/chart.js');
+
+    drupal_add_css($pathmodule . '/css/jquery.jqplot.min.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
+  
+// extract and format users data
+    $resultusers = db_query("
+      SELECT COUNT(DATE_FORMAT(from_unixtime(created), '%Y-%m')) AS usersnumber,
+      DATE_FORMAT(from_unixtime(created), '%Y-%m') as usersdate
+      FROM {ces_account}
+      WHERE exchange = :exchange
+      GROUP BY DATE_FORMAT(from_unixtime(created), '%Y-%m')
+      ORDER BY created ASC",
+      array(
+        ':exchange' => $exchange['id'],
+      ));
+
+    $totalusers = 0;
+    $staticsusers = array();
+    foreach ($resultusers as $record) {
+     	$totalusers += $record->usersnumber;
+  	   $staticsusers[] = array(
+  	     'usersdate' => $record->usersdate,
+  	     'usersnumber' => $totalusers,
+  	 	);
+    };
+    
+    $longarray = count($staticsusers);
+    $todaymonth = date("Y-m", time());
+    if ($staticsusers[$longarray-1]['usersdate'] != $todaymonth) { // no data in present month
+    	$staticsusers[] = array(
+    	'usersdate' => $todaymonth,
+    	'usersnumber' => $totalusers
+    	); 
+    } 
+
+// extract and format user's last year activity data
+    $lastyear = time() - 31536000; // unix time stamp last year ago
+    $resultactivity = db_query("
+      SELECT COUNT(t.id) AS activitynumber,
+      a.id AS activityaccount
+      FROM {ces_account} a
+      INNER JOIN {ces_transaction} t
+      ON a.id = t.toaccount
+      OR a.id = t.fromaccount
+      WHERE a.exchange = :exchange
+      AND t.created > :lastyear
+      AND t.state = :state
+      GROUP BY a.id
+      ORDER BY COUNT(t.id)",
+      array(
+        ':exchange' => $exchange['id'],
+        ':lastyear' => $lastyear,
+        ':state' => 3,
+      ));
+
+
+
+    $labels = array('Total inactivity','1-3 transactions','4-6 transactions',
+     '6-12 transactions','+12 transactions');
+    $staticsactivity = array();
+    for($i=0;$i<=4;$i++) {  // 0 to 4 levels of activity
+      $staticsactivity[$i]['activitylevel'] = $labels[$i];
+    	$staticsactivity[$i]['activitynumber'] = 0;
+    	$staticsactivity[$i]['activitypercent'] = 0;
+    };
+    $i = 0;
+    $actn = 0;
+    foreach ($resultactivity as $record) {
+    	$actn = $record->activitynumber;
+      if ($actn > 0 && $actn <= 3) $staticsactivity[1]['activitynumber']++;
+      if ($actn > 3 && $actn <= 6) $staticsactivity[2]['activitynumber']++;
+      if ($actn > 6 && $actn <= 12) $staticsactivity[3]['activitynumber']++;
+      if ($actn > 12) $staticsactivity[4]['activitynumber']++;
+      $i++; 
+    };
+    $staticsactivity[0]['activitynumber'] = $totalusers - $i;
+    for($i=0;$i<=4;$i++) {  // 0 to 4 levels of activity
+      $staticsactivity[$i]['activitypercent'] = 100*$staticsactivity[$i]['activitynumber']/$totalusers;
+    };
+
+// extract and format transactions data
+    $resulttrans = db_query("
+      SELECT SUM(t.amount) AS transamount,
+      COUNT(t.amount) AS transnumber,
+      DATE_FORMAT(from_unixtime(t.created), '%Y-%m') AS transdate
+      FROM {ces_transaction} t
+      INNER JOIN {ces_account} a
+      ON t.fromaccount = a.id
+      WHERE a.exchange = :exchange
+      AND t.state = :state 
+      GROUP BY DATE_FORMAT(from_unixtime(created), '%Y-%m')
+      ORDER BY t.created ASC",
+      array(
+        ':exchange' => $exchange['id'],
+        ':state' => 3,
+      ));
+
+    $totalamount = 0;
+    $totalnumber = 0;
+    $staticstrans = array();
+    foreach ($resulttrans as $record) {
+      $totalamount += $record->transamount;
+      $totalnumber += $record->transnumber;
+  	   $staticstrans[] = array(
+  	     'transdate' => $record->transdate,
+  	 	  'transamount' => $record->transamount,
+  	 	  'transnumber' => $record->transnumber
+  	   );
+    };
+
+// Pass data to js:
+// -> Drupal.settings.ces_statistics.staticsusers
+// -> Drupal.settings.ces_statistics.staticstrans
+// -> Drupal.settings.ces_statistics.staticsactivity
+
+    $charts = array(
+      'staticsusers' => $staticsusers,
+      'staticsactivity' => $staticsactivity,
+      'staticstrans' => $staticstrans,
+    );
+    drupal_add_js(array('ces_statistics' => $charts), 'setting');
+    return array(
+      '#markup' => '<ul> 
+      <li>' . t('Number of accounts: ') . $totalusers . '</li>
+      <li>' . t('Number of transactions: ') . $totalnumber . '</li>
+      <li>' . t('Amount of transactions: ') . $totalamount . '</li>
+      <li>' . t('Average transaction: ') . $totalamount/$totalnumber . '</li>
+      </ul>    
+      <div id="chartdiv1"></div><br><br>
+      <div id="chartdiv2"></div><br><br>
+      <div id="chartdiv3"></div><br><br><br><br>'
+    );
+
+  } //if
+  
+  else {
+    return array('#markup' => '<p>' . t('You need an account to see this.') . '</p>');
+  }
+}
