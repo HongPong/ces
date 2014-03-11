@@ -10,94 +10,77 @@ require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.install';
 require_once drupal_get_path('module', 'ces_offerswants') . '/ces_offerswants.module';
 
 $path_csv = DRUPAL_ROOT.'/sites/default/files/import/';
+$step     = ( isset($_POST['step']) ) ? $_POST['step'] : 0 ;
+$msg      = FALSE ;
+$error    = FALSE ;
 
-$error_procesando = FALSE;
+?>
 
-if ( ! isset($_POST['pass']) ) {
+<div id="step_info">Step <span id="step"><?php echo $step ?></span></div>
 
-   ?>
+<?php
 
-   <?php echo t('Put all the csv files in the sites /default/files/import folder and click "Continue"');?>
-   <form action="" method="POST">
-   <input type="hidden" name="pass" value="0"/>
-   <input type="submit" name="continue" value="<?php echo t("Continue") ?>"/>
-   </form>
-   <?php
+switch ($step) {
+   case '0':
+      $msg = t('Put all the csv files in the sites /default/files/import folder and click "Continue"');
+      $step++;
+      break;
 
-} elseif ( $_POST['pass'] == 0 ) {
+   case '1':
 
-   ?>
-   <p>Createing a new exchange...</p>
-   <?php
+      $file_csv = $path_csv.'settings.csv';
 
+      if ( ! file_exists($file_csv) ) {
 
-   $file_csv = $path_csv.'settings.csv';
+         ?>
+         <p class="error">
+         <?php echo t("Was not found import file");?> [<?php echo $file_csv?>]
+         <?php echo t("Place the files in the folder sites/default/files/ and try again.");?>
+         </p>
+         <?php
+         }
 
-   if ( ! file_exists($file_csv) ) {
+      include('imports/setting.php');
 
-      ?>
-      <p class="error">
-      <?php echo t("Was not found import file");?> [<?php echo $file_csv?>]
-      <?php echo t("Place the files in the folder sites/default/files/ and try again.");?>
-      </p>
-      <form action="" method="POST">
-      <input type="hidden" name="pass" value="0"/>
-      <input type="submit" name="continue" value="<?php echo t("Continue") ?>"/>
-      </form>
-      <?php
-      }
-
-   ?>
-   <p>extracting information...</p>
-
-   <?php
-
-   $setting = procesa_csv($file_csv);
-
-   if ( $setting ) {
-
-      global $user;
-
-      // Crear bank
-      $bank = new Bank();
-
-      $setting = $setting[0];
-
-      // Create exchange.
-      $exchange = array(
-        'code'             => $setting['ExchangeID'],
-        'shortname'        => $setting['ExchangeTitle'],
-        'name'             => $setting['ExchangeName'],
-        'website'          => $setting['WebAddress'],
-        'country'          => $setting['CountryCode'],
-        'region'           => $setting['Province'],
-        'town'             => $setting['Town'],
-        'map'              => $setting['MapAddress'],
-        'currencysymbol'   => $setting['CurLet'],
-        'currencyname'     => $setting['ConCurName'],
-        'currenciesname'   => $setting['CurNamePlural'],
-
-        'currencyvalue'    => 1, // @todo $setting['?'],
-        'currencyscale'    => 1, // @todo $setting['?'],
-
-        'admin'            => $user->uid,
-        'data'             => array(
-          'registration_offers' => 1,
-          'registration_wants' => 0,
-        ),
-      );
-      $bank->createExchange($exchange);
-   }
+      $step++;
+      break;
 
 }
 
 ?>
+
+<?php if ( $error ) { ?>
+<div id="message"><?php echo $error ?></div>
+<?php } ?>
+
+<?php if ( $msg ) { ?>
+<div id="message"><?php echo $msg ?></div>
+<?php } ?>
+
+
+
+<form action="" method="POST">
+   <input type="hidden" name="step" value="<?php echo $step ?>"/>
+   <input type="submit" name="continue" value="<?php echo t("Continue") ?>"/>
+</form>
+
 <style>
 .form_i4c input, .form_i4c textarea {
     width: 100%;
 }
 .form_i4c textarea {
     height: 160px;
+}
+#step_info{
+    background: none repeat scroll 0 0 #F5F5F5;
+    width: 100%;
+}
+#actions > a {
+    background: none repeat scroll 0 0 #9ACD32;
+    border-radius: 6%;
+    color: #FFFFFF;
+    margin: 6px 6px 6px 0;
+    padding: 4px;
 }
 </style>
 
