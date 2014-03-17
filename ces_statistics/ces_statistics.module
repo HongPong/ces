@@ -15,7 +15,7 @@ function ces_statistics_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 630,
+    'weight' => 250,
   );
   return $menu;
 }

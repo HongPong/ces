@@ -502,7 +502,7 @@ class BankTestCase extends DrupalWebTestCase {
    */
   protected function doTransaction($user, $record, $success = TRUE) {
     $this->drupalLogin($user);
-    $this->clickLink(t('Seller actions'));
+    $this->clickLink(t('My account'));
     $this->clickLink(t('Enter transaction'));
     $edit = array(
       'fromaccountname' => $record['buyer'],

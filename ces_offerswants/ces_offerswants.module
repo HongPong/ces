@@ -123,7 +123,7 @@ function ces_offerswants_entity_info() {
  */
 function ces_category_uri($category) {
   return array(
-    'path' => 'ces/offerswants/category/' . $category->id,
+    'path' => 'ces/bank/exchange/offerswants/category/' . $category->id,
   );
 }
 
@@ -132,7 +132,7 @@ function ces_category_uri($category) {
  */
 function ces_offerwant_uri($offer) {
   return array(
-    'path' => 'ces/offerswants/offerwant/' . $offer->id,
+    'path' => 'ces/bank/exchange/offerswants/offerwant/' . $offer->id,
   );
 }
 /**
@@ -162,7 +162,7 @@ function ces_offerwant_delete($id) {
  */
 function ces_offerswants_menu() {
   $menu = array();
-  $menu['ces/offers'] = array(
+  $menu['ces/bank/exchange/offers'] = array(
     'title' => 'Offers',
     'description' => 'View available offers',
     'page callback' => 'ces_offerswants_list_page',
@@ -170,9 +170,9 @@ function ces_offerswants_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 100,
+    'weight' => 220,
   );
-  $menu['ces/wants'] = array(
+  $menu['ces/bank/exchange/wants'] = array(
     'title' => 'Wants',
     'description' => 'View people\'s wants',
     'page callback' => 'ces_offerswants_list_page',
@@ -181,7 +181,7 @@ function ces_offerswants_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 200,
+    'weight' => 230,
   );
   $menu['ces/bank/account/myoffers'] = array(
     'title' => 'My offers',
@@ -189,7 +189,7 @@ function ces_offerswants_menu() {
     'page callback' => 'ces_offerswants_myoffers_page',
     'access callback' => TRUE,
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 620,
+    'weight' => 110,
   );
   $menu['ces/bank/account/myoffers/list'] = array(
     'title' => 'My offers',
@@ -237,7 +237,7 @@ function ces_offerswants_menu() {
     'page callback' => 'ces_offerswants_mywants_page',
     'access callback' => TRUE,
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 630,
+    'weight' => 120,
   );
   $menu['ces/bank/account/mywants/list'] = array(
     'title' => 'My wants',
@@ -1233,7 +1233,7 @@ function ces_offerswants_block_info() {
       'cache' => DRUPAL_NO_CACHE,
       'region' => 'help',
       'visibility' => BLOCK_VISIBILITY_LISTED,
-      'pages' => 'ces/offers*' . "\n" . 'ces/wants*' . "\n",
+      'pages' => 'ces/bank/exchange/offers*' . "\n" . 'ces/bank/exchange/wants*' . "\n",
       'weight' => -1000,
       'status' => 1,
     ),

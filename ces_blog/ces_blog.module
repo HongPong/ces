@@ -23,7 +23,7 @@ function ces_blog_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'exchange blog', CES_CURRENT_EXCHANGE),
     'expanded' => TRUE,
-    'weight' => 600,
+    'weight' => 210,
   );
   $menu['ces/admin/post'] = array(
     'title' => 'Post',
