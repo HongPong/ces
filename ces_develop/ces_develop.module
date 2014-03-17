@@ -121,7 +121,6 @@ function ces_develop_register_account($user, $exchange, $i) {
   $limit = $bank->getDefaultLimitChain($exchange['id']);
   $account = array(
     'exchange' => $exchange['id'],
-    
     'name' => $exchange['code'] . sprintf('%04d', $i),
     'limitchain' => $limit['id'],
     'kind' => LocalAccount::TYPE_INDIVIDUAL,

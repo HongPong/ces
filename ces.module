@@ -21,24 +21,24 @@ function ces_preprocess_page(&$variables, $hook) {
     $variables['site_slogan'] = 'Integral Community Exchange System';
     $items = field_get_items('user', $user, 'ces_firstname');
     $userfullname = '';
-    if(!empty($items)){
+    if (!empty($items)) {
       $item = reset($items);
       $userfullname = $item['safe_value'] . ' ';
     }
     $items = field_get_items('user', $user, 'ces_surname');
-    if(!empty($items)){
+    if (!empty($items)) {
       $item = reset($items);
       $userfullname .= $item['safe_value'];
     }
-    if(!empty($userfullname)) {
+    if (!empty($userfullname)) {
       $user->name = $userfullname;
     }
   }
   else {
     $variables['site_name'] = variable_get('site_name');
-    $variables['site_slogan'] = variable_get('site_slogan');  	
+    $variables['site_slogan'] = variable_get('site_slogan');
   }
-  if($variables['is_front']) {
+  if ($variables['is_front']) {
     $variables['title'] = '';
   }
 }

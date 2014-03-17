@@ -10,11 +10,11 @@
    - @ref balances_file
    - @ref offers_file
    - @ref wants_file
- - @ref users_migrate 
-   - @ref duplicity 
+ - @ref users_migrate
+   - @ref duplicity
    - @ref subarea
-   - @ref noemail 
-   - @ref coord 
+   - @ref noemail
+   - @ref coord
    - @ref limit
 
 @section spec Especificació dels arxius d'entrada
@@ -144,7 +144,7 @@ DefaultSub. 0=fals, -1=cert. Si cert, aquest usuari veurà per defecte només la
  - BudRate: Percentatge del total de la transacció que va cap al compte “amic”.
 @subsection trades_file Arxiu trades.csv
  - ID: Número creixent que comena per 1.
- - Seller: UID del compte que cobra. 
+ - Seller: UID del compte que cobra.
  - Buyer: UID del compte que paga.
  - RemoteExchange: Si la transacció és entre xarxes, codi de 4 lletres de la xarxa externa.
  - RemoteBuyer: Si la transacció es entre xarxes, UID del compte de la xarxa externa. En aquest cas, Seller o Buyer és un compte virtual XXXXVIRT.
@@ -196,7 +196,7 @@ ToDo: Decidir què fem.
 Aquest és un concepte que no està implementat en el CES.
 ToDo: Decidir què fem.
 @subsection noemail NoEmail
-Aquest és un concepte que no està implementat en el CES, perquè en particular no està implementada la funcionalitat de enviar mails massius des de l'administració de la xarxa. 
+Aquest és un concepte que no està implementat en el CES, perquè en particular no està implementada la funcionalitat de enviar mails massius des de l'administració de la xarxa.
 Observació: Aquesta funcionalitat però ha demostrat ser interessant i potser podem valorar d'afegir-la. En qualsevol cas jo no em preocuparia massa d'aquest camp.
 @subsection coord Coord
 Tampoc aquest concepte existeix al CES.
@@ -205,4 +205,4 @@ Observació: La naturalesa del sistema de permisos fa que sigui fàcil d'impleme
 En el CES els límits s'escriuen directament al compte de l'usuari. En l'IntegralCES el sistema és més sofisticat: per a cada xarxa, hi ha diferents tipologies de límits (ex: “individuals”, “companyies”, “associació X”,...), i un compte està associat a un tipus de límit. Aquests tius de límits són els que internament anomenem limitchains, doncs a nivell d'implementació estan formats per una cadena de límits atòmics del tipus “No estar per sot de X” o “No estar per sobre de X”.
 El que cal fer és crear una instància de limitchain per a cada límit diferent que hi hagi, però no una per a cada compte! És d'esperar que tots els comptes excepte uns quants tinguin els mateixos valors.
 @}
-*/
+ */

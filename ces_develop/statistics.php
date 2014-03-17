@@ -5,7 +5,7 @@
  * statistics purposes. It empties the users and all ces tables and populates
  * it with ($numaccounts) users with their respective accounts in one exchange and
  * applies ($numtransactions) random transactions between them.
- * Randomizes 'created' field for accounts and transactions, 
+ * Randomizes 'created' field for accounts and transactions,
  * between ($firsttime) and ($lasttime).
  */
 
@@ -81,8 +81,8 @@ for ($i = 1; $i <= $numaccounts; $i++) {
 // Randomize created date in accounts
 for ($i = 1; $i <= $numaccounts; $i++) {
   $rndcreated = rand($firsttime, $lasttime);
-   db_update('ces_account')
-    ->condition('name','NET1' . sprintf('%04d', $i))
+  db_update('ces_account')
+    ->condition('name', 'NET1' . sprintf('%04d', $i))
     ->fields(array('created' => $rndcreated))
     ->execute();
 }
@@ -96,7 +96,7 @@ for ($i = 1; $i <= $numtransactions; $i++) {
   $rndfromuser = rand(1, $numaccounts);
   $rndtouser = rand(1, $numaccounts);
   while ($rndtouser == $rndfromuser) {
-    $rndtouser = rand(1, $numaccounts);	
+    $rndtouser = rand(1, $numaccounts);
   }
   $rndvalue = rand(1, 1000)/100;
   $rndtransaction[$i] = array(
@@ -123,8 +123,8 @@ foreach ($rndtransaction as $t) {
 // Randomize created date in transactions
 for ($i = 1; $i <= $numtransactions; $i++) {
   $rndcreated = rand($firsttime, $lasttime);
-   db_update('ces_transaction')
-    ->condition('concept','concept' . $i)
+  db_update('ces_transaction')
+    ->condition('concept', 'concept' . $i)
     ->fields(array('created' => $rndcreated))
     ->execute();
 }
@@ -132,7 +132,7 @@ for ($i = 1; $i <= $numtransactions; $i++) {
 // OFFERWANTS.
 // Add categories.
 $names = array('Food', 'Hygiene', 'Professional services', 'Reparation', 'Education');
-$exchanges = array($net1,);
+$exchanges = array($net1);
 $categories = array();
 foreach ($exchanges as $e) {
   $categories[$e['id']] = array();

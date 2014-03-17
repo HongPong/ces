@@ -16,13 +16,13 @@ function ces_bank_exchange_admin() {
   $exchange = ces_bank_get_current_exchange();
   $page = array();
   // New accounts request.
-  $page['new_accounts'] = array(
-    'type' => 'fieldset',
-    'title' => t('New accounts'),
-    'description' => t('List of new account requests for this exchange. Activate or delete all them.'),
-  );
   $accounts = $bank->getAllAccounts(array('state' => 0, 'exchange' => $exchange['id']));
   if (!empty($accounts)) {
+    $page['new_accounts'] = array(
+      'type' => 'fieldset',
+      'title' => t('New accounts'),
+      'description' => t('List of new account requests for this exchange. Activate or delete all them.'),
+    );
     $list = array(
       '#theme' => 'item_list',
       '#items' => array(),
@@ -33,7 +33,7 @@ function ces_bank_exchange_admin() {
     $page['new_accounts']['new_accounts_list'] = $list;
   }
   else {
-    $page['new_accounts']['text'] = array(
+    $page['no_new_accounts'] = array(
       '#type' => 'item',
       '#title' => t('No requests for new accounts.'),
     );

@@ -938,7 +938,7 @@ within 10 days to have it corrected.
 
 /**
  * Given a drupal account, returns its full username.
- * 
+ *
  * @param object $account
  *   Drupal user object.
  */
@@ -962,7 +962,7 @@ function ces_bank_get_full_username($account) {
 }
 /**
  * Get current bank account.
- * 
+ *
  * @return array
  *   The current user's account.
  */
@@ -987,7 +987,7 @@ function ces_bank_get_current_account($account = NULL) {
 }
 /**
  * Get current exchange.
- * 
+ *
  * @return array
  *   The current user's exchange
  */

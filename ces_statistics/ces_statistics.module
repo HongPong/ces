@@ -18,8 +18,11 @@ function ces_statistics_menu() {
     'weight' => 630,
   );
   return $menu;
-}  
+}
 
+/**
+ * Page for exchange statistics.
+ */
 function ces_statistics_page() {
   global $user;
   $user = user_load($user->uid);
@@ -40,10 +43,9 @@ function ces_statistics_page() {
     drupal_add_js($pathmodule . '/js/jqplot.pointLabels.min.js');
     drupal_add_js($pathmodule . '/js/jqplot.pieRenderer.min.js');
     drupal_add_js($pathmodule . '/js/chart.js');
-
     drupal_add_css($pathmodule . '/css/jquery.jqplot.min.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
-  
-// extract and format users data
+
+// Extract and format users data.
     $resultusers = db_query("
       SELECT COUNT(DATE_FORMAT(from_unixtime(created), '%Y-%m')) AS usersnumber,
       DATE_FORMAT(from_unixtime(created), '%Y-%m') as usersdate
@@ -58,24 +60,24 @@ function ces_statistics_page() {
     $totalusers = 0;
     $staticsusers = array();
     foreach ($resultusers as $record) {
-     	$totalusers += $record->usersnumber;
-  	   $staticsusers[] = array(
-  	     'usersdate' => $record->usersdate,
-  	     'usersnumber' => $totalusers,
-  	 	);
+      $totalusers += $record->usersnumber;
+      $staticsusers[] = array(
+        'usersdate' => $record->usersdate,
+        'usersnumber' => $totalusers,
+      );
     };
-    
+
     $longarray = count($staticsusers);
     $todaymonth = date("Y-m", time());
     if ($staticsusers[$longarray-1]['usersdate'] != $todaymonth) { // no data in present month
-    	$staticsusers[] = array(
-    	'usersdate' => $todaymonth,
-    	'usersnumber' => $totalusers
-    	); 
-    } 
-
-// extract and format user's last year activity data
-    $lastyear = time() - 31536000; // unix time stamp last year ago
+      $staticsusers[] = array(
+        'usersdate' => $todaymonth,
+        'usersnumber' => $totalusers
+      );
+    }
+// Extract and format user's last year activity data.
+// Unix time stamp last year ago.
+    $lastyear = time() - 31536000;
     $resultactivity = db_query("
       SELECT COUNT(t.id) AS activitynumber,
       a.id AS activityaccount
@@ -93,33 +95,30 @@ function ces_statistics_page() {
         ':lastyear' => $lastyear,
         ':state' => 3,
       ));
-
-
-
-    $labels = array('Total inactivity','1-3 transactions','4-6 transactions',
-     '6-12 transactions','+12 transactions');
+    $labels = array('Total inactivity', '1-3 transactions', '4-6 transactions',
+     '6-12 transactions', '+12 transactions');
     $staticsactivity = array();
-    for($i=0;$i<=4;$i++) {  // 0 to 4 levels of activity
+    for ($i = 0; $i <= 4; $i++) {  // 0 to 4 levels of activity
       $staticsactivity[$i]['activitylevel'] = $labels[$i];
-    	$staticsactivity[$i]['activitynumber'] = 0;
-    	$staticsactivity[$i]['activitypercent'] = 0;
+      $staticsactivity[$i]['activitynumber'] = 0;
+      $staticsactivity[$i]['activitypercent'] = 0;
     };
     $i = 0;
     $actn = 0;
     foreach ($resultactivity as $record) {
-    	$actn = $record->activitynumber;
+      $actn = $record->activitynumber;
       if ($actn > 0 && $actn <= 3) $staticsactivity[1]['activitynumber']++;
       if ($actn > 3 && $actn <= 6) $staticsactivity[2]['activitynumber']++;
       if ($actn > 6 && $actn <= 12) $staticsactivity[3]['activitynumber']++;
       if ($actn > 12) $staticsactivity[4]['activitynumber']++;
-      $i++; 
+      $i++;
     };
     $staticsactivity[0]['activitynumber'] = $totalusers - $i;
-    for($i=0;$i<=4;$i++) {  // 0 to 4 levels of activity
-      $staticsactivity[$i]['activitypercent'] = 100*$staticsactivity[$i]['activitynumber']/$totalusers;
+    for ($i = 0; $i <= 4; $i++) {  // 0 to 4 levels of activity
+      $staticsactivity[$i]['activitypercent'] = 100 * $staticsactivity[$i]['activitynumber'] / $totalusers;
     };
 
-// extract and format transactions data
+// Extract and format transactions data
     $resulttrans = db_query("
       SELECT SUM(t.amount) AS transamount,
       COUNT(t.amount) AS transnumber,
@@ -128,7 +127,7 @@ function ces_statistics_page() {
       INNER JOIN {ces_account} a
       ON t.fromaccount = a.id
       WHERE a.exchange = :exchange
-      AND t.state = :state 
+      AND t.state = :state
       GROUP BY DATE_FORMAT(from_unixtime(created), '%Y-%m')
       ORDER BY t.created ASC",
       array(
@@ -142,11 +141,11 @@ function ces_statistics_page() {
     foreach ($resulttrans as $record) {
       $totalamount += $record->transamount;
       $totalnumber += $record->transnumber;
-  	   $staticstrans[] = array(
-  	     'transdate' => $record->transdate,
-  	 	  'transamount' => $record->transamount,
-  	 	  'transnumber' => $record->transnumber
-  	   );
+      $staticstrans[] = array(
+        'transdate' => $record->transdate,
+        'transamount' => $record->transamount,
+        'transnumber' => $record->transnumber
+      );
     };
 
 // Pass data to js:
@@ -161,19 +160,18 @@ function ces_statistics_page() {
     );
     drupal_add_js(array('ces_statistics' => $charts), 'setting');
     return array(
-      '#markup' => '<ul> 
-      <li>' . t('Number of accounts: ') . $totalusers . '</li>
-      <li>' . t('Number of transactions: ') . $totalnumber . '</li>
-      <li>' . t('Amount of transactions: ') . $totalamount . '</li>
-      <li>' . t('Average transaction: ') . $totalamount/$totalnumber . '</li>
-      </ul>    
+      '#markup' => '<ul>
+      <li>' . t('Number of accounts:') . ' ' . $totalusers . '</li>
+      <li>' . t('Number of transactions:') . ' ' . $totalnumber . '</li>
+      <li>' . t('Amount of transactions:') . ' ' . $totalamount . '</li>
+      <li>' . t('Average transaction:') . ' ' . $totalamount/$totalnumber . '</li>
+      </ul>
       <div id="chartdiv1"></div><br><br>
       <div id="chartdiv2"></div><br><br>
       <div id="chartdiv3"></div><br><br><br><br>'
     );
 
-  } //if
-  
+  }
   else {
     return array('#markup' => '<p>' . t('You need an account to see this.') . '</p>');
   }
