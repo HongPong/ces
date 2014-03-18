@@ -183,9 +183,12 @@ function ces_offerswants_install() {
  * Implements hook_uninstall().
  */
 function ces_offerswants_uninstall() {
+  drupal_uninstall_schema(ces_offerswants_schema());
   // Delete price field.
   field_delete_field('ces_offer_rate');
   $instances = field_info_instances('ces_offerwant', 'ces_offer_rate');
+  if ( empty($instances) ) return;
+
   foreach ($instances as $instance) {
     field_delete_instance($instance);
   }

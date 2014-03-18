@@ -8,7 +8,6 @@
  * Implements hook_menu().
  */
 function ces_import4ces_menu() {
-   // Import data from CES
   $menu['ces/admin/import4ces'] = array(
     'title' => 'Import from CES',
     'decription' => 'Import data from CES',
@@ -17,15 +16,15 @@ function ces_import4ces_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('admin', 'exchange', CES_CURRENT_EXCHANGE),
   );
-   return $menu;
+  return $menu;
 }
 /**
  * Run the given script.
  */
 function ces_import4ces_run_script() {
-   $path = drupal_get_path('module', 'ces_import4ces');
-   ob_start();
-   include $path . '/ces_import4ces.php';
-   $output = ob_get_clean();
-   return $output;
+  $path = drupal_get_path('module', 'ces_import4ces');
+  ob_start();
+  include $path . '/ces_import4ces.php';
+  $output = ob_get_clean();
+  return $output;
 }

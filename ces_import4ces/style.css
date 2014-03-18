@@ -1,0 +1,17 @@
+.form_i4c input, .form_i4c textarea {
+    width: 100%;
+}
+.form_i4c textarea {
+    height: 160px;
+}
+#step_info{
+    background: none repeat scroll 0 0 #F5F5F5;
+    width: 100%;
+}
+#actions > a {
+    background: none repeat scroll 0 0 #9ACD32;
+    border-radius: 6%;
+    color: #FFFFFF;
+    margin: 6px 6px 6px 0;
+    padding: 4px;
+}

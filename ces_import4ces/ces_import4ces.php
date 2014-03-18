@@ -10,47 +10,107 @@ require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.install';
 require_once drupal_get_path('module', 'ces_offerswants') . '/ces_offerswants.module';
 
 $path_csv = DRUPAL_ROOT.'/sites/default/files/import/';
-$step     = ( isset($_POST['step']) ) ? $_POST['step'] : 0 ;
-$msg      = FALSE ;
-$error    = FALSE ;
+
+$msg       = FALSE ;
+$error     = FALSE ;
+$user_id   = $GLOBALS['user']->uid;
+
+$import_id   = ( isset($_POST['import_id']) ) ? $_POST['import_id'] : FALSE ;
+$import_id   = ( isset($_GET['import_id']) )  ? $_GET['import_id']  : $import_id ;
+$step        = ( isset($_POST['step']) )      ? $_POST['step']      : 0 ;
+$row         = ( isset($_POST['row']) )       ? $_POST['row']       : 1 ;
+$anonymous = TRUE ;
+$send_mail_user = FALSE ; 
+
+// debug
+echo '<pre>REQUEST: ' ; print_r($_REQUEST) ; echo '</pre>'; // exit() ; // DEV  
+echo '<pre>row: ' ; print_r($row) ; echo '</pre>'; // exit() ; // DEV  
+
+
+if ( $import_id ) {
+
+   $result = db_query('SELECT i.exchange_id, e.name, i.step, i.row, i.anonymous 
+      FROM {ces_import4ces_exchange} i 
+      LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
+      WHERE i.finished=0 AND i.uid = :uid
+      ', array(':uid' => $user_id));
+
+   foreach ($result as $record) {
+      $exchange_name      = $record->name      ; 
+      $step               = $record->step      ;
+      $row                = $record->row       ;
+      $anonymous          = $record->anonymous ;
+   }
+
+}
+
 
 ?>
 
+<?php if ( $import_id ) { ?>
+
+<h1>Importing <?php echo $exchange_name ?></h2>
+
+<?php } ?>
+
+<?php if ( $step !== 0 ) { ?>
 <div id="step_info">Step <span id="step"><?php echo $step ?></span></div>
+<?php } ?>
 
 <?php
 
 switch ($step) {
-   case '0':
-      $msg = t('Put all the csv files in the sites /default/files/import folder and click "Continue"');
-      $step++;
-      break;
+case '0':
+?>
+      <?php echo t('Put all the csv files in the sites /default/files/import folder.')?>
 
-   case '1':
+      <form action="" method="POST">
+         <input type="hidden" name="step" value="1"/>
+         <input type="submit" name="new" value="<?php echo t('New import')?>"/>
+      </form>
+<?php
+   break;
 
-      $file_csv = $path_csv.'settings.csv';
+case '1':  // Import setting.csv
+?>
+      <h3>Import Setting</h3>
+<?php
+   include('imports/setting.php');
+   $file_csv = $path_csv.'settings.csv';
+   $data = procesa_csv($file_csv, 'parse_setting', $row);
 
-      if ( ! file_exists($file_csv) ) {
+   // @todo Edit data if there is a error
+   //  createfrom($setting); 
 
-         ?>
-         <p class="error">
-         <?php echo t("Was not found import file");?> [<?php echo $file_csv?>]
-         <?php echo t("Place the files in the folder sites/default/files/ and try again.");?>
-         </p>
-         <?php
-         }
+   if ( $data ) {
+      $msg = "New Bank created";
+      $step++ ; $row=1 ;
+   } else {
+      $error = "Error in parse setting";
+   }
+   break;
 
-      include('imports/setting.php');
+case '2':  // Import users.csv
+?>
+      <h3>Import Users</h3>
+<?php
+   include('imports/users.php');
+   $file_csv = $path_csv.'users.csv';
+   $data = procesa_csv($file_csv, 'parse_users', $row);
+   if ( ! $data ) break;
+   // createfrom($data); 
+   $step++ ; $row=1 ;
+   break;
 
-      $step++;
-      break;
-
+default:
+   $error = "Step not found";
+   break;
 }
 
 ?>
 
 <?php if ( $error ) { ?>
-<div id="message"><?php echo $error ?></div>
+<p class="error"><?php echo $error ?></p>
 <?php } ?>
 
 <?php if ( $msg ) { ?>
@@ -59,28 +119,31 @@ switch ($step) {
 
 
 
-<form action="" method="POST">
-   <input type="hidden" name="step" value="<?php echo $step ?>"/>
-   <input type="submit" name="continue" value="<?php echo t("Continue") ?>"/>
-</form>
+<?php
 
-<style>
-.form_i4c input, .form_i4c textarea {
-    width: 100%;
+$result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.step, o.row, i.uid
+   FROM {ces_import4ces_exchange} i 
+   LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
+   LEFT JOIN {ces_import4ces_objects} o ON i.id = o.import_id 
+   WHERE i.finished=0 AND i.uid = :uid
+   ORDER BY o.id DESC
+   LIMIT 1
+   ', array(':uid' => $user_id));
+
+foreach ($result as $record) {
+?>
+   <form action="" method="post">
+   <fieldset>
+      <legend><?php echo $record->name ?></legend>
+      <input type="hidden" name="step" value="<?php echo $record->step ?>"/>
+      <input type="hidden" name="row" value="<?php echo $record->row ?>"/>
+      <input type="hidden" name="import_id" value="<?php echo $record->id ?>">
+      <input type="submit" name="continue" value="<?php echo t("Continue") ?>">
+      <input type="submit" name="delete" value="<?php echo t("Delete") ?>">
+   </fieldset>
+   </form>
+<?php
 }
-.form_i4c textarea {
-    height: 160px;
-}
-#step_info{
-    background: none repeat scroll 0 0 #F5F5F5;
-    width: 100%;
-}
-#actions > a {
-    background: none repeat scroll 0 0 #9ACD32;
-    border-radius: 6%;
-    color: #FFFFFF;
-    margin: 6px 6px 6px 0;
-    padding: 4px;
-}
-</style>
+
+
 

@@ -2,43 +2,75 @@
 
 /**
  * @file
+ * Functions from parse setting
  */
 
-$setting = procesa_csv($file_csv);
+/**
+ * Parse setting
+ */
 
-if ( $setting ) {
+function parse_setting($setting) {
 
-   global $user;
+   if ( $setting ) {
 
-   // Crear bank
-   $bank = new Bank();
+      global $user;
 
-   $setting = $setting[0];
+      // Crear bank
+      $bank = new Bank();
 
-   // Create exchange.
-   $exchange = array(
-     'code'             => $setting['ExchangeID'],
-     'shortname'        => $setting['ExchangeTitle'],
-     'name'             => $setting['ExchangeName'],
-     'website'          => $setting['WebAddress'],
-     'country'          => $setting['CountryCode'],
-     'region'           => $setting['Province'],
-     'town'             => $setting['Town'],
-     'map'              => $setting['MapAddress'],
-     'currencysymbol'   => $setting['CurLet'],
-     'currencyname'     => $setting['ConCurName'],
-     'currenciesname'   => $setting['CurNamePlural'],
+      // Create exchange.
+      $exchange = array(
+         'code'             => $setting['ExchangeID'],
+         'shortname'        => $setting['ExchangeTitle'],
+         'name'             => $setting['ExchangeName'],
+         'website'          => $setting['WebAddress'],
+         'country'          => $setting['CountryCode'],
+         'region'           => $setting['Province'],
+         'town'             => $setting['Town'],
+         'map'              => $setting['MapAddress'],
+         'currencysymbol'   => $setting['CurLet'],
+         'currencyname'     => $setting['ConCurName'],
+         'currenciesname'   => $setting['CurNamePlural'],
 
-     'currencyvalue'    => 1, // @todo $setting['?'],
-     'currencyscale'    => 1, // @todo $setting['?'],
+         'currencyvalue'    => 1, // @todo $setting['?'],
+         'currencyscale'    => 1, // @todo $setting['?'],
 
-     'admin'            => $user->uid,
-     'data'             => array(
-       'registration_offers' => 1,
-       'registration_wants' => 0,
-     ),
-   );
-   $bank->createExchange($exchange);
+         'admin'            => $user->uid,
+         'data'             => array(
+            'registration_offers' => 1,
+            'registration_wants' => 0,
+         ),
+      );
+      $bank->createExchange($exchange);
+
+      $nid = db_insert('ces_import4ces_exchange')
+         ->fields(array(
+            'exchange_id' => $exchange['id'],
+            'created' => REQUEST_TIME,
+            'step' => 2,
+            'row' => 1,
+            'uid' => $user->uid,
+            'data' => serialize($setting)
+         ))->execute();
+
+      return $nid;
+
+   }
+
+   return FALSE ;
+
+}
+
+/**
+ * Delete setting
+ * 
+ * Delete exchange import
+ */
+
+function delete_setting($import_id) {
+
+   echo 'Pendiente borrado de importación '.$import_id;
+
 }
 
 ?>
