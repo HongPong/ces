@@ -1,0 +1,22 @@
+div.region-header {
+  clear: both;
+  float: none;
+}
+
+#block-ces-summaryblock-ces-summary {
+  clear: both;
+}
+
+#block-ces-summaryblock-ces-summary div.ces_summaryblock_controls,
+#block-ces-summaryblock-ces-summary div.ces_summaryblock_number,
+#block-ces-summaryblock-ces-summary div.ces_summaryblock_trade {
+  display: inline-block;
+  padding-right: 5px;
+  padding-left: 5px;
+  margin-bottom: 10px;
+}
+
+#block-ces-summaryblock-ces-summary div.ces_summaryblock_trade {
+	padding-left: 15px;
+	padding-right: 10px;
+}
