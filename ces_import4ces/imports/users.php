@@ -11,11 +11,17 @@
 
 function parse_users($data, $row) {
 
-  echo '<pre>parse_users: ' ; print_r($data) ; echo '</pre>'; // exit() ; // DEV  
   if ( $data ) {
 
-    // create user
-    //
+    // create drupal user
+
+    // If user virtual return
+    $query = db_query('SELECT ca.name FROM {ces_account} ca where ca.name=:name',
+      array(':name' => $data['UID']));
+    $result = $query->fetchAllAssoc('name');
+
+    if ( !empty($result) ) return ;
+
     // @todo Al crear un usuario se utiliza el mail como identificador y se 
     // genera un password aleatorio, enviano un email al usuario que podra
     // resetear el password.
@@ -38,26 +44,46 @@ function parse_users($data, $row) {
     );
 
     //the first parameter is left blank so a new user is created
-    $account = user_save('', $fields);
+    $user_drupal = user_save('', $fields);
 
     // If you want to send the welcome email, use the following code
 
     // Manually set the password so it appears in the e-mail.
-    $account->password = $fields['pass'];
+    $user_drupal->password = $fields['pass'];
 
     // Send the e-mail through the user module.
     // $email = "eduardo@mamedu.com";
-    if ( $GLOBALS['send_mail_user'] ) {
-      drupal_mail('user', 'register_no_approval_required', $email, NULL, array('account' => $account), variable_get('site_mail', 'noreply@example..com'));
-    }
+    // if ( $GLOBALS['send_mail_user'] ) {
+    //   drupal_mail('user', 'register_no_approval_required', $email, NULL, array('account' => $user_drupal), variable_get('site_mail', 'noreply@example..com'));
+    // }
 
+
+    // User in CES
+
+    $bank = new Bank();
+    $limit = $bank->getDefaultLimitChain($GLOBALS['exchange_id']);
+    $account = array(
+      'exchange' => $GLOBALS['exchange_id'],
+      'name' => $data['UID'],
+      'limitchain' => $limit['id'],
+      'kind' => LocalAccount::TYPE_INDIVIDUAL,
+      'state' => LocalAccount::STATE_HIDDEN,
+      'users' => array(
+        array(
+          'user' => $data['UID'],
+          'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+        ),
+      ),
+    );
+    $bank->createAccount($account);
+    $bank->activateAccount($account);
 
     $nid = db_insert('ces_import4ces_objects')
       ->fields(array(
-        'import_id' => $_SESSION['import']['id'],
+        'import_id' => $GLOBALS['import_id'],
         'object' => 'user',
-        'object_id' => $account->uid,
-        'row' => $account->uid,
+        'object_id' => $user_drupal->uid,
+        'row' => $user_drupal->uid,
         'data' => serialize($data)
       ))->execute();
 

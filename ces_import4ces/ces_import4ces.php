@@ -19,31 +19,39 @@ $import_id   = ( isset($_POST['import_id']) ) ? $_POST['import_id'] : FALSE ;
 $import_id   = ( isset($_GET['import_id']) )  ? $_GET['import_id']  : $import_id ;
 $step        = ( isset($_POST['step']) )      ? $_POST['step']      : 0 ;
 $row         = ( isset($_POST['row']) )       ? $_POST['row']       : 1 ;
-$anonymous = TRUE ;
-$send_mail_user = FALSE ; 
 
-// debug
-echo '<pre>REQUEST: ' ; print_r($_REQUEST) ; echo '</pre>'; // exit() ; // DEV  
-echo '<pre>row: ' ; print_r($row) ; echo '</pre>'; // exit() ; // DEV  
-
+$anonymous      = TRUE  ;   ///< Hide personal info
+$send_mail_user = FALSE ;   ///< Send email from reset password
 
 if ( $import_id ) {
 
-   $result = db_query('SELECT i.exchange_id, e.name, i.step, i.row, i.anonymous 
+   $result = db_query('SELECT i.exchange_id, e.code, e.name, i.step, i.row, i.anonymous 
       FROM {ces_import4ces_exchange} i 
       LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
       WHERE i.finished=0 AND i.uid = :uid
       ', array(':uid' => $user_id));
 
    foreach ($result as $record) {
-      $exchange_name      = $record->name      ; 
-      $step               = $record->step      ;
-      $row                = $record->row       ;
-      $anonymous          = $record->anonymous ;
+      $exchange_id        = $record->exchange_id ;   
+      $exchange_name      = $record->name        ; 
+      $exchange_code      = $record->code        ; 
+      $step               = $record->step        ;
+      $row                = $record->row         ;
+      $anonymous          = $record->anonymous   ;
    }
 
+  $GLOBALS['exchange_id'] = $exchange_id ;
+  $GLOBALS['exchange_name'] = $exchange_name ;
+  $GLOBALS['exchange_code'] = $exchange_code ;
 }
 
+$GLOBALS['anonymous'] = $anonymous ;
+$GLOBALS['import_id'] = $import_id ;
+$GLOBALS['send_mail_user'] = $send_mail_user ;
+$GLOBALS['msg'] = $msg ;
+$GLOBALS['error'] = $error ;
+$GLOBALS['step'] = $step ;
+$GLOBALS['row'] = $row ;
 
 ?>
 
@@ -97,10 +105,15 @@ case '2':  // Import users.csv
    include('imports/users.php');
    $file_csv = $path_csv.'users.csv';
    $data = procesa_csv($file_csv, 'parse_users', $row);
-   if ( ! $data ) break;
    // createfrom($data); 
-   $step++ ; $row=1 ;
+   $step=nextstep($step) ; $row=1 ;
    break;
+
+case '2':  // Import users.csv
+  ?>
+  <h3>Pendiente</h3>
+  <?php
+  break;
 
 default:
    $error = "Step not found";
@@ -145,5 +158,8 @@ foreach ($result as $record) {
 <?php
 }
 
-
-
+// debug 
+?>
+<br />import_id: <?php echo $import_id ?>
+<br />step: <?php echo $step ?>
+<br />row: <?php echo $row ?>

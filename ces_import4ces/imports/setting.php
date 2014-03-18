@@ -42,6 +42,7 @@ function parse_setting($setting) {
          ),
       );
       $bank->createExchange($exchange);
+      $bank->activateExchange($exchange);
 
       $nid = db_insert('ces_import4ces_exchange')
          ->fields(array(
@@ -49,6 +50,7 @@ function parse_setting($setting) {
             'created' => REQUEST_TIME,
             'step' => 2,
             'row' => 1,
+            'anonymous' => ( ($GLOBALS['anonymous']) ? 1 : 0 ),
             'uid' => $user->uid,
             'data' => serialize($setting)
          ))->execute();

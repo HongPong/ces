@@ -105,6 +105,15 @@ function createfrom($importar) {
 }
 
 /**
+ * Count step
+ */
+function nextstep($step) {
+  $step++;
+  db_update('ces_import4ces_exchange')->condition('id', $GLOBALS['import_id'])->fields(array('step' => $step))->execute();
+  return $step;
+}
+
+/**
  * Display error
  */
 
