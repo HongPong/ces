@@ -1,10 +1,9 @@
-div.region-header {
-  clear: both;
-  float: none;
+#featured h2 {
+	display: none;
 }
 
 #block-ces-summaryblock-ces-summary {
-  clear: both;
+  font-size: 14px;
 }
 
 #block-ces-summaryblock-ces-summary div.ces_summaryblock_controls,
