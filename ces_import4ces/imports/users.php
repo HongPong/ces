@@ -15,7 +15,7 @@ function parse_users($data, $row) {
 
     // create drupal user
 
-    // If user virtual return
+    // The admin user account is created with the exchange 
     $query = db_query('SELECT ca.name FROM {ces_account} ca where ca.name=:name',
       array(':name' => $data['UID']));
     $result = $query->fetchAllAssoc('name');

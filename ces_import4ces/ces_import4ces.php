@@ -104,12 +104,14 @@ case '2':  // Import users.csv
 <?php
    include('imports/users.php');
    $file_csv = $path_csv.'users.csv';
-   $data = procesa_csv($file_csv, 'parse_users', $row);
-   // createfrom($data); 
-   $step=nextstep($step) ; $row=1 ;
+   $status = procesa_csv($file_csv, 'parse_users', $row);
+   echo '<pre>status: ' ; print_r($status) ; echo '</pre>'; // exit() ; // DEV  
+   if ( $status['finished'] ) {
+     $step=nextstep($step) ; $row=1 ;
+   }
    break;
 
-case '2':  // Import users.csv
+case '3':  // Import users.csv
   ?>
   <h3>Pendiente</h3>
   <?php
@@ -134,32 +136,38 @@ default:
 
 <?php
 
-$result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.step, o.row, i.uid
+$result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.step, max(o.row), i.uid
    FROM {ces_import4ces_exchange} i 
    LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
    LEFT JOIN {ces_import4ces_objects} o ON i.id = o.import_id 
    WHERE i.finished=0 AND i.uid = :uid
+   GROUP BY e.code
    ORDER BY o.id DESC
-   LIMIT 1
    ', array(':uid' => $user_id));
 
 foreach ($result as $record) {
-?>
+
+  $name = ( isset($record->name) ) ? $record->name : 'NULL' ;
+  $id   = ( isset($record->id)   ) ? $record->id   : 'NULL' ;
+  $step = ( isset($record->step) ) ? $record->step : 'NULL' ;
+  $row  = ( isset($record->row)  ) ? $record->row  : 1      ;
+
+  // Comprobaciones
+  // Si no hay un exchange asociado debe comunicarse
+  ?>
    <form action="" method="post">
    <fieldset>
-      <legend><?php echo $record->name ?></legend>
-      <input type="hidden" name="step" value="<?php echo $record->step ?>"/>
-      <input type="hidden" name="row" value="<?php echo $record->row ?>"/>
-      <input type="hidden" name="import_id" value="<?php echo $record->id ?>">
+      <legend><?php echo $name ?> ( Import: <?php echo $id ?> / step: <?php echo $step ?> / row: <?php echo $row ?> )</legend>
+      <input type="hidden" name="step" value="<?php echo $step ?>"/>
+      <input type="hidden" name="row" value="<?php echo $row?>"/>
+      <input type="hidden" name="import_id" value="<?php echo $id ?>">
       <input type="submit" name="continue" value="<?php echo t("Continue") ?>">
       <input type="submit" name="delete" value="<?php echo t("Delete") ?>">
    </fieldset>
    </form>
-<?php
+  <?php
 }
 
 // debug 
 ?>
-<br />import_id: <?php echo $import_id ?>
-<br />step: <?php echo $step ?>
-<br />row: <?php echo $row ?>
+<br />Debug: import_id: <?php echo $import_id ?> / step: <?php echo $step ?> / row: <?php echo $row ?>

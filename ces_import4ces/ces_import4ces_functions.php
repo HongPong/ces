@@ -7,7 +7,13 @@
 
 function procesa_csv($file_csv, $parse, $row=1) {
 
-   $importar = FALSE ;
+  $importar = FALSE ;   //< Data from file
+
+  // Array with data os step
+  $status = array(
+    'finished' => FALSE
+    ,'row' => 1
+  );
 
    if ( ! file_exists($file_csv) ) {
 
@@ -64,9 +70,10 @@ function procesa_csv($file_csv, $parse, $row=1) {
 
             $importar = array_combine($heads,$cols);
             $cols = array();
+            $status['row'] = $fila ;
             if ( $parse($importar, $fila) === FALSE ) {
                error_i4c(t("Error on parse row")." $fila");
-               return FALSE;
+               return $status;
             }
 
          }
@@ -78,7 +85,8 @@ function procesa_csv($file_csv, $parse, $row=1) {
       fclose($gestor);
    }
 
-   return ( $importar ) ? $importar : FALSE ;
+   $status['finished'] = TRUE ;
+   return $status ;
 
 }
 
