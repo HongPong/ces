@@ -214,64 +214,45 @@ function ces_bank_exchange_accounts_page() {
     }
   }
   $page = array();
-  $page['table'] = array();
-  $page['table']['header'] = array(
-    '#type' => 'container',
-    '#attributes' => array('class' => array('ces-account-user', 'ces-account-user-header')),
-    'user' => array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-user-column')),
-      'title' => array('#markup' => t('User')),
+  $page['table'] = array(
+    '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
     ),
-    'accounts' => array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-accounts-column')),
-      'name' => array(
-        '#type' => 'container',
-        '#attributes' => array(),
-        'title' => array('#markup' => t('Account')),
+    '#header' => array(
+      array(
+        'data' => t('User'),
       ),
-      'balance' => array(
-        '#type' => 'container',
-        '#attributes' => array('class' => array('ces-currency-amount')),
-        'title' => array('#markup' => t('Balance')),
+      array(
+        'data' => t('Account'),
+      ),
+      array(
+        'data' => t('Balance'),
       ),
     ),
-  );
-  $counter = 1;
+  );           
+
   foreach ($useraccounts as $uid => $accounts) {
     $user = user_load($uid);
-    $parity = ($counter % 2 == 0) ? 'even' : 'odd';
-    $row = array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-account-user', $parity)),
-    );
-    $row['user'] = array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-user-column')),
-    );
-    $row['user']['picture'] = array(
-      '#theme' => 'user_picture',
-      '#account' => $user,
-    );
-    $row['user']['name'] = array(
-      '#markup' => l(ces_user_get_name($user), 'user/' . $uid),
-    );
-    $row['accounts'] = array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-accounts-column')),
-    );
+
+    $accountsperuser = "";
+    $balancesperuser = "";
     foreach ($accounts as $account) {
-      $row['accounts']['name'] = array('#type' => 'container', '#attributes' => array());
-      $row['accounts']['name'][] = array('#markup' => $account['name']);
-      $row['accounts']['balance'] = array('#type' => 'container', '#attributes' => array('class' => array('ces-currency-amount')));
-      $row['accounts']['balance'][] = array(
-        '#markup' => $bank->formatAmount($account['balance'], $exchange, TRUE),
-      );
+      $accountsperuser .= $account['name'] . '<br>';
+      $balancesperuser .= $bank->formatAmount($account['balance'], $exchange, TRUE) . '<br>';
     }
-    $page['table'][] = $row;
-    $counter++;
+
+    $row = array(
+      '<div class="ces-user-column">' .
+      '<div class="user-picture">' . theme('user_picture', array('account' => $user)) . '</div>' .
+      l(ces_user_get_name($user), 'user/' . $uid) .
+      '</div>',
+      $accountsperuser,
+      $balancesperuser,
+    );
+    $page['table']['#rows'][] = $row;
   }
+  
   return $page;
 }
 

@@ -328,12 +328,14 @@ function ces_offerswants_menu() {
  * Menu callback function.
  */
 function ces_offerswants_myoffers_page() {
+  drupal_add_css(drupal_get_path('module', 'ces_offerswants') . '/css/ces_offerswants.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
   return _ces_offerswants_my_page('offer');
 }
 /**
  * Menu callback function.
  */
 function ces_offerswants_mywants_page() {
+  drupal_add_css(drupal_get_path('module', 'ces_offerswants') . '/css/ces_offerswants.css', array('group' => CSS_DEFAULT, 'type' => 'file'));	
   return _ces_offerswants_my_page('want');
 }
 /**
@@ -1391,6 +1393,7 @@ function ces_offerswants_block_form_submit($form, &$form_state) {
  *   Order by property. Defaults to 'modified'.
  */
 function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $arg1 = NULL, $arg2 = NULL, $arg3 = NULL) {
+  drupal_add_css(drupal_get_path('module', 'ces_offerswants') . '/css/ces_offerswants.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
   if (empty($action)) {
     $action = 'filter';
   }
