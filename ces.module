@@ -6,6 +6,10 @@
  * ces.module is used as a container for the other modules and contains
  * several general purpose files.
  */
+
+/**
+ * Implements template_preprocess_page().
+ */
 function ces_preprocess_page(&$variables, $hook) {
   if (!module_exists('ces_bank')) {
     drupal_set_message(t('Module CES Bank required'), 'error');

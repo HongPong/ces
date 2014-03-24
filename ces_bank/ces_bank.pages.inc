@@ -107,6 +107,7 @@ function ces_bank_accounts_admin() {
   foreach ($limitchains as $id => $limit) {
     $limits[$id] = $limit['name'];
   }
+  $rows = array();
   foreach ($accounts as $account) {
     $row = array(
       $account['name'],
@@ -118,8 +119,10 @@ function ces_bank_accounts_admin() {
       l(t('Edit'), 'ces/admin/account/' . $account['id'] . '/edit') . ' ' .
       l(t('Delete'), 'ces/admin/account/' . $account['id'] . '/delete'),
     );
-    $page['table']['#rows'][] = $row;
+    $rows[] = $row;
   }
+  _ces_bank_sort_table($page['table']['#header'], $rows);
+  $page['table']['#rows'] = $rows;
   return $page;
 }
 /**
@@ -230,7 +233,7 @@ function ces_bank_exchange_accounts_page() {
         'data' => t('Balance'),
       ),
     ),
-  );           
+  );
 
   foreach ($useraccounts as $uid => $accounts) {
     $user = user_load($uid);
@@ -251,8 +254,7 @@ function ces_bank_exchange_accounts_page() {
       $balancesperuser,
     );
     $page['table']['#rows'][] = $row;
-  }
-  
+  }  
   return $page;
 }
 
@@ -420,9 +422,9 @@ function ces_bank_limitchain_list_page() {
         'data' => t('Actions'),
       ),
     ),
-    '#rows' => array(),
   );
   $limitnames = module_invoke_all('account_limit_classes');
+  $rows = array();
   foreach ($limitchains as $limitchain) {
     $row = array();
     $row[] = $limitchain['name'];
@@ -444,8 +446,10 @@ function ces_bank_limitchain_list_page() {
     $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'limitchain' => $limitchain['id']));
     $row[] = count($accounts);
     $row[] = implode(' ', $actions);
-    $page['table']['#rows'][] = $row;
+    $rows[] = $row;
   }
+  _ces_bank_sort_table($page['table']['#header'], $rows);
+  $page['table']['#rows'] = $rows;
   return $page;
 }
 /**
@@ -537,4 +541,56 @@ function ces_bank_transaction_view($transaction) {
     $page['fromexchange'] = &$page['toexchange'];
   }
   return $page;
+}
+
+/**
+ * Sort the rows of a table.
+ * 
+ * The second parameter $rows gets sorted depending on the $header definition
+ * and the parameters passed by URL.
+ * 
+ * @param array $headers
+ *   Table heeaders as in theme_table.
+ * @param array $rows
+ *   Table rows as in theme_table, by reference. 
+ */
+function _ces_bank_sort_table(array $headers, array &$rows) {
+  global $_ces_bank_sort_table_column;
+  $order = tablesort_get_order($headers);
+  $sort = tablesort_get_sort($headers);
+  // Find the column number to sort.
+  $i = 0;
+  foreach ($headers as $header) {
+    if ($header['field'] == $order['sql']) {
+      $_ces_bank_sort_table_column = $i;
+      break;
+    }
+    $i++;
+  }
+  if ($sort == 'asc') {
+    usort($rows, '_ces_bank_sort_table_cmp');
+  }
+  else {
+    usort($rows, '_ces_bank_sort_table_cmpr');
+  }
+}
+
+/**
+ * Table ows comparator callback.
+ */
+function _ces_bank_sort_table_cmp($a, $b) {
+  global $_ces_bank_sort_table_column;
+  $ca = $a[$_ces_bank_sort_table_column];
+  $cb = $b[$_ces_bank_sort_table_column];
+  return strcmp($ca, $cb);
+}
+
+/**
+ * Reverse table rows comparator callback.
+ */
+function _ces_bank_sort_table_cmpr($a, $b) {
+  global $_ces_bank_sort_table_column;
+  $ca = $a[$_ces_bank_sort_table_column];
+  $cb = $b[$_ces_bank_sort_table_column];
+  return strcmp($cb, $ca);
 }

@@ -1269,7 +1269,6 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
       'month' => date('n', $lastmonth),
       'day' => date('d', $lastmonth),
     );
-    $today = mktime(23, 59, 59, date('m'), date('d'), date('Y'));
     $to = array(
       'year' => date('Y'),
       'month' => date('n'),
@@ -1329,7 +1328,6 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
         'class' => 'ces-currency-amount',
       ),
     ),
-    '#rows' => array(),
   );
   $transactions = $bank->getTransactions(array(
     'account' => $account['id'],
@@ -1342,6 +1340,7 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
   if ($space !== FALSE) {
     $dateformat = substr($dateformat, 0, $space);
   }
+  $rows = array();
   foreach ($transactions as $transaction) {
     $row = array();
     $row[] = array(
@@ -1394,8 +1393,14 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
       'data' => $bank->formatAmount($inibalance, $exchange, TRUE, FALSE),
       'class' => 'ces-currency-amount',
     );
-    $form['transactions']['table']['#rows'][] = $row;
+    $rows[] = $row;
   }
+  // Get sort parameter from URL.
+  $sort = tablesort_get_sort($form['transactions']['table']['#header']);
+  if ($sort == 'desc') {
+    $rows = array_reverse($rows);
+  }
+  $form['transactions']['table']['#rows'] = $rows;
   return $form;
 }
 /**
