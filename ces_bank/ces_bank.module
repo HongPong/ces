@@ -269,17 +269,6 @@ function ces_bank_menu() {
     'access arguments' => array('edit', 'exchange', CES_CURRENT_EXCHANGE),
     'weight' => 910,
   );
-  $menu['ces/admin/exchange/%/activate'] = array(
-    'title' => 'Activate exchange',
-    'description' => 'Activate exchange',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_exchange_form', 'activate', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'global', 0),
-  );
   /* Begin limit chains */
   $menu['ces/admin/limit'] = array(
     'title' => 'Limits',
@@ -355,6 +344,17 @@ function ces_bank_menu() {
     'access arguments' => array('admin', 'global', 0),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 990,
+  );
+  $menu['ces/admin/exchange/%/activate'] = array(
+    'title' => 'Activate exchange',
+    'description' => 'Activate exchange',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_exchange_form', 'activate', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_CALLBACK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'global', 0),
   );
   // Superglobal menu (before login).
   $menu['ces/bank/exchange/new'] = array(
