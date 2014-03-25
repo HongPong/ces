@@ -393,6 +393,7 @@ function _ces_offerswants_my_page($type) {
  * Implements hook_entity_view().
  */
 function ces_offerwant_view($offerwant, $view_mode = 'full') {
+
   // Populate $node->content with a render() array.
   ces_offerwant_build_content($offerwant, $view_mode);
 
@@ -709,6 +710,7 @@ function ces_offerswants_file_download($uri) {
  * Process variables for ces_offerwant.tpl.php.
  */
 function template_preprocess_ces_offerwant(&$variables) {
+
   $offerwant = $variables['element']['#ces_offerwant'];
   $variables['view_mode'] = $variables['element']['#view_mode'];
   $variables['view_mode_full'] = $variables['element']['#view_mode'] == 'full';

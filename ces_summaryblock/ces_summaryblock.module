@@ -148,6 +148,7 @@ function _ces_summaryblock_get_interesting_offer($account) {
     if ($exchange != FALSE) {
       $query = new EntityFieldQuery();
       $categories = ces_offerswants_get_categories_ids('offer', $exchange['id']);
+      if ( ! $categories ) return FALSE ;
       $query->entityCondition('entity_type', 'ces_offerwant')
             ->entityCondition('bundle', 'offer')
             ->propertyCondition('category', $categories, 'IN')

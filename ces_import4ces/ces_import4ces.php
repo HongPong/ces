@@ -36,7 +36,6 @@ if ( $import_id ) {
       $exchange_name      = $record->name        ; 
       $exchange_code      = $record->code        ; 
       $step               = $record->step        ;
-      $row                = $record->row         ;
       $anonymous          = $record->anonymous   ;
    }
 
@@ -105,16 +104,21 @@ case '2':  // Import users.csv
    include('imports/users.php');
    $file_csv = $path_csv.'users.csv';
    $status = procesa_csv($file_csv, 'parse_users', $row);
-   echo '<pre>status: ' ; print_r($status) ; echo '</pre>'; // exit() ; // DEV  
    if ( $status['finished'] ) {
      $step=nextstep($step) ; $row=1 ;
    }
    break;
 
-case '3':  // Import users.csv
+case '3':  // Import offers.csv
   ?>
-  <h3>Pendiente</h3>
+  <h3><?php echo t('Offers') ?></h3>
   <?php
+   include('imports/offers.php');
+   $file_csv = $path_csv.'offers.csv';
+   $status = procesa_csv($file_csv, 'parse_offers', $row);
+   if ( $status['finished'] ) {
+     $step=nextstep($step) ; $row=1 ;
+   }
   break;
 
 default:
@@ -136,7 +140,7 @@ default:
 
 <?php
 
-$result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.step, max(o.row), i.uid
+$result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.step, max(o.row) row , i.uid
    FROM {ces_import4ces_exchange} i 
    LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
    LEFT JOIN {ces_import4ces_objects} o ON i.id = o.import_id 

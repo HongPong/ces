@@ -83,7 +83,7 @@ function parse_users($data, $row) {
         'import_id' => $GLOBALS['import_id'],
         'object' => 'user',
         'object_id' => $user_drupal->uid,
-        'row' => $user_drupal->uid,
+        'row' => $row,
         'data' => serialize($data)
       ))->execute();
 
@@ -101,9 +101,9 @@ function parse_users($data, $row) {
  * Delete exchange import
  */
 
-function delete_setting($import_id) {
+function delete_users($import_id) {
 
-  echo 'Pendiente borrado de importación '.$import_id;
+  echo 'Pendiente borrado de usuarios '.$import_id;
 
 }
 
