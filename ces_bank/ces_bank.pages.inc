@@ -225,16 +225,23 @@ function ces_bank_exchange_accounts_page() {
     '#header' => array(
       array(
         'data' => t('User'),
+        'field' => 'user',
+        'sort' => 'asc',
       ),
       array(
         'data' => t('Account'),
+        'field' => 'account',
+        'sort' => 'asc',
       ),
       array(
         'data' => t('Balance'),
+        'field' => 'balance',
+        'sort' => 'asc',
       ),
     ),
   );
-
+  
+  $rows = array();
   foreach ($useraccounts as $uid => $accounts) {
     $user = user_load($uid);
 
@@ -244,8 +251,10 @@ function ces_bank_exchange_accounts_page() {
       $accountsperuser .= $account['name'] . '<br>';
       $balancesperuser .= $bank->formatAmount($account['balance'], $exchange, TRUE) . '<br>';
     }
-
+    // first cell begins with 8 chars of the name user in capital letters
+    // only for sort case insensitive proposals.
     $row = array(
+      strtoupper(sprintf("%-8s",ces_user_get_name($user))) .
       '<div class="ces-user-column">' .
       '<div class="user-picture">' . theme('user_picture', array('account' => $user)) . '</div>' .
       l(ces_user_get_name($user), 'user/' . $uid) .
@@ -253,8 +262,14 @@ function ces_bank_exchange_accounts_page() {
       $accountsperuser,
       $balancesperuser,
     );
-    $page['table']['#rows'][] = $row;
-  }  
+    $rows[] = $row;
+  }
+  _ces_bank_sort_table($page['table']['#header'], $rows);
+  $lenghtrows = count($rows);
+  for ($i=0;$i<$lenghtrows;$i++) {
+  	 $rows[$i][0] = substr($rows[$i][0], 8);
+  }
+  $page['table']['#rows'] = $rows;
   return $page;
 }
 
