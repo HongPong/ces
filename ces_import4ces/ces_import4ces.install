@@ -113,6 +113,13 @@ function ces_import4ces_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'step' => array(
+        'description' => 'The step of the import',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'row' => array(
         'type' => 'int',
         'unsigned' => TRUE,

@@ -4,6 +4,9 @@
  * Import data from CES
  */
 
+
+ini_set('auto_detect_line_endings',TRUE);
+
 include_once DRUPAL_ROOT . '/includes/install.inc';
 require_once drupal_get_path('module', 'ces_import4ces') . '/ces_import4ces_functions.php';
 require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.install';
@@ -25,19 +28,19 @@ $send_mail_user = FALSE ;   ///< Send email from reset password
 
 if ( $import_id ) {
 
-   $result = db_query('SELECT i.exchange_id, e.code, e.name, i.step, i.row, i.anonymous 
-      FROM {ces_import4ces_exchange} i 
-      LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
-      WHERE i.finished=0 AND i.uid = :uid
-      ', array(':uid' => $user_id));
+  $result = db_query('SELECT i.exchange_id, e.code, e.name, i.step, i.row, i.anonymous 
+    FROM {ces_import4ces_exchange} i 
+    LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
+    WHERE i.finished=0 AND i.uid = :uid
+    ', array(':uid' => $user_id));
 
-   foreach ($result as $record) {
-      $exchange_id        = $record->exchange_id ;   
-      $exchange_name      = $record->name        ; 
-      $exchange_code      = $record->code        ; 
-      $step               = $record->step        ;
-      $anonymous          = $record->anonymous   ;
-   }
+  foreach ($result as $record) {
+    $exchange_id        = $record->exchange_id ;   
+    $exchange_name      = $record->name        ; 
+    $exchange_code      = $record->code        ; 
+    $step               = $record->step        ;
+    $anonymous          = $record->anonymous   ;
+  }
 
   $GLOBALS['exchange_id'] = $exchange_id ;
   $GLOBALS['exchange_name'] = $exchange_name ;
@@ -67,65 +70,63 @@ $GLOBALS['row'] = $row ;
 <?php
 
 switch ($step) {
+
 case '0':
 ?>
-      <?php echo t('Put all the csv files in the sites /default/files/import folder.')?>
-
-      <form action="" method="POST">
-         <input type="hidden" name="step" value="1"/>
-         <input type="submit" name="new" value="<?php echo t('New import')?>"/>
-      </form>
+    <?php echo t('Put all the csv files in the sites /default/files/import folder.')?>
+    <form action="" method="POST">
+       <input type="hidden" name="step" value="1"/>
+       <input type="submit" name="new" value="<?php echo t('New import')?>"/>
+    </form>
 <?php
-   break;
+  break;
 
 case '1':  // Import setting.csv
-?>
-      <h3>Import Setting</h3>
-<?php
-   include('imports/setting.php');
-   $file_csv = $path_csv.'settings.csv';
-   $data = procesa_csv($file_csv, 'parse_setting', $row);
-
-   // @todo Edit data if there is a error
-   //  createfrom($setting); 
-
-   if ( $data ) {
-      $msg = "New Bank created";
-      $step++ ; $row=1 ;
-   } else {
-      $error = "Error in parse setting";
-   }
-   break;
+  include('imports/setting.php');
+  $title = "Exchange";
+  $file_csv = $path_csv.'settings.csv';
+  $parse_function = 'parse_setting';
+  break;
 
 case '2':  // Import users.csv
-?>
-      <h3>Import Users</h3>
-<?php
-   include('imports/users.php');
-   $file_csv = $path_csv.'users.csv';
-   $status = procesa_csv($file_csv, 'parse_users', $row);
-   if ( $status['finished'] ) {
-     $step=nextstep($step) ; $row=1 ;
-   }
-   break;
+  include('imports/users.php');
+  $title = "Users";
+  $file_csv = $path_csv.'users.csv';
+  $parse_function = 'parse_users';
+  break;
 
 case '3':  // Import offers.csv
-  ?>
-  <h3><?php echo t('Offers') ?></h3>
-  <?php
-   include('imports/offers.php');
-   $file_csv = $path_csv.'offers.csv';
-   $status = procesa_csv($file_csv, 'parse_offers', $row);
-   if ( $status['finished'] ) {
-     $step=nextstep($step) ; $row=1 ;
-   }
+  include('imports/offers.php');
+  $title = "Offers";
+  $file_csv = $path_csv.'offers.csv';
+  $parse_function = 'parse_offers';
+  break;
+
+case '4':  // Import offers.csv
+  include('imports/wants.php');
+  $title = "wants";
+  $file_csv = $path_csv.'wants.csv';
+  $parse_function = 'parse_wants';
   break;
 
 default:
-   $error = "Step not found";
-   break;
+  $title = "Step not found";
+  break;
 }
 
+if ( isset($parse_function) ) {
+  ?>
+  <h3><?php echo t('Importing').' '.t($title) ?></h3>
+  <?php
+  update_step($step);
+  $status = procesa_csv($file_csv, $parse_function, $row);
+  if ( $status['finished'] ) {
+    $step++; 
+    $row=1 ;
+    update_step($step) ;
+    $msg = "Process completed successfully";
+  }
+}
 ?>
 
 <?php if ( $error ) { ?>
@@ -140,14 +141,12 @@ default:
 
 <?php
 
-$result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.step, max(o.row) row , i.uid
-   FROM {ces_import4ces_exchange} i 
-   LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
-   LEFT JOIN {ces_import4ces_objects} o ON i.id = o.import_id 
-   WHERE i.finished=0 AND i.uid = :uid
-   GROUP BY e.code
-   ORDER BY o.id DESC
-   ', array(':uid' => $user_id));
+$result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.step, i.row , i.uid
+  FROM {ces_import4ces_exchange} i 
+  LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
+  WHERE i.finished=0 AND i.uid = :uid
+  ORDER BY i.id DESC
+  ', array(':uid' => $user_id));
 
 foreach ($result as $record) {
 
@@ -158,7 +157,7 @@ foreach ($result as $record) {
 
   // Comprobaciones
   // Si no hay un exchange asociado debe comunicarse
-  ?>
+?>
    <form action="" method="post">
    <fieldset>
       <legend><?php echo $name ?> ( Import: <?php echo $id ?> / step: <?php echo $step ?> / row: <?php echo $row ?> )</legend>
@@ -169,7 +168,7 @@ foreach ($result as $record) {
       <input type="submit" name="delete" value="<?php echo t("Delete") ?>">
    </fieldset>
    </form>
-  <?php
+<?php
 }
 
 // debug 

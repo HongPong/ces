@@ -35,8 +35,6 @@ El usuario administrativo del nuevo banco sera el que realiza la importación.
 
 @todo Simbolo de la móneda no queda bien códificado.
 
-@todo La tabla de importaciones debe contener el code para reconocer una 
-      importación a medias.
-
 @todo row de objetos no es correcto.
-@todo row de exchange no es necesario
+
+@todo guardar solo los datos de los registros que no se están utilizando y no todos como ahora en user

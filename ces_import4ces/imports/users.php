@@ -86,7 +86,6 @@ function parse_users($data, $row) {
         'row' => $row,
         'data' => serialize($data)
       ))->execute();
-
     return $nid;
 
   }

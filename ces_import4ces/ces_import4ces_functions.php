@@ -8,6 +8,10 @@
 function procesa_csv($file_csv, $parse, $row=1) {
 
   $importar = FALSE ;   //< Data from file
+  $data_come_from = FALSE ;
+
+  // The data come form
+  if ( isset($_POST['row_error']) ) $data_come_from = TRUE ;
 
   // Array with data os step
   $status = array(
@@ -26,14 +30,11 @@ function procesa_csv($file_csv, $parse, $row=1) {
     while (($datos = fgetcsv($gestor, 1000, ",")) !== FALSE) {
       $fila++;
       $numero = count($datos);
-      echo "<br/>fila: $fila / $row"; // DEV
-      if ( $fila != 0 && $fila < $row ) continue;
-      // echo "<h1>Fila: $fila / Número de campos $numero</h1>\n";
+      if ( $fila != 0 && $fila <= $row ) continue;
       foreach( $datos as $key => $val ) {
         $datos[$key] = trim( $datos[$key] );
-        $datos[$key] = iconv('ISO-8859-1', 'UTF-8', $datos[$key]) ;
-        $datos[$key] = str_replace('""', '"', $datos[$key]);
-        $datos[$key] = preg_replace("/^\"(.*)\"$/sim", "$1", $datos[$key]);
+        //$datos[$key] = iconv('ISO-8859-1', 'UTF-8', $datos[$key]) ;
+        $datos[$key] = iconv('Windows-1252', 'UTF-8', $datos[$key]) ;
         if ( $fila == 0 ) {
           $heads[] = $datos[$key] ;
         } else {
@@ -41,8 +42,15 @@ function procesa_csv($file_csv, $parse, $row=1) {
         }
       }
       if ( $fila !== 0 ) {
-        // @todo Repair it here
-        if ( count($heads) > count($cols) ) {
+
+        if ( $data_come_from ) {
+          $cols = $_POST;
+          unset($cols['row']);
+          unset($cols['step']);
+          unset($cols['import_id']);
+          unset($cols['row_error']);
+          $data_come_from = FALSE ;
+        } elseif ( count($heads) > count($cols) ) {
           $faltan = count($heads) - count($cols);
           for ($i=0; $i<$faltan;$i++) {
             array_push($cols,"LACK!-0$i");
@@ -52,14 +60,12 @@ function procesa_csv($file_csv, $parse, $row=1) {
           $cols = array();
           createfrom($importar, $fila, 3 , $GLOBALS['import_id']);
           return FALSE;
-        }
-        if ( count($heads) < count($cols) ) {
+        } elseif ( count($heads) < count($cols) ) {
           $faltan = count($heads) - count($cols) ;
           for ($i=0; $i<$faltan;$i++) {
             array_push($cols,"");
           }
-        }
-        if ( count($heads) !== count($cols) ) {
+        } elseif ( count($heads) !== count($cols) ) {
           error_i4c(t('Not match the number of fields, it may have been interpreted in a comma as a field separator.').
             "<br/>".
             t('For example links to maps can generate this problem.').
@@ -78,7 +84,7 @@ function procesa_csv($file_csv, $parse, $row=1) {
           error_i4c(t("Error on parse row")." $fila");
           return $status;
         }
-
+        update_row($fila);
       }
     }
 
@@ -109,11 +115,14 @@ function createfrom($importar, $row, $step, $import_id) {
             <input type="text" name="<?php echo $key ?>" value="<?php echo $value ?>" id="<?php echo $key ?>">     
          <?php } ?>
          <?php } ?>
+         <div style="clear: both;"></div>
          <input type="hidden" name="row"       value="<?php echo $row  ?>"/>
          <input type="hidden" name="step"      value="<?php echo $step ?>"/>
          <input type="hidden" name="import_id" value="<?php echo $import_id ?>"/>
          <input type="submit" name="row_error" value="<?php echo t("Continue") ?>"/>
+         <input type="submit" name="row_skip" value="<?php echo t("or skip this record").' (pending)' ?>"/>
          </form>
+
       </fieldset>
 <?php
 }
@@ -121,10 +130,15 @@ function createfrom($importar, $row, $step, $import_id) {
 /**
  * Count step
  */
-function nextstep($step) {
-  $step++;
-  db_update('ces_import4ces_exchange')->condition('id', $GLOBALS['import_id'])->fields(array('step' => $step))->execute();
-  return $step;
+function update_step($step) {
+  return db_update('ces_import4ces_exchange')->condition('id', $GLOBALS['import_id'])->fields(array('step' => $step, 'row' => 1))->execute();
+}
+
+/**
+ * Count row
+ */
+function update_row($row) {
+  return db_update('ces_import4ces_exchange')->condition('id', $GLOBALS['import_id'])->fields(array('row' => $row))->execute();
 }
 
 /**

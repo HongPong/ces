@@ -48,8 +48,7 @@ function parse_setting($setting) {
          ->fields(array(
             'exchange_id' => $exchange['id'],
             'created' => REQUEST_TIME,
-            'step' => 2,
-            'row' => 1,
+            'step' => 1,
             'anonymous' => ( ($GLOBALS['anonymous']) ? 1 : 0 ),
             'uid' => $user->uid,
             'data' => serialize($setting)
