@@ -8,6 +8,29 @@
  */
 
 /**
+ * Implements hook_help().
+ */
+function ces_help($path, $arg) {
+  if ($path == 'admin/help#ces') {
+    $output = '';
+    $output .= '<h3>' . t('About') . '</h3>';
+    $output .= '<p>' . t('Integral CES is a suite of Drupal modules featuring social currencies management for communities. See <a href="@integralces">integralces.net</a> for more documentation and <a href="@demo">demo.integralces.net</a> for a demonstration site.', array('@integralces' => 'http://www.integralces.net', '@demo' => url('http://demo.integralces.net'))) . '</p>';
+    $output .= '<h3>' . t('Initializing an exchange group') . '</h3>';
+    $output .= '<dl>';
+    $output .= '<dt>' . t('Enable the sub-modules you need') . '</dt>';
+    $output .= '<dd>' . t('<em>CES Bank</em> is needed to run Integral CES, is about management of exchange groups, users accounts, transactions between accounts, etc... <em>CES Notifications</em> is the messaging system of Integral CES. <em>CES Offers and Wants</em> allows users to publish their offers and wants in the exchange group. <em>CES user profile</em> extends Drupal user profile with fields about Integral CES. <em>CES Summary Block</em> enables a block with information about the user \'s account, and a switcher between accounts, if the user owns several. <em>CES exchange blog</em> enables a blog for every exchange group and the exchange administrator can publish entries. <em>CES Statistics</em> produces some statistics of the exchange groups.') . '</dd>';
+    $output .= '<dt>' . t('Create new exchange group') . '</dt>';
+    $output .= '<dd>' . t('Visit <a href="@newexchange">new exchange form</a> and initialize the first exchange group.', array('@newexchange' => url('ces/bank/exchange/new'),)) . '</dd>';
+    $output .= '<dt>' . t('Invite the users to create an account') . '</dt>';
+    $output .= '<dd>' . t('Users can sing up and create a new account visiting <em>user/register/exchange_name</em>, where exchange_name is the short name of the new exchange group (Four numbers or uppercase letters)') . '</dd>';
+    $output .= '</dl>';
+    $output .= '<dt>' . t('Publish some offers and wants, blog entries... And have fun!') . '</dt>';
+    return $output;
+  }
+}
+      
+
+/**
  * Implements template_preprocess_page().
  */
 function ces_preprocess_page(&$variables, $hook) {
