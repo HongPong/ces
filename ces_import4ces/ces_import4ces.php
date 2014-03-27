@@ -18,6 +18,18 @@ $msg       = FALSE ;
 $error     = FALSE ;
 $user_id   = $GLOBALS['user']->uid;
 
+$title = "Step not found";  //< Default title
+/** Titles from steps */
+$titles_steps = array(
+  0 => "New exchange",
+  1 => "Exchange",
+  2 => "Users",
+  3 => "Offers",
+  4 => "Wants",
+  5 => "",
+  5 => "",
+);
+
 $import_id   = ( isset($_POST['import_id']) ) ? $_POST['import_id'] : FALSE ;
 $import_id   = ( isset($_GET['import_id']) )  ? $_GET['import_id']  : $import_id ;
 $step        = ( isset($_POST['step']) )      ? $_POST['step']      : 0 ;
@@ -90,38 +102,34 @@ case '0':
 
 case '1':  // Import setting.csv
   include('imports/setting.php');
-  $title = "Exchange";
   $file_csv = $path_csv.'settings.csv';
   $parse_function = 'parse_setting';
   break;
 
 case '2':  // Import users.csv
   include('imports/users.php');
-  $title = "Users";
   $file_csv = $path_csv.'users.csv';
   $parse_function = 'parse_users';
   break;
 
 case '3':  // Import offers.csv
   include('imports/offers.php');
-  $title = "Offers";
   $file_csv = $path_csv.'offers.csv';
   $parse_function = 'parse_offers';
   break;
 
 case '4':  // Import offers.csv
   include('imports/wants.php');
-  $title = "wants";
   $file_csv = $path_csv.'wants.csv';
   $parse_function = 'parse_wants';
   break;
 
 default:
-  $title = "Step not found";
   break;
 }
 
 if ( isset($parse_function) ) {
+  $title = ( isset($titles_steps[$step]) ) ? $titles_steps[$step] : $title ;
   ?>
   <h3><?php echo t('Importing').' '.t($title) ?></h3>
   <?php
@@ -150,7 +158,7 @@ if ( isset($parse_function) ) {
 
 <?php
 
-$result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.step, i.row , i.uid
+$result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.step, i.row , i.uid, i.observations
   FROM {ces_import4ces_exchange} i 
   LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
   WHERE i.finished=0 AND i.uid = :uid
@@ -159,17 +167,24 @@ $result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created, i.ste
 
 foreach ($result as $record) {
 
-  $name = ( isset($record->name) ) ? $record->name : 'NULL' ;
-  $id   = ( isset($record->id)   ) ? $record->id   : 'NULL' ;
-  $step = ( isset($record->step) ) ? $record->step : 'NULL' ;
-  $row  = ( isset($record->row)  ) ? $record->row  : 0      ;
+  $name          = ( isset($record->name)          ) ? $record->name          : 'NULL' ;
+  $id            = ( isset($record->id)            ) ? $record->id            : 'NULL' ;
+  $step          = ( isset($record->step)          ) ? $record->step          : 'NULL' ;
+  $row           = ( isset($record->row)           ) ? $record->row           : 0      ;
+  $observations  = ( isset($record->observations)  ) ? $record->observations  : FALSE  ;
 
   // Comprobaciones
   // Si no hay un exchange asociado debe comunicarse
 ?>
    <form action="" method="post">
    <fieldset>
-      <legend><?php echo $name ?> ( Import: <?php echo $id ?> / step: <?php echo $step ?> / row: <?php echo $row ?> )</legend>
+      <legend><?php echo $name ?></legend>
+      <div class="info_import">
+      Step: <?php echo $titles_steps[$step]." ($step / 5 )"; ?> / row: <?php echo $row ?>
+      </div>
+      <?php if ( $observations ) { ?>
+      <textarea class="import_observation"><?php echo $observations ?></textarea>
+      <?php } ?>
       <input type="hidden" name="step" value="<?php echo $step ?>"/>
       <input type="hidden" name="row" value="<?php echo $row?>"/>
       <input type="hidden" name="import_id" value="<?php echo $id ?>">
@@ -180,6 +195,3 @@ foreach ($result as $record) {
 <?php
 }
 
-// debug 
-?>
-<br />Debug: import_id: <?php echo $import_id ?> / step: <?php echo $step ?> / row: <?php echo $row ?>

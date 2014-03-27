@@ -67,10 +67,14 @@ function ces_import4ces_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'observations' => array(
+        'description' => 'observations collected',
+        'type' => 'blob',
+        'serialize' => TRUE,
+      ),
       'data' => array(
         'description' => 'PHP-serialized type-specific options.',
         'type' => 'blob',
-        'not null' => TRUE,
         'serialize' => TRUE,
       ),
     ),
@@ -128,7 +132,6 @@ function ces_import4ces_schema() {
       'data' => array(
         'description' => 'PHP-serialized transaction extra data.',
         'type' => 'blob',
-        'not null' => TRUE,
         'serialize' => TRUE,
       ),
     ),

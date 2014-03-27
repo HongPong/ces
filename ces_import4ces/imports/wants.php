@@ -55,8 +55,11 @@ function parse_wants($data, $row) {
   }
 
   if ( empty($want_user_id) ) {
-    error_i4c(t("Error: No user was found [".$data['UID']."]")." $row");
-    return FALSE;
+    $m  =  t("No user was found")." [".$data['UID']."] in row [$row]";
+    $m .= "\n".implode($data,',');  
+    add_observation($m);
+    error_i4c($m);
+    return ;
     }
 
   $want['user'] = $want_user_id;

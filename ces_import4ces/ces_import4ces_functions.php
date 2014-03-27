@@ -148,6 +148,15 @@ function update_row($row) {
 }
 
 /**
+ * Add observation
+ */
+function add_observation($observation) {
+  $old = db_query("SELECT observations FROM {ces_import4ces_exchange} WHERE id=:id ", array(':id'=>$GLOBALS['import_id']) )->fetchField();
+  $new = ( $old ) ? $old."\n".$observation : $observation ;
+  return db_update('ces_import4ces_exchange')->condition('id', $GLOBALS['import_id'])->fields(array('observations' => $new))->execute();
+}
+
+/**
  * Display error
  */
 
