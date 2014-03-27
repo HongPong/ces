@@ -1250,7 +1250,7 @@ function ces_offerswants_block_view($delta = '') {
   // Format the render array.
   $block = array();
   $block['subject'] = t('Filter');
-  $content = drupal_get_form('ces_offerswants_block_form', arg(1) == 'offers' ? 'offer' : 'want', arg(2), arg(3), arg(4), arg(5));
+  $content = drupal_get_form('ces_offerswants_block_form', arg(3) == 'offers' ? 'offer' : 'want', arg(4), arg(5), arg(6), arg(7));
   $block['content'] = $content;
   return $block;
 }
@@ -1374,11 +1374,11 @@ function ces_offerswants_block_form_submit($form, &$form_state) {
   $values = $form_state['values'];
 
   if ( isset($values['search']) && ! empty($values['search']) ) {
-    $form_state['redirect'] = 'ces/' . $values['offerwant_type'] . 's/search/' . $values['exchange']
+    $form_state['redirect'] = 'ces/bank/exchange/' . $values['offerwant_type'] . 's/search/' . $values['exchange']
               . '/' . $values['search'] . '/' . $values['orderby'];
   }
     elseif ($values['op'] == t('Filter')) {
-    $form_state['redirect'] = 'ces/' . $values['offerwant_type'] . 's/filter/' . $values['exchange']
+    $form_state['redirect'] = 'ces/bank/exchange/' . $values['offerwant_type'] . 's/filter/' . $values['exchange']
               . '/' . $values['category'] . '/' . $values['orderby'];
   }
 }
