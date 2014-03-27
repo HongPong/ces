@@ -49,6 +49,13 @@ function ces_bank_exchange_admin() {
 function ces_bank_accounts_admin() {
   $bank = new Bank();
   $exchange = ces_bank_get_current_exchange();
+  if ($exchange === FALSE) {
+    return array(
+      'message' => array(
+        '#markup' => '<p>' . t('Invalid current exchange') . '</p>',
+      ),
+    );
+  }
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
@@ -248,8 +255,8 @@ function ces_bank_exchange_accounts_page() {
     $accountsperuser = "";
     $balancesperuser = "";
     foreach ($accounts as $account) {
-      $accountsperuser .= $account['name'] . '<br>';
-      $balancesperuser .= $bank->formatAmount($account['balance'], $exchange, TRUE) . '<br>';
+      $accountsperuser .= $account['name'] . '<br/>';
+      $balancesperuser .= $bank->formatAmount($account['balance'], $exchange, TRUE) . '<br/>';
     }
     // first cell begins with 8 chars of the name user in capital letters
     // only for sort case insensitive proposals.
@@ -413,6 +420,13 @@ function ces_bank_permissions_page() {
  */
 function ces_bank_limitchain_list_page() {
   $exchange = ces_bank_get_current_exchange();
+  if ($exchange === FALSE) {
+    return array(
+      'message' => array(
+        '#markup' => '<p>' . t('Invalid current exchange') . '</p>',
+      ),
+    );
+  }
   $bank = new Bank();
   $limitchains = $bank->getAllLimitChains($exchange['id']);
   $page = array();
@@ -487,10 +501,21 @@ function ces_bank_limitchain_view($limitchain) {
  */
 function ces_bank_exchange_view() {
   $exchange = ces_bank_get_current_exchange();
-  $page = array(
-    'exchange' => $exchange,
-    '#theme' => 'ces_bank_exchange_view',
-  );
+  if ($exchange !== FALSE) {
+    $page = array(
+      'exchange' => $exchange,
+      '#theme' => 'ces_bank_exchange_view',
+    );
+  }
+  else {
+    $page = array(
+      'message' => array(
+        '#markup' => '<p>' . t("You don't belong to any exchange yet.") .
+        '</p>',
+      ),
+    );
+  }
+
   return $page;
 }
 /**

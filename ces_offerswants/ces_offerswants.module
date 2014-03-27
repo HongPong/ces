@@ -797,6 +797,14 @@ function ces_offerwant_access($operation, $offerwant, $account = NULL) {
  */
 function ces_category_form($form, &$form_state, $category = NULL) {
   if ($category == NULL) {
+    $exchangeid = ces_offerswants_get_current_exchage_id();
+    if (!$exchangeid) {
+      return array(
+        'message' => array(
+          '#markup' => '<p>' . ('Invalid exchange id.') . '</p>',
+        ),
+      );
+    }
     $category = (object) array(
       'title' => '',
       'description' => '',
@@ -872,7 +880,7 @@ function ces_category_form($form, &$form_state, $category = NULL) {
  * @TODO
  */
 function ces_category_form_validate($form, &$form_state) {
-  // TODO.
+  
 }
 /**
  * Form submit.

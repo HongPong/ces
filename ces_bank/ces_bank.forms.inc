@@ -18,8 +18,15 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     if ($op == 'new') {
       $exchange = $bank->getDefaultExchange();
     }
-    else {
+    elseif ($exchange_id) {
       $exchange = $bank->getExchange($exchange_id);
+    }
+    else {
+      return array(
+        'message' => array(
+          '#markup' => '<p>' . t('Invalid exchange id.') . '</p>',
+        ),
+      );
     }
     // We change the exchange field name from "name" to "fullname" so it doesn't
     // conflict with user's form "name" field.
@@ -338,6 +345,13 @@ function ces_bank_limitchain_form($form, &$form_state, $limitchain = NULL) {
     // First build. Take values from logic layer.
     if ($limitchain == NULL) {
       $exchange = ces_bank_get_current_exchange();
+      if ($exchange === FALSE) {
+        return array(
+          'message' => array(
+            '#markup' => '<p>' . t('Invalid current exchange') . '</p>',
+          ),
+        );
+      }
       $limitchain = $bank->getDefaultLimitChain($exchange['id']);
       $op = 'new';
     }
@@ -577,6 +591,13 @@ function ces_bank_account_form($form, &$form_state, $account = NULL) {
   }
   else {
     $exchange = ces_bank_get_current_exchange();
+    if ($exchange === FALSE) {
+      return array(
+        'message' => array(
+          '#markup' => '<p>' . t('Invalid current exchange') . '</p>',
+        ),
+      );
+    }
     $account = $bank->getDefaultAccount($exchange['id']);
   }
   $admin = ces_bank_access('admin', 'exchange', $exchange['id']);
@@ -792,6 +813,23 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
 
 /**
  * Single transaction form.
+ * 
+ * @param array $form
+ *   The Drupal form.
+ * @param array $form_state
+ *   The form input values.
+ * @param string $op
+ *   The operation to perform on the transaction:
+ *     - 'new': Create new transaction.
+ *     - 'edit': Edit transaction.
+ * @param array|int $arg
+ *   Argument to this form depending on the operation. If the operation is 'new'
+ *   $arg is the id of the exchange where the transaction is going to take 
+ *   place. If the operation is 'edit', $arg is the transaction array.
+ * @param int $to_account_id
+ *   Optional. The seller account id.
+ * @param int $from_account_id
+ *   Optional. The buyer account.
  *
  * @todo Set the currency according the toaccount exchange currency.
  * @todo Make an easy system to find account names by exchange/username.
@@ -805,12 +843,26 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
   $bank = new Bank();
   // Exchange options for selects.
   $exchanges = $bank->getAllExchanges();
+  if (empty($exchanges)) {
+    return array(
+      'message' => array(
+        '#markup' => '<p>' . t('There are no exchanges yet.') . '</p>',
+      ),
+    );
+  }
   $exoptions = array();
   foreach ($exchanges as $exchange) {
     $exoptions[$exchange['id']] = $exchange['code'];
   }
   if ($op == 'new') {
     $exchangeid = $arg;
+    if (!isset($exchanges[$exchangeid])) {
+      return array(
+        'message' => array(
+          '#markup' => '<p>' . t('Invalid exchange id.') . '</p>',
+        ),
+      );
+    }
   }
   elseif ($op == 'edit') {
     $from = $bank->getTransactionFromAccount($arg);
@@ -1242,13 +1294,21 @@ function ces_bank_transaction_delete_form_submit($form, &$form_state) {
  * @see ces_bank_account_statement_form_submit()
  */
 function ces_bank_account_statement_form($form, &$form_state, $account_id) {
+  if ($account_id == FALSE) {
+    $page = array();
+    $page['message'] = array(
+      '#markup' => '<p>' . t("You don't have any exchange account yet.")
+      . '</p>',
+    );
+    return $page;
+  }
   $bank = new Bank();
   try {
     $account = $bank->getAccount($account_id);
-    // Throws exception.
   }
   catch (Exception $e) {
-    return array('error' => array('#markup' => $e->getMessage()));
+    drupal_set_message($e->getMessage(), 'error');
+    return array();
   }
   $exchange = $bank->getExchange($account['exchange']);
 

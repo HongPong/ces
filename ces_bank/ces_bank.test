@@ -60,7 +60,8 @@ class BankTestCase extends DrupalWebTestCase {
     );
   }
   /**
-   * Setup CES modules, creates the admin user, configures blocks and user preferences.
+   * Setup CES modules, creates the admin user, configures blocks and user
+   * preferences.
    */
   public function setUp() {
     // Enable any modules required for the test.
