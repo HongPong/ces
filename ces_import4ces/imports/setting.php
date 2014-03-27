@@ -54,6 +54,7 @@ function parse_setting($setting) {
             'data' => serialize($setting)
          ))->execute();
 
+      $GLOBALS['import_id'] = $nid ;
       return $nid;
 
    }

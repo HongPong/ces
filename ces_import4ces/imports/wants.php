@@ -13,76 +13,56 @@ function parse_wants($data, $row) {
 
   $exchange_id = $GLOBALS['exchange_id'];
 
-  echo '<pre>data: ' ; print_r($data) ; echo '</pre>'; exit() ; // DEV  
+  // echo '<pre>data: ' ; print_r($data) ; echo '</pre>'; exit() ; // DEV  
+
+  /*
+
+    [ID] => 2
+    [UID] => HORA0024
+    [Keep] => 0
+    [DateAdded] => 2011/05/14 23:47:45
+    [Title] => Classes d'harmonia (musical, de moment)
+    [Description] => Busquem qui ens pugui donar classes d'harmonia.
+
+  */
 
   $want = array(
     'type'       => 'want',
     'user'       => $data['UID'],
     'title'      => $data['Title'],
     'body'       => $data['Description'],
-    'category'   => $category_id,
-    'keywords'   => $data['Keys'],
-    'state'      => ( ( $data['Hidden'] == 0 ) ? 1 : 0 ),
+    // 'category'   => $category_id,
+    'keywords'   => '',
+    'state'      => 1,
     'created'    => strtotime($data['DateAdded']),
     'modified'   => time(),
-    'expire'     => strtotime($data['DateExpires']),
-    'rate'       => $data['Rate'],
-    'image'      => $data['Image'],
+    'expire'     => ( strtotime($data['DateAdded']) + ( 60 * 60 * 24 * 365 ) ), // Add 1 year more of DateAdded (need something)
+    // 'rate'       => $data['Rate'],
+    // 'image'      => $data['Image'],
   );
 
   $extra_info = array(
     'ID'      => $data['ID'],
     'UID'     => $data['UID'],
-    'Remote'  => $data['Remote'],
-    'Subcat'  => $data['Subcat'],
-    'ConRate' => $data['ConRate'],
   );
 
-  // Find uid from user
-  $query = db_query('SELECT uid FROM {users} where name=:name',array(':name' => $data['UID']));
-  $want_user_id = $query->fetchColumn(0);
+  if ( substr($data['UID'],-4) == '0000' ) {
+    $want_user_id = $GLOBALS['user']->uid;
+  } else {
+    // Find uid from user
+    $query = db_query('SELECT uid FROM {users} where name=:name',array(':name' => $data['UID']));
+    $want_user_id = $query->fetchColumn(0);
+  }
 
   if ( empty($want_user_id) ) {
-    error_i4c(t("Error: No user was found [".$data['UID']."]")." $fila");
+    error_i4c(t("Error: No user was found [".$data['UID']."]")." $row");
     return FALSE;
     }
 
   $want['user'] = $want_user_id;
 
   $o = (object) $want;
-  $o->ces_want_rate = array(LANGUAGE_NONE => array(array('value' => $want['rate'])));
-  unset($o->rate);
-  $want = ces_wantwant_save($o);
-
-  if (!empty($want->image) ) {
-
-    $file = 'https://www.community-exchange.org/pics/'.$data['Image'];
-    $parts = explode(".", $file); 
-    $extension = end($parts);  
-    $directory = file_default_scheme() . '://' . variable_get('ces_wantswants_picture_path', 'ces_wantswants_pictures');
-    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
-    $name_image = 'picture-' . $want->id . '-' . REQUEST_TIME . '.' . $extension;
-    $destination = file_stream_wrapper_uri_normalize($directory . '/'.$name_image );
-    if ( getImageCES($file, $destination) ) {
-
-    $file = new stdClass;
-    $file->uid = $want_user_id;
-    $file->filename = $name_image;
-    $file->uri = $destination;
-    $file->status = 1;
-    $file->filemime = image_type_to_mime_type(exif_imagetype($destination));
-
-    file_save($file);
-
-
-      file_usage_add($file, 'ces_wantswants', 'ces_wantwant', $want->id);
-      $want->image = $file->fid;
-      // Re-save the entity with the new image file id.
-      $want = ces_wantwant_save($want);
-    } else {
-      return FALSE;
-    } 
-  }
+  $want = ces_offerwant_save($o);
 
   if ( $want ) {
     $nid = db_insert('ces_import4ces_objects')

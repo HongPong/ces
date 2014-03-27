@@ -21,7 +21,7 @@ $user_id   = $GLOBALS['user']->uid;
 $import_id   = ( isset($_POST['import_id']) ) ? $_POST['import_id'] : FALSE ;
 $import_id   = ( isset($_GET['import_id']) )  ? $_GET['import_id']  : $import_id ;
 $step        = ( isset($_POST['step']) )      ? $_POST['step']      : 0 ;
-$row         = ( isset($_POST['row']) )       ? $_POST['row']       : 1 ;
+$row         = ( isset($_POST['row']) )       ? $_POST['row']       : 0 ;
 
 $anonymous      = TRUE  ;   ///< Hide personal info
 $send_mail_user = FALSE ;   ///< Send email from reset password
@@ -39,6 +39,7 @@ if ( $import_id ) {
     $exchange_name      = $record->name        ; 
     $exchange_code      = $record->code        ; 
     $step               = $record->step        ;
+    $row                = $record->row         ;
     $anonymous          = $record->anonymous   ;
   }
 
@@ -54,6 +55,12 @@ $GLOBALS['msg'] = $msg ;
 $GLOBALS['error'] = $error ;
 $GLOBALS['step'] = $step ;
 $GLOBALS['row'] = $row ;
+
+if ( isset($_POST['row_error']) ) {
+  $row = $_POST['row'];
+  $GLOBALS['row'] = $row; 
+  update_row($row);
+  }
 
 ?>
 
@@ -119,11 +126,13 @@ if ( isset($parse_function) ) {
   <h3><?php echo t('Importing').' '.t($title) ?></h3>
   <?php
   update_step($step);
+  $status['data_come_from'] = 0;
   $status = procesa_csv($file_csv, $parse_function, $row);
   if ( $status['finished'] ) {
     $step++; 
-    $row=1 ;
+    $row=0 ;
     update_step($step) ;
+    update_row($row) ;
     $msg = "Process completed successfully";
   }
 }
@@ -153,7 +162,7 @@ foreach ($result as $record) {
   $name = ( isset($record->name) ) ? $record->name : 'NULL' ;
   $id   = ( isset($record->id)   ) ? $record->id   : 'NULL' ;
   $step = ( isset($record->step) ) ? $record->step : 'NULL' ;
-  $row  = ( isset($record->row)  ) ? $record->row  : 1      ;
+  $row  = ( isset($record->row)  ) ? $record->row  : 0      ;
 
   // Comprobaciones
   // Si no hay un exchange asociado debe comunicarse

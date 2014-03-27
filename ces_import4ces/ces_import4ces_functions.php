@@ -5,18 +5,21 @@
  * functions of ces_import4ces
  */
 
-function procesa_csv($file_csv, $parse, $row=1) {
+function procesa_csv($file_csv, $parse, $row=0) {
 
   $importar = FALSE ;   //< Data from file
   $data_come_from = FALSE ;
 
   // The data come form
-  if ( isset($_POST['row_error']) ) $data_come_from = TRUE ;
+  if ( isset($_POST['row_error']) ) {
+    $data_come_from = TRUE ;
+    $row = $_POST['row'];
+  }
 
   // Array with data os step
   $status = array(
     'finished' => FALSE
-    ,'row' => 1
+    ,'row' => 0
   );
 
   if ( ! file_exists($file_csv) ) {
@@ -30,7 +33,7 @@ function procesa_csv($file_csv, $parse, $row=1) {
     while (($datos = fgetcsv($gestor, 1000, ",")) !== FALSE) {
       $fila++;
       $numero = count($datos);
-      if ( $fila != 0 && $fila <= $row ) continue;
+      if ( $fila !== 0 && $fila <= $row ) continue;
       foreach( $datos as $key => $val ) {
         $datos[$key] = trim( $datos[$key] );
         //$datos[$key] = iconv('ISO-8859-1', 'UTF-8', $datos[$key]) ;
@@ -49,6 +52,7 @@ function procesa_csv($file_csv, $parse, $row=1) {
           unset($cols['step']);
           unset($cols['import_id']);
           unset($cols['row_error']);
+          $status['data_come_from'] = 1;
           $data_come_from = FALSE ;
         } elseif ( count($heads) > count($cols) ) {
           $faltan = count($heads) - count($cols);
@@ -91,7 +95,9 @@ function procesa_csv($file_csv, $parse, $row=1) {
     // if ( isset($importar) ) { createfrom($importar); }
 
     fclose($gestor);
-  }
+  } else {
+    return FALSE;
+    }
 
   $status['finished'] = TRUE ;
   return $status ;
@@ -131,7 +137,7 @@ function createfrom($importar, $row, $step, $import_id) {
  * Count step
  */
 function update_step($step) {
-  return db_update('ces_import4ces_exchange')->condition('id', $GLOBALS['import_id'])->fields(array('step' => $step, 'row' => 1))->execute();
+  return db_update('ces_import4ces_exchange')->condition('id', $GLOBALS['import_id'])->fields(array('step' => $step))->execute();
 }
 
 /**
@@ -157,7 +163,7 @@ function error_i4c($msg) {
 /**
  * Create o return category
  */
-function return_create_category($title) {
+function return_create_category($title, $row) {
 
   $query = new EntityFieldQuery();
 
@@ -187,7 +193,7 @@ function return_create_category($title) {
         'import_id' => $GLOBALS['import_id'],
         'object' => 'category',
         'object_id' => $category_id,
-        'row' => 1,
+        'row' => $row,
         'data' => ''
       ))->execute();
 

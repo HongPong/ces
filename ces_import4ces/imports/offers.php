@@ -17,7 +17,7 @@ function parse_offers($data, $row) {
 
   if ( $category ) {
 
-    $category_id = return_create_category($category);
+    $category_id = return_create_category($category, $row);
 
     $offer = array(
       'type'       => 'offer',
