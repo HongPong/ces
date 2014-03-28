@@ -10,6 +10,22 @@ function procesa_csv($file_csv, $parse, $row=0) {
   $importar = FALSE ;   //< Data from file
   $data_come_from = FALSE ;
 
+  $text_help = "
+    <p>
+    Some records can be problematic
+    </p>
+    <p>
+    Some records can be problematic
+    </p>
+    <p>
+    - A field containing commas interpreter makes it wrong.
+    - A line break prematurely.
+    </p>
+    <p>
+    If you find an error can be corrected manually or skip registration.
+      </p>
+      ";
+
   // The data come form
   if ( isset($_POST['row_error']) ) {
     $data_come_from = TRUE ;
@@ -60,6 +76,7 @@ function procesa_csv($file_csv, $parse, $row=0) {
             array_push($cols,"LACK!-0$i");
           }
           error_i4c(t('Mismatch fields, check the form to correct errors'));
+          help_i4c(t($text_help));
           $importar = array_combine($heads,$cols);
           $cols = array();
           createfrom($importar, $fila, 3 , $GLOBALS['import_id']);
@@ -97,7 +114,7 @@ function procesa_csv($file_csv, $parse, $row=0) {
     fclose($gestor);
   } else {
     return FALSE;
-    }
+  }
 
   $status['finished'] = TRUE ;
   return $status ;
@@ -157,16 +174,29 @@ function add_observation($observation) {
 }
 
 /**
+ * Display help
+ */
+
+function help_i4c($text) {
+
+  ?>
+  <div class="help_i4c">
+  <?php echo $text?>
+  </div>
+  <?php
+}
+
+/**
  * Display error
  */
 
 function error_i4c($msg) {
 
-?>
-   <p class="error">
-   <?php echo $msg?>
-   </p>
-<?php
+  ?>
+  <p class="error">
+  <?php echo $msg?>
+  </p>
+  <?php
 }
 
 /**
@@ -177,8 +207,8 @@ function return_create_category($title, $row) {
   $query = new EntityFieldQuery();
 
   $query->entityCondition('entity_type', 'ces_category')
-        ->propertyCondition('exchange', $GLOBALS['exchange_id'])
-        ->propertyCondition('title', $title);
+    ->propertyCondition('exchange', $GLOBALS['exchange_id'])
+    ->propertyCondition('title', $title);
 
   $result = $query->execute();
 

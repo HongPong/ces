@@ -13,7 +13,7 @@ function parse_wants($data, $row) {
 
   $exchange_id = $GLOBALS['exchange_id'];
 
-  // echo '<pre>data: ' ; print_r($data) ; echo '</pre>'; exit() ; // DEV  
+  $category_id = return_create_category('unclassified', $row);
 
   /*
 
@@ -31,12 +31,12 @@ function parse_wants($data, $row) {
     'user'       => $data['UID'],
     'title'      => $data['Title'],
     'body'       => $data['Description'],
-    // 'category'   => $category_id,
+    'category'   => $category_id,
     'keywords'   => '',
     'state'      => 1,
     'created'    => strtotime($data['DateAdded']),
-    'modified'   => time(),
-    'expire'     => ( strtotime($data['DateAdded']) + ( 60 * 60 * 24 * 365 ) ), // Add 1 year more of DateAdded (need something)
+    'modified'   => strtotime($data['DateAdded']),
+    'expire'     => ( strtotime($data['DateAdded']) + ( 60 * 60 * 24 * 150 ) ), // Add 150 days more of DateAdded (need something)
     // 'rate'       => $data['Rate'],
     // 'image'      => $data['Image'],
   );

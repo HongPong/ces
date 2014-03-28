@@ -5,6 +5,9 @@
  * Functions from parse offers and category
  */
 
+/** Having no category wants, create one for which indicates the lack of it  */
+$category_unclassified = return_create_category('unclassified', $row);
+
 /**
  * Parse setting
  */

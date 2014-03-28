@@ -6,4 +6,4 @@ package = ces
 dependencies[] = ces
 dependencies[] = ces_bank
 
-files[] = style.css
+stylesheets[all][] = style.css

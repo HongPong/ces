@@ -1,9 +1,3 @@
-.form_i4c input, .form_i4c textarea {
-    width: 100%;
-}
-.form_i4c textarea {
-    height: 160px;
-}
 .form_i4c legend {
     font-weight: bold;
 }

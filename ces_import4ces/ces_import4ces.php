@@ -12,6 +12,8 @@ require_once drupal_get_path('module', 'ces_import4ces') . '/ces_import4ces_func
 require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.install';
 require_once drupal_get_path('module', 'ces_offerswants') . '/ces_offerswants.module';
 
+drupal_add_css(drupal_get_path('module', 'ces_import4ces') .'/style.css');
+
 $path_csv = DRUPAL_ROOT.'/sites/default/files/import/';
 
 $msg       = FALSE ;
@@ -26,8 +28,8 @@ $titles_steps = array(
   2 => "Users",
   3 => "Offers",
   4 => "Wants",
-  5 => "",
-  5 => "",
+  5 => "Trades",
+  6 => "The end",
 );
 
 $import_id   = ( isset($_POST['import_id']) ) ? $_POST['import_id'] : FALSE ;
@@ -100,28 +102,34 @@ case '0':
 <?php
   break;
 
-case '1':  // Import setting.csv
+case '1':
   include('imports/setting.php');
   $file_csv = $path_csv.'settings.csv';
   $parse_function = 'parse_setting';
   break;
 
-case '2':  // Import users.csv
+case '2':
   include('imports/users.php');
   $file_csv = $path_csv.'users.csv';
   $parse_function = 'parse_users';
   break;
 
-case '3':  // Import offers.csv
+case '3':
   include('imports/offers.php');
   $file_csv = $path_csv.'offers.csv';
   $parse_function = 'parse_offers';
   break;
 
-case '4':  // Import offers.csv
+case '4':
   include('imports/wants.php');
   $file_csv = $path_csv.'wants.csv';
   $parse_function = 'parse_wants';
+  break;
+
+case '5':
+  include('imports/trades.php');
+  $file_csv = $path_csv.'trades.csv';
+  $parse_function = 'parse_trades';
   break;
 
 default:
@@ -176,7 +184,7 @@ foreach ($result as $record) {
   // Comprobaciones
   // Si no hay un exchange asociado debe comunicarse
 ?>
-   <form action="" method="post">
+   <form class="form_i4c" action="" method="post">
    <fieldset>
       <legend><?php echo $name ?></legend>
       <div class="info_import">
@@ -189,7 +197,7 @@ foreach ($result as $record) {
       <input type="hidden" name="row" value="<?php echo $row?>"/>
       <input type="hidden" name="import_id" value="<?php echo $id ?>">
       <input type="submit" name="continue" value="<?php echo t("Continue") ?>">
-      <input type="submit" name="delete" value="<?php echo t("Delete") ?>">
+      <input type="submit" name="delete" value="<?php echo t("Delete Importation") ?>">
    </fieldset>
    </form>
 <?php
