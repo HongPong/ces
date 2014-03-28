@@ -32,8 +32,8 @@ function parse_setting($setting) {
          'currencyname'     => $setting['ConCurName'],
          'currenciesname'   => $setting['CurNamePlural'],
 
-         'currencyvalue'    => 1, // @todo $setting['?'],
-         'currencyscale'    => 1, // @todo $setting['?'],
+         'currencyvalue'    => 1,
+         'currencyscale'    => 1,
 
          'admin'            => $user->uid,
          'data'             => array(
@@ -41,6 +41,60 @@ function parse_setting($setting) {
             'registration_wants' => 0,
          ),
       );
+
+      $extra_data = array(
+        'ExchangeType'         => 'ExchangeType',
+        'ExchangeDescr'        => 'ExchangeDescr', 
+        'Password'             => 'Password',
+        'Logo'                 => 'Logo',
+        'Administrator'        => 'Administrator', 
+        'Addr1'                => 'Addr1',
+        'Addr2'                => 'Addr2',
+        'Addr3'                => 'Addr3',
+        'Postcode'             => 'Postcode',
+        'CountryName'          => 'CountryName',
+        'Tel1'                 => 'Tel1',
+        'Tel2'                 => 'Tel2',
+        'Fax'                  => 'Fax',
+        'TelCode'              => 'TelCode',
+        'Email'                => 'Email',
+        'InternetMessaging'    => 'InternetMessaging',     
+        'AdminTel'             => 'AdminTel',     
+        'AdminEmail'           => 'AdminEmail',       
+        'MemSec'               => 'MemSec',   
+        'MemSecEmail'          => 'MemSecEmail',        
+        'MemSecEmailAlt'       => 'MemSecEmailAlt',
+        'MemSecPsw'            => 'MemSecPsw',      
+        'MemSecTel'            => 'MemSecTel',      
+        'LevyRate'             => 'LevyRate',     
+        'CurName'              => 'CurName',    
+        'ConCurLet'            => 'ConCurLet',      
+        'ReDir'                => 'ReDir',  
+        'Hidden'               => 'Hidden',   
+        'Active'               => 'Active',   
+        'TimeBased'            => 'TimeBased',      
+        'TimeUnit'             => 'TimeUnit',     
+        'DateAdded'            => 'DateAdded',      
+        'DateModified'         => 'DateModified',         
+        'CredLim'              => 'CredLim',    
+        'DebLim'               => 'DebLim',   
+        'TimeDiff'             => 'TimeDiff',     
+        'DaylightSavingOn'     => 'DaylightSavingOn',    
+        'DaylightSavingOff'    => 'DaylightSavingOff',    
+        'Language'             => 'Language',    
+        'DefaultExchanges'     => 'DefaultExchanges',    
+        'Cell'                 => 'Cell',    
+        'SubscriptionExchange' => 'SubscriptionExchange',   
+        'WelcomeLetter'        => 'WelcomeLetter',    
+        'InviteLetter'         => 'InviteLetter',    
+        'InviteLetterHead'     => 'InviteLetterHead',    
+        'DoMoney'              => 'DoMoney',    
+        'ConRedeemRate'        => 'ConRedeemRate',    
+        'HidePsw'              => 'HidePsw',    
+        'NoDetails'            => 'NoDetails',    
+        'BudRate'              => 'BudRate',    
+      );
+
       $bank->createExchange($exchange);
       $bank->activateExchange($exchange);
 
@@ -51,7 +105,7 @@ function parse_setting($setting) {
             'step' => 1,
             'anonymous' => ( ($GLOBALS['anonymous']) ? 1 : 0 ),
             'uid' => $user->uid,
-            'data' => serialize($setting)
+            'data' => serialize($extra_data)
          ))->execute();
 
       $GLOBALS['import_id'] = $nid ;

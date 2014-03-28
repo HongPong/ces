@@ -67,8 +67,8 @@ function parse_trades($data, $row) {
     'concept'         => $data['Description'],
     'user'            => $trade_user_id,
     'state'           => 3, 
-    'created'    => strtotime($data['DateEntered']),
-    'modified'   => time(),
+    'created'         => strtotime($data['DateEntered']),
+    'modified'        => strtotime($data['DateEntered']),
   );
 
   $extra_info = array(

@@ -50,13 +50,15 @@ que la cuestión de la cuenta no es tan relevante como el hecho de que exista un
 usuario con los permisos de administracion del exchange.
 
 A efectos de migración, este usuario es el 0000 que tienen todas las redes y
-que es especial para administracion.
+que es especial para administración.
 
-@todo Tarde demasiado en importar los usuarios quiza se debería utilizar ajax 
-      para hacerlo uno por uno.
+@todo Tarda demasiado en importar los usuarios quizá se debería
+      utilizar ajax para hacerlo uno por uno.
 
-@todo Simbolo de la móneda no queda bien códificado.
+@todo Símbolo de la moneda no queda bien codificado.
 
-@todo row de objetos no es correcto.
+@todo guardar solo los datos de los registros que no se están utilizando
+      y no todos como ahora en user
 
-@todo guardar solo los datos de los registros que no se están utilizando y no todos como ahora en user
+@todo Envío de email a usuarios para el final de la importaciónm con
+      enlace a resetear password.
