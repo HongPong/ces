@@ -1431,7 +1431,8 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
     }
     $direction = _ces_offerswants_get_orderby_direction($arg3);
     $query->propertyOrderBy($arg3, $direction);
-    // Get and render results.
+    // Get and render results with n results: pager(n).
+    $query->pager(25);
     $result = $query->execute();
     if (isset($result['ces_offerwant']) && count($result['ces_offerwant']) > 0) {
       $offerids = array_keys($result['ces_offerwant']);
@@ -1452,7 +1453,14 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
     drupal_set_message(t('Action not known'), 'error');
   }
 
-  return $page;
+  $build = array(
+    'content' => $page,
+    'pager' => array(
+      '#markup' => theme('pager'),
+      '#weight' => 10
+    )
+  );
+  return $build;
 }
 /**
  * Helper.
