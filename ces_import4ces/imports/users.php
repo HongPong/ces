@@ -85,24 +85,26 @@ function parse_users($data, $row) {
       'roles' => array(
         DRUPAL_AUTHENTICATED_RID => 'authenticated user',
       ),
+
+      // User custom fields
+      'ces_firstname'   => array(LANGUAGE_NONE => array(array('value' => $data['Firstname']))), 
+      'ces_surname'     => array(LANGUAGE_NONE => array(array('value' => $data['Surname']))), 
+      'ces_address'     => array(LANGUAGE_NONE => array(array('value' => $data['Address1']."\n".$data['Address2']))), 
+      'ces_town'        => array(LANGUAGE_NONE => array(array('value' => $data['Address3']))), 
+      'ces_postcode'    => array(LANGUAGE_NONE => array(array('value' => $data['Postcode']))), 
+      'ces_phonemobile' => array(LANGUAGE_NONE => array(array('value' => $data['PhoneM']))), 
+      'ces_phonework'   => array(LANGUAGE_NONE => array(array('value' => $data['PhoneW']))), 
+      'ces_phonehome'   => array(LANGUAGE_NONE => array(array('value' => $data['PhoneH']))), 
+      'ces_website'     => array(LANGUAGE_NONE => array(array('value' => $data['WebSite']))), 
+
     );
 
     $extra_data = array(
-      'Firstname'   => $data['Firstname'],
-      'Surname'     => $data['Surname'],
       'OrgName'     => $data['OrgName'],
-      'Address1'    => $data['Address1'],
-      'Address2'    => $data['Address2'],
-      'Address3'    => $data['Address3'],
-      'Postcode'    => $data['Postcode'],
       'SubArea'     => $data['SubArea'],
       'DefaultSub'  => $data['DefaultSub'],
-      'PhoneH'      => $data['PhoneH'],
-      'PhoneW'      => $data['PhoneW'],
       'PhoneF'      => $data['PhoneF'],
-      'PhoneM'      => $data['PhoneM'],
       'IM'          => $data['IM'],
-      'WebSite'     => $data['WebSite'],
       'DOB'         => $data['DOB'],
       'NoEmail1'    => $data['NoEmail1'],
       'NoEmail2'    => $data['NoEmail2'],
@@ -120,7 +122,6 @@ function parse_users($data, $row) {
       'DebLimit'    => $data['DebLimit'],
       'LocalOnly'   => $data['LocalOnly'],
       'Notes'       => $data['Notes'],
-      'Lang'        => $data['Lang'],
       'Photo'       => $data['Photo'],
       'HideAddr1'   => $data['HideAddr1'],
       'HideAddr2'   => $data['HideAddr2'],
@@ -182,7 +183,7 @@ function parse_users($data, $row) {
         'object' => 'user',
         'object_id' => $user_drupal->uid,
         'row' => $row,
-        'data' => serialize($data)
+        'data' => serialize($extra_data)
       ))->execute();
     return $nid;
 
