@@ -12,19 +12,16 @@ function procesa_csv($file_csv, $parse, $row=0) {
 
   $text_help = "
     <p>
-    Some records can be problematic
+    ".t('Some records can be problematic')."
     </p>
     <p>
-    Some records can be problematic
+    - ".t('A field containing commas interpreter makes it wrong').".
+    - ".t('A line break prematurely').".
     </p>
     <p>
-    - A field containing commas interpreter makes it wrong.
-    - A line break prematurely.
+    ".t('If you find an error can be corrected manually or skip registration').".
     </p>
-    <p>
-    If you find an error can be corrected manually or skip registration.
-      </p>
-      ";
+    ";
 
   // The data come form
   if ( isset($_POST['row_error']) ) {

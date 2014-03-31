@@ -56,9 +56,10 @@ function parse_wants($data, $row) {
 
   if ( empty($want_user_id) ) {
     $m  =  t("No user was found")." [".$data['UID']."] in row [$row]";
+    $e  = "$m\n\n".t("It may be a user of other banks have not yet imported, incidence is saved.");
     $m .= "\n".implode($data,',');  
     add_observation($m);
-    error_i4c($m);
+    error_i4c($e);
     return ;
     }
 

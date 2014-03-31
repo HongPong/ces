@@ -31,17 +31,115 @@ function parse_users($data, $row) {
     //This will generate a random password, you could set your own here
     $password = user_password(8);
 
+    /*
+      UserType: El tipus de compte. adm per administrador, org per organització
+      sense ànim de lucre, ind per individual, fam per compartit, com per
+      empreses, pub per a comptes públics, vir per virtual. L'administrador té
+      més permisos i només n'hi ha un (que jo sàpiga), org, ind, fam i com són
+      iguals a la pràctica (crec). pub és més accessible en el sentit que les
+      transaccions d'aquest compte les pot veure tothom. vir són comptes per
+      comptabilitzar els intercanvis  amb altres xarxes i no pertanyen a ningú.
+
+      kind One of INDIVIDUAL (0), SHARED (1), ORGANIZATION (2), COMPANY (3), PUBLIC (4)
+
+      'kind' => LocalAccount::TYPE_INDIVIDUAL,
+
+      const TYPE_INDIVIDUAL = 0;
+      const TYPE_SHARED = 1;
+      const TYPE_ORGANIZATION = 2;
+      const TYPE_COMPANY = 3;
+      const TYPE_PUBLIC = 4;
+      const TYPE_VIRTUAL = 5;
+     */
+
+    $type_user = array(
+      'adm' => LocalAccount::TYPE_INDIVIDUAL,
+      'org' => LocalAccount::TYPE_ORGANIZATION,
+      'ind' => LocalAccount::TYPE_INDIVIDUAL,
+      'fam' => LocalAccount::TYPE_SHARED,
+      'com' => LocalAccount::TYPE_COMPANY,
+      'pub' => LocalAccount::TYPE_PUBLIC,
+      'vir' => LocalAccount::TYPE_VIRTUAL
+    );
+
+    /*
+      Lang: idioma en tres lletres. No segueix l'estàndard ISO. eng per anglès, 
+      cat per català, spa per castellà.
+     */
+
+    $langs = array(
+      'eng' => 'en',
+      'cat' => 'ca',
+      'spa' => 'es',
+      'default' => language_default()->language,
+    );
+
     //set up the user fields
     $fields = array(
       'name' => $data['UID'],
       'mail' => ( $GLOBALS['anonymous'] ) ? 'test-'.$data['UID'].'@test.com' : $data['Email'],
       'pass' => $password,
-      'status' => 1,
-      'init' => 'email address',
+      'status' => ( $data['Locked'] == 0 ) ? 1 : 0 ,
+      // 'init' => ( $GLOBALS['anonymous'] ) ? 'test-'.$data['UID'].'@test.com' : $data['Email'],
+      'language' => ( isset($langs[$data['Lang']]) ) ? $langs[$data['Lang']] : $langs['default'] ,  
       'roles' => array(
         DRUPAL_AUTHENTICATED_RID => 'authenticated user',
       ),
     );
+
+    $extra_data = array(
+      'Firstname'   => $data['Firstname'],
+      'Surname'     => $data['Surname'],
+      'OrgName'     => $data['OrgName'],
+      'Address1'    => $data['Address1'],
+      'Address2'    => $data['Address2'],
+      'Address3'    => $data['Address3'],
+      'Postcode'    => $data['Postcode'],
+      'SubArea'     => $data['SubArea'],
+      'DefaultSub'  => $data['DefaultSub'],
+      'PhoneH'      => $data['PhoneH'],
+      'PhoneW'      => $data['PhoneW'],
+      'PhoneF'      => $data['PhoneF'],
+      'PhoneM'      => $data['PhoneM'],
+      'IM'          => $data['IM'],
+      'WebSite'     => $data['WebSite'],
+      'DOB'         => $data['DOB'],
+      'NoEmail1'    => $data['NoEmail1'],
+      'NoEmail2'    => $data['NoEmail2'],
+      'NoEmail3'    => $data['NoEmail3'],
+      'NoEmail4'    => $data['NoEmail4'],
+      'Hidden'      => $data['Hidden'],
+      'Created'     => $data['Created'],
+      'LastAccess'  => $data['LastAccess'],
+      'LastEdited'  => $data['LastEdited'],
+      'EditedBy'    => $data['EditedBy'],
+      'InvNo'       => $data['InvNo'],
+      'OrdNo'       => $data['OrdNo'],
+      'Coord'       => $data['Coord'],
+      'CredLimit'   => $data['CredLimit'],
+      'DebLimit'    => $data['DebLimit'],
+      'LocalOnly'   => $data['LocalOnly'],
+      'Notes'       => $data['Notes'],
+      'Lang'        => $data['Lang'],
+      'Photo'       => $data['Photo'],
+      'HideAddr1'   => $data['HideAddr1'],
+      'HideAddr2'   => $data['HideAddr2'],
+      'HideAddr3'   => $data['HideAddr3'],
+      'HideArea'    => $data['HideArea'],
+      'HideCode'    => $data['HideCode'],
+      'HidePhoneH'  => $data['HidePhoneH'],
+      'HidePhoneW'  => $data['HidePhoneW'],
+      'HidePhoneF'  => $data['HidePhoneF'],
+      'HidePhoneM'  => $data['HidePhoneM'],
+      'HideEmail'   => $data['HideEmail'],
+      'IdNo'        => $data['IdNo'],
+      'LoginCount'  => $data['LoginCount'],
+      'SubsDue'     => $data['SubsDue'],
+      'Closed'      => $data['Closed'],
+      'DateClosed'  => $data['DateClosed'],
+      'Translate'   => $data['Translate'],
+      'Buddy'       => $data['Buddy'],
+    );    
 
     //the first parameter is left blank so a new user is created
     $user_drupal = user_save('', $fields);
@@ -66,7 +164,7 @@ function parse_users($data, $row) {
       'exchange' => $GLOBALS['exchange_id'],
       'name' => $data['UID'],
       'limitchain' => $limit['id'],
-      'kind' => LocalAccount::TYPE_INDIVIDUAL,
+      'kind' => $type_user[$data['UserType']],
       'state' => LocalAccount::STATE_HIDDEN,
       'users' => array(
         array(

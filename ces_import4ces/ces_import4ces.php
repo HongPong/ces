@@ -133,6 +133,7 @@ case '5':
   break;
 
 default:
+  $msg = "Process completed successfully";
   break;
 }
 
@@ -149,7 +150,7 @@ if ( isset($parse_function) ) {
     $row=0 ;
     update_step($step) ;
     update_row($row) ;
-    $msg = "Process completed successfully";
+    $msg = "Step completed successfully";
   }
 }
 ?>
@@ -188,7 +189,7 @@ foreach ($result as $record) {
    <fieldset>
       <legend><?php echo $name ?></legend>
       <div class="info_import">
-      Step: <?php echo $titles_steps[$step]." ($step / 5 )"; ?> / row: <?php echo $row ?>
+      Step: <?php echo $titles_steps[$step]." ($step / ".count($titles_steps)." )"; ?> / row: <?php echo $row ?>
       </div>
       <?php if ( $observations ) { ?>
       <textarea class="import_observation"><?php echo $observations ?></textarea>

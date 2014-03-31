@@ -52,13 +52,64 @@ usuario con los permisos de administracion del exchange.
 A efectos de migración, este usuario es el 0000 que tienen todas las redes y
 que es especial para administración.
 
+@todo Evitar envio de emails masivo al administrador al crear todos los usuarios.
+
+@todo Salto de registro erroneo, guardar incidencia y continuar.
+
+@todo ¿Y si tenemos mails repetidos?
+
 @todo Tarda demasiado en importar los usuarios quizá se debería
       utilizar ajax para hacerlo uno por uno.
 
 @todo Símbolo de la moneda no queda bien codificado.
 
-@todo guardar solo los datos de los registros que no se están utilizando
-      y no todos como ahora en user
-
 @todo Envío de email a usuarios para el final de la importaciónm con
       enlace a resetear password.
+
+@todo Eliminar importación y Eliminar importación y datos importados.
+
+@todo Insertar los campos del CES que no estan en integralCES y tienen su utilidad
+
+@todo Estratègia
+
+  Usuaris
+
+  Duplicitat
+
+  Els usuaris i els comptes corrents a CES són el mateix concepte, però son
+  conceptes separats a IntegralCES. Per aquest mateix motiu, hi ha diferents
+  comptes al CES amb idèntic email, cosa que no és admesa en Drupal estàndard.
+  
+  @ToDo: Decidir què fem.  
+  
+  Subarea Aquest és un concepte que no està implementat en el CES.  
+
+  @ToDo: Decidir què fem.  
+
+  NoEmail 
+
+  Aquest és un concepte que no està implementat en el CES, perquè en particular
+  no està implementada la funcionalitat de enviar mails massius des de
+  l'administració de la xarxa.  Observació: Aquesta funcionalitat però ha
+  demostrat ser interessant i potser podem valorar d'afegir-la. En qualsevol
+  cas jo no em preocuparia massa d'aquest camp.  
+
+  Coord 
+
+  Tampoc aquest concepte existeix al CES.  Observació: La naturalesa del
+  sistema de permisos fa que sigui fàcil d'implementar. Tot i això jo no ho
+  faria i ho deixaria en tot cas per més endavant sempre que puguem tenir varis
+  comptes administradors.  
+
+  Limit 
+
+  En el CES els límits s'escriuen directament al compte de l'usuari. En
+  l'IntegralCES el sistema és més sofisticat: per a cada xarxa, hi ha diferents
+  tipologies de límits (ex: “individuals”, “companyies”, “associació X”,...), i
+  un compte està associat a un tipus de límit. Aquests tipus de límits són els
+  que internament anomenem limitchains, doncs a nivell d'implementació estan
+  formats per una cadena de límits atòmics del tipus “No estar per sot de X” o
+  “No estar per sobre de X”.  El que cal fer és crear una instància de
+  limitchain per a cada límit diferent que hi hagi, però no una per a cada
+  compte! És d'esperar que tots els comptes excepte uns quants tinguin els
+  mateixos valors.
