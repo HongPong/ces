@@ -21,8 +21,8 @@ function parse_setting($setting) {
       // Create exchange.
       $exchange = array(
          'code'             => $setting['ExchangeID'],
-         'shortname'        => $setting['ExchangeTitle'],
-         'name'             => $setting['ExchangeName'],
+         'shortname'        => $setting['ExchangeName'],
+         'name'             => $setting['ExchangeTitle'],
          'website'          => $setting['WebAddress'],
          'country'          => $setting['CountryCode'],
          'region'           => $setting['Province'],

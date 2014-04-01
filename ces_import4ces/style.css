@@ -6,6 +6,9 @@
     min-height: 200px;
     width: 100%;
 }
+.form_i4c input[type='text'],.form_i4c  textarea {
+    width: 100%;
+}
 .info_import {
     padding: 10px;
 }
@@ -21,3 +24,9 @@
     padding: 4px;
 }
 #message { color: green; }
+
+#edit_file textarea {
+    height: 500px;
+    line-height: 1.5;
+    width: 100%;
+}

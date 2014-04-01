@@ -74,7 +74,23 @@ if ( isset($_POST['row_error']) ) {
   $row = $_POST['row'];
   $GLOBALS['row'] = $row; 
   update_row($row);
+}
+
+if ( isset($_POST['edit_file']) ) {
+  $file = $_POST['file'];
+  edit_file($file);
+  $step = FALSE;
+}
+
+if ( isset($_POST['save_file']) ) {
+  $file = $_POST['file'];
+  // $step = FALSE;
+  if ( save_file($file) ) {
+    $msg = "File save";
+  } else {
+    $error = "Error  saving file";
   }
+}
 
 ?>
 
@@ -90,69 +106,79 @@ if ( isset($_POST['row_error']) ) {
 
 <?php
 
-switch ($step) {
+if ( $step !== FALSE ) {
 
-case '0':
-?>
-    <?php echo t('Put all the csv files in the sites /default/files/import folder.')?>
-    <form action="" method="POST">
-       <input type="hidden" name="step" value="1"/>
-       <input type="submit" name="new" value="<?php echo t('New import')?>"/>
-    </form>
-<?php
-  break;
+  switch ($step) {
 
-case '1':
-  include('imports/setting.php');
-  $file_csv = $path_csv.'settings.csv';
-  $parse_function = 'parse_setting';
-  break;
-
-case '2':
-  include('imports/users.php');
-  $file_csv = $path_csv.'users.csv';
-  $parse_function = 'parse_users';
-  break;
-
-case '3':
-  include('imports/offers.php');
-  $file_csv = $path_csv.'offers.csv';
-  $parse_function = 'parse_offers';
-  break;
-
-case '4':
-  include('imports/wants.php');
-  $file_csv = $path_csv.'wants.csv';
-  $parse_function = 'parse_wants';
-  break;
-
-case '5':
-  include('imports/trades.php');
-  $file_csv = $path_csv.'trades.csv';
-  $parse_function = 'parse_trades';
-  break;
-
-default:
-  $msg = "Process completed successfully";
-  break;
-}
-
-if ( isset($parse_function) ) {
-  $title = ( isset($titles_steps[$step]) ) ? $titles_steps[$step] : $title ;
+  case '0':
   ?>
-  <h3><?php echo t('Importing').' '.t($title) ?></h3>
+      <?php echo t('Put all the csv files in the sites /default/files/import folder.')?>
+      <form action="" method="POST">
+         <input type="hidden" name="step" value="1"/>
+         <input type="submit" name="new" value="<?php echo t('New import')?>"/>
+      </form>
   <?php
-  update_step($step);
-  $status['data_come_from'] = 0;
-  $status = procesa_csv($file_csv, $parse_function, $row);
-  if ( $status['finished'] ) {
-    $step++; 
-    $row=0 ;
-    update_step($step) ;
-    update_row($row) ;
-    $msg = "Step completed successfully";
+    break;
+
+  case '1':
+    include('imports/setting.php');
+    $file_csv = $path_csv.'settings.csv';
+    $parse_function = 'parse_setting';
+    break;
+
+  case '2':
+    include('imports/users.php');
+    $file_csv = $path_csv.'users.csv';
+    $parse_function = 'parse_users';
+    break;
+
+  case '3':
+    include('imports/offers.php');
+    $file_csv = $path_csv.'offers.csv';
+    $parse_function = 'parse_offers';
+    break;
+
+  case '4':
+    include('imports/wants.php');
+    $file_csv = $path_csv.'wants.csv';
+    $parse_function = 'parse_wants';
+    break;
+
+  case '5':
+    include('imports/trades.php');
+    $file_csv = $path_csv.'trades.csv';
+    $parse_function = 'parse_trades';
+    break;
+
+  case '6':
+    // TheEnd
+    // @todo Envío de emails a los usuarios para restear contraseña
+    $msg = t("Process completed successfully");
+    break;
+
+  default:
+    $error = t("Step not found");
+    break;
   }
-}
+
+  if ( isset($parse_function) ) {
+    $title = ( isset($titles_steps[$step]) ) ? $titles_steps[$step] : $title ;
+    ?>
+    <h3><?php echo t('Importing').' '.t($title) ?></h3>
+    <?php
+    update_step($step);
+    $status['data_come_from'] = 0;
+    $status = procesa_csv($file_csv, $parse_function, $row);
+    if ( $status['finished'] ) {
+      $step++; 
+      $row=0 ;
+      update_step($step) ;
+      update_row($row) ;
+      $msg = "Step completed successfully";
+    }
+  }
+
+} // End if step
 ?>
 
 <?php if ( $error ) { ?>
@@ -182,25 +208,25 @@ foreach ($result as $record) {
   $row           = ( isset($record->row)           ) ? $record->row           : 0      ;
   $observations  = ( isset($record->observations)  ) ? $record->observations  : FALSE  ;
 
-  // Comprobaciones
-  // Si no hay un exchange asociado debe comunicarse
-?>
-   <form class="form_i4c" action="" method="post">
-   <fieldset>
-      <legend><?php echo $name ?></legend>
-      <div class="info_import">
-      Step: <?php echo $titles_steps[$step]." ($step / ".count($titles_steps)." )"; ?> / row: <?php echo $row ?>
-      </div>
-      <?php if ( $observations ) { ?>
-      <textarea class="import_observation"><?php echo $observations ?></textarea>
-      <?php } ?>
-      <input type="hidden" name="step" value="<?php echo $step ?>"/>
-      <input type="hidden" name="row" value="<?php echo $row?>"/>
-      <input type="hidden" name="import_id" value="<?php echo $id ?>">
-      <input type="submit" name="continue" value="<?php echo t("Continue") ?>">
-      <input type="submit" name="delete" value="<?php echo t("Delete Importation") ?>">
-   </fieldset>
-   </form>
-<?php
+
+  ?>
+  <form class="form_i4c" action="" method="post">
+  <fieldset>
+     <legend><?php echo $name." ($step / ".count($titles_steps)." )" ?></legend>
+     <div class="info_import">
+     Step: <?php echo $titles_steps[$step]; ?>
+     <?php if ( $row != 0 ) { ?>  row: <?php echo $row ?><?php } ?>
+     </div>
+     <?php if ( $observations ) { ?>
+     <textarea class="import_observation"><?php echo $observations ?></textarea>
+     <?php } ?>
+     <input type="hidden" name="step" value="<?php echo $step ?>"/>
+     <input type="hidden" name="row" value="<?php echo $row?>"/>
+     <input type="hidden" name="import_id" value="<?php echo $id ?>">
+     <input type="submit" name="continue" value="<?php echo t("Continue") ?>">
+     <input type="submit" name="delete" value="<?php echo t("Delete") ?>">
+  </fieldset>
+  </form>
+  <?php
 }
 

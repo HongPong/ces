@@ -458,8 +458,9 @@ class Bank {
    *
    * @param array $record
    *   account object record.
+   * @param bool $send_mail (T/F)
    */
-  public function createAccount(array &$record) {
+  public function createAccount(array &$record, $send_mail = TRUE) {
     $t = Serializer::DBTransaction();
     try {
       // Create account record.
@@ -473,8 +474,10 @@ class Bank {
       $account->saveExtraData();
       $record = $account->getRecord();
       $exchange = $account->getExchange();
-      $notifier = new Notifier();
-      $notifier->notify('ces_bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
+      if ( $send_mail ) {
+        $notifier = new Notifier();
+        $notifier->notify('ces_bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
+      }
     }
     catch (Exception $e) {
       $t->rollback();

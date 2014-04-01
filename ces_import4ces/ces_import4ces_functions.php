@@ -15,7 +15,11 @@ function procesa_csv($file_csv, $parse, $row=0) {
     ".t('Some records can be problematic')."
     </p>
     <p>
+    ".t('Some sources of error can be').": 
+    </p>
+    <p>
     - ".t('A field containing commas interpreter makes it wrong').".
+    <br/>
     - ".t('A line break prematurely').".
     </p>
     <p>
@@ -59,6 +63,20 @@ function procesa_csv($file_csv, $parse, $row=0) {
       }
       if ( $fila !== 0 ) {
 
+        // @todo Si es setting probable error con campo MapAddress
+        // Asegurarnos que es este error y corregirlo nosotros mismos
+        // Comprobar que WebAddress es una dirección web si no es así
+        // Añadir su contenido a MapAddress con una coma delante
+        // Hacer lo mismo con ReDir 
+        // Hacer que coincidan los campos eliminando estos dos y subiendo el resto
+        if ( $parse == 'parse_setting' &&
+             stripos($cols[36],'http') === FALSE && ! empty($cols[36]) 
+            ) {
+          $cols[35] .= ','.$cols[36].','.$cols[37];
+          unset($cols[36]);
+          unset($cols[37]);
+        }
+
         if ( $data_come_from ) {
           $cols = $_POST;
           unset($cols['row']);
@@ -67,22 +85,31 @@ function procesa_csv($file_csv, $parse, $row=0) {
           unset($cols['row_error']);
           $status['data_come_from'] = 1;
           $data_come_from = FALSE ;
+
         } elseif ( count($heads) > count($cols) ) {
           $faltan = count($heads) - count($cols);
           for ($i=0; $i<$faltan;$i++) {
-            array_push($cols,"LACK!-0$i");
+            array_push($cols,"LACK!-$i");
           }
           error_i4c(t('Mismatch fields, check the form to correct errors'));
           help_i4c(t($text_help));
           $importar = array_combine($heads,$cols);
           $cols = array();
-          createfrom($importar, $fila, 3 , $GLOBALS['import_id']);
+          createfrom($importar, $fila, 3 , $GLOBALS['import_id'], $file_csv);
           return FALSE;
+
         } elseif ( count($heads) < count($cols) ) {
-          $faltan = count($heads) - count($cols) ;
+          $faltan = count($cols) - count($heads) ;
           for ($i=0; $i<$faltan;$i++) {
-            array_push($cols,"");
+            array_push($heads,"LACK!-$i");
           }
+          error_i4c(t('Mismatch fields, check the form to correct errors'));
+          help_i4c(t($text_help));
+          $importar = array_combine($heads,$cols);
+          $cols = array();
+          createfrom($importar, $fila, 3 , $GLOBALS['import_id'], $file_csv);
+          return FALSE;
+
         } elseif ( count($heads) !== count($cols) ) {
           error_i4c(t('Not match the number of fields, it may have been interpreted in a comma as a field separator.').
             "<br/>".
@@ -122,7 +149,7 @@ function procesa_csv($file_csv, $parse, $row=0) {
  * Create a form with data
  */
 
-function createfrom($importar, $row, $step, $import_id) {
+function createfrom($importar, $row, $step, $import_id, $file) {
 
 ?>
       <fieldset class="form_i4c">
@@ -139,8 +166,12 @@ function createfrom($importar, $row, $step, $import_id) {
          <input type="hidden" name="row"       value="<?php echo $row  ?>"/>
          <input type="hidden" name="step"      value="<?php echo $step ?>"/>
          <input type="hidden" name="import_id" value="<?php echo $import_id ?>"/>
+         <input type="hidden" name="file" value="<?php echo $file ?>"/>
          <input type="submit" name="row_error" value="<?php echo t("Continue") ?>"/>
          <input type="submit" name="row_skip" value="<?php echo t("or skip this record").' (pending)' ?>"/>
+         <!-- It does not work, problems with encoding 
+         <input type="submit" name="edit_file" value="<?php echo t("Edit file") ?>"/>
+         -->
          </form>
 
       </fieldset>
@@ -251,4 +282,39 @@ function getImageCES($url_origen,$archivo_destino){
   fclose ($fs_archivo);
   return TRUE;
 } 
+
+/**
+ * Edit file 
+ *
+ * It does not work, problems with encoding
+ */
+
+function edit_file($file) {
+
+  $content = file_get_contents($file);
+
+  ?>
+  <form id="edit_file" action="" method="post">
+    <textarea name="file_content"><?php echo $content ?></textarea>
+    <input type="hidden" name="file" value="<?php echo $file ?>"/>
+    <input type="submit" name="save_file" value="<?php echo t("Save")?>"/>
+  </form>
+  <?php
+}
+
+/**
+ * Save file
+ *
+ * It does not work, problems with encoding
+ */
+
+function save_file($file) {
+
+  if ( copy($file,$file.'_backup') ) {
+    return file_put_contents($file, $_POST['file_content']);
+  } else {
+    return FALSE;
+    }
+
+}
 ?>

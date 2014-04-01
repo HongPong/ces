@@ -52,25 +52,7 @@ usuario con los permisos de administracion del exchange.
 A efectos de migración, este usuario es el 0000 que tienen todas las redes y
 que es especial para administración.
 
-@todo Evitar envio de emails masivo al administrador al crear todos los usuarios.
-
-@todo Salto de registro erroneo, guardar incidencia y continuar.
-
-@todo ¿Y si tenemos mails repetidos?
-
-@todo Tarda demasiado en importar los usuarios quizá se debería
-      utilizar ajax para hacerlo uno por uno.
-
-@todo Símbolo de la moneda no queda bien codificado.
-
-@todo Envío de email a usuarios para el final de la importaciónm con
-      enlace a resetear password.
-
-@todo Eliminar importación y Eliminar importación y datos importados.
-
-@todo Insertar los campos del CES que no estan en integralCES y tienen su utilidad
-
-@todo Estratègia
+Estratègia
 
   Usuaris
 
@@ -113,3 +95,27 @@ que es especial para administración.
   limitchain per a cada límit diferent que hi hagi, però no una per a cada
   compte! És d'esperar que tots els comptes excepte uns quants tinguin els
   mateixos valors.
+
+@todo Corregir error con mapa en setting.csv desde php
+
+@todo Salto de registro erroneo, guardar incidencia y continuar.
+
+@todo ¿Y si tenemos mails repetidos?
+
+@todo Tarda demasiado en importar los usuarios quizá se debería
+      utilizar ajax para hacerlo uno por uno.
+
+@todo Símbolo de la moneda no queda bien codificado.
+
+@todo Envío de email a usuarios para el final de la importación con
+      enlace a resetear password.
+
+@todo Eliminar importación y Eliminar importación y datos importados.
+
+@todo Insertar los campos del usuario que no están en integralCES y tienen su utilidad.
+
+@todo Archivo remote.csv ¿Transacciones remotas? 
+      Esto son ofertas remotas. Es decir, ofertas de gente con cuentas en otras 
+      exchanges que publican su anuncio en esta exchange.
+ 
+@todo Archivo announce.csv ¿Entradas para el blog? Vale!

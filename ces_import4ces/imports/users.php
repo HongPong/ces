@@ -174,7 +174,7 @@ function parse_users($data, $row) {
         ),
       ),
     );
-    $bank->createAccount($account);
+    $bank->createAccount($account, FALSE);
     $bank->activateAccount($account);
 
     $nid = db_insert('ces_import4ces_objects')
