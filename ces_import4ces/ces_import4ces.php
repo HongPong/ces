@@ -29,7 +29,8 @@ $titles_steps = array(
   3 => "Offers",
   4 => "Wants",
   5 => "Trades",
-  6 => "The end",
+  6 => "Announces",
+  7 => "The end",
 );
 
 $import_id   = ( isset($_POST['import_id']) ) ? $_POST['import_id'] : FALSE ;
@@ -92,6 +93,10 @@ if ( isset($_POST['save_file']) ) {
   }
 }
 
+if ( isset($_POST['row_skip']) ) {
+  $row++;
+}
+
 ?>
 
 <?php if ( $import_id ) { ?>
@@ -151,6 +156,12 @@ if ( $step !== FALSE ) {
     break;
 
   case '6':
+    include('imports/announce.php');
+    $file_csv = $path_csv.'announce.csv';
+    $parse_function = 'parse_announce';
+    break;
+
+  case '7':
     // TheEnd
     // @todo Envío de emails a los usuarios para restear contraseña
     $msg = t("Process completed successfully");

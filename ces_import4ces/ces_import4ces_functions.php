@@ -168,7 +168,7 @@ function createfrom($importar, $row, $step, $import_id, $file) {
          <input type="hidden" name="import_id" value="<?php echo $import_id ?>"/>
          <input type="hidden" name="file" value="<?php echo $file ?>"/>
          <input type="submit" name="row_error" value="<?php echo t("Continue") ?>"/>
-         <input type="submit" name="row_skip" value="<?php echo t("or skip this record").' (pending)' ?>"/>
+         <input type="submit" name="row_skip" value="<?php echo t("or skip this record") ?>"/>
          <!-- It does not work, problems with encoding 
          <input type="submit" name="edit_file" value="<?php echo t("Edit file") ?>"/>
          -->

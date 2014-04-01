@@ -96,10 +96,6 @@ Estratègia
   compte! És d'esperar que tots els comptes excepte uns quants tinguin els
   mateixos valors.
 
-@todo Corregir error con mapa en setting.csv desde php
-
-@todo Salto de registro erroneo, guardar incidencia y continuar.
-
 @todo ¿Y si tenemos mails repetidos?
 
 @todo Tarda demasiado en importar los usuarios quizá se debería
