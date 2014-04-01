@@ -193,16 +193,4 @@ function parse_users($data, $row) {
 
 }
 
-/**
- * Delete setting
- * 
- * Delete exchange import
- */
-
-function delete_users($import_id) {
-
-  echo 'Pendiente borrado de usuarios '.$import_id;
-
-}
-
 ?>

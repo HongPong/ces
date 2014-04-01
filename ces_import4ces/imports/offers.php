@@ -109,16 +109,4 @@ function parse_offers($data, $row) {
 
 }
 
-/**
- * Delete setting
- * 
- * Delete exchange import
- */
-
-function delete_category($import_id) {
-
-  echo 'Pendiente borrado de categorias '.$import_id;
-
-}
-
 ?>

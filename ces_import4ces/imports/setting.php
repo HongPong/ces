@@ -117,16 +117,4 @@ function parse_setting($setting) {
 
 }
 
-/**
- * Delete setting
- * 
- * Delete exchange import
- */
-
-function delete_setting($import_id) {
-
-   echo 'Pendiente borrado de importación '.$import_id;
-
-}
-
 ?>

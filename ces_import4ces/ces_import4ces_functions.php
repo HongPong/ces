@@ -63,12 +63,7 @@ function procesa_csv($file_csv, $parse, $row=0) {
       }
       if ( $fila !== 0 ) {
 
-        // @todo Si es setting probable error con campo MapAddress
-        // Asegurarnos que es este error y corregirlo nosotros mismos
-        // Comprobar que WebAddress es una dirección web si no es así
-        // Añadir su contenido a MapAddress con una coma delante
-        // Hacer lo mismo con ReDir 
-        // Hacer que coincidan los campos eliminando estos dos y subiendo el resto
+        // Automatic correction for field AapAddress
         if ( $parse == 'parse_setting' &&
              stripos($cols[36],'http') === FALSE && ! empty($cols[36]) 
             ) {
