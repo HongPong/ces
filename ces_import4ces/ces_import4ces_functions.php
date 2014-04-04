@@ -47,7 +47,7 @@ function procesa_csv($file_csv, $parse, $row=0) {
 
   $fila = -1;
   if (($gestor = fopen($file_csv, "r")) !== FALSE) {
-    while (($datos = fgetcsv($gestor, 1000, ",")) !== FALSE) {
+    while (($datos = fgetcsv($gestor, FALSE, ",")) !== FALSE) {
       $fila++;
       $numero = count($datos);
       if ( $fila !== 0 && $fila <= $row ) continue;
@@ -165,7 +165,7 @@ function createfrom($importar, $row, $step, $import_id, $file) {
          <?php foreach ( $importar as $key => $value ) { ?>
          <label for="label_<?php echo $key ?>"><?php echo $key ?></label>
          <?php if ( isset($value) && !empty($value) && strlen($value) > 100 ) { ?>
-            <textarea name="<?php echo $key ?>"><?php echo $value ?> id="<?php echo $key ?>"</textarea>
+            <textarea  id="<?php echo $key ?>" name="<?php echo $key ?>"><?php echo $value ?></textarea>
          <?php } else { ?>
             <input type="text" name="<?php echo $key ?>" value="<?php echo $value ?>" id="<?php echo $key ?>">     
          <?php } ?>
