@@ -63,13 +63,26 @@ function procesa_csv($file_csv, $parse, $row=0) {
       }
       if ( $fila !== 0 ) {
 
-        // Automatic correction for field AapAddress
-        if ( $parse == 'parse_setting' &&
-             stripos($cols[36],'http') === FALSE && ! empty($cols[36]) 
-            ) {
-          $cols[35] .= ','.$cols[36].','.$cols[37];
-          unset($cols[36]);
-          unset($cols[37]);
+        // Automatic correction for field MapAddress
+        if ( $parse == 'parse_setting' ) {
+          $field = 36;
+          $error_map = TRUE ;
+          $field_error = array();
+          while ( $error_map ) {
+            if ( ! empty($cols[$field]) &&
+              ( stripos($cols[$field],'http') === FALSE &&
+                stripos($cols[$field],'www') === FALSE 
+              ) ) {
+                $field_error[] = $field;
+                $field++;
+              } else {
+                $error_map = FALSE;
+              }
+          }
+          foreach ( $field_error as $fe ) {
+            $cols[35] .= ','.$cols[$fe];
+            unset($cols[$fe]);
+          }
         }
 
         if ( $data_come_from ) {

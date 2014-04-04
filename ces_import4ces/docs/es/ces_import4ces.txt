@@ -56,61 +56,36 @@ Estratègia
 
   Usuaris
 
-  Duplicitat
+Lista de tareas pendientes por orden de prioridad
+-------------------------------------------------
 
-  Els usuaris i els comptes corrents a CES són el mateix concepte, però son
-  conceptes separats a IntegralCES. Per aquest mateix motiu, hi ha diferents
-  comptes al CES amb idèntic email, cosa que no és admesa en Drupal estàndard.
-  
-  @ToDo: Decidir què fem.  
-  
-  Subarea Aquest és un concepte que no està implementat en el CES.  
+@todo Insertar los campos del usuario que no están en integralCES y tienen 
+      su utilidad.
 
-  @ToDo: Decidir què fem.  
+@todo Implementar: "Eliminar importación" y 
+      "Eliminar importación y datos importados".
 
-  NoEmail 
+@todo Símbolo de la moneda no queda bien codificado.
 
-  Aquest és un concepte que no està implementat en el CES, perquè en particular
-  no està implementada la funcionalitat de enviar mails massius des de
-  l'administració de la xarxa.  Observació: Aquesta funcionalitat però ha
-  demostrat ser interessant i potser podem valorar d'afegir-la. En qualsevol
-  cas jo no em preocuparia massa d'aquest camp.  
+@todo Repasar a fondo los campos de todas las tablas que no se están utilizando
+      y decidir si se implementan o no.
 
-  Coord 
+@todo Crear importación anonimizada para testear y que pueda servir para la 
+      demo
 
-  Tampoc aquest concepte existeix al CES.  Observació: La naturalesa del
-  sistema de permisos fa que sigui fàcil d'implementar. Tot i això jo no ho
-  faria i ho deixaria en tot cas per més endavant sempre que puguem tenir varis
-  comptes administradors.  
+@todo Acciones para el último paso: 
 
-  Limit 
-
-  En el CES els límits s'escriuen directament al compte de l'usuari. En
-  l'IntegralCES el sistema és més sofisticat: per a cada xarxa, hi ha diferents
-  tipologies de límits (ex: “individuals”, “companyies”, “associació X”,...), i
-  un compte està associat a un tipus de límit. Aquests tipus de límits són els
-  que internament anomenem limitchains, doncs a nivell d'implementació estan
-  formats per una cadena de límits atòmics del tipus “No estar per sot de X” o
-  “No estar per sobre de X”.  El que cal fer és crear una instància de
-  limitchain per a cada límit diferent que hi hagi, però no una per a cada
-  compte! És d'esperar que tots els comptes excepte uns quants tinguin els
-  mateixos valors.
-
-@todo ¿Y si tenemos mails repetidos?
+        + Enviar email a los uusarios para que reseteen la contraseña.
+        + Añadir enlace para editar Exchange
 
 @todo Tarda demasiado en importar los usuarios quizá se debería
       utilizar ajax para hacerlo uno por uno.
 
-@todo Símbolo de la moneda no queda bien codificado.
+@todo Subarea Aquest és un concepte que no està implementat en el CES.
+      Decidir què fem.  
 
-@todo Envío de email a usuarios para el final de la importación con
-      enlace a resetear password.
+@todo Archivo remote.csv son ofertas remotas. Es decir, ofertas de gente con 
+      cuentas en otras exchanges que publican su anuncio en esta exchange.
 
-@todo Eliminar importación y Eliminar importación y datos importados.
-
-@todo Insertar los campos del usuario que no están en integralCES y tienen su utilidad.
-
-@todo Archivo remote.csv ¿Transacciones remotas? 
-      Esto son ofertas remotas. Es decir, ofertas de gente con cuentas en otras 
-      exchanges que publican su anuncio en esta exchange.
- 
+      El problema es que estos usuarios no existen mientras no se haya 
+      importado la base de datos de su exchange.
