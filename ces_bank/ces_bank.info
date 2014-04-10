@@ -1,6 +1,7 @@
 name = CES Bank
 description = Community Exchange System Banking
 files[] = ces_bank.logic.inc
+files[] = ces_bank.test
 dependencies[] = ces
 dependencies[] = ces_notify
 core = 7.x

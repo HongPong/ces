@@ -123,7 +123,7 @@ function ces_offerswants_entity_info() {
  */
 function ces_category_uri($category) {
   return array(
-    'path' => 'ces/offerswants/category/' . $category->id,
+    'path' => 'ces/bank/exchange/offerswants/category/' . $category->id,
   );
 }
 
@@ -132,7 +132,7 @@ function ces_category_uri($category) {
  */
 function ces_offerwant_uri($offer) {
   return array(
-    'path' => 'ces/offerswants/offerwant/' . $offer->id,
+    'path' => 'ces/bank/exchange/offerswants/offerwant/' . $offer->id,
   );
 }
 /**
@@ -162,26 +162,26 @@ function ces_offerwant_delete($id) {
  */
 function ces_offerswants_menu() {
   $menu = array();
-  $menu['ces/offers'] = array(
+  $menu['ces/bank/exchange/offers'] = array(
     'title' => 'Offers',
     'description' => 'View available offers',
     'page callback' => 'ces_offerswants_list_page',
-    'page arguments' => array('offer', 2, 3, 4, 5, 6),
+    'page arguments' => array('offer', 4, 5, 6, 7, 8),
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 100,
+    'weight' => 220,
   );
-  $menu['ces/wants'] = array(
+  $menu['ces/bank/exchange/wants'] = array(
     'title' => 'Wants',
     'description' => 'View people\'s wants',
     'page callback' => 'ces_offerswants_list_page',
     'access callback' => TRUE,
-    'page arguments' => array('want', 2, 3, 4, 5, 6),
+    'page arguments' => array('want', 4, 5, 6, 7, 8),
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 200,
+    'weight' => 230,
   );
   $menu['ces/bank/account/myoffers'] = array(
     'title' => 'My offers',
@@ -189,7 +189,7 @@ function ces_offerswants_menu() {
     'page callback' => 'ces_offerswants_myoffers_page',
     'access callback' => TRUE,
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 620,
+    'weight' => 110,
   );
   $menu['ces/bank/account/myoffers/list'] = array(
     'title' => 'My offers',
@@ -237,7 +237,7 @@ function ces_offerswants_menu() {
     'page callback' => 'ces_offerswants_mywants_page',
     'access callback' => TRUE,
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 630,
+    'weight' => 120,
   );
   $menu['ces/bank/account/mywants/list'] = array(
     'title' => 'My wants',
@@ -328,12 +328,14 @@ function ces_offerswants_menu() {
  * Menu callback function.
  */
 function ces_offerswants_myoffers_page() {
+  drupal_add_css(drupal_get_path('module', 'ces_offerswants') . '/css/ces_offerswants.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
   return _ces_offerswants_my_page('offer');
 }
 /**
  * Menu callback function.
  */
 function ces_offerswants_mywants_page() {
+  drupal_add_css(drupal_get_path('module', 'ces_offerswants') . '/css/ces_offerswants.css', array('group' => CSS_DEFAULT, 'type' => 'file'));	
   return _ces_offerswants_my_page('want');
 }
 /**
@@ -797,6 +799,14 @@ function ces_offerwant_access($operation, $offerwant, $account = NULL) {
  */
 function ces_category_form($form, &$form_state, $category = NULL) {
   if ($category == NULL) {
+    $exchangeid = ces_offerswants_get_current_exchage_id();
+    if (!$exchangeid) {
+      return array(
+        'message' => array(
+          '#markup' => '<p>' . ('Invalid exchange id.') . '</p>',
+        ),
+      );
+    }
     $category = (object) array(
       'title' => '',
       'description' => '',
@@ -872,7 +882,7 @@ function ces_category_form($form, &$form_state, $category = NULL) {
  * @TODO
  */
 function ces_category_form_validate($form, &$form_state) {
-  // TODO.
+  
 }
 /**
  * Form submit.
@@ -1235,7 +1245,7 @@ function ces_offerswants_block_info() {
       'cache' => DRUPAL_NO_CACHE,
       'region' => 'help',
       'visibility' => BLOCK_VISIBILITY_LISTED,
-      'pages' => 'ces/offers*' . "\n" . 'ces/wants*' . "\n",
+      'pages' => 'ces/bank/exchange/offers*' . "\n" . 'ces/bank/exchange/wants*' . "\n",
       'weight' => -1000,
       'status' => 1,
     ),
@@ -1250,7 +1260,7 @@ function ces_offerswants_block_view($delta = '') {
   // Format the render array.
   $block = array();
   $block['subject'] = t('Filter');
-  $content = drupal_get_form('ces_offerswants_block_form', arg(1) == 'offers' ? 'offer' : 'want', arg(2), arg(3), arg(4), arg(5));
+  $content = drupal_get_form('ces_offerswants_block_form', arg(3) == 'offers' ? 'offer' : 'want', arg(4), arg(5), arg(6), arg(7));
   $block['content'] = $content;
   return $block;
 }
@@ -1374,11 +1384,11 @@ function ces_offerswants_block_form_submit($form, &$form_state) {
   $values = $form_state['values'];
 
   if ( isset($values['search']) && ! empty($values['search']) ) {
-    $form_state['redirect'] = 'ces/' . $values['offerwant_type'] . 's/search/' . $values['exchange']
+    $form_state['redirect'] = 'ces/bank/exchange/' . $values['offerwant_type'] . 's/search/' . $values['exchange']
               . '/' . $values['search'] . '/' . $values['orderby'];
   }
     elseif ($values['op'] == t('Filter')) {
-    $form_state['redirect'] = 'ces/' . $values['offerwant_type'] . 's/filter/' . $values['exchange']
+    $form_state['redirect'] = 'ces/bank/exchange/' . $values['offerwant_type'] . 's/filter/' . $values['exchange']
               . '/' . $values['category'] . '/' . $values['orderby'];
   }
 }
@@ -1393,6 +1403,7 @@ function ces_offerswants_block_form_submit($form, &$form_state) {
  *   Order by property. Defaults to 'modified'.
  */
 function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $arg1 = NULL, $arg2 = NULL, $arg3 = NULL) {
+  drupal_add_css(drupal_get_path('module', 'ces_offerswants') . '/css/ces_offerswants.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
   if (empty($action)) {
     $action = 'filter';
   }
@@ -1422,7 +1433,8 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
     }
     $direction = _ces_offerswants_get_orderby_direction($arg3);
     $query->propertyOrderBy($arg3, $direction);
-    // Get and render results.
+    // Get and render results with n results: pager(n).
+    $query->pager(25);
     $result = $query->execute();
     if (isset($result['ces_offerwant']) && count($result['ces_offerwant']) > 0) {
       $offerids = array_keys($result['ces_offerwant']);
@@ -1443,7 +1455,14 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
     drupal_set_message(t('Action not known'), 'error');
   }
 
-  return $page;
+  $build = array(
+    'content' => $page,
+    'pager' => array(
+      '#markup' => theme('pager'),
+      '#weight' => 10
+    )
+  );
+  return $build;
 }
 /**
  * Helper.

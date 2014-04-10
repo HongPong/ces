@@ -16,13 +16,13 @@ function ces_bank_exchange_admin() {
   $exchange = ces_bank_get_current_exchange();
   $page = array();
   // New accounts request.
-  $page['new_accounts'] = array(
-    'type' => 'fieldset',
-    'title' => t('New accounts'),
-    'description' => t('List of new account requests for this exchange. Activate or delete all them.'),
-  );
   $accounts = $bank->getAllAccounts(array('state' => 0, 'exchange' => $exchange['id']));
   if (!empty($accounts)) {
+    $page['new_accounts'] = array(
+      'type' => 'fieldset',
+      'title' => t('New accounts'),
+      'description' => t('List of new account requests for this exchange. Activate or delete all them.'),
+    );
     $list = array(
       '#theme' => 'item_list',
       '#items' => array(),
@@ -33,7 +33,7 @@ function ces_bank_exchange_admin() {
     $page['new_accounts']['new_accounts_list'] = $list;
   }
   else {
-    $page['new_accounts']['text'] = array(
+    $page['no_new_accounts'] = array(
       '#type' => 'item',
       '#title' => t('No requests for new accounts.'),
     );
@@ -49,6 +49,13 @@ function ces_bank_exchange_admin() {
 function ces_bank_accounts_admin() {
   $bank = new Bank();
   $exchange = ces_bank_get_current_exchange();
+  if ($exchange === FALSE) {
+    return array(
+      'message' => array(
+        '#markup' => '<p>' . t('Invalid current exchange') . '</p>',
+      ),
+    );
+  }
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
@@ -107,6 +114,7 @@ function ces_bank_accounts_admin() {
   foreach ($limitchains as $id => $limit) {
     $limits[$id] = $limit['name'];
   }
+  $rows = array();
   foreach ($accounts as $account) {
     $row = array(
       $account['name'],
@@ -118,8 +126,10 @@ function ces_bank_accounts_admin() {
       l(t('Edit'), 'ces/admin/account/' . $account['id'] . '/edit') . ' ' .
       l(t('Delete'), 'ces/admin/account/' . $account['id'] . '/delete'),
     );
-    $page['table']['#rows'][] = $row;
+    $rows[] = $row;
   }
+  _ces_bank_sort_table($page['table']['#header'], $rows);
+  $page['table']['#rows'] = $rows;
   return $page;
 }
 /**
@@ -214,64 +224,59 @@ function ces_bank_exchange_accounts_page() {
     }
   }
   $page = array();
-  $page['table'] = array();
-  $page['table']['header'] = array(
-    '#type' => 'container',
-    '#attributes' => array('class' => array('ces-account-user', 'ces-account-user-header')),
-    'user' => array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-user-column')),
-      'title' => array('#markup' => t('User')),
+  $page['table'] = array(
+    '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
     ),
-    'accounts' => array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-accounts-column')),
-      'name' => array(
-        '#type' => 'container',
-        '#attributes' => array(),
-        'title' => array('#markup' => t('Account')),
+    '#header' => array(
+      array(
+        'data' => t('User'),
+        'field' => 'user',
+        'sort' => 'asc',
       ),
-      'balance' => array(
-        '#type' => 'container',
-        '#attributes' => array('class' => array('ces-currency-amount')),
-        'title' => array('#markup' => t('Balance')),
+      array(
+        'data' => t('Account'),
+        'field' => 'account',
+        'sort' => 'asc',
+      ),
+      array(
+        'data' => t('Balance'),
+        'field' => 'balance',
+        'sort' => 'asc',
       ),
     ),
   );
-  $counter = 1;
+  
+  $rows = array();
   foreach ($useraccounts as $uid => $accounts) {
     $user = user_load($uid);
-    $parity = ($counter % 2 == 0) ? 'even' : 'odd';
-    $row = array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-account-user', $parity)),
-    );
-    $row['user'] = array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-user-column')),
-    );
-    $row['user']['picture'] = array(
-      '#theme' => 'user_picture',
-      '#account' => $user,
-    );
-    $row['user']['name'] = array(
-      '#markup' => l(ces_user_get_name($user), 'user/' . $uid),
-    );
-    $row['accounts'] = array(
-      '#type' => 'container',
-      '#attributes' => array('class' => array('ces-accounts-column')),
-    );
+
+    $accountsperuser = "";
+    $balancesperuser = "";
     foreach ($accounts as $account) {
-      $row['accounts']['name'] = array('#type' => 'container', '#attributes' => array());
-      $row['accounts']['name'][] = array('#markup' => $account['name']);
-      $row['accounts']['balance'] = array('#type' => 'container', '#attributes' => array('class' => array('ces-currency-amount')));
-      $row['accounts']['balance'][] = array(
-        '#markup' => $bank->formatAmount($account['balance'], $exchange, TRUE),
-      );
+      $accountsperuser .= $account['name'] . '<br/>';
+      $balancesperuser .= $bank->formatAmount($account['balance'], $exchange, TRUE) . '<br/>';
     }
-    $page['table'][] = $row;
-    $counter++;
+    // first cell begins with 8 chars of the name user in capital letters
+    // only for sort case insensitive proposals.
+    $row = array(
+      strtoupper(sprintf("%-8s",ces_user_get_name($user))) .
+      '<div class="ces-user-column">' .
+      '<div class="user-picture">' . theme('user_picture', array('account' => $user)) . '</div>' .
+      l(ces_user_get_name($user), 'user/' . $uid) .
+      '</div>',
+      $accountsperuser,
+      $balancesperuser,
+    );
+    $rows[] = $row;
   }
+  _ces_bank_sort_table($page['table']['#header'], $rows);
+  $lenghtrows = count($rows);
+  for ($i=0;$i<$lenghtrows;$i++) {
+  	 $rows[$i][0] = substr($rows[$i][0], 8);
+  }
+  $page['table']['#rows'] = $rows;
   return $page;
 }
 
@@ -415,6 +420,13 @@ function ces_bank_permissions_page() {
  */
 function ces_bank_limitchain_list_page() {
   $exchange = ces_bank_get_current_exchange();
+  if ($exchange === FALSE) {
+    return array(
+      'message' => array(
+        '#markup' => '<p>' . t('Invalid current exchange') . '</p>',
+      ),
+    );
+  }
   $bank = new Bank();
   $limitchains = $bank->getAllLimitChains($exchange['id']);
   $page = array();
@@ -439,9 +451,9 @@ function ces_bank_limitchain_list_page() {
         'data' => t('Actions'),
       ),
     ),
-    '#rows' => array(),
   );
   $limitnames = module_invoke_all('account_limit_classes');
+  $rows = array();
   foreach ($limitchains as $limitchain) {
     $row = array();
     $row[] = $limitchain['name'];
@@ -463,8 +475,10 @@ function ces_bank_limitchain_list_page() {
     $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'limitchain' => $limitchain['id']));
     $row[] = count($accounts);
     $row[] = implode(' ', $actions);
-    $page['table']['#rows'][] = $row;
+    $rows[] = $row;
   }
+  _ces_bank_sort_table($page['table']['#header'], $rows);
+  $page['table']['#rows'] = $rows;
   return $page;
 }
 /**
@@ -487,10 +501,21 @@ function ces_bank_limitchain_view($limitchain) {
  */
 function ces_bank_exchange_view() {
   $exchange = ces_bank_get_current_exchange();
-  $page = array(
-    'exchange' => $exchange,
-    '#theme' => 'ces_bank_exchange_view',
-  );
+  if ($exchange !== FALSE) {
+    $page = array(
+      'exchange' => $exchange,
+      '#theme' => 'ces_bank_exchange_view',
+    );
+  }
+  else {
+    $page = array(
+      'message' => array(
+        '#markup' => '<p>' . t("You don't belong to any exchange yet.") .
+        '</p>',
+      ),
+    );
+  }
+
   return $page;
 }
 /**
@@ -556,4 +581,56 @@ function ces_bank_transaction_view($transaction) {
     $page['fromexchange'] = &$page['toexchange'];
   }
   return $page;
+}
+
+/**
+ * Sort the rows of a table.
+ * 
+ * The second parameter $rows gets sorted depending on the $header definition
+ * and the parameters passed by URL.
+ * 
+ * @param array $headers
+ *   Table heeaders as in theme_table.
+ * @param array $rows
+ *   Table rows as in theme_table, by reference. 
+ */
+function _ces_bank_sort_table(array $headers, array &$rows) {
+  global $_ces_bank_sort_table_column;
+  $order = tablesort_get_order($headers);
+  $sort = tablesort_get_sort($headers);
+  // Find the column number to sort.
+  $i = 0;
+  foreach ($headers as $header) {
+    if ($header['field'] == $order['sql']) {
+      $_ces_bank_sort_table_column = $i;
+      break;
+    }
+    $i++;
+  }
+  if ($sort == 'asc') {
+    usort($rows, '_ces_bank_sort_table_cmp');
+  }
+  else {
+    usort($rows, '_ces_bank_sort_table_cmpr');
+  }
+}
+
+/**
+ * Table ows comparator callback.
+ */
+function _ces_bank_sort_table_cmp($a, $b) {
+  global $_ces_bank_sort_table_column;
+  $ca = $a[$_ces_bank_sort_table_column];
+  $cb = $b[$_ces_bank_sort_table_column];
+  return strcmp($ca, $cb);
+}
+
+/**
+ * Reverse table rows comparator callback.
+ */
+function _ces_bank_sort_table_cmpr($a, $b) {
+  global $_ces_bank_sort_table_column;
+  $ca = $a[$_ces_bank_sort_table_column];
+  $cb = $b[$_ces_bank_sort_table_column];
+  return strcmp($cb, $ca);
 }
