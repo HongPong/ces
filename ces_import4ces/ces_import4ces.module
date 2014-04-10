@@ -4,7 +4,6 @@
  * @file
  * Implements the drupal hooks for this module.
  */
-
 /**
  * Set to 0 in production.
  */
@@ -97,7 +96,8 @@ function ces_import4ces_admin_page() {
   FROM {ces_import4ces_exchange} i
   LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
   WHERE i.finished = 0 AND i.uid = :uid
-  ORDER BY i.id DESC', array(':uid' => $user->uid));
+  ORDER BY i.id DESC',
+    array(':uid' => $user->uid));
 
   $titles_steps = _ces_import4ces_steps();
   $table = array(
@@ -149,26 +149,36 @@ function ces_import4ces_import_form($form, &$form_state, $import_id = FALSE) {
     return ces_import4ces_row_form($form, $form_state);
   }
   if ($import_id === FALSE) {
-    return confirm_form($form, t('Do you really want to start a new import?'), 'ces/admin/import', t('Put all the csv files in the sites/default/files/import folder.'), t('New import'));
+    return confirm_form($form, t('Do you really want to start a new import?'),
+      'ces/admin/import',
+      t('Put all the csv files in the sites/default/files/import folder.'),
+      t('New import'));
   }
   else {
     $import = ces_import4ces_import_load($import_id);
     $steps = _ces_import4ces_steps();
     if ($import->step < 7) {
-      return confirm_form($form, t('Step @num. Import @type.', array(
+      return confirm_form($form,
+        t('Step @num. Import @type.',
+          array(
         '@num' => $import->step,
         '@type' => $steps[$import->step],
-        )), 'ces/admin/import', t('Importing step @step of exchange @exchange from row @row.', array(
+        )), 'ces/admin/import',
+        t('Importing step @step of exchange @exchange from row @row.',
+          array(
         '@step' => $import->step,
         '@exchange' => $import->name,
         '@row' => $import->row,
         )), t('Import @type', array('@type' => $steps[$import->step])));
     }
     else {
-      return confirm_form($form, t('All data has been imported'), 'ces/admin/import', t('Click Finish to end the import process.'), t('Finish'));
+      return confirm_form($form, t('All data has been imported'),
+        'ces/admin/import', t('Click Finish to end the import process.'),
+        t('Finish'));
     }
   }
 }
+
 /**
  * Import single row form.
  */
@@ -212,6 +222,7 @@ function ces_import4ces_row_form($form, &$form_state) {
   );
   return $form;
 }
+
 /**
  * Import single row form submit.
  */
@@ -245,6 +256,7 @@ function ces_import4ces_row_form_submit($form, &$form_state) {
     }
   }
 }
+
 /**
  * Load an import object with static cache.
  */
@@ -255,7 +267,8 @@ function ces_import4ces_import_load($import_id) {
       'SELECT i.id, i.exchange_id, e.code, e.name, i.step, i.row, i.anonymous 
     FROM {ces_import4ces_exchange} i 
     LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
-    WHERE i.id = :iid', array(':iid' => $import_id))
+    WHERE i.id = :iid',
+      array(':iid' => $import_id))
       ->fetch();
     $cache[$import_id] = empty($result) ? FALSE : $result;
   }
@@ -362,7 +375,8 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
 function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) {
   // Validate CSV file.
   if (!file_exists($file_csv)) {
-    drupal_set_message(t('Import file @path not found.', array('@path' => $file_csv), 'error'));
+    drupal_set_message(t('Import file @path not found.',
+        array('@path' => $file_csv), 'error'));
     return FALSE;
   }
 
@@ -374,7 +388,7 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
   if (($gestor = fopen($file_csv, "r")) !== FALSE) {
     $heads = array();
     $fila = -1;
-    while (($datos = fgetcsv($gestor, 1000, ",")) !== FALSE) {
+    while (($datos = fgetcsv($gestor, FALSE, ",")) !== FALSE) {
       $fila++;
       if ($fila != 0 && $fila <= $row)
         continue;
@@ -391,11 +405,25 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
       }
       if ($fila !== 0) {
         // Automatic correction for field AapAddress
-        if ($parse_function == 'parse_setting' &&
-          stripos($cols[36], 'http') === FALSE && !empty($cols[36])) {
-          $cols[35] .= ',' . $cols[36] . ',' . $cols[37];
-          unset($cols[36]);
-          unset($cols[37]);
+        if ($parse_function == 'parse_setting') {
+          $field = 36;
+          $error_map = TRUE;
+          $field_error = array();
+          while ($error_map) {
+            if (!empty($cols[$field]) &&
+              (stripos($cols[$field], 'http') === FALSE &&
+              stripos($cols[$field], 'www') === FALSE)) {
+              $field_error[] = $field;
+              $field++;
+            }
+            else {
+              $error_map = FALSE;
+            }
+          }
+          foreach ($field_error as $fe) {
+            $cols[35] .= ',' . $cols[$fe];
+            unset($cols[$fe]);
+          }
         }
         $arguments = array();
         if (isset($record->id)) {
@@ -423,7 +451,8 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
     fclose($gestor);
   }
   else {
-    drupal_set_message(t('Could not open import file @path.', array('@path' => $file_csv), 'error'));
+    drupal_set_message(t('Could not open import file @path.',
+        array('@path' => $file_csv), 'error'));
     return FALSE;
   }
 
@@ -439,7 +468,8 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
       'operations' => $operations,
       'file' => drupal_get_path('module', 'ces_import4ces') . '/' . $file,
       'finished' => '_ces_import4ces_batch_import_csv_finished',
-      'title' => t('Importing @exchange step @step', array('@exchange' => $record->name, '@step' => $record->step)),
+      'title' => t('Importing @exchange step @step',
+        array('@exchange' => $record->name, '@step' => $record->step)),
       'init_message' => t('Import is starting.'),
       'progress_message' => t('Processed @current out of @total.'),
       'error_message' => t('Error during import.'),
@@ -447,11 +477,13 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
     batch_set($batch);
   }
 }
+
 /**
  * To be called from the batch process to stop it and let the user the 
  * opportunity to change the row data manually.
  */
-function ces_import4ces_batch_fail_row($import_id, $heads, $cols, $row, &$context) {
+function ces_import4ces_batch_fail_row($import_id, $heads, $cols, $row,
+  &$context) {
   if ($import_id) {
     $context['results']['import_id'] = $import_id;
   }
@@ -460,12 +492,15 @@ function ces_import4ces_batch_fail_row($import_id, $heads, $cols, $row, &$contex
     'columns' => $cols,
     'row' => $row,
   );
-  $context['results']['error'] = t('The row @row could not be parsed.', array('@row' => $row));
+  $context['results']['error'] = t('The row @row could not be parsed.',
+    array('@row' => $row));
 }
+
 /**
  * Finish callback function for batch process.
  */
-function _ces_import4ces_batch_import_csv_finished($success, $results, $operations) {
+function _ces_import4ces_batch_import_csv_finished($success, $results,
+  $operations) {
   $batch = &batch_get();
   if ($success && empty($results['error'])) {
     $batch['form_state']['redirect'] = 'ces/admin/import/'
@@ -512,6 +547,7 @@ function _ces_import4ces_steps() {
     7 => "The end",
   );
 }
+
 /**
  * Confirm form for delete import.
  */
@@ -520,12 +556,15 @@ function ces_import4ces_import_delete_form($form, &$form_state, $import_id) {
   if ($import !== FALSE) {
     $form = array();
     $form['import_id'] = array('#type' => 'value', '#value' => $import_id);
-    return confirm_form($form, t('Are you sure you want to delete the exchange @name and all its data?', array('@name' => $import->name)), 'ces/admin/import');
+    return confirm_form($form,
+      t('Are you sure you want to delete the exchange @name and all its data?',
+        array('@name' => $import->name)), 'ces/admin/import');
   }
   else {
     drupal_set_message(t('Invaid import id.'), 'error');
   }
 }
+
 /**
  * Delete all import data. This function may need so many time to be cmpletely 
  * executed in some servers!
@@ -602,15 +641,18 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
     ->execute();
 
   // That's all.
-  drupal_set_message(t('Exchange @name has been deleted.', array('@name' => $exchange['name'])));
+  drupal_set_message(t('Exchange @name has been deleted.',
+      array('@name' => $exchange['name'])));
   $form_state['redirect'] = 'ces/admin/import';
 }
+
 /**
  * Get all the id's for a given import and a given object type.
  */
 function ces_import4ces_get_object_ids($import_id, $type) {
   $result = db_query('SELECT object_id from {ces_import4ces_objects} 
-    WHERE object = :object AND import_id = :import', array(':object' => $type, ':import' => $import_id))->fetchCol(0);
+    WHERE object = :object AND import_id = :import',
+    array(':object' => $type, ':import' => $import_id))->fetchCol(0);
   return $result;
 }
 
@@ -632,14 +674,16 @@ function ces_import4ces_download_image($url_origen, $archivo_destino) {
  * Count step
  */
 function ces_import4ces_update_step($import_id, $step) {
-  return db_update('ces_import4ces_exchange')->condition('id', $import_id)->fields(array('step' => $step))->execute();
+  return db_update('ces_import4ces_exchange')->condition('id', $import_id)->fields(array(
+      'step' => $step))->execute();
 }
 
 /**
  * Count row
  */
 function ces_import4ces_update_row($import_id, $row) {
-  return db_update('ces_import4ces_exchange')->condition('id', $import_id)->fields(array('row' => $row))->execute();
+  return db_update('ces_import4ces_exchange')->condition('id', $import_id)->fields(array(
+      'row' => $row))->execute();
 }
 
 /**
@@ -680,10 +724,11 @@ function ces_import4ces_get_category($title, $import) {
 
     return $category_id;
   }
-  
+
   function ces_import4ces_mail_alter(&$message) {
     if (!CES_IMPORT4CES_SEND_MAILS) {
       $message['send'] = FALSE;
     }
   }
+
 }
