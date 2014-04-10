@@ -3,6 +3,8 @@ description = Import data from CES
 core = 7.x
 package = ces
 
+files[] = ces_import4ces_functions.php
+
 dependencies[] = ces
 dependencies[] = ces_bank
 

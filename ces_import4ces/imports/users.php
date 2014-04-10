@@ -6,30 +6,36 @@
  */
 
 /**
- * Parse setting
+ * Parse users
  */
-
-function parse_users($data, $row) {
-
-  if ( $data ) {
-
+function parse_users($import_id, $data, $row, &$context) {
+  if (isset($context['results']['error']))
+    return;
+  $tx = db_transaction();
+  try {
+    $context['results']['import_id'] = $import_id;
+    $import = ces_import4ces_import_load($import_id);
     // create drupal user
-
     // The admin user account is created with the exchange 
     $query = db_query('SELECT ca.name FROM {ces_account} ca where ca.name=:name',
       array(':name' => $data['UID']));
     $result = $query->fetchAllAssoc('name');
-
-    if ( !empty($result) ) return ;
-
+    if (!empty($result)) {
+      ces_import4ces_update_row($import_id, $row);
+      return;
+    }
     // @todo Al crear un usuario se utiliza el mail como identificador y se 
     // genera un password aleatorio, enviano un email al usuario que podra
     // resetear el password.
     //
     // Comprobar que es el comportamiento que deseamos.
-
-    //This will generate a random password, you could set your own here
-    $password = user_password(8);
+    
+    if (CES_IMPORT4CES_RESET_PASSWORD) {
+      $password = user_password(8);
+    }
+    else {
+      $password = $data['Password'];
+    }
 
     /*
       UserType: El tipus de compte. adm per administrador, org per organització
@@ -63,7 +69,7 @@ function parse_users($data, $row) {
     );
 
     /*
-      Lang: idioma en tres lletres. No segueix l'estàndard ISO. eng per anglès, 
+      Lang: idioma en tres lletres. No segueix l'estàndard ISO. eng per anglès,
       cat per català, spa per castellà.
      */
 
@@ -77,99 +83,92 @@ function parse_users($data, $row) {
     //set up the user fields
     $fields = array(
       'name' => $data['UID'],
-      'mail' => ( $GLOBALS['anonymous'] ) ? 'test-'.$data['UID'].'@test.com' : $data['Email'],
+      'mail' => ($import->anonymous) ? 'test-' . $data['UID'] . '@test.com' : $data['Email'],
       'pass' => $password,
-      'status' => ( $data['Locked'] == 0 ) ? 1 : 0 ,
+      'status' => ( $data['Locked'] == 0 ) ? 1 : 0,
       // 'init' => ( $GLOBALS['anonymous'] ) ? 'test-'.$data['UID'].'@test.com' : $data['Email'],
-      'language' => ( isset($langs[$data['Lang']]) ) ? $langs[$data['Lang']] : $langs['default'] ,  
+      'language' => ( isset($langs[$data['Lang']]) ) ? $langs[$data['Lang']] : $langs['default'],
       'roles' => array(
         DRUPAL_AUTHENTICATED_RID => 'authenticated user',
       ),
-
       // User custom fields
-      'ces_firstname'   => array(LANGUAGE_NONE => array(array('value' => $data['Firstname']))), 
-      'ces_surname'     => array(LANGUAGE_NONE => array(array('value' => $data['Surname']))), 
-      'ces_address'     => array(LANGUAGE_NONE => array(array('value' => $data['Address1']."\n".$data['Address2']))), 
-      'ces_town'        => array(LANGUAGE_NONE => array(array('value' => $data['Address3']))), 
-      'ces_postcode'    => array(LANGUAGE_NONE => array(array('value' => $data['Postcode']))), 
-      'ces_phonemobile' => array(LANGUAGE_NONE => array(array('value' => $data['PhoneM']))), 
-      'ces_phonework'   => array(LANGUAGE_NONE => array(array('value' => $data['PhoneW']))), 
-      'ces_phonehome'   => array(LANGUAGE_NONE => array(array('value' => $data['PhoneH']))), 
-      'ces_website'     => array(LANGUAGE_NONE => array(array('value' => $data['WebSite']))), 
-
+      'ces_firstname' => array(LANGUAGE_NONE => array(array('value' => $data['Firstname']))),
+      'ces_surname' => array(LANGUAGE_NONE => array(array('value' => $data['Surname']))),
+      'ces_address' => array(LANGUAGE_NONE => array(array('value' => $data['Address1'] . "\n" . $data['Address2']))),
+      'ces_town' => array(LANGUAGE_NONE => array(array('value' => $data['Address3']))),
+      'ces_postcode' => array(LANGUAGE_NONE => array(array('value' => $data['Postcode']))),
+      'ces_phonemobile' => array(LANGUAGE_NONE => array(array('value' => $data['PhoneM']))),
+      'ces_phonework' => array(LANGUAGE_NONE => array(array('value' => $data['PhoneW']))),
+      'ces_phonehome' => array(LANGUAGE_NONE => array(array('value' => $data['PhoneH']))),
+      'ces_website' => array(LANGUAGE_NONE => array(array('value' => $data['WebSite']))),
     );
 
     $extra_data = array(
-      'OrgName'     => $data['OrgName'],
-      'SubArea'     => $data['SubArea'],
-      'DefaultSub'  => $data['DefaultSub'],
-      'PhoneF'      => $data['PhoneF'],
-      'IM'          => $data['IM'],
-      'DOB'         => $data['DOB'],
-      'NoEmail1'    => $data['NoEmail1'],
-      'NoEmail2'    => $data['NoEmail2'],
-      'NoEmail3'    => $data['NoEmail3'],
-      'NoEmail4'    => $data['NoEmail4'],
-      'Hidden'      => $data['Hidden'],
-      'Created'     => $data['Created'],
-      'LastAccess'  => $data['LastAccess'],
-      'LastEdited'  => $data['LastEdited'],
-      'EditedBy'    => $data['EditedBy'],
-      'InvNo'       => $data['InvNo'],
-      'OrdNo'       => $data['OrdNo'],
-      'Coord'       => $data['Coord'],
-      'CredLimit'   => $data['CredLimit'],
-      'DebLimit'    => $data['DebLimit'],
-      'LocalOnly'   => $data['LocalOnly'],
-      'Notes'       => $data['Notes'],
-      'Photo'       => $data['Photo'],
-      'HideAddr1'   => $data['HideAddr1'],
-      'HideAddr2'   => $data['HideAddr2'],
-      'HideAddr3'   => $data['HideAddr3'],
-      'HideArea'    => $data['HideArea'],
-      'HideCode'    => $data['HideCode'],
-      'HidePhoneH'  => $data['HidePhoneH'],
-      'HidePhoneW'  => $data['HidePhoneW'],
-      'HidePhoneF'  => $data['HidePhoneF'],
-      'HidePhoneM'  => $data['HidePhoneM'],
-      'HideEmail'   => $data['HideEmail'],
-      'IdNo'        => $data['IdNo'],
-      'LoginCount'  => $data['LoginCount'],
-      'SubsDue'     => $data['SubsDue'],
-      'Closed'      => $data['Closed'],
-      'DateClosed'  => $data['DateClosed'],
-      'Translate'   => $data['Translate'],
-      'Buddy'       => $data['Buddy'],
-    );    
+      'OrgName' => $data['OrgName'],
+      'SubArea' => $data['SubArea'],
+      'DefaultSub' => $data['DefaultSub'],
+      'PhoneF' => $data['PhoneF'],
+      'IM' => $data['IM'],
+      'DOB' => $data['DOB'],
+      'NoEmail1' => $data['NoEmail1'],
+      'NoEmail2' => $data['NoEmail2'],
+      'NoEmail3' => $data['NoEmail3'],
+      'NoEmail4' => $data['NoEmail4'],
+      'Hidden' => $data['Hidden'],
+      'Created' => $data['Created'],
+      'LastAccess' => $data['LastAccess'],
+      'LastEdited' => $data['LastEdited'],
+      'EditedBy' => $data['EditedBy'],
+      'InvNo' => $data['InvNo'],
+      'OrdNo' => $data['OrdNo'],
+      'Coord' => $data['Coord'],
+      'CredLimit' => $data['CredLimit'],
+      'DebLimit' => $data['DebLimit'],
+      'LocalOnly' => $data['LocalOnly'],
+      'Notes' => $data['Notes'],
+      'Photo' => $data['Photo'],
+      'HideAddr1' => $data['HideAddr1'],
+      'HideAddr2' => $data['HideAddr2'],
+      'HideAddr3' => $data['HideAddr3'],
+      'HideArea' => $data['HideArea'],
+      'HideCode' => $data['HideCode'],
+      'HidePhoneH' => $data['HidePhoneH'],
+      'HidePhoneW' => $data['HidePhoneW'],
+      'HidePhoneF' => $data['HidePhoneF'],
+      'HidePhoneM' => $data['HidePhoneM'],
+      'HideEmail' => $data['HideEmail'],
+      'IdNo' => $data['IdNo'],
+      'LoginCount' => $data['LoginCount'],
+      'SubsDue' => $data['SubsDue'],
+      'Closed' => $data['Closed'],
+      'DateClosed' => $data['DateClosed'],
+      'Translate' => $data['Translate'],
+      'Buddy' => $data['Buddy'],
+    );
 
     //the first parameter is left blank so a new user is created
     $user_drupal = user_save('', $fields);
+    if ($user_drupal === FALSE) {
+      throw new Exception(t('Error creating Drupal user.'));
+    }
 
     // If you want to send the welcome email, use the following code
-
     // Manually set the password so it appears in the e-mail.
     $user_drupal->password = $fields['pass'];
-
-    // Send the e-mail through the user module.
-    // $email = "eduardo@mamedu.com";
-    // if ( $GLOBALS['send_mail_user'] ) {
-    //   drupal_mail('user', 'register_no_approval_required', $email, NULL, array('account' => $user_drupal), variable_get('site_mail', 'noreply@example..com'));
-    // }
-
 
     // User in CES
 
     $bank = new Bank();
-    $limit = $bank->getDefaultLimitChain($GLOBALS['exchange_id']);
+    $limit = $bank->getDefaultLimitChain($import->exchange_id);
     $account = array(
-      'exchange' => $GLOBALS['exchange_id'],
+      'exchange' => $import->exchange_id,
       'name' => $data['UID'],
       'limitchain' => $limit['id'],
       'kind' => $type_user[$data['UserType']],
       'state' => LocalAccount::STATE_HIDDEN,
       'users' => array(
         array(
-          'user' => $data['UID'],
+          'user' => $user_drupal->uid,
           'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
         ),
       ),
@@ -177,20 +176,20 @@ function parse_users($data, $row) {
     $bank->createAccount($account, FALSE);
     $bank->activateAccount($account);
 
-    $nid = db_insert('ces_import4ces_objects')
+    db_insert('ces_import4ces_objects')
       ->fields(array(
-        'import_id' => $GLOBALS['import_id'],
+        'import_id' => $import_id,
         'object' => 'user',
         'object_id' => $user_drupal->uid,
         'row' => $row,
-        'data' => serialize($extra_data)
+        'data' => serialize($extra_data),
       ))->execute();
-    return $nid;
-
+    ces_import4ces_update_row($import_id, $row);
   }
-
-  return FALSE ;
-
+  catch (Exception $e) {
+    $tx->rollback();
+    ces_import4ces_batch_fail_row($import_id, array_keys($data),
+      array_values($data), $row, $context);
+    $context['results']['error'] = check_plain($e->getMessage());
+  }
 }
-
-?>
