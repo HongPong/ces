@@ -1272,7 +1272,8 @@ function ces_bank_transaction_delete_form($form, &$form_state, $transaction) {
   $message = '<p>' . t('Are you sure you want to delete the transaction?') . '</p>';
   $caption = '<p>' . t('Transaction details:') . '</p>';
   require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.pages.inc';
-  $caption .= '<p>' . drupal_render(ces_bank_transaction_view($transaction)) . '</p>';
+  $view = ces_bank_transaction_view($transaction);
+  $caption .= '<p>' . drupal_render($view) . '</p>';
   $caption .= '<p>' . t('This action cannot be undone.') . '</p>';
   return confirm_form($form, filter_xss($message), 'ces/bank/account/transaction', filter_xss($caption), t('Delete'));
 }
