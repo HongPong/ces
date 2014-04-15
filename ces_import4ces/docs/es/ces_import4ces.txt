@@ -64,8 +64,6 @@ Lista de tareas pendientes por orden de prioridad
 
 @todo Las transacciones no tienen la fecha correcta.
 
-@todo Símbolo de la moneda no queda bien codificado.
-
 @todo Repasar a fondo los campos de todas las tablas que no se están utilizando
       y decidir si se implementan o no.
 

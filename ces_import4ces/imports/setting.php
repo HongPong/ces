@@ -29,7 +29,7 @@ function parse_setting($setting, $row, &$context) {
       'region' => $setting['Province'],
       'town' => $setting['Town'],
       'map' => $setting['MapAddress'],
-      'currencysymbol' => $setting['CurLet'],
+      'currencysymbol' => html_entity_decode($setting['CurLet'], ENT_QUOTES, 'UTF-8') ,
       'currencyname' => $setting['ConCurName'],
       'currenciesname' => $setting['CurNamePlural'],
       'currencyvalue' => 1,
