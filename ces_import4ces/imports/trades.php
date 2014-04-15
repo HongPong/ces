@@ -67,19 +67,6 @@ function parse_trades($import_id, $data, $row, &$context) {
       }
     }
 
-    $trade = array(
-      'fromaccount' => $account_seller['id'],
-      'toaccount' => $account_buyer['id'],
-      'fromaccountname' => $data['Seller'],
-      'toaccountname' => $data['Buyer'],
-      'amount' => $data['Amount'],
-      'concept' => $data['Description'],
-      'user' => $trade_user_id,
-      'state' => TransactionInterface::STATE_COMMITTED,
-      'created' => strtotime($data['DateEntered']),
-      'modified' => strtotime($data['DateEntered']),
-    );
-
     $extra_info = array(
       'ID' => $data['ID'],
       'RemoteExchange' => $data['RemoteExchange'],
@@ -90,11 +77,13 @@ function parse_trades($import_id, $data, $row, &$context) {
     );
 
     $trans = array(
-      'fromaccountname' => $trade['fromaccountname'],
-      'toaccountname' => $trade['toaccountname'],
-      'amount' => $trade['amount'],
-      'concept' => $trade['concept'],
-      'user' => $trade['user'],
+      'fromaccountname' => $data['Seller'],
+      'toaccountname' => $data['Buyer'],
+      'amount' => $data['Amount'],
+      'concept' => $data['Description'],
+      'user' => $trade_user_id,
+      'created' => strtotime($data['DateEntered']),
+      'modified' => strtotime($data['DateEntered']),
     );
 
     $bank->createTransaction($trans);
