@@ -813,7 +813,7 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
 
 /**
  * Single transaction form.
- * 
+ *
  * @param array $form
  *   The Drupal form.
  * @param array $form_state
@@ -824,7 +824,7 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
  *     - 'edit': Edit transaction.
  * @param array|int $arg
  *   Argument to this form depending on the operation. If the operation is 'new'
- *   $arg is the id of the exchange where the transaction is going to take 
+ *   $arg is the id of the exchange where the transaction is going to take
  *   place. If the operation is 'edit', $arg is the transaction array.
  * @param int $to_account_id
  *   Optional. The seller account id.
@@ -1290,30 +1290,17 @@ function ces_bank_transaction_delete_form_submit($form, &$form_state) {
 
 /**
  * Bank account statement form.
+ *
  * @return array
  *   page where to find the last transactions with this account.
- * @see ces_bank_account_statement_form_submit()
+ * @see ces_bank_account_statement_form_submit(),
+ *   ces_bank_account_statement_page().
  */
-function ces_bank_account_statement_form($form, &$form_state, $account_id) {
-  if ($account_id == FALSE) {
-    $page = array();
-    $page['message'] = array(
-      '#markup' => '<p>' . t("You don't have any exchange account yet.")
-      . '</p>',
-    );
-    return $page;
-  }
-  $bank = new Bank();
-  try {
-    $account = $bank->getAccount($account_id);
-  }
-  catch (Exception $e) {
-    drupal_set_message($e->getMessage(), 'error');
-    return array();
-  }
-  $exchange = $bank->getExchange($account['exchange']);
-
-  $form = array();
+function ces_bank_account_statement_form($form, &$form_state) {
+  $form = array(
+    '#method' => 'get',
+    '#token' => FALSE,
+  );
   // Filter controls.
   $form['controls'] = array(
     '#type' => 'container',
@@ -1350,118 +1337,6 @@ function ces_bank_account_statement_form($form, &$form_state, $account_id) {
     '#type' => 'submit',
     '#value' => t('Filter'),
   );
-  $timefrom = mktime(0, 0, 0, $from['month'], $from['day'], $from['year']);
-  $timeto = mktime(23, 59, 59, $to['month'], $to['day'], $to['year']);
-  // Transaction table.
-  $form['transactions'] = array(
-    '#type' => 'container',
-    '#attributes' => array(),
-  );
-  $form['transactions']['table'] = array(
-    '#theme' => 'table',
-    '#attributes' => array(
-      'class' => array('ces-table'),
-    ),
-    '#header' => array(
-      array(
-        'data' => t('Date'),
-        'field' => 'created',
-        'sort' => 'asc',
-      ),
-      array(
-        'data' => t('State'),
-        'class' => 'ces-statement-state',
-      ),
-      array(
-        'data' => t('Account'),
-        'class' => 'ces-statement-user',
-      ),
-      array(
-        'data' => t('Description'),
-        'class' => 'ces-statement-description',
-      ),
-      array(
-        'data' => t('Amount'),
-        'class' => 'ces-currency-amount',
-      ),
-      array(
-        'data' => t('Balance'),
-        'class' => 'ces-currency-amount',
-      ),
-    ),
-  );
-  $transactions = $bank->getTransactions(array(
-    'account' => $account['id'],
-    'createdsince' => $timefrom,
-    'createduntil' => $timeto,
-  ));
-  $inibalance = $bank->getAccountHistoricBalance($account['id'], $timefrom);
-  $dateformat = $format = variable_get('date_format_short', 'm/d/Y');
-  $space = strpos($format, ' ');
-  if ($space !== FALSE) {
-    $dateformat = substr($dateformat, 0, $space);
-  }
-  $rows = array();
-  foreach ($transactions as $transaction) {
-    $row = array();
-    $row[] = array(
-      'data' => format_date($transaction['created'], 'custom', $dateformat));
-
-    if ($transaction['fromaccount'] != $account['id']) {
-      $other_account = $bank->getTransactionFromAccount($transaction);
-      $type = 0;
-    }
-    elseif ($transaction['toaccount'] != $account['id']) {
-      $other_account = $bank->getTransactionToAccount($transaction);
-      $type = 1;
-    }
-    else {
-      // This is impossible, but just in case.
-      $other_account = $account;
-      $type = 2;
-    }
-    $statestring = array(
-      0 => t('New'),
-      1 => t('Triggered'),
-      2 => t('Accepted'),
-      3 => t('Committed'),
-      4 => t('Archived'),
-      5 => t('Rejected'),
-      6 => t('Discarded'),
-      7 => t('Revoke triggered'),
-      8 => t('Revoke accepted'),
-      9 => t('Revoke rejected'),
-      10 => t('Revoked'),
-      11 => t('Error'),
-    );
-    $row[] = array('data' => $statestring[$transaction['state']]);
-
-    $useracc = reset($other_account['users']);
-    $uid = $useracc['user'];
-
-    $row[] = array('data' => $other_account['name'] . ' - ' . l(ces_user_get_name(user_load($uid)), 'user/' . $uid));
-    $row[] = array('data' => l($transaction['concept'], 'ces/bank/account/transaction/' . $transaction['id'] . '/view'));
-    $amount = ($transaction['amount']) * ($type == 0 ? 1 : -1);
-    $row[] = array(
-      'data' => $bank->formatAmount($amount, $exchange, TRUE, TRUE),
-      'class' => 'ces-currency-amount',
-    );
-
-    if (in_array((int) $transaction['state'], array(3))) {
-      $inibalance += $amount;
-    }
-    $row[] = array(
-      'data' => $bank->formatAmount($inibalance, $exchange, TRUE, FALSE),
-      'class' => 'ces-currency-amount',
-    );
-    $rows[] = $row;
-  }
-  // Get sort parameter from URL.
-  $sort = tablesort_get_sort($form['transactions']['table']['#header']);
-  if ($sort == 'desc') {
-    $rows = array_reverse($rows);
-  }
-  $form['transactions']['table']['#rows'] = $rows;
   return $form;
 }
 /**
