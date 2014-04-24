@@ -62,7 +62,9 @@ Lista de tareas pendientes por orden de prioridad
 @todo Insertar los campos del usuario que no están en integralCES y tienen 
       su utilidad.
 
-@todo Las transacciones no tienen la fecha correcta.
+@todo Importar mejor las transacciones inter-exchange de forma que queden 
+      registrados los balances y que en caso de que ya exista la otra red o que
+      a posteriori se importe queden bien.
 
 @todo Repasar a fondo los campos de todas las tablas que no se están utilizando
       y decidir si se implementan o no.
