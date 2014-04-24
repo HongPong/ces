@@ -672,6 +672,9 @@ function ces_bank_account_form($form, &$form_state, $account = NULL) {
     3 => t('Company'),
     4 => t('Public'),
   );
+  if ($account['kind'] == 5) {
+    $options[5] = t('Virtual');
+  }
   $form['bankaccount']['kind'] = array(
     '#type' => 'select',
     '#title' => t('Type'),
@@ -680,6 +683,9 @@ function ces_bank_account_form($form, &$form_state, $account = NULL) {
     '#required' => TRUE,
     '#default_value' => $account['kind'],
   );
+  if ($account['kind'] == 5) {
+    $form['bankaccount']['kind']['#disabled'] = TRUE;
+  }
   $limitchains = $bank->getAllLimitChains($exchange['id']);
   $options = array();
   foreach ($limitchains as $id => $limit) {
