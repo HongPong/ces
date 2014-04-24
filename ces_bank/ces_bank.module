@@ -371,9 +371,8 @@ function ces_bank_menu() {
   $menu['ces/bank/account/transaction'] = array(
     'title' => 'Account statement' ,
     'description' => 'Last transactions with this account',
-    'page callback' => '_ces_bank_get_form',
-    'page arguments' => array('ces_bank_account_statement_form', CES_CURRENT_ACCOUNT),
-    'file' => 'ces_bank.forms.inc',
+    'page callback' => 'ces_bank_account_statement_page',
+    'file' => 'ces_bank.pages.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'account transactions', CES_CURRENT_ACCOUNT),

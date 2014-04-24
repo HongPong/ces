@@ -422,7 +422,8 @@ class Bank {
       unset($conditions['fromaccount']);
       $conditions['toaccount'] = $account;
       $transactions2 = $s->loadCollection($conditions, 'created');
-      $transactions = array_merge($transactions1, $transactions2);
+      // Merge the arrays taking the created field in count.
+      $transactions = $this->mergeSortedCollections($transactions1, $transactions2);
     }
     else {
       $transactions = $s->loadCollection($conditions, 'created');
@@ -436,6 +437,36 @@ class Bank {
       $records[] = $record;
     }
     return $records;
+  }
+  /**
+   * Merge two sorted collections of objects.
+   * 
+   * @param array $c1
+   *   The first collection.
+   * @param array $c2
+   *   The second collection.
+   * @param string $field
+   *   The field which over the collections are sorted.
+   * 
+   * @return array
+   *   The sorted merge of $c1 and $c2.
+   */
+  private function mergeSortedCollections(array $c1, array $c2, $field = 'created') {
+    $i1 = 0;
+    $n1 = count($c1);
+    $i2 = 0;
+    $n2 = count($c2);
+    $c = array();
+    while ($i1 < $n1 && $i2 < $n2) {
+      $c[] = ($c1[$i1]->$field < $c2[$i2]->$field) ? $c1[$i1++] : $c2[$i2++];
+    }
+    while ($i1 < $n1) {
+      $c[] = $c1[$i1++];
+    }
+    while ($i2 < $n2) {
+      $c[] = $c2[$i2++];
+    }
+    return $c;
   }
   /**
    * Delete transaction.
