@@ -77,8 +77,8 @@ function parse_trades($import_id, $data, $row, &$context) {
     );
 
     $trans = array(
-      'fromaccountname' => $data['Seller'],
-      'toaccountname' => $data['Buyer'],
+      'fromaccountname' => $data['Buyer'],
+      'toaccountname' => $data['Seller'],
       'amount' => $data['Amount'],
       'concept' => $data['Description'],
       'user' => $trade_user_id,
