@@ -470,10 +470,12 @@ class Bank {
     try{
       $s = new Serializer('BasicTransaction');
       $transaction = $s->load($id);
-      $transaction->revoke();
-      if ($transaction->getState() != TransactionInterface::STATE_REVOKED) {
-        throw new Exception('Couldn\'t revoke transaction: ' . $transaction->getLog($transaction->getState()));
+      if ($transaction->getState() == TransactionInterface::STATE_COMMITTED) {
+        $transaction->revoke();
       }
+      // The following statement will throw an exception if the transaction is 
+      // not revoked or rejected.
+      $transaction->setState(TransactionInterface::STATE_DISCARDED);
       $s->delete($transaction);
       return TRUE;
     }
@@ -2066,7 +2068,6 @@ class BasicTransaction extends DBObject implements TransactionInterface {
       TransactionInterface::STATE_REVOKE_ACCEPTED => array(TransactionInterface::STATE_REVOKED, TransactionInterface::STATE_ERROR),
       TransactionInterface::STATE_REVOKE_REJECTED => array(TransactionInterface::STATE_REVOKE_TRIGGERED),
       TransactionInterface::STATE_REVOKED => array(TransactionInterface::STATE_DISCARDED, TransactionInterface::STATE_TRIGGERED),
-
     );
     $candidates = $flow[$this->state];
     if (!in_array($state, $candidates)) {
@@ -2139,12 +2140,12 @@ class BasicTransaction extends DBObject implements TransactionInterface {
     $account_to = $s->load($this->toaccount);
     // Revoke transaction from both accounts.
     try {
+      $this->setState(TransactionInterface::STATE_REVOKE_TRIGGERED);
       $this->amount = -$this->amount;
       $account_to->applyTransaction($this);
       $account_from->applyTransaction($this);
       $this->amount = -$this->amount;
       // Go through the three necessary workflow states.
-      $this->setState(TransactionInterface::STATE_REVOKE_TRIGGERED);
       $this->setState(TransactionInterface::STATE_REVOKE_ACCEPTED);
       $this->setState(TransactionInterface::STATE_REVOKED);
       return TRUE;
