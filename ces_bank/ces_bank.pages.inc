@@ -261,7 +261,7 @@ function ces_bank_exchange_accounts_page() {
     // first cell begins with 8 chars of the name user in capital letters
     // only for sort case insensitive proposals.
     $row = array(
-      strtoupper(sprintf("%-8s",ces_user_get_name($user))) .
+      strtoupper(sprintf("%8.8s",ces_user_get_name($user))) .
       '<div class="ces-user-column">' .
       '<div class="user-picture">' . theme('user_picture', array('account' => $user)) . '</div>' .
       l(ces_user_get_name($user), 'user/' . $uid) .
