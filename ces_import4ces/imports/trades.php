@@ -47,42 +47,11 @@ function parse_trades($import_id, $data, $row, &$context) {
 
 
      */
-    if (substr($data['Seller'], 4) == 'VIRT') {
-      // This is an inter-exchange transaction. Use the corresponding virtual
-      // account.
-      $name = substr($data['Seller'], 0, 4) . $data['RemoteExchange'];
-      $account_seller = $bank->getAccountByName($name);
-      if ($account_seller === FALSE) {
-        // The virtual account does not exist yet, so let's create it.
-        $import = ces_import4ces_import_load($import_id);
-        $exchange = $bank->getExchange($import['exchange_id']);
-        $record = array(
-          'id' => NULL,
-          'exchange' => $exchange['id'],
-          'name' => $name,
-          'balance' => 0.0,
-          'state' => LocalAccount::STATE_HIDDEN,
-          'kind' => LocalAccount::TYPE_VIRTUAL,
-          'limitchain' => $exchange['limitchain'],
-          'users' => array(
-            array(
-              'account' => NULL,
-              'user' => 1,
-              'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
-            ),
-          ),
-        );
-        $bank->createAccount($record);
-        $bank->activateAccount($record);
-      }
-    }
-    else{
-      $account_seller = $bank->getAccountByName($data['Seller']);
-    }
+    $account_seller = _ces_import4ces_trades_get_account($import_id, $data['Seller'], $data);
     if ($account_seller === FALSE) {
       throw new Exception('Acount @account not found.', array('@account' => $data['Seller']));
     }
-    $account_buyer = $bank->getAccountByName($data['Buyer']);
+    $account_buyer = _ces_import4ces_trades_get_account($import_id, $data['Buyer'], $data);
     if ($account_buyer === FALSE) {
       throw new Exception('Acount @account not found.', array('@account' => $data['Buyer']));
     }
@@ -135,4 +104,54 @@ function parse_trades($import_id, $data, $row, &$context) {
     ces_import4ces_batch_fail_row($import_id, array_keys($data), array_values($data), $row, $context);
     $context['results']['error'] = check_plain($e->getMessage());
   }
+}
+
+/**
+ * Get an account record for this trade. If the trade is inter-exchange, it
+ * returns the proper interexchange virtual account, creating it if necessary.
+ * 
+ * @param $import_id int
+ *   The id of this import.
+ * @param $name string
+ *   The name of the account to be retrieved.
+ * @param $data array
+ *   The full import line.
+ * 
+ * @return The accout record or FALSE if it donesn't exist.
+ */
+function _ces_import4ces_trades_get_account($import_id, $name, $data) {
+  $bank = new Bank();
+  if (substr($name, 4) == 'VIRT') {
+      // This is an inter-exchange transaction. Use the corresponding virtual
+      // account.
+      $name = substr($name, 0, 4) . $data['RemoteExchange'];
+      $account_seller = $bank->getAccountByName($name);
+      if ($account_seller === FALSE) {
+        // The virtual account does not exist yet, so let's create it.
+        $import = ces_import4ces_import_load($import_id);
+        $exchange = $bank->getExchange($import['exchange_id']);
+        $account_seller = array(
+          'id' => NULL,
+          'exchange' => $exchange['id'],
+          'name' => $name,
+          'balance' => 0.0,
+          'state' => LocalAccount::STATE_HIDDEN,
+          'kind' => LocalAccount::TYPE_VIRTUAL,
+          'limitchain' => $exchange['limitchain'],
+          'users' => array(
+            array(
+              'account' => NULL,
+              'user' => 1,
+              'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+            ),
+          ),
+        );
+        $bank->createAccount($account_seller);
+        $bank->activateAccount($account_seller);
+      }
+    }
+    else{
+      $account_seller = $bank->getAccountByName($data['Seller']);
+    }
+    return $account_seller;
 }
