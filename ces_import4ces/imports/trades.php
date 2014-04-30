@@ -129,7 +129,7 @@ function _ces_import4ces_trades_get_account($import_id, $name, $data) {
       if ($account_seller === FALSE) {
         // The virtual account does not exist yet, so let's create it.
         $import = ces_import4ces_import_load($import_id);
-        $exchange = $bank->getExchange($import['exchange_id']);
+        $exchange = $bank->getExchange($import->exchange_id);
         $account_seller = array(
           'id' => NULL,
           'exchange' => $exchange['id'],
@@ -151,7 +151,7 @@ function _ces_import4ces_trades_get_account($import_id, $name, $data) {
       }
     }
     else{
-      $account_seller = $bank->getAccountByName($data['Seller']);
+      $account_seller = $bank->getAccountByName($name);
     }
     return $account_seller;
 }
