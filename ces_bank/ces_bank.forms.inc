@@ -1065,7 +1065,7 @@ function ces_bank_transaction_form_submit($form, &$form_state) {
  *   One of:
  *   - new: create and trigger transaction.
  *   - edit: edit a new transaction.
- *   - trigger: trigger an alredy created transaction.
+ *   - trigger: trigger an already created transaction.
  *   - discard: discard a rejected transaction (TODO).
  *   - revoke: revoke a committed transaction (TODO).
  * @param int $id

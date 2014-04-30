@@ -423,7 +423,7 @@ class Bank {
       $conditions['toaccount'] = $account;
       $transactions2 = $s->loadCollection($conditions, 'created');
       // Merge the arrays taking the created field in count.
-      $transactions = $this->mergeSortedCollections($transactions1, $transactions2);
+      $transactions = $this->mergeSortedTransactionCollections($transactions1, $transactions2);
     }
     else {
       $transactions = $s->loadCollection($conditions, 'created');
@@ -439,26 +439,24 @@ class Bank {
     return $records;
   }
   /**
-   * Merge two sorted collections of objects.
+   * Merge two sorted collections of transaction objects.
    * 
    * @param array $c1
-   *   The first collection.
+   *   The first TansactionInterface collection.
    * @param array $c2
-   *   The second collection.
-   * @param string $field
-   *   The field which over the collections are sorted.
+   *   The second TansactionInterface collection.
    * 
    * @return array
    *   The sorted merge of $c1 and $c2.
    */
-  private function mergeSortedCollections(array $c1, array $c2, $field = 'created') {
+  private function mergeSortedTransactionCollections(array $c1, array $c2) {
     $i1 = 0;
     $n1 = count($c1);
     $i2 = 0;
     $n2 = count($c2);
     $c = array();
     while ($i1 < $n1 && $i2 < $n2) {
-      $c[] = ($c1[$i1]->$field < $c2[$i2]->$field) ? $c1[$i1++] : $c2[$i2++];
+      $c[] = ($c1[$i1]->getCreated() < $c2[$i2]->getCreated()) ? $c1[$i1++] : $c2[$i2++];
     }
     while ($i1 < $n1) {
       $c[] = $c1[$i1++];
@@ -482,10 +480,12 @@ class Bank {
     try{
       $s = new Serializer('BasicTransaction');
       $transaction = $s->load($id);
-      $transaction->revoke();
-      if ($transaction->getState() != TransactionInterface::STATE_REVOKED) {
-        throw new Exception('Couldn\'t revoke transaction: ' . $transaction->getLog($transaction->getState()));
+      if ($transaction->getState() == TransactionInterface::STATE_COMMITTED) {
+        $transaction->revoke();
       }
+      // The following statement will throw an exception if the transaction is 
+      // not revoked or rejected.
+      $transaction->setState(TransactionInterface::STATE_DISCARDED);
       $s->delete($transaction);
       return TRUE;
     }
@@ -1844,59 +1844,77 @@ class AbsoluteCreditLimit extends AccountLimit {
  * ============
  * A transaction is an amount of money to be transferred from one account to
  * another account. The basic transaction moves certanin quantity of money through
- * two accounts within the same exchange. There are other king of transactions
+ * two accounts within the same exchange. There are other kind of transactions
  * moving currency between servers or third party applications. In each exchange
  * there is an special account called 'virtual account'. This account acts as the
  * foreign account for all inter-exchange transactions. It is also used to
  * temporally save the money in delayed transactions.
  */
 interface TransactionInterface {
+
   /**
-   * TODO: document.
+   * Get the identifier of this transaction.
+   * 
+   * @return int
+   *   The identifier of this transaction.
    */
   public function getId();
   /**
-   * TODO: document.
+   * Get the amount of this transaction, in the seller's exchange currency.
+   * 
    * @return float
-   *   the currency amount of this transaction.
+   *   The currency amount of this transaction.
    */
   public function getAmount(Currency $currency = NULL);
   /**
-   * TODO: document.
+   * Get the user id that has created this transaction.
+   * 
    * @return int
    *   The id of the user who has created this transaction.
    */
   public function getUser();
   /**
-   * A short description of this transaction.
+   * Get the short description of this transaction.
+   * 
    * @return string
-   *   A short description of this transaction.
+   *   The short description of this transaction.
    */
   public function getConcept();
   /**
-   * TODO: document.
+   * Get the name of the buyer account.
+   * 
    * @return string
    *   The buyer account public ID
    */
   public function getFromAccountName();
   /**
-   * TODO: document.
+   * Get the name of the seller account.
+   * 
    * @return string
    *   The seller account public ID
    */
   public function getToAccountName();
   /**
-   * TODO: document.
+   * Get the state of this transaction.
+   * 
    * @return int
    *   The current state of this transaction.
    */
   public function getState();
   /**
-   * TODO: document.
+   * Get messages logged for this trasaction.
+   * 
    * @return array
    *   Array of messages with details about given $state.
    */
   public function getLog($state);
+  /**
+   * Get the time the transaction was created.
+   *
+   * @return int
+   *   The timestamp of the transaction creation.
+   */
+  public function getCreated();
   /**
    * Trigger this transaction.
    */
@@ -1985,41 +2003,47 @@ interface TransactionInterface {
 class BasicTransaction extends DBObject implements TransactionInterface {
   /**
    * @var int
-   * Transaction identifier.
+   *   Transaction identifier.
    */
   public $id;
   /**
    * @var int
-   * Buyer account identifier.
+   *   Buyer account identifier.
    */
   public $fromaccount;
   /**
    * @var int
-   * Seller account identifier.
+   *   Seller account identifier.
    */
   public $toaccount;
   /**
    * @var float
+   *   Transaction amount.
    */
   public $amount;
   /**
    * @var int
+   *   Transaction creator.
    */
   public $user;
   /**
    * @var string
+   *   Short description.
    */
   public $concept;
   /**
    * @var int
+   *   State.
    */
   public $state;
   /**
    * @var int
+   *   Date.
    */
   public $created;
   /**
    * @var int
+   *   Date.
    */
   public $modified;
   /**
@@ -2131,7 +2155,6 @@ class BasicTransaction extends DBObject implements TransactionInterface {
       TransactionInterface::STATE_REVOKE_ACCEPTED => array(TransactionInterface::STATE_REVOKED, TransactionInterface::STATE_ERROR),
       TransactionInterface::STATE_REVOKE_REJECTED => array(TransactionInterface::STATE_REVOKE_TRIGGERED),
       TransactionInterface::STATE_REVOKED => array(TransactionInterface::STATE_DISCARDED, TransactionInterface::STATE_TRIGGERED),
-
     );
     $candidates = $flow[$this->state];
     if (!in_array($state, $candidates)) {
@@ -2204,12 +2227,12 @@ class BasicTransaction extends DBObject implements TransactionInterface {
     $account_to = $s->load($this->toaccount);
     // Revoke transaction from both accounts.
     try {
+      $this->setState(TransactionInterface::STATE_REVOKE_TRIGGERED);
       $this->amount = -$this->amount;
       $account_to->applyTransaction($this);
       $account_from->applyTransaction($this);
       $this->amount = -$this->amount;
       // Go through the three necessary workflow states.
-      $this->setState(TransactionInterface::STATE_REVOKE_TRIGGERED);
       $this->setState(TransactionInterface::STATE_REVOKE_ACCEPTED);
       $this->setState(TransactionInterface::STATE_REVOKED);
       return TRUE;
@@ -2239,6 +2262,10 @@ class BasicTransaction extends DBObject implements TransactionInterface {
       11 => 'ERROR',
     );
     return $string[$state];
+  }
+
+  public function getCreated() {
+    return $this->created;
   }
 }
 /**
@@ -2341,6 +2368,12 @@ abstract class DecoratedTransaction extends DBObject implements TransactionInter
    */
   public function setState($state) {
     return $this->parent->setState($state);
+  }
+  /**
+   * Implements TransactionInterface::getCreated();
+   */
+  public function getCreated() {
+    return $this->parent->getCreated();
   }
   /**
    * TODO: document.
@@ -2530,6 +2563,7 @@ class LevyedTransaction extends DecoratedTransaction {
     ));
     // @TODO: finish this!
   }
+
 }
 /**
  * The set of permissions of a particular user.
