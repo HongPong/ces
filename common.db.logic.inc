@@ -175,19 +175,29 @@ class Serializer {
     }
     $query = db_select($this->table, 't')->fields('t');
     if (isset($conditions['createdsince'])) {
-      $query = $query->condition('created', $conditions['createdsince'], '>=');
+      $query->condition('t.created', $conditions['createdsince'], '>=');
       unset($conditions['createdsince']);
     }
     if (isset($conditions['createduntil'])) {
-      $query = $query->condition('created', $conditions['createduntil'], '<=');
+      $query->condition('t.created', $conditions['createduntil'], '<=');
       unset($conditions['createduntil']);
+    }
+    if (isset($conditions['join'])) {
+      $field = $conditions['join']['field'];
+      $s = new Serializer($conditions['join']['class']);
+      $table = $s->table;
+      $condition_field = $conditions['join']['condition']['field'];
+      $condition_value = $conditions['join']['condition']['value'];
+      $query->join($table, 'j', 't.' . $field . ' = ' . 'j.id AND j.' .
+        $condition_field . ' = :val', array(':val' => $condition_value));
+      unset($conditions['join']);
     }
     if (isset($conditions['limit'])) {
       $query->range(0, $conditions['limit']);
       unset($conditions['limit']);
     }
     foreach ($conditions as $key => $value) {
-      $query = $query->condition($key, $value);
+      $query->condition('t.' . $key, $value);
     }
     if ($order != NULL) {
       $query->orderBy($order);

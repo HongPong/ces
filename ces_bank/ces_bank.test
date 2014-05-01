@@ -111,6 +111,7 @@ class BankTestCase extends DrupalWebTestCase {
     $this->createExchanges();
     $this->createAccounts();
     $this->doTransactions();
+    $this->adminTransactions();
   }
   /**
    * Creates two exchanges.
@@ -318,6 +319,16 @@ class BankTestCase extends DrupalWebTestCase {
     $this->doTransaction($user2, $record);
     $this->assertBalance($user1, '1.5');
     $this->assertBalance($user2, '-1.5');
+  }
+  /**
+   * Check administrative interface.
+   */
+  protected function adminTransactions() {
+     $this->drupalLogin($this->admin1);
+     $this->drupalGet('ces/admin/transaction');
+     $this->assertText('First test transaction.');
+     $this->assertText('Second test transaction.');
+     $this->assertText('Third test transaction.');
   }
   /**
    * Helper function.
