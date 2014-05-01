@@ -416,6 +416,18 @@ class Bank {
       $transactions = $this->mergeSortedTransactionCollections($transactions1, $transactions2);
     }
     else {
+      if (isset($conditions['exchange'])) {
+        $exchange_id = $conditions['exchange'];
+        unset($conditions['exchange']);
+        $conditions['join'] = array(
+          'field' => 'toaccount',
+          'class' => 'LocalAccount',
+          'condition' => array(
+            'field' => 'exchange',
+            'value' => $exchange_id,
+          ),
+        );
+      }
       $transactions = $s->loadCollection($conditions, 'created');
     }
     $records = array();
