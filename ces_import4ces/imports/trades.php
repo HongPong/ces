@@ -55,16 +55,11 @@ function parse_trades($import_id, $data, $row, &$context) {
     if ($account_buyer === FALSE) {
       throw new Exception('Acount @account not found.', array('@account' => $data['Buyer']));
     }
-    if (substr($data['EnteredBy'], -4) == '0000') {
+    // Find uid from user
+    $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['EnteredBy']));
+    $trade_user_id = $query->fetchColumn(0);
+    if (!$trade_user_id) {
       $trade_user_id = $user->uid;
-    }
-    else {
-      // Find uid from user
-      $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['EnteredBy']));
-      $trade_user_id = $query->fetchColumn(0);
-      if (!$trade_user_id) {
-        $trade_user_id = $user->uid;
-      }
     }
 
     $extra_info = array(

@@ -480,6 +480,10 @@ class Bank {
     try{
       $s = new Serializer('BasicTransaction');
       $transaction = $s->load($id);
+      if ($transaction === FALSE) {
+        throw new Exception(t('Transaction id %id is invalid',
+          array('%id' => $id)));
+      }
       if ($transaction->getState() == TransactionInterface::STATE_COMMITTED) {
         $transaction->revoke();
       }

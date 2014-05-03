@@ -27,16 +27,10 @@ function parse_announce($import_id, $data, $row, &$context) {
       'Keep' => $data['Keep'],
     );
 
-    if (substr($data['Owner'], -4) == '0000') {
-      $announce_user_id = $user->uid;
-    }
-    else {
-      // Find uid from user
-      $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['Owner']));
-      $announce_user_id = $query->fetchColumn(0);
-      if (!$announce_user_id) {
-        $announce_user_id = $user->id;
-      }
+    $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['Owner']));
+    $announce_user_id = $query->fetchColumn(0);
+    if (!$announce_user_id) {
+      $announce_user_id = $user->id;
     }
 
     // Create a blog post

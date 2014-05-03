@@ -571,7 +571,13 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
 
   $transactions = ces_import4ces_get_object_ids($import->id, 'trades');
   foreach ($transactions as $id) {
-    $bank->deleteTransaction($id);
+    try {
+      $bank->deleteTransaction($id);
+    } 
+    catch(Exception $e) {
+      // Most probably the transaction doesn't exist anymore.
+      drupal_set_message($e->getMessage(), 'error');
+    }
   }
 
   // Delete offers and wants.

@@ -15,15 +15,7 @@ function parse_users($import_id, $data, $row, &$context) {
   try {
     $context['results']['import_id'] = $import_id;
     $import = ces_import4ces_import_load($import_id);
-    // create drupal user
-    // The admin user account is created with the exchange 
-    $query = db_query('SELECT ca.name FROM {ces_account} ca where ca.name=:name',
-      array(':name' => $data['UID']));
-    $result = $query->fetchAllAssoc('name');
-    if (!empty($result)) {
-      ces_import4ces_update_row($import_id, $row);
-      return;
-    }
+    
     // @todo Al crear un usuario se utiliza el mail como identificador y se 
     // genera un password aleatorio, enviano un email al usuario que podra
     // resetear el password.
@@ -146,8 +138,15 @@ function parse_users($import_id, $data, $row, &$context) {
       'Buddy' => $data['Buddy'],
     );
 
-    //the first parameter is left blank so a new user is created
-    $user_drupal = user_save('', $fields);
+    // Administrative user hs already been created in the first step, but we now
+    // are completing the record with the user info.
+    if (substr($data['UID'], -4) == '0000') {
+      $user_drupal = user_load_by_name($data['UID']);
+    }
+    else {
+      $user_drupal = FALSE;
+    }
+    $user_drupal = user_save($user_drupal, $fields);
     if ($user_drupal === FALSE) {
       throw new Exception(t('Error creating Drupal user.'));
     }
@@ -156,26 +155,27 @@ function parse_users($import_id, $data, $row, &$context) {
     // Manually set the password so it appears in the e-mail.
     $user_drupal->password = $fields['pass'];
 
-    // User in CES
-
-    $bank = new Bank();
-    $limit = $bank->getDefaultLimitChain($import->exchange_id);
-    $account = array(
-      'exchange' => $import->exchange_id,
-      'name' => $data['UID'],
-      'limitchain' => $limit['id'],
-      'kind' => $type_user[$data['UserType']],
-      'state' => LocalAccount::STATE_HIDDEN,
-      'users' => array(
-        array(
-          'user' => $user_drupal->uid,
-          'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+    // Account in CES. The administrative account has already been created in
+    // exchange import.
+    if (substr($user_drupal->name, -4) != '0000') {
+      $bank = new Bank();
+      $limit = $bank->getDefaultLimitChain($import->exchange_id);
+      $account = array(
+        'exchange' => $import->exchange_id,
+        'name' => $data['UID'],
+        'limitchain' => $limit['id'],
+        'kind' => $type_user[$data['UserType']],
+        'state' => LocalAccount::STATE_HIDDEN,
+        'users' => array(
+          array(
+            'user' => $user_drupal->uid,
+            'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+          ),
         ),
-      ),
-    );
-    $bank->createAccount($account, FALSE);
-    $bank->activateAccount($account);
-
+      );
+      $bank->createAccount($account, FALSE);
+      $bank->activateAccount($account);
+    }
     db_insert('ces_import4ces_objects')
       ->fields(array(
         'import_id' => $import_id,

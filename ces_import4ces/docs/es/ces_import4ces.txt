@@ -62,10 +62,6 @@ Lista de tareas pendientes por orden de prioridad
 @todo Insertar los campos del usuario que no están en integralCES y tienen 
       su utilidad.
 
-@todo Importar mejor las transacciones inter-exchange de forma que queden 
-      registrados los balances y que en caso de que ya exista la otra red o que
-      a posteriori se importe queden bien.
-
 @todo Repasar a fondo los campos de todas las tablas que no se están utilizando
       y decidir si se implementan o no.
 
@@ -73,15 +69,9 @@ Lista de tareas pendientes por orden de prioridad
       demo
 
 @todo Acciones para el último paso: 
-
         + Enviar email a los uusarios para que reseteen la contraseña.
         + Añadir enlace para editar Exchange
 
 @todo Subarea Aquest és un concepte que no està implementat en el CES.
       Decidir què fem.
 
-@todo Archivo remote.csv son ofertas remotas. Es decir, ofertas de gente con 
-      cuentas en otras exchanges que publican su anuncio en esta exchange.
-
-      El problema es que estos usuarios no existen mientras no se haya 
-      importado la base de datos de su exchange.

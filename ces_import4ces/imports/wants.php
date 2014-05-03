@@ -51,14 +51,9 @@ function parse_wants($import_id, $data, $row, &$context) {
       'UID' => $data['UID'],
     );
 
-    if (substr($data['UID'], -4) == '0000') {
-      $want_user_id = $GLOBALS['user']->uid;
-    }
-    else {
-      // Find uid from user
-      $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['UID']));
-      $want_user_id = $query->fetchColumn(0);
-    }
+    // Find uid from user
+    $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['UID']));
+    $want_user_id = $query->fetchColumn(0);
 
     if (empty($want_user_id)) {
       $m = t('The user @user was not found in want import row @row. It may be a
