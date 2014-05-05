@@ -16,7 +16,10 @@ define('CES_IMPORT4CES_RESET_PASSWORD', 0);
  * Send welcome mails to all users.
  */
 define('CES_IMPORT4CES_SEND_MAILS', 0);
-
+/**
+ * Where to save import CSV files.
+ */
+define('CES_IMPORT4CES_FILES_URI', 'public://ces_import');
 /**
  * Implements hook_menu().
  */
@@ -130,9 +133,54 @@ function ces_import4ces_import_form($form, &$form_state, $import_id = FALSE) {
     return ces_import4ces_row_form($form, $form_state);
   }
   if ($import_id === FALSE) {
+    $imports = file_scan_directory(CES_IMPORT4CES_FILES_URI, '/.*/',
+      array('recurse' => FALSE));
+    $options = array();
+    $options[0] = t('Upload new files');
+    foreach($imports as $uri => $file) {
+      if (is_dir($uri)) {
+        $options[$uri] = $file->name;
+      }
+    }
+    $form['files'] = array(
+      '#type' => 'select',
+      '#options' => $options,
+      '#default_value' => 0,
+      '#title' => t('Select a previously uploaded import file set or let "Upload new files".'),
+    );
+    $form['name'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Import name',
+      '#description' => t('A good name is the four letter code of the exchange to be imported.'),
+    );
+    $form['settings'] = array(
+      '#type' => 'file',
+      '#title' => 'settings.csv',
+    );
+    $form['users'] = array(
+      '#type' => 'file',
+      '#title' => 'users.csv',
+    );
+    $form['offers'] = array(
+      '#type' => 'file',
+      '#title' => 'offers.csv',
+    );
+    $form['wants'] = array(
+      '#type' => 'file',
+      '#title' => 'wants.csv',
+    );
+    $form['trades'] = array(
+      '#type' => 'file',
+      '#title' => 'trades.csv',
+    );
+    $form['announce'] = array(
+      '#type' => 'file',
+      '#title' => 'announce.csv',
+    );
+    
     return confirm_form($form, t('Do you really want to start a new import?'),
       'ces/admin/import',
-      t('Put all the csv files in the sites/default/files/import folder.'),
+      t('Either select an import set or upload a new set of files.'),
       t('New import'));
   }
   else {
@@ -245,7 +293,8 @@ function ces_import4ces_import_load($import_id) {
   $cache = &drupal_static(__FUNCTION__);
   if (!isset($cache[$import_id])) {
     $result = db_query(
-      'SELECT i.id, i.exchange_id, e.code, e.name, i.step, i.row, i.anonymous 
+    'SELECT i.id, i.exchange_id, e.code, e.name, i.step, i.row, i.anonymous,
+    i.files 
     FROM {ces_import4ces_exchange} i 
     LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
     WHERE i.id = :iid',
@@ -256,16 +305,53 @@ function ces_import4ces_import_load($import_id) {
   return $cache[$import_id];
 }
 
+function ces_import4ces_import_form_validate($form, &$form_state) {
+  if (empty($form_state['values']['import_id'])) {
+    $files = array('settings', 'users', 'offers', 'wants', 'trades',
+      'announce');
+    if (empty($form_state['values']['files'])) {
+      $dir = $form_state['values']['name'];
+      if (!preg_match('/[a-zA-Z0-9]+/', $dir)) {
+        form_set_error('name', t('Invalid folder name.'));
+      }
+      $validators = array('file_validate_extensions' => array( 'csv' ));
+      foreach ($files as $file) {
+        $dest = CES_IMPORT4CES_FILES_URI . '/' . $dir . '/';
+        if (!is_dir($dest)) {
+          mkdir($dest, 0777, TRUE);
+        }
+        if(($fileobj = file_save_upload($file, $validators, $dest,
+          FILE_EXISTS_REPLACE))) {
+          $form_state['values'][$file] = $fileobj->destination;
+        }
+        else {
+          form_set_error($file, t('Could not copy file to %file',
+            array('%file' => $dest)));
+        }
+      }
+      $form_state['values']['files'] = $dir;
+    }
+  }
+}
+
 /**
  * Submit to confirm form to continue an import.
  */
 function ces_import4ces_import_form_submit($form, &$form_state) {
   global $user;
   if (empty($form_state['values']['import_id'])) {
-    $record = new stdClass();
-    $record->step = '1';
-    $record->row = 0;
-    $record->name = 'exchange';
+    $import_id = db_insert('ces_import4ces_exchange')->fields(array(
+      'exchange_id' => 0,
+      'created' => REQUEST_TIME,
+      'step' => 1,
+      'row' => 0,
+      'anonymous' => CES_IMPORT4CES_ANONYMOUS,
+      'uid' => $user->uid,
+      'files' => $form_state['values']['files'],
+    ))->execute();
+    $record = db_select('ces_import4ces_exchange', 'i')->fields('i')
+      ->condition('id', $import_id)->execute()->fetch();
+    $record->name = 'Exchange';
   }
   else {
     // Continue an import.
@@ -326,7 +412,7 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
   }
   if (isset($parse_function)) {
     // Setup the absolute path of this csv file
-    $file_csv = DRUPAL_ROOT . '/sites/default/files/import/' . $file_csv;
+    $file_csv = $record->files . '/' . $file_csv;
     if (!empty($form_state['values']['manual_row'])) {
       require_once drupal_get_path('module', 'ces_import4ces') . '/' . $file;
       $form_state['values']['parse_function'] = $parse_function;
@@ -357,7 +443,7 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
   // Validate CSV file.
   if (!file_exists($file_csv)) {
     drupal_set_message(t('Import file @path not found.',
-        array('@path' => $file_csv), 'error'));
+        array('@path' => $file_csv)), 'error');
     return FALSE;
   }
 
@@ -438,8 +524,6 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
   }
 
   if (empty($operations)) {
-    require_once drupal_get_path('module', 'ces_import4ces')
-      . '/ces_import4ces_functions.php';
     ces_import4ces_update_step($record->id, $record->step + 1);
     ces_import4ces_update_row($record->id, 0);
     drupal_set_message('There is no data to import in this step.');
@@ -553,72 +637,72 @@ function ces_import4ces_import_delete_form($form, &$form_state, $import_id) {
 function ces_import4ces_import_delete_form_submit($form, &$form_state) {
   $import_id = $form_state['values']['import_id'];
   $import = ces_import4ces_import_load($import_id);
-
-  // Delete blog posts:
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'ces_blog')
-    ->fieldCondition('ces_blog_exchange', 'value', $import->exchange_id);
-  $result = $query->execute();
-  if (isset($result['node']) && count($result['node']) > 0) {
-    $nids = array_keys($result['node']);
-    node_delete_multiple($nids);
-  }
-
-  // Delete trades.
-  $bank = new Bank();
-  $exchange = $bank->getExchange($import->exchange_id);
-
-  $transactions = ces_import4ces_get_object_ids($import->id, 'trades');
-  foreach ($transactions as $id) {
-    try {
-      $bank->deleteTransaction($id);
-    } 
-    catch(Exception $e) {
-      // Most probably the transaction doesn't exist anymore.
-      drupal_set_message($e->getMessage(), 'error');
+  if ($import->exchange_id) {
+    // Delete blog posts:
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'ces_blog')
+      ->fieldCondition('ces_blog_exchange', 'value', $import->exchange_id);
+    $result = $query->execute();
+    if (isset($result['node']) && count($result['node']) > 0) {
+      $nids = array_keys($result['node']);
+      node_delete_multiple($nids);
     }
-  }
 
-  // Delete offers and wants.
+    // Delete trades.
+    $bank = new Bank();
+    $exchange = $bank->getExchange($import->exchange_id);
 
-  $offers = ces_import4ces_get_object_ids($import->id, 'offers');
-  $offers = array_keys(ces_offerwant_load_multiple($offers));
-  foreach ($offers as $id) {
-    ces_offerwant_delete($id);
-  }
-  $wants = ces_import4ces_get_object_ids($import->id, 'wants');
-  $wants = array_keys(ces_offerwant_load_multiple($wants));
-  foreach ($wants as $id) {
-    ces_offerwant_delete($id);
-  }
-
-  // Delete categories.
-  $categories = ces_import4ces_get_object_ids($import->id, 'category');
-  $categories = array_keys(ces_category_load_multiple($categories));
-  foreach ($categories as $id) {
-    ces_category_delete($id);
-  }
-
-  // Delete accounts.
-  $accounts = $bank->getAllAccounts(array('exchange' => $import->exchange_id));
-  foreach ($accounts as $account) {
-    $bank->deleteAccount($account['id']);
-  }
-  $userids = ces_import4ces_get_object_ids($import->id, 'user');
-  foreach ($userids as $uid) {
-    if ($uid != 1) {
-      user_delete($uid);
+    $transactions = ces_import4ces_get_object_ids($import->id, 'trades');
+    foreach ($transactions as $id) {
+      try {
+        $bank->deleteTransaction($id);
+      } 
+      catch(Exception $e) {
+        // Most probably the transaction doesn't exist anymore.
+        drupal_set_message($e->getMessage(), 'error');
+      }
     }
-  }
 
-  // Delete exchange
-  $limitchains = $bank->getAllLimitChains($import->exchange_id);
-  foreach ($limitchains as $chain) {
-    $bank->deleteLimitChain($chain['id']);
-  }
-  $bank->deleteExchange($import->exchange_id);
+    // Delete offers and wants.
 
+    $offers = ces_import4ces_get_object_ids($import->id, 'offers');
+    $offers = array_keys(ces_offerwant_load_multiple($offers));
+    foreach ($offers as $id) {
+      ces_offerwant_delete($id);
+    }
+    $wants = ces_import4ces_get_object_ids($import->id, 'wants');
+    $wants = array_keys(ces_offerwant_load_multiple($wants));
+    foreach ($wants as $id) {
+      ces_offerwant_delete($id);
+    }
+
+    // Delete categories.
+    $categories = ces_import4ces_get_object_ids($import->id, 'category');
+    $categories = array_keys(ces_category_load_multiple($categories));
+    foreach ($categories as $id) {
+      ces_category_delete($id);
+    }
+
+    // Delete accounts.
+    $accounts = $bank->getAllAccounts(array('exchange' => $import->exchange_id));
+    foreach ($accounts as $account) {
+      $bank->deleteAccount($account['id']);
+    }
+    $userids = ces_import4ces_get_object_ids($import->id, 'user');
+    foreach ($userids as $uid) {
+      if ($uid != 1) {
+        user_delete($uid);
+      }
+    }
+
+    // Delete exchange
+    $limitchains = $bank->getAllLimitChains($import->exchange_id);
+    foreach ($limitchains as $chain) {
+      $bank->deleteLimitChain($chain['id']);
+    }
+    $bank->deleteExchange($import->exchange_id);
+  }
   // Delete import data.
   db_delete('ces_import4ces_objects')
     ->condition('import_id', $import->id)
@@ -626,10 +710,9 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
   db_delete('ces_import4ces_exchange')
     ->condition('id', $import->id)
     ->execute();
-
+  
   // That's all.
-  drupal_set_message(t('Exchange @name has been deleted.',
-      array('@name' => $exchange['name'])));
+  drupal_set_message(t('Import data has been deleted.'));
   $form_state['redirect'] = 'ces/admin/import';
 }
 

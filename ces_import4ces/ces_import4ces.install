@@ -68,6 +68,13 @@ function ces_import4ces_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'files' => array(
+        'description' => 'Where the CSV files are found.',
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => '255',
+        'default' => '',
+      ),
       'observations' => array(
         'description' => 'observations collected',
         'type' => 'blob',

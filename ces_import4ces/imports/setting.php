@@ -8,7 +8,7 @@
 /**
  * Parse exchange settings.
  */
-function parse_setting($setting, $row, &$context) {
+function parse_setting($import_id, $setting, $row, &$context) {
   if (isset($context['results']['error']))
     return;
   $tx = db_transaction();
@@ -108,17 +108,11 @@ function parse_setting($setting, $row, &$context) {
 
     $bank->createExchange($exchange);
     $bank->activateExchange($exchange);
-
-    $import_id = db_insert('ces_import4ces_exchange')
-        ->fields(array(
-          'exchange_id' => $exchange['id'],
-          'created' => REQUEST_TIME,
-          'step' => 1,
-          'anonymous' => CES_IMPORT4CES_ANONYMOUS,
-          'uid' => $user->uid,
-          'data' => serialize($extra_data)
-        ))->execute();
-
+    db_update('ces_import4ces_exchange')
+    ->condition('id', $import_id)->fields(array(
+      'exchange_id' => $exchange['id'],
+      'data' => serialize($extra_data),
+    ))->execute();
     ces_import4ces_update_row($import_id, $row);
     $context['message'] = check_plain($exchange['name']);
     $context['results']['import_id'] = $import_id;
