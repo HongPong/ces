@@ -13,7 +13,6 @@ function parse_setting($import_id, $setting, $row, &$context) {
     return;
   $tx = db_transaction();
   try {
-
     global $user;
 
     // Crear bank
@@ -87,8 +86,6 @@ function parse_setting($import_id, $setting, $row, &$context) {
       'TimeUnit' => $setting['TimeUnit'],
       'DateAdded' => $setting['DateAdded'],
       'DateModified' => $setting['DateModified'],
-      'CredLim' => $setting['CredLim'],
-      'DebLim' => $setting['DebLim'],
       'TimeDiff' => $setting['TimeDiff'],
       'DaylightSavingOn' => $setting['DaylightSavingOn'],
       'DaylightSavingOff' => $setting['DaylightSavingOff'],
@@ -108,6 +105,25 @@ function parse_setting($import_id, $setting, $row, &$context) {
 
     $bank->createExchange($exchange);
     $bank->activateExchange($exchange);
+    // Update default credit/debit limit.
+    $default_limit = $bank->getLimitChain($exchange['limitchain']);
+    $default_credit = $setting['CredLim'];
+    $default_debit = $setting['DebLim'];
+    if ($default_credit != 0) {
+      $default_limit['limits'][] = array(
+        'classname' => 'AbsoluteCreditLimit',
+        'value' => $default_credit,
+        'block' => FALSE,
+      );
+    }
+    if ($default_debit != 0) {
+      $default_limit['limits'][] = array(
+        'classname' => 'AbsluteDebitLimit',
+        'value' => - $default_debit,
+        'block' => FALSE,
+      );
+    }
+    $bank->updateLimitChain($default_limit);
     db_update('ces_import4ces_exchange')
     ->condition('id', $import_id)->fields(array(
       'exchange_id' => $exchange['id'],

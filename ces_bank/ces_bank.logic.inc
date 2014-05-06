@@ -136,6 +136,7 @@ class Bank {
       $notifier = new Notifier();
       $notifier->notify('ces_bank', 'exchange activated', $exchange->admin, $user->uid, array('exchange' => $exchange->getRecord()));
       $this->activateAccount($account);
+      $record = $exchange->getRecord();
     }
     catch (Exception $e) {
       $t->rollback();
@@ -658,8 +659,22 @@ class Bank {
    * Creates a limit chain object.
    */
   public function createLimitChain(array &$record) {
-    unset($record['id']);
-    return $this->updateLimitChain($record);
+    $t = Serializer::DBTransaction();
+    try {
+      // Create account record.
+      unset($record['id']);
+      $limitchain = new LimitChain($record);
+      $s = new Serializer('LimitChain');
+      $s->save($limitchain);
+      // Save extra data because we need to have the limitchain id in orde to
+      // properly save the atomic limits.
+      $limitchain->saveExtraData();
+      $record = $limitchain->getRecord();
+    }
+    catch (Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
   }
   /**
    * Updates a limit chain object.
@@ -667,16 +682,6 @@ class Bank {
   public function updateLimitChain(array &$record) {
     $t = Serializer::DBTransaction();
     try{
-      if (isset($record['limits'])) {
-        foreach ($record['limits'] as $key => $limit) {
-          if (!isset($limit['data'])) {
-            $record['limits'][$key]['data'] = array();
-          }
-        }
-      }
-      else {
-        $record['limits'] = array();
-      }
       return $this->updateObject('LimitChain', $record);
     }
     catch (Exception $e) {
@@ -1626,6 +1631,10 @@ class LimitChain extends DBObject {
     $newids = array();
     // create/update limits.
     foreach ($this->limits as $limit) {
+      if (!isset($limit->data)) {
+        $limit->data = array();
+      }
+      $limit->limitchain = $this->id;
       $s->save($limit);
       $newids[] = $limit->id;
     }

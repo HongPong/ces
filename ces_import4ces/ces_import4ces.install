@@ -87,9 +87,6 @@ function ces_import4ces_schema() {
       ),
     ),
     'primary key' => array('id'),
-    'unique keys' => array(
-      'exchange_id' => array('exchange_id'),
-    ),
     'foreign keys' => array(
       'exchange_id' => array(
         'table' => 'ces_exchange',

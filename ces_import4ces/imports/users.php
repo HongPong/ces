@@ -114,8 +114,6 @@ function parse_users($import_id, $data, $row, &$context) {
       'InvNo' => $data['InvNo'],
       'OrdNo' => $data['OrdNo'],
       'Coord' => $data['Coord'],
-      'CredLimit' => $data['CredLimit'],
-      'DebLimit' => $data['DebLimit'],
       'LocalOnly' => $data['LocalOnly'],
       'Notes' => $data['Notes'],
       'Photo' => $data['Photo'],
@@ -159,7 +157,8 @@ function parse_users($import_id, $data, $row, &$context) {
     // exchange import.
     if (substr($user_drupal->name, -4) != '0000') {
       $bank = new Bank();
-      $limit = $bank->getDefaultLimitChain($import->exchange_id);
+      $limit = _ces_import4ces_get_limitchain($import->exchange_id, 
+        $data['DebLimit'], $data['CredLimit']);
       $account = array(
         'exchange' => $import->exchange_id,
         'name' => $data['UID'],
@@ -192,4 +191,56 @@ function parse_users($import_id, $data, $row, &$context) {
       array_values($data), $row, $context);
     $context['results']['error'] = check_plain($e->getMessage());
   }
+}
+
+/**
+ * Return a limit chain for this exchange with these properties. It creates the
+ * object if necessary. 0 means no limit. $debit and $credit are nonnegatives.
+ */
+function _ces_import4ces_get_limitchain($exchange_id, $debit, $credit) {
+  $bank = new Bank();
+  $limitchains = &drupal_static(__FUNCTION__);
+  if (empty($limitchains)) {
+    $limitchains = $bank->getAllLimitChains($exchange_id);
+  }
+  foreach ($limitchains as $limitchain) {
+    $limit_credit = 0;
+    $limit_debit = 0;
+    foreach ($limitchain['limits'] as $limit) {
+      if ($limit['classname'] == 'AbsoluteCreditLimit') {
+        $limit_credit = $limit['value'];
+      }
+      elseif ($limit['classname'] == 'AbsoluteDebitLimit') {
+        $limit_debit = $limit['value'];
+      }
+    }
+    if ($limit_credit == $credit && $limit_debit == - $debit) {
+      return $limitchain;
+    }
+  }
+  // We have not found any suitable limit chain, so create a new one.
+  $limitchain = array(
+    'exchange' => $exchange_id,
+    'limits' => array(),
+    'name' => 'x',
+  );
+  if ($debit != 0) {
+    $limitchain['name'] = '-' . $debit . ' < ' . $limitchain['name'];
+    $limitchain['limits'][] = array(
+      'classname' => 'AbsoluteDebitLimit',
+      'value' => - $debit,
+      'block' => FALSE,
+    );
+  }
+  if ($credit != 0) {
+    $limitchain['name'] .= ' < ' . $credit;
+    $limitchain['limits'][] = array(
+      'classname' => 'AbsoluteCreditLimit',
+      'value' => $credit,
+      'block' => FALSE,
+    );
+  }
+  $bank->createLimitChain($limitchain);
+  drupal_static_reset(__FUNCTION__);
+  return $limitchain;
 }

@@ -139,7 +139,7 @@ function ces_import4ces_import_form($form, &$form_state, $import_id = FALSE) {
     $options[0] = t('Upload new files');
     foreach($imports as $uri => $file) {
       if (is_dir($uri)) {
-        $options[$uri] = $file->name;
+        $options[$file->name] = $file->name;
       }
     }
     $form['files'] = array(
@@ -412,7 +412,7 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
   }
   if (isset($parse_function)) {
     // Setup the absolute path of this csv file
-    $file_csv = $record->files . '/' . $file_csv;
+    $file_csv = CES_IMPORT4CES_FILES_URI . '/' . $record->files . '/' . $file_csv;
     if (!empty($form_state['values']['manual_row'])) {
       require_once drupal_get_path('module', 'ces_import4ces') . '/' . $file;
       $form_state['values']['parse_function'] = $parse_function;
