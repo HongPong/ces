@@ -60,8 +60,7 @@ class BankTestCase extends DrupalWebTestCase {
     );
   }
   /**
-   * Setup CES modules, creates the admin user, configures blocks and user
-   * preferences.
+   * Setup CES modules, admin user, configures blocks and user preferences.
    */
   public function setUp() {
     // Enable any modules required for the test.
@@ -324,11 +323,11 @@ class BankTestCase extends DrupalWebTestCase {
    * Check administrative interface.
    */
   protected function adminTransactions() {
-     $this->drupalLogin($this->admin1);
-     $this->drupalGet('ces/admin/transaction');
-     $this->assertText('First test transaction.');
-     $this->assertText('Second test transaction.');
-     $this->assertText('Third test transaction.');
+    $this->drupalLogin($this->admin1);
+    $this->drupalGet('ces/admin/transaction');
+    $this->assertText('First test transaction.');
+    $this->assertText('Second test transaction.');
+    $this->assertText('Third test transaction.');
   }
   /**
    * Helper function.

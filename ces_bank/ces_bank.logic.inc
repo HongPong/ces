@@ -236,8 +236,8 @@ class Bank {
    *   with all exchanges in this server that satisfy certain conditions.
    *
    * @param array $conditions
-   *   conditions filter on the fields of exchange records. By default return the
-   *   active ones.
+   *   conditions filter on the fields of exchange records. By default return
+   *   the active ones.
    */
   public function getAllExchanges(array $conditions = array('state' => 1)) {
     $s = new Serializer('Exchange');
@@ -385,17 +385,21 @@ class Bank {
    *   - account: id. Get transactions from or to the specified account id.
    *   If this parameter is set then the following two must not be set.
    *   - fromaccount: id. Get transactions where specified account id is buyer.
-   *   - toaccount: id. Get transactions where the specified account id is seller.
-   *   - createdsince: time. Get transactions created after this timestamp in seconds.
-   *   - createduntil: time. Get transactions created before this timestamp in seconds.
+   *   - toaccount: id. Get transactions where the specified account id is
+   *   seller.
+   *   - createdsince: time. Get transactions created after this timestamp in
+   *   seconds.
+   *   - createduntil: time. Get transactions created before this timestamp in
+   *   seconds.
    *   - limit: int. Get only n transactions.
    *
    * @return array
-   *   transaction records meeting all conditions specified by $conditions parameter.
-   *   The amount is expressed in a currency depending on the given conditions: if
-   *   'account' is set, then it is used the account's currency. If 'fromaccount'
-   *   is set but 'toaccount' is ommited, then the fromaccount's currency is used.
-   *   Otherwise the currency is the seller's account one for each exchenge.
+   *   Transaction records meeting all conditions specified by $conditions
+   *   parameter. The amount is expressed in a currency depending on the given
+   *   conditions: if 'account' is set, then it is used the account's currency.
+   *   If 'fromaccount' is set but 'toaccount' is ommited, then the
+   *   fromaccount's currency is used. Otherwise the currency is the seller's
+   *   account one for each exchenge.
    */
   public function getTransactions(array $conditions) {
     $s = new Serializer('BasicTransaction');
@@ -453,12 +457,12 @@ class Bank {
   }
   /**
    * Merge two sorted collections of transaction objects.
-   * 
+   *
    * @param array $c1
    *   The first TansactionInterface collection.
    * @param array $c2
    *   The second TansactionInterface collection.
-   * 
+   *
    * @return array
    *   The sorted merge of $c1 and $c2.
    */
@@ -500,7 +504,7 @@ class Bank {
       if ($transaction->getState() == TransactionInterface::STATE_COMMITTED) {
         $transaction->revoke();
       }
-      // The following statement will throw an exception if the transaction is 
+      // The following statement will throw an exception if the transaction is
       // not revoked or rejected.
       $transaction->setState(TransactionInterface::STATE_DISCARDED);
       $s->delete($transaction);
@@ -516,7 +520,8 @@ class Bank {
    *
    * @param array $record
    *   account object record.
-   * @param bool $send_mail (T/F)
+   * @param bool $send_mail
+   *   (T/F)
    */
   public function createAccount(array &$record, $send_mail = TRUE) {
     $t = Serializer::DBTransaction();
@@ -532,7 +537,7 @@ class Bank {
       $account->saveExtraData();
       $record = $account->getRecord();
       $exchange = $account->getExchange();
-      if ( $send_mail ) {
+      if ($send_mail) {
         $notifier = new Notifier();
         $notifier->notify('ces_bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
       }
@@ -849,7 +854,7 @@ class Bank {
   }
   /**
    * Delete permission given its id.
-   * 
+   *
    * @parm $id int
    *   The identifier of the permission object.
    */
@@ -879,16 +884,16 @@ class Bank {
       throw $e;
     }
   }
-  
+
   /**
    * Delete all permissions granted to a specific sope.
-   * 
+   *
    * When an object is deleted, all its associated permissions should be
    * deleted too and this function is a helper to do so.
-   * 
-   * @param $scope string
+   *
+   * @param string $scope
    *   The name of the scope. It can be one of 'exchange', 'account' or 'user'.
-   * @param $scope_id int
+   * @param int $scope_id
    *   The identfier of the scope object.
    */
   private function deletePermissionsToScope($scope, $scope_id) {
@@ -1368,7 +1373,8 @@ class Currency extends DBObject {
 }
 
 /**
- * Account interface names basic methods for an account applying and checking transactions.
+ * Account interface names basic methods for an account applying and checking
+ * transactions.
  */
 interface AccountInterface {
   /**
@@ -1486,11 +1492,11 @@ class LocalAccount extends DBObject implements AccountInterface {
   }
   /**
    * Delete extra data.
-   * @see Bank::deleteAccount().
+   * @see Bank::deleteAccount()
    */
   public function deleteExtraData() {
     $s = new Serializer('AccountUser');
-    foreach ($this->users as $accuser) {  
+    foreach ($this->users as $accuser) {
       $s->delete($accuser);
     }
   }
@@ -1504,7 +1510,7 @@ class LocalAccount extends DBObject implements AccountInterface {
     return $s->load($this->limitchain);
   }
   /**
-   * This function updates this account's amount with this transaction if accepted.
+   * Updates this account's amount with this transaction if accepted.
    *
    * If it is accepted, the updated account is safely saved to the DB.
    */
@@ -1664,7 +1670,7 @@ class LimitChain extends DBObject {
     }
   }
   /**
-   * Delets associated AccountLimit
+   * Delets associated AccountLimit.
    */
   public function deleteExtraData() {
     $s = new Serializer('AccountLimit');
@@ -1714,7 +1720,8 @@ class LimitChain extends DBObject {
   }
 }
 /**
- * Generic class for account limits. Each account limit limites one aspect of accounts.
+ * Generic class for account limits. Each account limit limites one aspect of
+ * accounts.
  */
 abstract class AccountLimit extends DBObject {
   public static $table = 'ces_limit';
@@ -1868,67 +1875,67 @@ class AbsoluteCreditLimit extends AccountLimit {
  * Transactions
  * ============
  * A transaction is an amount of money to be transferred from one account to
- * another account. The basic transaction moves certanin quantity of money through
- * two accounts within the same exchange. There are other kind of transactions
- * moving currency between servers or third party applications. In each exchange
- * there is an special account called 'virtual account'. This account acts as the
- * foreign account for all inter-exchange transactions. It is also used to
- * temporally save the money in delayed transactions.
+ * another account. The basic transaction moves certanin quantity of money
+ * through two accounts within the same exchange. There are other kind of
+ * transactions moving currency between servers or third party applications. In
+ * each exchange there is an special account called 'virtual account'. This
+ * account acts as the foreign account for all inter-exchange transactions. It
+ * is also used to temporally save the money in delayed transactions.
  */
 interface TransactionInterface {
 
   /**
    * Get the identifier of this transaction.
-   * 
+   *
    * @return int
    *   The identifier of this transaction.
    */
   public function getId();
   /**
    * Get the amount of this transaction, in the seller's exchange currency.
-   * 
+   *
    * @return float
    *   The currency amount of this transaction.
    */
   public function getAmount(Currency $currency = NULL);
   /**
    * Get the user id that has created this transaction.
-   * 
+   *
    * @return int
    *   The id of the user who has created this transaction.
    */
   public function getUser();
   /**
    * Get the short description of this transaction.
-   * 
+   *
    * @return string
    *   The short description of this transaction.
    */
   public function getConcept();
   /**
    * Get the name of the buyer account.
-   * 
+   *
    * @return string
    *   The buyer account public ID
    */
   public function getFromAccountName();
   /**
    * Get the name of the seller account.
-   * 
+   *
    * @return string
    *   The seller account public ID
    */
   public function getToAccountName();
   /**
    * Get the state of this transaction.
-   * 
+   *
    * @return int
    *   The current state of this transaction.
    */
   public function getState();
   /**
    * Get messages logged for this trasaction.
-   * 
+   *
    * @return array
    *   Array of messages with details about given $state.
    */
@@ -2023,7 +2030,8 @@ interface TransactionInterface {
 
 }
 /**
- * Concrete class for the basic transaction. It can be enhanced using DecoratorTransactions.
+ * Concrete class for the basic transaction. It can be enhanced using
+ * DecoratorTransactions.
  */
 class BasicTransaction extends DBObject implements TransactionInterface {
   /**
@@ -2288,7 +2296,9 @@ class BasicTransaction extends DBObject implements TransactionInterface {
     );
     return $string[$state];
   }
-
+  /**
+   * Gets the creation timestamp.
+   */
   public function getCreated() {
     return $this->created;
   }
@@ -2395,7 +2405,7 @@ abstract class DecoratedTransaction extends DBObject implements TransactionInter
     return $this->parent->setState($state);
   }
   /**
-   * Implements TransactionInterface::getCreated();
+   * Implements TransactionInterface::getCreated().
    */
   public function getCreated() {
     return $this->parent->getCreated();
@@ -2419,7 +2429,8 @@ class InterExchangeTransaction extends DecoratedTransaction {
    */
   public $pairid;
   /**
-   * @var int one of InterExchangeTransaction::$FROM or InterExchangeTransaction::$TO.
+   * @var int one of InterExchangeTransaction::$FROM or
+   * InterExchangeTransaction::$TO.
    */
   public $side;
 

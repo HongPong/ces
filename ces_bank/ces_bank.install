@@ -550,7 +550,9 @@ function ces_bank_schema() {
   );
   return $schema;
 }
-/** Delete tables */
+/**
+ * Implements hook_uninstall().
+ */
 function ces_bank_uninstall() {
-drupal_uninstall_schema(ces_bank_schema());
+  drupal_uninstall_schema(ces_bank_schema());
 }

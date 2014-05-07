@@ -258,12 +258,12 @@ function ces_bank_exchange_accounts_page() {
       $accountsperuser .= $account['name'] . '<br/>';
       $balancesperuser .= $bank->formatAmount($account['balance'], $exchange, TRUE) . '<br/>';
     }
-    // first cell begins with 8 chars of the name user in capital letters
+    // First cell begins with 8 chars of the name user in capital letters
     // only for sort case insensitive proposals.
     $row = array(
-      strtoupper(sprintf("%8.8s",ces_user_get_name($user))) .
-      '<div class="ces-user-column">' .
-      '<div class="user-picture">' . theme('user_picture', array('account' => $user)) . '</div>' .
+      strtoupper(sprintf("%8.8s", ces_user_get_name($user))) .
+      '<div class="ces-user-column"> <div class="user-picture">' .
+      theme('user_picture', array('account' => $user)) . '</div>' .
       l(ces_user_get_name($user), 'user/' . $uid) .
       '</div>',
       $accountsperuser,
@@ -273,8 +273,8 @@ function ces_bank_exchange_accounts_page() {
   }
   _ces_bank_sort_table($page['table']['#header'], $rows);
   $lenghtrows = count($rows);
-  for ($i=0;$i<$lenghtrows;$i++) {
-  	 $rows[$i][0] = substr($rows[$i][0], 8);
+  for ($i = 0; $i < $lenghtrows; $i++) {
+    $rows[$i][0] = substr($rows[$i][0], 8);
   }
   $page['table']['#rows'] = $rows;
   return $page;
@@ -634,6 +634,9 @@ function _ces_bank_sort_table_cmpr($a, $b) {
   $cb = $b[$_ces_bank_sort_table_column];
   return strcmp($cb, $ca);
 }
+/**
+ * Lastest transactions admin page.
+ */
 function ces_bank_transactions_admin_page() {
   $bank = new Bank();
   $exchange = ces_bank_get_current_exchange();
@@ -647,7 +650,7 @@ function ces_bank_transactions_admin_page() {
   // Use the account statement filter form.
   $form_state = array('method' => 'get');
   require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.forms.inc';
-	$form = drupal_build_form('ces_bank_account_statement_form', $form_state);
+  $form = drupal_build_form('ces_bank_account_statement_form', $form_state);
   $from = $form_state['values']['from'];
   $to = $form_state['values']['to'];
 
@@ -705,22 +708,28 @@ function ces_bank_transactions_admin_page() {
   foreach ($transactions as $transaction) {
     $row = array();
     $row[] = array(
-      'data' => format_date($transaction['created'], 'custom', $dateformat)
+      'data' => format_date($transaction['created'], 'custom', $dateformat),
     );
     $statestring = _ces_bank_get_transaction_states();
     $row[] = array('data' => $statestring[$transaction['state']]);
     $buyer = $bank->getTransactionFromAccount($transaction);
     $useracc = reset($buyer['users']);
     $buyer_uid = $useracc['user'];
-    $row[] = array('data' => $buyer['name'] . ' - ' 
-      . l(ces_user_get_name(user_load($buyer_uid)), 'user/' . $buyer_uid));
+    $row[] = array(
+      'data' => $buyer['name'] . ' - '
+      . l(ces_user_get_name(user_load($buyer_uid)), 'user/' . $buyer_uid),
+    );
     $seller = $bank->getTransactionToAccount($transaction);
     $useracc = reset($seller['users']);
     $seller_uid = $useracc['user'];
-    $row[] = array('data' => $seller['name'] . ' - '
-      . l(ces_user_get_name(user_load($seller_uid)), 'user/' . $seller_uid));
-    $row[] = array('data' => l($transaction['concept'],
-      'ces/bank/account/transaction/' . $transaction['id'] . '/view'));
+    $row[] = array(
+      'data' => $seller['name'] . ' - '
+      . l(ces_user_get_name(user_load($seller_uid)), 'user/' . $seller_uid),
+    );
+    $row[] = array(
+      'data' => l($transaction['concept'],
+      'ces/bank/account/transaction/' . $transaction['id'] . '/view'),
+    );
     $row[] = array(
       'data' => $bank->formatAmount($transaction['amount'], $exchange, TRUE, FALSE),
       'class' => 'ces-currency-amount',
@@ -752,7 +761,7 @@ function ces_bank_account_statement_page() {
 
   $form_state = array('method' => 'get');
   require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.forms.inc';
-	$form = drupal_build_form('ces_bank_account_statement_form', $form_state);
+  $form = drupal_build_form('ces_bank_account_statement_form', $form_state);
 
   $bank = new Bank();
   $exchange = $bank->getExchange($account['exchange']);
@@ -862,6 +871,9 @@ function ces_bank_account_statement_page() {
   return $form;
 
 }
+/**
+ * Return the array of state number => Description.
+ */
 function _ces_bank_get_transaction_states() {
   return array(
     0 => t('New'),

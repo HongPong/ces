@@ -1283,8 +1283,8 @@ function ces_bank_transaction_delete_form_submit($form, &$form_state) {
  *
  * @return array
  *   page where to find the last transactions with this account.
- * @see ces_bank_account_statement_form_submit(),
- *   ces_bank_account_statement_page().
+ * @see ces_bank_account_statement_form_submit()
+ * ces_bank_account_statement_page().
  */
 function ces_bank_account_statement_form($form, &$form_state) {
   $form = array(
