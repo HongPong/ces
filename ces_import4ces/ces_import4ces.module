@@ -4,6 +4,7 @@
  * @file
  * Implements the drupal hooks for this module.
  */
+
 /**
  * Set to 0 in production.
  */
@@ -78,7 +79,7 @@ function ces_import4ces_admin_page() {
   $result = db_query('SELECT i.id, i.exchange_id, e.code, e.name, i.created,
   i.step, i.row, i.uid, i.observations
   FROM {ces_import4ces_exchange} i
-  LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
+  LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id
   WHERE i.finished = 0 AND i.uid = :uid
   ORDER BY i.id DESC',
     array(':uid' => $user->uid));
@@ -94,7 +95,6 @@ function ces_import4ces_admin_page() {
       t('Exchange'),
       t('Step'),
       t('Row'),
-      //t('Observations'),
       t('Actions'),
     ),
   );
@@ -108,7 +108,7 @@ function ces_import4ces_admin_page() {
     $row[] = !empty($record->name) ? $record->name : '';
     $row[] = $step . ' / ' . count($titles_steps);
     $row[] = !empty($record->row) ? $record->row : '';
-    //$row[] = !empty($record->observations) ? $record->observations : '';
+
     $actions = '';
     if ($step < 8) {
       $actions .= l(t('Continue'), 'ces/admin/import/' . $id . '/continue');
@@ -137,7 +137,7 @@ function ces_import4ces_import_form($form, &$form_state, $import_id = FALSE) {
       array('recurse' => FALSE));
     $options = array();
     $options[0] = t('Upload new files');
-    foreach($imports as $uri => $file) {
+    foreach ($imports as $uri => $file) {
       if (is_dir($uri)) {
         $options[$file->name] = $file->name;
       }
@@ -177,7 +177,7 @@ function ces_import4ces_import_form($form, &$form_state, $import_id = FALSE) {
       '#type' => 'file',
       '#title' => 'announce.csv',
     );
-    
+
     return confirm_form($form, t('Do you really want to start a new import?'),
       'ces/admin/import',
       t('Either select an import set or upload a new set of files.'),
@@ -188,16 +188,14 @@ function ces_import4ces_import_form($form, &$form_state, $import_id = FALSE) {
     $steps = _ces_import4ces_steps();
     if ($import->step < 7) {
       return confirm_form($form,
-        t('Step @num. Import @type.',
-          array(
-        '@num' => $import->step,
-        '@type' => $steps[$import->step],
+        t('Step @num. Import @type.', array(
+          '@num' => $import->step,
+          '@type' => $steps[$import->step],
         )), 'ces/admin/import',
-        t('Importing step @step of exchange @exchange from row @row.',
-          array(
-        '@step' => $import->step,
-        '@exchange' => $import->name,
-        '@row' => $import->row,
+        t('Importing step @step of exchange @exchange from row @row.', array(
+          '@step' => $import->step,
+          '@exchange' => $import->name,
+          '@row' => $import->row,
         )), t('Import @type', array('@type' => $steps[$import->step])));
     }
     else {
@@ -234,7 +232,7 @@ function ces_import4ces_row_form($form, &$form_state) {
   foreach ($heads as $head) {
     $form[$head] = array(
       '#type' => 'textfield',
-      '#title' => $head,
+      '#title' => check_plain($head),
       '#default_value' => $form_state['values'][$head],
       '#size' => 60,
       '#maxlength' => 4096,
@@ -294,9 +292,9 @@ function ces_import4ces_import_load($import_id) {
   if (!isset($cache[$import_id])) {
     $result = db_query(
     'SELECT i.id, i.exchange_id, e.code, e.name, i.step, i.row, i.anonymous,
-    i.files 
-    FROM {ces_import4ces_exchange} i 
-    LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id 
+    i.files
+    FROM {ces_import4ces_exchange} i
+    LEFT JOIN {ces_exchange} e ON i.exchange_id = e.id
     WHERE i.id = :iid',
       array(':iid' => $import_id))
       ->fetch();
@@ -305,6 +303,9 @@ function ces_import4ces_import_load($import_id) {
   return $cache[$import_id];
 }
 
+/**
+ * Validates import form and saves upload csv files.
+ */
 function ces_import4ces_import_form_validate($form, &$form_state) {
   if (empty($form_state['values']['import_id'])) {
     $files = array('settings', 'users', 'offers', 'wants', 'trades',
@@ -314,13 +315,13 @@ function ces_import4ces_import_form_validate($form, &$form_state) {
       if (!preg_match('/[a-zA-Z0-9]+/', $dir)) {
         form_set_error('name', t('Invalid folder name.'));
       }
-      $validators = array('file_validate_extensions' => array( 'csv' ));
+      $validators = array('file_validate_extensions' => array('csv'));
       foreach ($files as $file) {
         $dest = CES_IMPORT4CES_FILES_URI . '/' . $dir . '/';
         if (!is_dir($dest)) {
           mkdir($dest, 0777, TRUE);
         }
-        if(($fileobj = file_save_upload($file, $validators, $dest,
+        if (($fileobj = file_save_upload($file, $validators, $dest,
           FILE_EXISTS_REPLACE))) {
           $form_state['values'][$file] = $fileobj->destination;
         }
@@ -358,7 +359,7 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
     $import_id = $form_state['values']['import_id'];
     $record = ces_import4ces_import_load($import_id);
     if ($record === FALSE) {
-      drupal_set_message('Invalid import identifier.', 'error');
+      drupal_set_message(t('Invalid import identifier.'), 'error');
       $form_state['redirect'] = 'ces/bank/admin/import';
       return;
     }
@@ -381,6 +382,7 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
       $file_csv = 'offers.csv';
       $parse_function = 'parse_offers';
       break;
+
     case '4':
       $file = 'imports/wants.php';
       $file_csv = 'wants.csv';
@@ -411,7 +413,7 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
       return;
   }
   if (isset($parse_function)) {
-    // Setup the absolute path of this csv file
+    // Setup the absolute path of this csv file.
     $file_csv = CES_IMPORT4CES_FILES_URI . '/' . $record->files . '/' . $file_csv;
     if (!empty($form_state['values']['manual_row'])) {
       require_once drupal_get_path('module', 'ces_import4ces') . '/' . $file;
@@ -427,7 +429,7 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
 
 /**
  * Imports a CSV file to the database.
- * 
+ *
  * @param string $file_csv
  *   The absolute path of the CSV file.
  * @param string $file
@@ -436,8 +438,9 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
  *   The name of the function able to parse the file.
  * @param object $record
  *   Import record.
- * 
- * @return An associative array with information about the import process.
+ *
+ * @return array
+ *   An associative array with information about the import process.
  */
 function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) {
   // Validate CSV file.
@@ -457,8 +460,9 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
     $fila = -1;
     while (($datos = fgetcsv($gestor, FALSE, ",")) !== FALSE) {
       $fila++;
-      if ($fila != 0 && $fila <= $row)
+      if ($fila != 0 && $fila <= $row) {
         continue;
+      }
       $cols = array();
       foreach ($datos as $key => $val) {
         $datos[$key] = trim($datos[$key]);
@@ -471,7 +475,7 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
         }
       }
       if ($fila !== 0) {
-        // Automatic correction for field AapAddress
+        // Automatic correction for field AapAddress.
         if ($parse_function == 'parse_setting') {
           $field = 36;
           $error_map = TRUE;
@@ -508,7 +512,7 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
           $arguments[] = $heads;
           $arguments[] = $cols;
           $arguments[] = $fila;
-          // This row has an incorrect number of columns. Let the user the 
+          // This row has an incorrect number of columns. Let the user the
           // opportunity to correct this row.
           $operations[] = array('ces_import4ces_batch_fail_row', $arguments);
         }
@@ -526,7 +530,7 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
   if (empty($operations)) {
     ces_import4ces_update_step($record->id, $record->step + 1);
     ces_import4ces_update_row($record->id, 0);
-    drupal_set_message('There is no data to import in this step.');
+    drupal_set_message(t('There is no data to import in this step.'));
   }
   else {
     $batch = array(
@@ -544,7 +548,9 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
 }
 
 /**
- * To be called from the batch process to stop it and let the user the 
+ * Row fail batch operation.
+ * 
+ * To be called from the batch process to stop it and let the user the
  * opportunity to change the row data manually.
  */
 function ces_import4ces_batch_fail_row($import_id, $heads, $cols, $row,
@@ -631,8 +637,9 @@ function ces_import4ces_import_delete_form($form, &$form_state, $import_id) {
 }
 
 /**
- * Delete all import data. This function may need so many time to be cmpletely 
- * executed in some servers!
+ * Delete all import data.
+ * 
+ * This function may need so many time to be cmpletely executed in some servers!
  */
 function ces_import4ces_import_delete_form_submit($form, &$form_state) {
   $import_id = $form_state['values']['import_id'];
@@ -657,8 +664,8 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
     foreach ($transactions as $id) {
       try {
         $bank->deleteTransaction($id);
-      } 
-      catch(Exception $e) {
+      }
+      catch (Exception $e) {
         // Most probably the transaction doesn't exist anymore.
         drupal_set_message($e->getMessage(), 'error');
       }
@@ -696,7 +703,7 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
       }
     }
 
-    // Delete exchange
+    // Delete exchange.
     $limitchains = $bank->getAllLimitChains($import->exchange_id);
     foreach ($limitchains as $chain) {
       $bank->deleteLimitChain($chain['id']);
@@ -710,7 +717,7 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
   db_delete('ces_import4ces_exchange')
     ->condition('id', $import->id)
     ->execute();
-  
+
   // That's all.
   drupal_set_message(t('Import data has been deleted.'));
   $form_state['redirect'] = 'ces/admin/import';
@@ -720,14 +727,14 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
  * Get all the id's for a given import and a given object type.
  */
 function ces_import4ces_get_object_ids($import_id, $type) {
-  $result = db_query('SELECT object_id from {ces_import4ces_objects} 
+  $result = db_query('SELECT object_id from {ces_import4ces_objects}
     WHERE object = :object AND import_id = :import',
     array(':object' => $type, ':import' => $import_id))->fetchCol(0);
   return $result;
 }
 
 /**
- * Get image from CES
+ * Get image from CES.
  */
 function ces_import4ces_download_image($url_origen, $archivo_destino) {
   $mi_curl = curl_init($url_origen);
@@ -741,7 +748,7 @@ function ces_import4ces_download_image($url_origen, $archivo_destino) {
 }
 
 /**
- * Count step
+ * Count step.
  */
 function ces_import4ces_update_step($import_id, $step) {
   return db_update('ces_import4ces_exchange')->condition('id', $import_id)->fields(array(
@@ -749,7 +756,7 @@ function ces_import4ces_update_step($import_id, $step) {
 }
 
 /**
- * Count row
+ * Count row.
  */
 function ces_import4ces_update_row($import_id, $row) {
   return db_update('ces_import4ces_exchange')->condition('id', $import_id)->fields(array(
@@ -757,7 +764,7 @@ function ces_import4ces_update_row($import_id, $row) {
 }
 
 /**
- * Create o return category
+ * Create o return category.
  */
 function ces_import4ces_get_category($title, $import) {
   $query = new EntityFieldQuery();
@@ -777,7 +784,7 @@ function ces_import4ces_get_category($title, $import) {
       'title' => $title,
       'description' => $title,
       'exchange' => $import->exchange_id,
-      'context' => 1, // offers
+      'context' => 1,
     );
 
     $category_object = ces_category_save($cat);
@@ -789,12 +796,15 @@ function ces_import4ces_get_category($title, $import) {
         'object' => 'category',
         'object_id' => $category_id,
         'row' => $import->row,
-        'data' => ''
+        'data' => '',
       ))->execute();
 
     return $category_id;
   }
 
+  /**
+   * Implements hook_mail_alter().
+   */
   function ces_import4ces_mail_alter(&$message) {
     if (!CES_IMPORT4CES_SEND_MAILS) {
       $message['send'] = FALSE;
