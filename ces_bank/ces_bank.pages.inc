@@ -261,7 +261,7 @@ function ces_bank_exchange_accounts_page() {
     // first cell begins with 8 chars of the name user in capital letters
     // only for sort case insensitive proposals.
     $row = array(
-      strtoupper(sprintf("%-8s",ces_user_get_name($user))) .
+      strtoupper(sprintf("%8.8s",ces_user_get_name($user))) .
       '<div class="ces-user-column">' .
       '<div class="user-picture">' . theme('user_picture', array('account' => $user)) . '</div>' .
       l(ces_user_get_name($user), 'user/' . $uid) .
@@ -634,6 +634,107 @@ function _ces_bank_sort_table_cmpr($a, $b) {
   $cb = $b[$_ces_bank_sort_table_column];
   return strcmp($cb, $ca);
 }
+function ces_bank_transactions_admin_page() {
+  $bank = new Bank();
+  $exchange = ces_bank_get_current_exchange();
+  if ($exchange === FALSE) {
+    $page = array();
+    $page['message'] = array(
+      '#markup' => '<p>' . t("You don't administer any exchange yet.") . '<p>',
+    );
+    return $page;
+  }
+  // Use the account statement filter form.
+  $form_state = array('method' => 'get');
+  require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.forms.inc';
+	$form = drupal_build_form('ces_bank_account_statement_form', $form_state);
+  $from = $form_state['values']['from'];
+  $to = $form_state['values']['to'];
+
+  $timefrom = mktime(0, 0, 0, $from['month'], $from['day'], $from['year']);
+  $timeto = mktime(23, 59, 59, $to['month'], $to['day'], $to['year']);
+  // Transaction table.
+  $form['transactions'] = array(
+    '#type' => 'container',
+    '#attributes' => array(),
+  );
+  $form['transactions']['table'] = array(
+    '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
+    ),
+    '#header' => array(
+      array(
+        'data' => t('Date'),
+        'field' => 'created',
+        'sort' => 'asc',
+      ),
+      array(
+        'data' => t('State'),
+        'class' => 'ces-statement-state',
+      ),
+      array(
+        'data' => t('Buyer'),
+        'class' => 'ces-statement-user',
+      ),
+      array(
+        'data' => t('Seller'),
+        'class' => 'ces-statement-user',
+      ),
+      array(
+        'data' => t('Description'),
+        'class' => 'ces-statement-description',
+      ),
+      array(
+        'data' => t('Amount'),
+        'class' => 'ces-currency-amount',
+      ),
+    ),
+  );
+  $transactions = $bank->getTransactions(array(
+    'exchange' => $exchange['id'],
+    'createdsince' => $timefrom,
+    'createduntil' => $timeto,
+  ));
+  $dateformat = $format = variable_get('date_format_short', 'm/d/Y');
+  $space = strpos($format, ' ');
+  if ($space !== FALSE) {
+    $dateformat = substr($dateformat, 0, $space);
+  }
+  $rows = array();
+  foreach ($transactions as $transaction) {
+    $row = array();
+    $row[] = array(
+      'data' => format_date($transaction['created'], 'custom', $dateformat)
+    );
+    $statestring = _ces_bank_get_transaction_states();
+    $row[] = array('data' => $statestring[$transaction['state']]);
+    $buyer = $bank->getTransactionFromAccount($transaction);
+    $useracc = reset($buyer['users']);
+    $buyer_uid = $useracc['user'];
+    $row[] = array('data' => $buyer['name'] . ' - ' 
+      . l(ces_user_get_name(user_load($buyer_uid)), 'user/' . $buyer_uid));
+    $seller = $bank->getTransactionToAccount($transaction);
+    $useracc = reset($seller['users']);
+    $seller_uid = $useracc['user'];
+    $row[] = array('data' => $seller['name'] . ' - '
+      . l(ces_user_get_name(user_load($seller_uid)), 'user/' . $seller_uid));
+    $row[] = array('data' => l($transaction['concept'],
+      'ces/bank/account/transaction/' . $transaction['id'] . '/view'));
+    $row[] = array(
+      'data' => $bank->formatAmount($transaction['amount'], $exchange, TRUE, FALSE),
+      'class' => 'ces-currency-amount',
+    );
+    $rows[] = $row;
+  }
+  // Get sort parameter from URL.
+  $sort = tablesort_get_sort($form['transactions']['table']['#header']);
+  if ($sort == 'desc') {
+    $rows = array_reverse($rows);
+  }
+  $form['transactions']['table']['#rows'] = $rows;
+  return $form;
+}
 
 /**
  * Page handler for account statement list.
@@ -729,20 +830,7 @@ function ces_bank_account_statement_page() {
       $other_account = $account;
       $type = 2;
     }
-    $statestring = array(
-      0 => t('New'),
-      1 => t('Triggered'),
-      2 => t('Accepted'),
-      3 => t('Committed'),
-      4 => t('Archived'),
-      5 => t('Rejected'),
-      6 => t('Discarded'),
-      7 => t('Revoke triggered'),
-      8 => t('Revoke accepted'),
-      9 => t('Revoke rejected'),
-      10 => t('Revoked'),
-      11 => t('Error'),
-    );
+    $statestring = _ces_bank_get_transaction_states();
     $row[] = array('data' => $statestring[$transaction['state']]);
 
     $useracc = reset($other_account['users']);
@@ -773,4 +861,20 @@ function ces_bank_account_statement_page() {
   $form['transactions']['table']['#rows'] = $rows;
   return $form;
 
+}
+function _ces_bank_get_transaction_states() {
+  return array(
+    0 => t('New'),
+    1 => t('Triggered'),
+    2 => t('Accepted'),
+    3 => t('Committed'),
+    4 => t('Archived'),
+    5 => t('Rejected'),
+    6 => t('Discarded'),
+    7 => t('Revoke triggered'),
+    8 => t('Revoke accepted'),
+    9 => t('Revoke rejected'),
+    10 => t('Revoked'),
+    11 => t('Error'),
+  );
 }

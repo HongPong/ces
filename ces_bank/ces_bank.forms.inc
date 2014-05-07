@@ -158,6 +158,7 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#title' => t('Map'),
     '#default_value' => $exchange['map'],
     '#required' => FALSE,
+    '#maxlength' => 200,
   );
 
   $form['exchange']['currency'] = array(
