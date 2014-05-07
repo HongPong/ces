@@ -139,7 +139,11 @@ function ces_import4ces_import_form($form, &$form_state, $import_id = FALSE) {
     $options[0] = t('Upload new files');
     foreach ($imports as $uri => $file) {
       if (is_dir($uri)) {
-        $options[$file->name] = $file->name;
+        $files = file_scan_directory(CES_IMPORT4CES_FILES_URI . '/' .
+        $file->name, '/.*csv/', array('recurse' => FALSE));
+        if (count($files) >= 6) {
+          $options[$file->name] = $file->name;
+        }
       }
     }
     $form['files'] = array(

@@ -17,18 +17,37 @@ function parse_setting($import_id, $setting, $row, &$context) {
 
     // Crear bank
     $bank = new Bank();
-    
+
     // Create exchange administrator drupal user. It will be completed in users
     // step.
     $record = array(
       'name' => $setting['ExchangeID'] . '0000',
-      'mail' => (CES_IMPORT4CES_ANONYMOUS) ? 'test-' . $setting['ExchangeID'] . 
+      'mail' => (CES_IMPORT4CES_ANONYMOUS) ? 'test-' . $setting['ExchangeID'] .
         '0000@test.com' : $setting['Email'],
       'pass' => $setting['Password'],
       'status' => 1,
       'roles' => array(DRUPAL_AUTHENTICATED_RID => 'authenticated user'),
     );
     $admin_user = user_save('', $record);
+    // Compute curency value and currency scale.
+    $timevalues = array(
+      'h' => 1,
+      'm' => 0.01666667,
+    );
+    $currvalues = array(
+      'Euro' => 0.1
+    );
+    $value = 1;
+    if ($setting['TimeBased'] == -1) {
+      if (isset($timevalues[$setting['TimeUnit']])) {
+        $value = $timevalues[$setting['TimeUnit']];
+      }
+    }
+    else {
+      if (isset($currvalues[$setting['ConCurName']])) {
+        $value = $currvalues[$setting['ConCurName']];
+      }
+    }
 
     // Create exchange.
     $exchange = array(
@@ -43,7 +62,7 @@ function parse_setting($import_id, $setting, $row, &$context) {
       'currencysymbol' => html_entity_decode($setting['CurLet'], ENT_QUOTES, 'UTF-8') ,
       'currencyname' => $setting['ConCurName'],
       'currenciesname' => $setting['CurNamePlural'],
-      'currencyvalue' => 1,
+      'currencyvalue' => $value,
       'currencyscale' => 2,
       'admin' => $admin_user->uid,
       'data' => array(
@@ -118,7 +137,7 @@ function parse_setting($import_id, $setting, $row, &$context) {
     }
     if ($default_debit != 0) {
       $default_limit['limits'][] = array(
-        'classname' => 'AbsluteDebitLimit',
+        'classname' => 'AbsoluteDebitLimit',
         'value' => - $default_debit,
         'block' => FALSE,
       );
