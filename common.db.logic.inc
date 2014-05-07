@@ -104,7 +104,11 @@ class Serializer {
     // Decide between insert and update, and automatically populate temporal fields.
     $record['modified'] = REQUEST_TIME;
     if (empty($record['id'])) {
-      $record['created'] = REQUEST_TIME;
+      // Sometimes, like in exchange import, we are creating new objects 
+      // with past dates.
+      if (empty($record['created'])) {
+        $record['created'] = REQUEST_TIME;
+      }
       drupal_write_record($this->table, $record);
       // Update the inserted object with the id parameter.
       if (isset($record['id'])) {

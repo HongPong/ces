@@ -80,7 +80,7 @@ function ces_bank_schema() {
       'shortname' => array(
         'description' => 'Exchange short name',
         'type' => 'varchar',
-        'length' => '31',
+        'length' => '50',
         'not null' => TRUE,
         'default' => '',
       ),
@@ -549,4 +549,8 @@ function ces_bank_schema() {
     'foreign keys' => array(),
   );
   return $schema;
+}
+/** Delete tables */
+function ces_bank_uninstall() {
+drupal_uninstall_schema(ces_bank_schema());
 }

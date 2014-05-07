@@ -136,6 +136,7 @@ class Bank {
       $notifier = new Notifier();
       $notifier->notify('ces_bank', 'exchange activated', $exchange->admin, $user->uid, array('exchange' => $exchange->getRecord()));
       $this->activateAccount($account);
+      $record = $exchange->getRecord();
     }
     catch (Exception $e) {
       $t->rollback();
@@ -215,8 +216,18 @@ class Bank {
    *   exchange identifier.
    */
   public function deleteExchange($id) {
-    // @TODO: implement this.
-    throw new Exception('Not implemented yet');
+    $t = Serializer::DBTransaction();
+    try{
+      $s = new Serializer('Exchange');
+      $exchange = $s->load($id);
+      $s->delete($exchange);
+      $this->deletePermissionsToScope('exchange', $id);
+      return TRUE;
+    }
+    catch (Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
   }
   /**
    * Gets all exchanges under certain conditions.
@@ -482,6 +493,10 @@ class Bank {
     try{
       $s = new Serializer('BasicTransaction');
       $transaction = $s->load($id);
+      if ($transaction === FALSE) {
+        throw new Exception(t('Transaction id %id is invalid',
+          array('%id' => $id)));
+      }
       if ($transaction->getState() == TransactionInterface::STATE_COMMITTED) {
         $transaction->revoke();
       }
@@ -501,8 +516,9 @@ class Bank {
    *
    * @param array $record
    *   account object record.
+   * @param bool $send_mail (T/F)
    */
-  public function createAccount(array &$record) {
+  public function createAccount(array &$record, $send_mail = TRUE) {
     $t = Serializer::DBTransaction();
     try {
       // Create account record.
@@ -516,8 +532,10 @@ class Bank {
       $account->saveExtraData();
       $record = $account->getRecord();
       $exchange = $account->getExchange();
-      $notifier = new Notifier();
-      $notifier->notify('ces_bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
+      if ( $send_mail ) {
+        $notifier = new Notifier();
+        $notifier->notify('ces_bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
+      }
     }
     catch (Exception $e) {
       $t->rollback();
@@ -636,15 +654,39 @@ class Bank {
    * Deletes an account.
    */
   public function deleteAccount($id) {
-    // @TODO: implement this
-    throw new Exception('Not implemented yet');
+    $t = Serializer::DBTransaction();
+    try{
+      $s = new Serializer('LocalAccount');
+      $account = $s->load($id);
+      $s->delete($account);
+      $this->deletePermissionsToScope('account', $id);
+      return TRUE;
+    }
+    catch (Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
   }
   /**
    * Creates a limit chain object.
    */
   public function createLimitChain(array &$record) {
-    unset($record['id']);
-    return $this->updateLimitChain($record);
+    $t = Serializer::DBTransaction();
+    try {
+      // Create account record.
+      unset($record['id']);
+      $limitchain = new LimitChain($record);
+      $s = new Serializer('LimitChain');
+      $s->save($limitchain);
+      // Save extra data because we need to have the limitchain id in orde to
+      // properly save the atomic limits.
+      $limitchain->saveExtraData();
+      $record = $limitchain->getRecord();
+    }
+    catch (Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
   }
   /**
    * Updates a limit chain object.
@@ -652,16 +694,6 @@ class Bank {
   public function updateLimitChain(array &$record) {
     $t = Serializer::DBTransaction();
     try{
-      if (isset($record['limits'])) {
-        foreach ($record['limits'] as $key => $limit) {
-          if (!isset($limit['data'])) {
-            $record['limits'][$key]['data'] = array();
-          }
-        }
-      }
-      else {
-        $record['limits'] = array();
-      }
       return $this->updateObject('LimitChain', $record);
     }
     catch (Exception $e) {
@@ -681,8 +713,17 @@ class Bank {
    * Deletes a limit chain.
    */
   public function deleteLimitChain($id) {
-    // @TODO: implement this.
-    throw new Exception('Not implemented yet');
+    $t = Serializer::DBTransaction();
+    try{
+      $s = new Serializer('LimitChain');
+      $chain = $s->load($id);
+      $s->delete($chain);
+      return TRUE;
+    }
+    catch (Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
   }
   /**
    * Gets the default exchange object record.
@@ -807,11 +848,23 @@ class Bank {
     }
   }
   /**
-   * Delete permission given its id (TODO).
+   * Delete permission given its id.
+   * 
+   * @parm $id int
+   *   The identifier of the permission object.
    */
   public function deletePermission($id) {
-    // @TODO: implement this
-    throw new Exception('Not implemented yet');
+    $t = Serializer::DBTransaction();
+    try{
+      $s = new Serializer('Permission');
+      $permission = $s->load($id);
+      $s->delete($permission);
+      return TRUE;
+    }
+    catch (Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
   }
   /**
    * Update permission.
@@ -824,6 +877,30 @@ class Bank {
     catch (Exception $e) {
       $t->rollback();
       throw $e;
+    }
+  }
+  
+  /**
+   * Delete all permissions granted to a specific sope.
+   * 
+   * When an object is deleted, all its associated permissions should be
+   * deleted too and this function is a helper to do so.
+   * 
+   * @param $scope string
+   *   The name of the scope. It can be one of 'exchange', 'account' or 'user'.
+   * @param $scope_id int
+   *   The identfier of the scope object.
+   */
+  private function deletePermissionsToScope($scope, $scope_id) {
+    $s = new Serializer('Permission');
+    $permissions = $s->loadCollection(
+      array(
+        'scope' => $scope,
+        'scopeid' => $scope_id,
+      )
+    );
+    foreach ($permissions as $permission) {
+      $s->delete($permission);
     }
   }
   /**
@@ -1408,6 +1485,16 @@ class LocalAccount extends DBObject implements AccountInterface {
     }
   }
   /**
+   * Delete extra data.
+   * @see Bank::deleteAccount().
+   */
+  public function deleteExtraData() {
+    $s = new Serializer('AccountUser');
+    foreach ($this->users as $accuser) {  
+      $s->delete($accuser);
+    }
+  }
+  /**
    * Gets limit chain.
    * @return LimitChain
    *   The limit chain associated to this account.
@@ -1548,7 +1635,7 @@ class LimitChain extends DBObject {
     return $record;
   }
   /**
-   * TODO: Document.
+   * Saves all instances of AccountLimit that belong to this LimitChain.
    * @override
    */
   public function saveExtraData() {
@@ -1556,6 +1643,10 @@ class LimitChain extends DBObject {
     $newids = array();
     // create/update limits.
     foreach ($this->limits as $limit) {
+      if (!isset($limit->data)) {
+        $limit->data = array();
+      }
+      $limit->limitchain = $this->id;
       $s->save($limit);
       $newids[] = $limit->id;
     }
@@ -1570,6 +1661,15 @@ class LimitChain extends DBObject {
     $oldids = array_diff($allids, $newids);
     foreach ($oldids as $id) {
       $s->delete($limits[$id]);
+    }
+  }
+  /**
+   * Delets associated AccountLimit
+   */
+  public function deleteExtraData() {
+    $s = new Serializer('AccountLimit');
+    foreach ($this->limits as $limit) {
+      $s->delete($limit);
     }
   }
   /**
@@ -2673,7 +2773,7 @@ class Permission extends DBObject {
    */
   public $permission;
   /**
-   * @var String
+   * @var string
    * Determines, together with $objectid, the target data of this permission.
    * It begins with a scope string and optionally contain another
    * keyword separated by space. eg. 'account' or 'account balance'. This scope
@@ -2685,7 +2785,7 @@ class Permission extends DBObject {
    */
   public $objectid;
   /**
-   * @var String
+   * @var string
    * Determines, together with scopeid, the group of users having this
    * permission.
    * Is a single keyword. Must be one of 'global', 'exchange', 'account', 'user'

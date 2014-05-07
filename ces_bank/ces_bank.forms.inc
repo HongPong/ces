@@ -354,6 +354,7 @@ function ces_bank_limitchain_form($form, &$form_state, $limitchain = NULL) {
         );
       }
       $limitchain = $bank->getDefaultLimitChain($exchange['id']);
+      $limitchain['name'] = '';
       $op = 'new';
     }
     else {
@@ -539,25 +540,6 @@ function ces_bank_limitchain_form_validate($form, &$form_state) {
   }
 }
 /**
- * Submit the limit chain field set form, for new or current limit chains.
- */
-function ces_bank_limitchain_fieldset_submit($form, &$form_state) {
-  $values = $form_state['values'];
-  try {
-    $bank = new Bank();
-    if ($form_values['operation'] == 'new') {
-      // Create new limit chain.
-      $bank->createLimitChain($values);
-    }
-    elseif ($form_values['operation'] == 'edit') {
-      $bank->updateLimitChain($values);
-    }
-  }
-  catch (Exception $e) {
-    drupal_set_message(t('Error occurred while updating the limit chain. Details: %msg', array('%msg' => $e->getMessage())), 'error');
-  }
-}
-/**
  * Submit the limit chain form, for new or current limit chains.
  */
 function ces_bank_limitchain_form_submit($form, &$form_state) {
@@ -567,6 +549,7 @@ function ces_bank_limitchain_form_submit($form, &$form_state) {
     if ($op == 'new') {
       $bank->createLimitChain($form_state['values']);
       drupal_set_message(t('Limit chain %name successfully created.', array('%name' => $form_state['values']['name'])));
+      $form_state['redirect'] = 'ces/admin/limit';
     }
     elseif ($op == 'edit') {
       $bank->updateLimitChain($form_state['values']);
