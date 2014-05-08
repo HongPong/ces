@@ -16,7 +16,7 @@
  */
 class Serializer {
 
-  protected $className;
+  protected $classname;
   protected $table;
   /**
    * cache array. Srtucture:
@@ -28,9 +28,9 @@ class Serializer {
   /**
    * Creates a new serializer for a specific object class.
    */
-  public function __construct($className) {
-    $this->className = $className;
-    $class = new ReflectionClass($this->className);
+  public function __construct($classname) {
+    $this->classname = $classname;
+    $class = new ReflectionClass($this->classname);
     $this->table = $class->getStaticPropertyValue('table');
   }
   /**
@@ -39,20 +39,20 @@ class Serializer {
    *   The loaded object on success or FALSE if object can not be loaded.
    */
   public function load($id) {
-    if (!isset(Serializer::$cache[$this->className])) {
-      $cache[$this->className] = array();
+    if (!isset(Serializer::$cache[$this->classname])) {
+      $cache[$this->classname] = array();
     }
-    if (!isset(Serializer::$cache[$this->className]['id'])) {
-      $cache[$this->className]['id'] = array();
+    if (!isset(Serializer::$cache[$this->classname]['id'])) {
+      $cache[$this->classname]['id'] = array();
     }
-    if (!isset(Serializer::$cache[$this->className]['id'][$id])) {
+    if (!isset(Serializer::$cache[$this->classname]['id'][$id])) {
       $record = db_select($this->table, 't')->fields('t')->condition('id', $id)->execute()->fetchAssoc();
       if ($record === FALSE) {
         return FALSE;
       }
-      Serializer::$cache[$this->className]['id'][$id] = $this->loadFromRecord($record);
+      Serializer::$cache[$this->classname]['id'][$id] = $this->loadFromRecord($record);
     }
-    return Serializer::$cache[$this->className]['id'][$id];
+    return Serializer::$cache[$this->classname]['id'][$id];
   }
   /**
    * Count entries.
@@ -66,16 +66,24 @@ class Serializer {
     return $result;
   }
   /**
+   * Loads a DBObject from it record.
+   *
+   * The record may come from the database (when retrieving an existing
+   * instance) or from user input (when creating a new instance).
+   *
+   * @param array $record
+   *   An associative array with the parameters of the object.
+   *
    * @return DBObject
    *   A loaded object from its database record.
    */
   public function loadFromRecord($record) {
     $this->handleSerialized($record);
-    if (isset($record['classname']) && class_exists($record['classname']) && is_subclass_of($record['classname'], $this->className)) {
+    if (isset($record['classname']) && class_exists($record['classname']) && is_subclass_of($record['classname'], $this->classname)) {
       $obj = new $record['classname']($record);
     }
     else {
-      $obj = new $this->className($record);
+      $obj = new $this->classname($record);
     }
     if (!empty($record['decoration']) && is_array($record['decoration'])) {
       // Load decorator pattern.
@@ -101,10 +109,11 @@ class Serializer {
       $inner = $auxobject;
       $auxobject = $auxobject->getParent();
     } while ($auxobject != NULL && ($auxobject instanceof DBObject));
-    // Decide between insert and update, and automatically populate temporal fields.
+    // Decide between insert and update, and automatically populate temporal
+    // fields.
     $record['modified'] = REQUEST_TIME;
     if (empty($record['id'])) {
-      // Sometimes, like in exchange import, we are creating new objects 
+      // Sometimes, like in exchange import, we are creating new objects
       // with past dates.
       if (empty($record['created'])) {
         $record['created'] = REQUEST_TIME;
@@ -135,8 +144,8 @@ class Serializer {
    * Performs a SQL function such as COUNT(*), SUM(*), ... on a table field for
    * those rows meeting conditions.
    *
-   * @param $key
-   *   must be SQL safe.
+   * @param string $key
+   *   The field name. Must be SQL safe.
    * @param array $conditions
    *   Each entry is a condition. A condition is an array of three therms.
    */
@@ -161,8 +170,8 @@ class Serializer {
    * Load many objects.
    *
    * @param array $conditions
-   *   Associative array with field names as keys. There are two special conditions
-   *   for those objects having the created [time] field:
+   *   Associative array with field names as keys. There are two special 
+   *   conditions for those objects having the created [time] field:
    *   - createdsince: the smaller created time to return.
    *   - createduntil: the largest created time to return.
    * @param string $order
@@ -214,25 +223,28 @@ class Serializer {
     return $loads;
   }
   /**
+   * Retrieves and loads an object from a unique key.
+   * 
    * @return DBObject
+   *   The initialized instance of DBObject with $key = $value, or FALSE.
    */
   public function loadFromUniqueKey($key, $value) {
-    if (!isset(Serializer::$cache[$this->className])) {
-      $cache[$this->className] = array();
+    if (!isset(Serializer::$cache[$this->classname])) {
+      $cache[$this->classname] = array();
     }
-    if (!isset(Serializer::$cache[$this->className][$key])) {
-      $cache[$this->className][$key] = array();
+    if (!isset(Serializer::$cache[$this->classname][$key])) {
+      $cache[$this->classname][$key] = array();
     }
-    if (!isset(Serializer::$cache[$this->className][$key][$value])) {
+    if (!isset(Serializer::$cache[$this->classname][$key][$value])) {
       $query = db_select($this->table, 't')->fields('t')->condition($key, $value)->range(0, 1);
       $result = $query->execute();
       $record = $result->fetchAssoc();
       if ($record === FALSE) {
         return FALSE;
       }
-      Serializer::$cache[$this->className][$key][$value] = $this->loadFromRecord($record);
+      Serializer::$cache[$this->classname][$key][$value] = $this->loadFromRecord($record);
     }
-    return Serializer::$cache[$this->className][$key][$value];
+    return Serializer::$cache[$this->classname][$key][$value];
   }
   /**
    * Deletes a database record.
@@ -272,10 +284,10 @@ class Serializer {
    * Deletes record from static cache.
    */
   protected function deleteRecordFromCache(array $record) {
-    if (isset(Serializer::$cache[$this->className])) {
-      foreach (Serializer::$cache[$this->className] as $key => $value) {
+    if (isset(Serializer::$cache[$this->classname])) {
+      foreach (Serializer::$cache[$this->classname] as $key => $value) {
         if (isset($record[$key]) && isset($value[$record[$key]])) {
-          unset(Serializer::$cache[$this->className][$key][$record[$key]]);
+          unset(Serializer::$cache[$this->classname][$key][$record[$key]]);
         }
       }
     }
@@ -284,7 +296,7 @@ class Serializer {
    * Deletes whole static cache.
    */
   protected function deleteCache() {
-    Serializer::$cache[$this->className] = array();
+    Serializer::$cache[$this->classname] = array();
   }
 }
 /**
@@ -305,7 +317,7 @@ class LockSerializer extends Serializer {
     throw new Exception('Not implemented');
   }
   /**
-   * Load object and acquires lock
+   * Load object and acquires lock.
    */
   public function load($id) {
     $lockname = $this->table . ' ' . $id;
@@ -430,6 +442,9 @@ abstract class DBObject {
  * A wrapper interface for Drupal transaction objects.
  */
 interface DBTransactionInterface {
+  /**
+   * Discards transaction.
+   */
   public function rollback();
 }
 

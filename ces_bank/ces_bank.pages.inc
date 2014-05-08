@@ -463,13 +463,13 @@ function ces_bank_limitchain_list_page() {
     }
     $row[] = implode('<br/>', $limits);
     $actions = array();
-    if (ces_bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', CES_CURRENT_EXCHANGE)) {
+    if (ces_bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', CES_BANK_CURRENT_EXCHANGE)) {
       $actions[] = l(t('View'), 'ces/admin/limit/' . $limitchain['id'] . '/view');
     }
-    if (ces_bank_access(Permission::PERMISSION_EDIT, 'exchange', CES_CURRENT_EXCHANGE)) {
+    if (ces_bank_access(Permission::PERMISSION_EDIT, 'exchange', CES_BANK_CURRENT_EXCHANGE)) {
       $actions[] = l(t('Edit'), 'ces/admin/limit/' . $limitchain['id'] . '/edit');
     }
-    if (ces_bank_access(Permission::PERMISSION_ADMIN, 'exchange', CES_CURRENT_EXCHANGE)) {
+    if (ces_bank_access(Permission::PERMISSION_ADMIN, 'exchange', CES_BANK_CURRENT_EXCHANGE)) {
       $actions[] = l(t('Delete'), 'ces/admin/limit/' . $limitchain['id'] . '/delete');
     }
     $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'limitchain' => $limitchain['id']));

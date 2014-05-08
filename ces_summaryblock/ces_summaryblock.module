@@ -19,7 +19,7 @@ function ces_summaryblock_block_info() {
  * Implements hook_block_view().
  */
 function ces_summaryblock_block_view($delta = '') {
-  // Minimal css format
+  // Minimal css format.
   drupal_add_css(drupal_get_path('module', 'ces_summaryblock') . '/css/ces_summaryblock.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
   // Get the relevant data.
   global $user;
@@ -136,12 +136,12 @@ function _ces_summaryblock_shorten_text($text, $size = 50) {
   }
   return $text . '...';
 }
- /**
- *  Computes an offer that may be interesting to given account.
+/**
+ * Computes an offer that may be interesting to given account.
  *
- *  @return object
- *    A potentially interesting offer for given account.
- *    Current implementation is just random that changes every 5 minutes.
+ * @return object
+ *   A potentially interesting offer for given account.
+ *   Current implementation is just random that changes every 5 minutes.
  */
 function _ces_summaryblock_get_interesting_offer($account) {
   $id = FALSE;

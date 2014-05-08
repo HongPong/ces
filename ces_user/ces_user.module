@@ -353,7 +353,7 @@ function ces_user_main_page() {
         'community' => t('Empower your community. Have fun playing with social currency.'),
       ),
       '#attributes' => array('class' => array('front-list')),
-    )
+    ),
   );
 }
 /**

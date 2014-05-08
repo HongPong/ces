@@ -46,7 +46,7 @@ class OffersWantsTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Setup CES modules, creates the admin user, configures blocks and user preferences.
+   * Setup CES modules, the admin user, configures blocks and user preferences.
    */
   public function setUp() {
     // Enable any modules required for the test.
@@ -56,7 +56,7 @@ class OffersWantsTestCase extends DrupalWebTestCase {
       'ces_notify',
       'ces_offerswants',
       'ces_summaryblock',
-      'ces_user'
+      'ces_user',
     ));
     $bank = new Bank();
     $this->globalAdminUser = $this->drupalCreateUser(array(
@@ -352,25 +352,25 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $record_category = array(
       'title' => 'categoryTest None',
       'description' => 'Test Category None',
-      'context' => '0'
+      'context' => '0',
     );
     $this->addCategory($record_category);
     $record_category = array(
       'title' => 'categoryTest Offers',
       'description' => 'Test Category Offer',
-      'context' => '1'
+      'context' => '1',
     );
     $this->addCategory($record_category);
     $record_category = array(
       'title' => 'categoryTest Wants',
       'description' => 'Test Category Want',
-      'context' => '2'
+      'context' => '2',
     );
     $this->addCategory($record_category);
     $record_category = array(
       'title' => 'categoryTest Both',
       'description' => 'Test Category Both',
-      'context' => '3'
+      'context' => '3',
     );
     $this->addCategory($record_category);
     $this->addOffer();
@@ -384,7 +384,9 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->drupalLogout();
   }
 
-  /** Add category */
+  /**
+   * Add category.
+   */
   protected function addCategory($record_category) {
     $this->drupalGet('');
     $this->clickLink(t('Administration'));
@@ -395,7 +397,9 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->assertText($record_category['title']);
   }
 
-  /** modify category */
+  /**
+   * Modify category.
+   */
   protected function modifyCategory($record_category) {
     $this->drupalGet('');
     $this->clickLink(t('Administration'));
@@ -406,7 +410,9 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->assertText($record_category['title']);
   }
 
-  /** del category */
+  /**
+   * Delete category.
+   */
   protected function delCategory() {
     $this->drupalGet('');
     $this->clickLink(t('Administration'));
@@ -429,14 +435,13 @@ class OffersWantsTestCase extends DrupalWebTestCase {
       'body' => 'This is the first test offer from John Smith account.',
       'ces_offer_rate[und][0][value]' => '1.50',
       'keywords' => 'test keyword',
-      //'files[image]' => $rpath,
       'category' => '3',
       'expire[day]' => date("d"),
       'expire[month]' => date("m"),
       'expire[year]' => (date("Y") + 1),
     );
 
-    // Create a offer
+    // Create an offer.
     $this->drupalGet('');
     $this->clickLink(t('My account'));
     $this->clickLink(t('My offers'));
@@ -449,7 +454,6 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->assertText(t('Image'));
     $this->assertText(t('Valid until'));
     $this->assertText(t('Hide'));
-    // $this->drupalPost(NULL, $record_offer, t('Upload'));
     $this->drupalPost(NULL, $record_offer, t('Save'));
     $this->assertText($record_offer['title']);
     $this->assertText($record_offer['body']);
@@ -457,7 +461,9 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->assertText($record_offer['keywords']);
   }
 
-  /** Check modify offer */
+  /**
+   * Check modify offer.
+   */
   protected function modifyOffer() {
     $record_offer = array(
       'title' => 'Test offer modify',
@@ -469,7 +475,7 @@ class OffersWantsTestCase extends DrupalWebTestCase {
       'expire[year]' => (date("Y") + 1),
     );
 
-    // Edit a offer
+    // Edit an offer.
     $this->drupalGet('');
     $this->clickLink(t('My account'));
     $this->clickLink(t('My offers'));
@@ -489,7 +495,9 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->assertText($record_offer['keywords']);
   }
 
-  /** Check delete offer */
+  /**
+   * Check delete offer.
+   */
   protected function deleteOffer() {
     $this->drupalGet('');
     $this->clickLink(t('My account'));
@@ -500,7 +508,9 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->assertText(t('has been deleted'));
   }
 
-  /** Check add want */
+  /**
+   * Check add want.
+   */
   protected function addWant() {
     $rpath = realpath('sites/all/modules/ces/ces_testing/files/test.png');
     $record_want = array(
@@ -513,7 +523,7 @@ class OffersWantsTestCase extends DrupalWebTestCase {
       'expire[year]' => (date("Y") + 1),
     );
 
-    // Create a want
+    // Create a want.
     $this->drupalGet('');
     $this->clickLink(t('My account'));
     $this->clickLink(t('My wants'));
@@ -523,14 +533,15 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->assertText(t('Description'));
     $this->assertText(t('keywords'));
     $this->assertText(t('Hide'));
-    // $this->drupalPost(NULL, $record_want, t('Upload'));
     $this->drupalPost(NULL, $record_want, t('Save'));
     $this->assertText($record_want['title']);
     $this->assertText($record_want['body']);
     $this->assertText($record_want['keywords']);
   }
 
-  /** Check modify want */
+  /**
+   * Check modify want.
+   */
   protected function modifyWant() {
     $record_want = array(
       'title' => 'Test want modify',
@@ -557,7 +568,9 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->assertText($record_want['keywords']);
   }
 
-  /** Check delete Want */
+  /**
+   * Check delete Want.
+   */
   protected function deleteWant() {
     $this->drupalGet('');
     $this->clickLink(t('My account'));

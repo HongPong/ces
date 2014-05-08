@@ -47,15 +47,56 @@ function ces_user_uninstall() {
  */
 function _ces_user_create_user_fields() {
   $textfields = array(
-    'ces_firstname' => array('First Name', 'Your first name or the name of the organization.', TRUE, 5, 'hidden'),
-    'ces_surname' => array('Surname', 'Leave blank for organization accounts.', FALSE, 10, 'hidden'),
-    'ces_address' => array('Address', 'Eg. 15 Main Street', FALSE, 20, 'hidden'),
+    'ces_firstname' => array(
+      'First Name',
+      'Your first name or the name of the organization.',
+      TRUE,
+      5,
+      'hidden',
+    ),
+    'ces_surname' => array('Surname',
+      'Leave blank for organization accounts.',
+      FALSE,
+      10,
+      'hidden',
+    ),
+    'ces_address' => array(
+      'Address',
+      'Eg. 15 Main Street',
+      FALSE,
+      20,
+      'hidden',
+    ),
     'ces_town' => array('Town', '', TRUE, 25, 'hidden'),
     'ces_postcode' => array('Postcode', '', TRUE, 35, 'hidden'),
-    'ces_phonemobile' => array('Phone (mobile)', 'The main phone to be displayed.', FALSE, 40, 'text_default'),
-    'ces_phonework' => array('Phone (work)', 'Will only be displayed in your account details', FALSE, 45, 'text_default'),
-    'ces_phonehome' => array('Phone (home)', 'Will only be displayed in your account details', FALSE, 50, 'text_default'),
-    'ces_website' => array('Website', 'Your personal or organization website address', FALSE, 55, 'text_default'),
+    'ces_phonemobile' => array(
+      'Phone (mobile)',
+      'The main phone to be displayed.',
+      FALSE,
+      40,
+      'text_default',
+    ),
+    'ces_phonework' => array(
+      'Phone (work)',
+      'Will only be displayed in your account details',
+      FALSE,
+      45,
+      'text_default',
+    ),
+    'ces_phonehome' => array(
+      'Phone (home)',
+      'Will only be displayed in your account details',
+      FALSE,
+      50,
+      'text_default',
+    ),
+    'ces_website' => array(
+      'Website',
+      'Your personal or organization website address',
+      FALSE,
+      55,
+      'text_default',
+    ),
   );
   foreach ($textfields as $name => $info) {
     if (!field_info_field($name)) {

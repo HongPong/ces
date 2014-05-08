@@ -13,7 +13,7 @@ function ces_statistics_menu() {
     'description' => 'View exchange statistics.',
     'page callback' => 'ces_statistics_page',
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange details', CES_CURRENT_EXCHANGE),
+    'access arguments' => array('view', 'exchange details', CES_BANK_CURRENT_EXCHANGE),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 250,
   );

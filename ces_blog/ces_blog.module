@@ -21,7 +21,8 @@ function ces_blog_menu() {
     'page callback' => 'ces_blog_page',
     'type' => MENU_NORMAL_ITEM,
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange blog', CES_CURRENT_EXCHANGE),
+    'access arguments' => array('view', 'exchange blog',
+      CES_BANK_CURRENT_EXCHANGE),
     'expanded' => TRUE,
     'weight' => 210,
   );
@@ -31,7 +32,8 @@ function ces_blog_menu() {
     'page callback' => 'ces_blog_add_post',
     'type' => MENU_NORMAL_ITEM,
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange blog', CES_CURRENT_EXCHANGE),
+    'access arguments' => array('admin', 'exchange blog',
+      CES_BANK_CURRENT_EXCHANGE),
     'expanded' => TRUE,
     'weight' => 0,
   );
@@ -83,7 +85,7 @@ function ces_blog_page() {
       '#markup' => t('There are no blog posts yet.'),
       '#suffix' => '</p>',
     );
-    if (ces_bank_access('admin', 'exchange blog', CES_CURRENT_EXCHANGE)) {
+    if (ces_bank_access('admin', 'exchange blog', CES_BANK_CURRENT_EXCHANGE)) {
       $page['p2'] = array(
         '#prefix' => '<p>',
         '#markup' => l(t('Add new post'), 'node/add/ces-blog'),
@@ -153,7 +155,7 @@ function ces_blog_node_access($node, $op, $account) {
     if ($op != 'view') {
       $op = 'admin';
     }
-    if (ces_bank_access($op, 'exchange blog', CES_CURRENT_EXCHANGE, $account->uid)) {
+    if (ces_bank_access($op, 'exchange blog', CES_BANK_CURRENT_EXCHANGE, $account->uid)) {
       return NODE_ACCESS_ALLOW;
     }
     else {
