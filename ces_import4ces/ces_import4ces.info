@@ -1,11 +1,9 @@
-name = ces_import4ces
+name = ICES import
 description = Import data from CES
 core = 7.x
-package = ces
+package = ices
 
-files[] = ces_import4ces_functions.php
-
-dependencies[] = ces
+dependencies[] = ices
 dependencies[] = ces_bank
 
 stylesheets[all][] = style.css

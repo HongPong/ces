@@ -1,8 +1,8 @@
-name = ces_develop
+name = ICES develop
 description = CES develop helper module. Do not install in a production site.
 core = 7.x
-package = ces
+package = ices
 
-dependencies[] = ces
+dependencies[] = ices
 dependencies[] = ces_bank
 dependencies[] = ces_notify

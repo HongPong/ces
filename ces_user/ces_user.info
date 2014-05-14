@@ -1,5 +1,5 @@
-name = CES user profile
+name = ICES user profile
 description = Add some fields to the standard user profile and an api to access them.
 core = 7.x
-package = ces
-dependencies[] = ces
+package = ices
+dependencies[] = ices

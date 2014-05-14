@@ -1,7 +1,7 @@
-name = CES Statistics
-description = Some exchange statistics
+name = ICES Statistics
+description = Some exchange statistics.
 ;files[] = ces_statistics.test
-dependencies[] = ces
+dependencies[] = ices
 dependencies[] = ces_bank
 core = 7.x
-package = ces
+package = ices

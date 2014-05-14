@@ -1,6 +1,6 @@
-name = ces_summaryblock
-description = Block with CES bank account summary.
+name = ICES summary block
+description = Block with ICES bank account summary.
 core = 7.x
-package = ces
+package = ices
 dependencies[] = ces_bank
 dependencies[] = ces_offerswants

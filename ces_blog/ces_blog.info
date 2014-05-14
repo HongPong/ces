@@ -1,6 +1,6 @@
-name = CES exchange blog
-description = CES exchange blog
+name = ICES exchange blog
+description = Individual blog for each exchange.
 core = 7.x
-package = ces
-dependencies[] = ces
+package = ices
+dependencies[] = ices
 files[] = 

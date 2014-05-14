@@ -1,7 +1,7 @@
-name = CES Notifications
-description = Community Exchange System Messaging
-dependencies[] = ces
+name = ICES Notifications
+description = Customize ICES messages.
+dependencies[] = ices
 files[] = ces_notify.logic.inc
 core = 7.x
-package = ces
+package = ices
  
