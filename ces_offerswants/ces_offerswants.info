@@ -1,5 +1,5 @@
-name = CES Offers and Wants
-description = CES Offers and Wants.
+name = ICES Offers and Wants
+description = Simple offers and wants module.
 core = 7.x
 package = ices
 dependencies[] = ices
