@@ -1,5 +1,5 @@
-name = CES
+name = Integral Community Exchange System
 description = A social currency exchange system including banking and shopping. 
 files[] = common.db.logic.inc
 core = 7.x
-package = ces
+package = ices

@@ -10,7 +10,7 @@
 /**
  * Implements hook_help().
  */
-function ces_help($path, $arg) {
+function ices_help($path, $arg) {
   if ($path == 'admin/help#ces') {
     $output = '';
     $output .= '<h3>' . t('About') . '</h3>';
@@ -33,7 +33,7 @@ function ces_help($path, $arg) {
 /**
  * Implements template_preprocess_page().
  */
-function ces_preprocess_page(&$variables, $hook) {
+function ices_preprocess_page(&$variables, $hook) {
   if (!module_exists('ces_bank')) {
     drupal_set_message(t('Module CES Bank required'), 'error');
     return;
