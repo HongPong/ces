@@ -13,7 +13,8 @@ function ces_statistics_menu() {
     'description' => 'View exchange statistics.',
     'page callback' => 'ces_statistics_page',
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange details', CES_BANK_CURRENT_EXCHANGE),
+    'access arguments' => array('view', 'exchange details',
+      CES_BANK_CURRENT_EXCHANGE),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 250,
   );
@@ -31,7 +32,7 @@ function ces_statistics_page() {
   if ($variables['account'] !== FALSE) {
     $exchange = ces_bank_get_current_exchange();
 
-// js and css files
+    // Js and css files.
     $pathmodule = drupal_get_path('module', 'ces_statistics');
     drupal_add_js($pathmodule . '/js/jquery.jqplot.min.js');
     drupal_add_js($pathmodule . '/js/jqplot.dateAxisRenderer.min.js');
@@ -45,7 +46,7 @@ function ces_statistics_page() {
     drupal_add_js($pathmodule . '/js/chart.js');
     drupal_add_css($pathmodule . '/css/jquery.jqplot.min.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
 
-// Extract and format users data.
+    // Extract and format users data.
     $resultusers = db_query("
       SELECT COUNT(DATE_FORMAT(from_unixtime(created), '%Y-%m')) AS usersnumber,
       DATE_FORMAT(from_unixtime(created), '%Y-%m') as usersdate
@@ -69,14 +70,15 @@ function ces_statistics_page() {
 
     $longarray = count($staticsusers);
     $todaymonth = date("Y-m", time());
-    if ($staticsusers[$longarray-1]['usersdate'] != $todaymonth) { // no data in present month
+    // No data in present month.
+    if ($staticsusers[$longarray - 1]['usersdate'] != $todaymonth) {
       $staticsusers[] = array(
         'usersdate' => $todaymonth,
-        'usersnumber' => $totalusers
+        'usersnumber' => $totalusers,
       );
     }
-// Extract and format user's last year activity data.
-// Unix time stamp last year ago.
+    // Extract and format user's last year activity data.
+    // Unix time stamp last year ago.
     $lastyear = time() - 31536000;
     $resultactivity = db_query("
       SELECT COUNT(t.id) AS activitynumber,
@@ -96,9 +98,10 @@ function ces_statistics_page() {
         ':state' => 3,
       ));
     $labels = array('Total inactivity', '1-3 transactions', '4-6 transactions',
-     '6-12 transactions', '+12 transactions');
+      '6-12 transactions', '+12 transactions');
     $staticsactivity = array();
-    for ($i = 0; $i <= 4; $i++) {  // 0 to 4 levels of activity
+    // 0 to 4 levels of activity.
+    for ($i = 0; $i <= 4; $i++) {
       $staticsactivity[$i]['activitylevel'] = $labels[$i];
       $staticsactivity[$i]['activitynumber'] = 0;
       $staticsactivity[$i]['activitypercent'] = 0;
@@ -107,18 +110,27 @@ function ces_statistics_page() {
     $actn = 0;
     foreach ($resultactivity as $record) {
       $actn = $record->activitynumber;
-      if ($actn > 0 && $actn <= 3) $staticsactivity[1]['activitynumber']++;
-      if ($actn > 3 && $actn <= 6) $staticsactivity[2]['activitynumber']++;
-      if ($actn > 6 && $actn <= 12) $staticsactivity[3]['activitynumber']++;
-      if ($actn > 12) $staticsactivity[4]['activitynumber']++;
+      if ($actn > 0 && $actn <= 3) {
+        $staticsactivity[1]['activitynumber']++;
+      }
+      if ($actn > 3 && $actn <= 6) {
+        $staticsactivity[2]['activitynumber']++;
+      }
+      if ($actn > 6 && $actn <= 12) {
+        $staticsactivity[3]['activitynumber']++;
+      }
+      if ($actn > 12) {
+        $staticsactivity[4]['activitynumber']++;
+      }
       $i++;
     };
     $staticsactivity[0]['activitynumber'] = $totalusers - $i;
-    for ($i = 0; $i <= 4; $i++) {  // 0 to 4 levels of activity
+    // 0 to 4 levels of activity.
+    for ($i = 0; $i <= 4; $i++) {
       $staticsactivity[$i]['activitypercent'] = 100 * $staticsactivity[$i]['activitynumber'] / $totalusers;
     };
 
-// Extract and format transactions data
+    // Extract and format transactions data.
     $resulttrans = db_query("
       SELECT SUM(t.amount) AS transamount,
       COUNT(t.amount) AS transnumber,
@@ -144,14 +156,14 @@ function ces_statistics_page() {
       $staticstrans[] = array(
         'transdate' => $record->transdate,
         'transamount' => $record->transamount,
-        'transnumber' => $record->transnumber
+        'transnumber' => $record->transnumber,
       );
     };
 
-// Pass data to js:
-// -> Drupal.settings.ces_statistics.staticsusers
-// -> Drupal.settings.ces_statistics.staticstrans
-// -> Drupal.settings.ces_statistics.staticsactivity
+    // Pass data to js:
+    // -> Drupal.settings.ces_statistics.staticsusers
+    // -> Drupal.settings.ces_statistics.staticstrans
+    // -> Drupal.settings.ces_statistics.staticsactivity
 
     $charts = array(
       'staticsusers' => $staticsusers,
@@ -159,20 +171,21 @@ function ces_statistics_page() {
       'staticstrans' => $staticstrans,
     );
     drupal_add_js(array('ces_statistics' => $charts), 'setting');
-    return array(
-      '#markup' => '<ul>
+    $markup = '<ul>
       <li>' . t('Number of accounts:') . ' ' . $totalusers . '</li>
       <li>' . t('Number of transactions:') . ' ' . $totalnumber . '</li>
       <li>' . t('Amount of transactions:') . ' ' . $totalamount . '</li>
-      <li>' . t('Average transaction:') . ' ' . $totalamount/$totalnumber . '</li>
+      <li>' . t('Average transaction:') . ' ' . $totalamount / $totalnumber
+      . '</li>
       </ul>
-      <div id="chartdiv1"></div><br><br>
-      <div id="chartdiv2"></div><br><br>
-      <div id="chartdiv3"></div><br><br><br><br>'
-    );
-
+      <div id="chartdiv1"></div><br/><br/>
+      <div id="chartdiv2"></div><br/><br/>
+      <div id="chartdiv3"></div><br/><br/><br/><br/>';
+    return array('#markup' => $markup);
   }
   else {
-    return array('#markup' => '<p>' . t('You need an account to see this.') . '</p>');
+    return array(
+      '#markup' => '<p>' . t('You need an account to see this.') . '</p>',
+    );
   }
 }

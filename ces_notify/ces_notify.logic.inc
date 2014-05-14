@@ -3,14 +3,15 @@
  * @file
  * Abstraction layer between CES logic and the Drupal mailing system.
  *
- * Every logical message has a unique name. For example the name 'account activated'
- * is related to the message to be sent when an account has just been activated.
+ * Every logical message has a unique name. For example the name 
+ * 'account activated' is related to the message to be sent when an account has 
+ * just been activated.
  * However, the actual message text depends on several additional data:
  *   1 - The recipient's preferred language.
  *   2 - The available languages in sender's customized messages.
- * It is highly recommended that each sender has customized messages for at least
- * its own preferred language. It is mandatory for modules using this messaging
- * framework to provide default message templates at least in english.
+ * It is highly recommended that each sender has customized messages for at
+ * least its own preferred language. It is mandatory for modules using this 
+ * messaging framework to provide default message templates at least in english.
  */
 
 /**
@@ -44,21 +45,24 @@ class Notifier {
    * The most appropiate template is choosen to be the one that first meets one
    * of the following conditions:
    * 1. Sender's template exists with language = $record['lang']
-   * 2. Sender's template exists with language = user_preferred_language(recipient)
+   * 2. Sender's template exists with language
+   *    = user_preferred_language(recipient)
    * 3. Sender's template exists with language = user_preferred_language(sender)
    * 4. Default template exists with language = $record['lang']
-   * 5. Default template exists with language = user_preferred_language(recipient)
+   * 5. Default template exists with language
+   *    = user_preferred_language(recipient)
    * 6. Default template exists with language = user_preferred_language(sender)
    * 7. Default template exists with language = language_default()
    * 8. Default template exists with language = en
    *
-   * @param $record array
-   * Input and output associative array with entries:
+   * @param array $record
+   *   Input and output associative array with entries:
    *  - 'module': Input. The module name defining the key.
    *  - 'name': Input. The message key.
    *  - 'sender: Optional Input. The sender's uid.
    *  - 'recipient': Optional Input. The recipient's uid.
-   *  - 'lang': Optional input/Output. The desired language/The actual output language.
+   *  - 'lang': Optional input/Output. The desired language/The actual output
+   *    language.
    *  - 'subject': Output. The subject of the message.
    *  - 'body': Output. The body of the message.
    */
