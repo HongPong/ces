@@ -5,6 +5,33 @@
  */
 
 /**
+ * Implements hook_library().
+ */
+function ces_statistics_library() {
+	$pathmodule = drupal_get_path('module', 'ces_statistics');
+  $libraries['jqplot'] = array(
+    'title' => 'jqplot',
+    'website' => 'https://bitbucket.org/cleonello/jqplot/downloads/',
+    'version' => '1.0.8r1250',
+    'js' => array(
+      $pathmodule . '/js/jquery.jqplot.min.js' => array(),
+      $pathmodule . '/js/jqplot.dateAxisRenderer.min.js' => array(),
+      $pathmodule . '/js/jqplot.barRenderer.min.js' => array(),
+      $pathmodule . '/js/jqplot.canvasTextRenderer.min.js' => array(),
+      $pathmodule . '/js/jqplot.canvasAxisLabelRenderer.min.js' => array(),
+      $pathmodule . '/js/jqplot.canvasAxisTickRenderer.min.js' => array(),
+      $pathmodule . '/js/jqplot.categoryAxisRenderer.min.js' => array(),
+      $pathmodule . '/js/jqplot.pointLabels.min.js' => array(),
+      $pathmodule . '/js/jqplot.pieRenderer.min.js' => array(),
+    ),
+    'css' => array(
+      $pathmodule . '/css/jquery.jqplot.min.css' => array(),
+    ),
+  );
+  return $libraries;
+}
+
+/**
  * Implements hook_menu().
  */
 function ces_statistics_menu() {
@@ -33,18 +60,8 @@ function ces_statistics_page() {
     $exchange = ces_bank_get_current_exchange();
 
     // Js and css files.
-    $pathmodule = drupal_get_path('module', 'ces_statistics');
-    drupal_add_js($pathmodule . '/js/jquery.jqplot.min.js');
-    drupal_add_js($pathmodule . '/js/jqplot.dateAxisRenderer.min.js');
-    drupal_add_js($pathmodule . '/js/jqplot.barRenderer.min.js');
-    drupal_add_js($pathmodule . '/js/jqplot.canvasTextRenderer.min.js');
-    drupal_add_js($pathmodule . '/js/jqplot.canvasAxisLabelRenderer.min.js');
-    drupal_add_js($pathmodule . '/js/jqplot.canvasAxisTickRenderer.min.js');
-    drupal_add_js($pathmodule . '/js/jqplot.categoryAxisRenderer.min.js');
-    drupal_add_js($pathmodule . '/js/jqplot.pointLabels.min.js');
-    drupal_add_js($pathmodule . '/js/jqplot.pieRenderer.min.js');
-    drupal_add_js($pathmodule . '/js/chart.js');
-    drupal_add_css($pathmodule . '/css/jquery.jqplot.min.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
+    drupal_add_library('ces_statistics', 'jqplot');
+    drupal_add_js(drupal_get_path('module', 'ces_statistics') . '/js/chart.js');
 
     // Extract and format users data.
     $resultusers = db_query("
