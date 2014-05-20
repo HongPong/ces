@@ -96,22 +96,25 @@ function ces_message_template_list_entities() {
   if (!empty($entities)) {
     foreach ($entities as $entity) {
       // Create tabular rows for our entities.
-      $rows[$entity->ces_action_id]['data']['ces_action'] = ces_action_load($entity->ces_action_id)->description;
-      if (isset($rows[$entity->ces_action_id]['data']['language'])) {
-        $rows[$entity->ces_action_id]['data']['language'] = 
-          $rows[$entity->ces_action_id]['data']['language'] . ' ' . l($entity->language, 'ces/admin/message/' . $entity->template_id);
+      $ident = $entity->ces_action_id . '-' . $entity->exchange_id;
+
+      $rows[$ident]['data']['ces_action'] = ces_action_load($entity->ces_action_id)->description;
+      if (isset($rows[$ident]['data']['language'])) {
+        $rows[$ident]['data']['language'] = 
+          $rows[$ident]['data']['language'] . ' ' . l($entity->language, 'ces/admin/message/' . $entity->template_id);
       }
       else {
-        $rows[$entity->ces_action_id]['data']['language'] = l($entity->language, 'ces/admin/message/' . $entity->template_id);
+        $rows[$ident]['data']['language'] = l($entity->language, 'ces/admin/message/' . $entity->template_id);
       }
-      $rows[$entity->ces_action_id]['data']['subject'] = $entity->subject;
+      $rows[$ident]['data']['subject'] = $entity->subject;
       if ( $entity->exchange_id == 0 ) {
         $exchange = t('Default');
       }
       else {
-        $exchange = ces_bank_get_exchange($entity->exchange_id)->shortname;
+        $exchange_data = ces_bank_get_exchange($entity->exchange_id);
+        $exchange = $exchange_data['shortname'];
       }
-      $rows[$entity->ces_action_id]['data']['exchange'] = $exchange;
+      $rows[$ident]['data']['exchange'] = $exchange;
     }
     // Put our entities into a themed table. See theme_table() for details.
     $content['entity_table'] = array(
@@ -418,11 +421,6 @@ function ces_message_fields_ajax_callback(array $form, array &$form_state) {
  */
 function ces_message_template_form_validate($form, &$form_state) {
   field_attach_form_validate('ces_message_template', $form_state['values']['template_entity'], $form, $form_state);
-  $entity = $form_state['values']['template_entity'];
-  if ($entity->exchange_id == 0) {
-      form_set_error('exchange_id', t('Can\'t edit the default templates. You need to edit from an exchange.'));
-  }
-
 }
 
 
@@ -436,9 +434,9 @@ function ces_message_template_form_submit($form, &$form_state) {
   $entity->body = $form_state['values']['body'];
   $entity->ces_action_id = $form_state['values']['ces_action'];
   $entity->language = $form_state['values']['language'];
-  $entity->exchange_id = ces_bank_get_current_exchange();
   field_attach_submit('ces_message_template', $entity, $form, $form_state);
   $entity = ces_message_template_save($entity);
+
   $form_state['redirect'] = 'ces/admin/message/' . $entity->template_id;
 
 }
@@ -539,6 +537,8 @@ class CesMessageTemplateController
     // Can not edit the default templates.
     if ($entity->exchange_id == 0 ) {
       $entity->template_id = 0;
+      $exchange_data = ces_bank_get_current_exchange();
+      $entity->exchange_id = $exchange_data['id'];
     }
     // If our entity has no template_id, then we need to give it a
     // time of creation.
