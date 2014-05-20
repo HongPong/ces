@@ -1,0 +1,85 @@
+@defgroup ces_message Ces Message
+@ingroup ices
+
+@{
+
+Ces Message
+===========
+
+Ces Message gestiona el envío de notificaciones a los usuarios.
+
+Ces Message guardara las notificaciones realizadas a los usuarios para que 
+puedan verlas y gestionarlas desde la misma web.
+
+A la vez permite decidir si se desea que la notificación le sea enviada por 
+correo o simplemente guardada en base de datos.
+
+La decisión se puede tomar al enviar la notificación desde el código o más
+adelante podría ser una opción del usuario si desea recibir emails y de que 
+tipo. (Pendiente de estudiar).
+
+Plantillas por defecto
+----------------------
+
+Las plantillas por defecto se encuentran en includes/actions/.
+
+Cada idioma tiene su propia carpeta y los nombres de los archivos corresponden
+a la acción que se realiza.
+
+Ejemplo:
+
+- includes/actions/en/account_activated.inc
+- includes/actions/ca/account_activated.inc
+
+Mensajes de usuario
+-------------------
+
+Los usuarios tienen un listado de todos los mensajes recibidos.
+
+Los mensajes pueden tener diferentes estados:
+
+- 0: Sin leer
+- 1: Leído
+- 2: Borrado
+
+Un mensaje borrado no sera mostrado al usuario, no obstante el administrador aún podra
+verlos, de esta manera tenemos un sistema de registros de actividad del ces que puede 
+ayudar al administrador de cada exchange.
+
+Lista de pendientes
+-------------------
+
+@todo Evitar duplicados comprobando que no haya una plantilla con la misma 
+      acción y el mismo idioma.
+
+@todo Gestionar la plantilla a recoger, por orden de prioridad:
+
+      - Plantilla del exchnage en idioma de usuario.
+      - Plantilla del exchnage en idioma del exchange.
+      - Plantilla por defecto en idioma de usuario.
+      - Plantilla por defecto en idioma del exchange.
+      - Plantilla por defecto en ingles.
+
+@todo Mostrar idioma en el detalle de plantilla.
+
+@todo Estudiar la forma de evitar el exceso de acumulación de mensajes. Por 
+      ejemplo poniendo un limite a los mensajes guardados de cada usuario y
+      en el caso de sobrepasarlo borrar una cantidad de los más antiguos.
+      Se debería de estudiar la mejor estrategia.
+
+@todo Determinar los permisos adecuados, ejemplo: 
+      
+      - El administrador general puede crear y modificar cualquier plantilla.
+      - El administrador de un exchange puede crear y modificar solo las 
+        plantillas de su exchange.
+
+      Estudiar la posibilidad de crear un rol cesadmin los administradores de 
+      un exchange.
+
+@todo Crear ces_message_send_account() para enviar el emnsaje a todos los 
+      usuarios de una cuenta.
+
+@todo Ampliar simpletest a las entidades ces_message
+
+@todo Documentar para doxygen
+@}

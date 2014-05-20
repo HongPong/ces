@@ -1,0 +1,9 @@
+name = ICES Message
+description = System message from ices
+core = 7.x
+package = ices
+files[] = ces_message.test
+configure = admin/structure/ces_message_template/manage
+dependencies[] = token
+
+
