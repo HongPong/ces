@@ -5,4 +5,4 @@ package = ices
 
 dependencies[] = ices
 dependencies[] = ces_bank
-dependencies[] = ces_notify
+dependencies[] = ces_message

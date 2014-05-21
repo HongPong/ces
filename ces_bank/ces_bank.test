@@ -67,7 +67,7 @@ class BankTestCase extends DrupalWebTestCase {
     parent::setUp(array(
       'ces_bank',
       'ces_blog',
-      'ces_notify',
+      'ces_message',
       'ces_offerswants',
       'ces_summaryblock',
       'ces_user')
