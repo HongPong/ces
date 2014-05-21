@@ -3,6 +3,6 @@ description = Integral Community Exchange System Banking
 files[] = ces_bank.logic.inc
 files[] = ces_bank.test
 dependencies[] = ices
-dependencies[] = ces_notify
+dependencies[] = ces_message
 core = 7.x
 package = ices

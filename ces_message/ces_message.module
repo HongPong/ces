@@ -360,6 +360,9 @@ function ces_message_send_notify($action, $params, $recipient = array(), $sender
     $language      = $language_recipient->language;
 
     $template = ces_message_get_template($action, $language);
+    if (!$template) {
+      drupal_set_message('Error: No template from action');
+    }
     $subject  = token_replace($template->subject, $params);
     $body     = token_replace($template->body, $params);
 
@@ -431,6 +434,15 @@ function ces_message_template_test($action = 'account_activated', $recipient = 1
   return $salida;
 }
 
+/**
+* Implementation of hook_views_api().
+*/
+function ces_message_views_api() {
+  return array(
+    'api' => 3.0,
+    'path' => drupal_get_path('module', 'ces_message') .'/includes'
+  );
+}
 /**
  * @} End of "defgroup ces_message".
  */

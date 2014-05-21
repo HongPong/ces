@@ -49,6 +49,8 @@ ayudar al administrador de cada exchange.
 Lista de pendientes
 -------------------
 
+@todo Crear vista de los mensajes para usuario y para administardor
+
 @todo Evitar duplicados comprobando que no haya una plantilla con la misma 
       acción y el mismo idioma.
 
@@ -62,10 +64,7 @@ Lista de pendientes
 
 @todo Mostrar idioma en el detalle de plantilla.
 
-@todo Estudiar la forma de evitar el exceso de acumulación de mensajes. Por 
-      ejemplo poniendo un limite a los mensajes guardados de cada usuario y
-      en el caso de sobrepasarlo borrar una cantidad de los más antiguos.
-      Se debería de estudiar la mejor estrategia.
+@todo Conectar ces_bank con ces_message y borrar ces_notify
 
 @todo Determinar los permisos adecuados, ejemplo: 
       
@@ -80,6 +79,11 @@ Lista de pendientes
       usuarios de una cuenta.
 
 @todo Ampliar simpletest a las entidades ces_message
+
+@todo Estudiar la forma de evitar el exceso de acumulación de mensajes. Por 
+      ejemplo poniendo un limite a los mensajes guardados de cada usuario y
+      en el caso de sobrepasarlo borrar una cantidad de los más antiguos.
+      Se debería de estudiar la mejor estrategia.
 
 @todo Documentar para doxygen
 @}

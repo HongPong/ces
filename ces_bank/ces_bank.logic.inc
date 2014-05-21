@@ -35,8 +35,7 @@ class Bank {
       }
       $record['state'] = Exchange::STATE_INACTIVE;
       $this->updateObject('Exchange', $record);
-      $notifier = new Notifier();
-      $notifier->notify('ces_bank', 'new exchange', 1, 1, array('exchange' => $record));
+      ces_message_send_notify('new_exchange', array('exchange' => $record), array(1), 1);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -133,9 +132,7 @@ class Bank {
       $account['name'] = $exchange->code . '0000';
       $this->createAccount($account);
 
-      $notifier = new Notifier();
-      $notifier->notify('ces_bank', 'exchange activated', $exchange->admin, $user->uid, array('exchange' => $exchange->getRecord()));
-      $this->activateAccount($account);
+      ces_message_send_notify('exchange_activated', array('exchange' => $exchange->getRecord()), array($exchange->admin), $user->uid);
       $record = $exchange->getRecord();
     }
     catch (Exception $e) {
@@ -169,14 +166,13 @@ class Bank {
         );
         $this->createPermission($perm);
       }
-      $notifier = new Notifier();
       // Build recipients array.
       $recipients = array();
       $accusers = $account->getUsers();
       foreach ($accusers as $accuser) {
         $recipients[] = $accuser->user;
       }
-      $notifier->notify('ces_bank', 'account activated', $recipients, $user->uid, array('account' => $account->getRecord()));
+      ces_message_send_notify('account_activated', array('account' => $account->getRecord()), $recipients, $user->uid);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -537,10 +533,7 @@ class Bank {
       $account->saveExtraData();
       $record = $account->getRecord();
       $exchange = $account->getExchange();
-      if ($send_mail) {
-        $notifier = new Notifier();
-        $notifier->notify('ces_bank', 'new account', $exchange->admin, 1, array('account' => $account->getRecord()));
-      }
+      ces_message_send_notify('new_account', array('account' => $account->getRecord()), array($exchange->admin), 1, $send_mail);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -1039,8 +1032,7 @@ class Bank {
    *
    * @see Bank::notifyTransactionAccount()
    */
-  protected function notifyTransaction(TransactionInterface $transaction) {
-    $notifier = new Notifier();
+  public function notifyTransaction(TransactionInterface $transaction) {
     $account_from_name = $transaction->getFromAccountName();
     $account_to_name = $transaction->getToAccountName();
     $transaction_user = $transaction->getUser();
@@ -1052,24 +1044,21 @@ class Bank {
         'toaccount' => $account_to_name,
       ),
     );
-    $this->notifyTransactionAccount('account debited', $account_from_name, $transaction_user, $params);
-    $this->notifyTransactionAccount('account credited', $account_to_name, $transaction_user, $params);
+    $this->notifyTransactionAccount('account_debited', $account_from_name, $transaction_user, $params);
+    $this->notifyTransactionAccount('account_credited', $account_to_name, $transaction_user, $params);
   }
 
   /**
    * Triggers notification for transaction account.
-   * @see Notifier
    */
   protected function notifyTransactionAccount($message_key, $account_name, $transaction_user, $params) {
     $s = new Serializer('LocalAccount');
     $account = $s->loadFromUniqueKey('name', $account_name);
     $account_users = $account->getUsers();
-    $notifier = new Notifier();
     foreach ($account_users as $account_user) {
-      if ($transaction_user != $account_user->user) {
-        // Don't notify the transaction user.
-        $notifier->notify('ces_bank', $message_key, $account_user->user, $transaction_user, $params);
-      }
+      // Don't send mail if the user is the same.
+      $send_mail = ($transaction_user != $account_user->user) ? TRUE : FALSE;
+      ces_message_send_notify($message_key, $params, array($account_user->user), $transaction_user, $send_mail);
     }
   }
 }
@@ -2241,6 +2230,8 @@ class BasicTransaction extends DBObject implements TransactionInterface {
       $account_to->applyTransaction($this);
       $account_from->applyTransaction($this);
       $this->setState(TransactionInterface::STATE_COMMITTED);
+      $bank = new Bank();
+      $bank->notifyTransaction($this);
       return TRUE;
     }
     catch (Exception $e) {

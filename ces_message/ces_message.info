@@ -5,5 +5,9 @@ package = ices
 files[] = ces_message.test
 configure = admin/structure/ces_message_template/manage
 dependencies[] = token
+dependencies[] = "views"
+features[ctools][] = "views:views_default:3.0"
+features[message_type][] = "ces_message"
+features[views_view][] = "ces_message"
 
 
