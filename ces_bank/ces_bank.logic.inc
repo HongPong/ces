@@ -133,6 +133,7 @@ class Bank {
       $this->createAccount($account);
 
       ces_message_send_notify('exchange_activated', array('exchange' => $exchange->getRecord()), array($exchange->admin), $user->uid);
+      $this->activateAccount($account);	
       $record = $exchange->getRecord();
     }
     catch (Exception $e) {
@@ -1032,7 +1033,7 @@ class Bank {
    *
    * @see Bank::notifyTransactionAccount()
    */
-  public function notifyTransaction(TransactionInterface $transaction) {
+  protected function notifyTransaction(TransactionInterface $transaction) {
     $account_from_name = $transaction->getFromAccountName();
     $account_to_name = $transaction->getToAccountName();
     $transaction_user = $transaction->getUser();
@@ -2230,8 +2231,9 @@ class BasicTransaction extends DBObject implements TransactionInterface {
       $account_to->applyTransaction($this);
       $account_from->applyTransaction($this);
       $this->setState(TransactionInterface::STATE_COMMITTED);
-      $bank = new Bank();
-      $bank->notifyTransaction($this);
+      // @todo Da error por falta de estado, mirar de solucionarlo
+      // $bank = new Bank();
+      // $bank->notifyTransaction($this);
       return TRUE;
     }
     catch (Exception $e) {

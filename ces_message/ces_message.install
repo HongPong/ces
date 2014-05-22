@@ -40,6 +40,12 @@ function ces_message_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'exchange' => array(
+        'description' => 'ID of exchange',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       'subject' => array(
         'description' => 'Message subject',
         'type' => 'text',
@@ -71,6 +77,10 @@ function ces_message_schema() {
       'user' => array(
         'table' => 'user',
         'columns' => array('user' => 'uid'),
+      ),
+      'exchange' => array(
+        'table' => 'ces_exchange',
+        'columns' => array('exchange' => 'id'),
       ),
     ),
   );

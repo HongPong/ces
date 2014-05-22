@@ -522,6 +522,7 @@ class CesMessageTemplateController
     $entity = new stdClass();
     $entity->type = 'ces_message_template';
     $entity->template_id = 0;
+    $entity->exchange_id = 0;
     $entity->bundle_type = 'ces_message_bundle';
     $entity->subject = '';
     $entity->body = '';
@@ -538,7 +539,8 @@ class CesMessageTemplateController
     if ($entity->exchange_id == 0 ) {
       $entity->template_id = 0;
       $exchange_data = ces_bank_get_current_exchange();
-      $entity->exchange_id = $exchange_data['id'];
+      $exchange_id = ($exchange_data) ? $exchange_data['id'] : 0;
+      $entity->exchange_id = $exchange_id;
     }
     // If our entity has no template_id, then we need to give it a
     // time of creation.

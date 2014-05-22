@@ -54,6 +54,8 @@ Lista de pendientes
 @todo Evitar duplicados comprobando que no haya una plantilla con la misma 
       acción y el mismo idioma.
 
+@todo Paginar listado de mensajes de usuario.
+
 @todo Gestionar la plantilla a recoger, por orden de prioridad:
 
       - Plantilla del exchnage en idioma de usuario.

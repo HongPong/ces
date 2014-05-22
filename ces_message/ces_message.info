@@ -4,6 +4,7 @@ core = 7.x
 package = ices
 files[] = ces_message.test
 configure = admin/structure/ces_message_template/manage
+dependencies[] = ces_bank
 dependencies[] = token
 dependencies[] = "views"
 features[ctools][] = "views:views_default:3.0"

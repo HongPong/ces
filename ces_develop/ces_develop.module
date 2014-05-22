@@ -82,7 +82,7 @@ function ces_develop_clean() {
   db_delete('ces_exchange')->execute();
   db_delete('ces_limit')->execute();
   db_delete('ces_limitchain')->execute();
-  db_delete('ces_messages')->execute();
+  db_delete('ces_message')->execute();
   db_delete('ces_permission')->execute();
   db_delete('ces_transaction')->execute();
   if (db_table_exists('ces_offerwant')) {

@@ -15,17 +15,18 @@
 /**
  * Basic information for the page.
  */
-function ces_message_info_page() {
+function ces_message_info_page($args=FALSE) {
   $content['preface'] = array(
     '#type' => 'item',
     '#markup' => t('The ces message.'),
   );
-  if (user_access('administer ces_message_template entities')) {
-    $content['preface']['#markup'] = t('You can administer all ces meessage !link.',
-      array('!link' => l(t('here'), 'admin/structure/ces_message_template/manage'))
+  // @todo pagina para administrar todos los mensajes del exchange
+  if (ces_bank_access('admin','exchange', ces_bank_get_current_exchange())) {
+    $content['preface']['#markup'] = t('You can view all ces meessage !link.',
+      array('!link' => l(t('here'), 'ces/message/all'))
     );
   }
-  $content['table'] = ces_message_list_entities();
+  $content['table'] = ces_message_list_entities($args);
 
   return $content;
 }
@@ -80,28 +81,64 @@ function ces_message_uri($message) {
  *
  * @see pager_example.module
  */
-function ces_message_list_entities() {
+function ces_message_list_entities($args=FALSE) {
+  global $user;
+  $current_exchange = ces_bank_get_current_exchange();
+  $current_exchange_id = $current_exchange['id'];
+
+  $all = ($args == 'all' && ces_bank_access('admin','exchange',$current_exchange_id)) ? TRUE : FALSE;
   $content = array();
-  // Load all of our entities.
-  $entities = ces_message_load_multiple();
+  if ($all) {
+    // Load all message.
+    //$conditions = array('exchange' => $current_exchange_id); Limit current exchange
+    $conditions = FALSE;
+  }
+  else {
+    // Load all of our messages.
+    $conditions = array('user' => $user->uid);
+  }
+  $entities = ces_message_load_multiple(FALSE, $conditions );
   if (!empty($entities)) {
     foreach ($entities as $entity) {
       // Create tabular rows for our entities.
-      $rows[] = array(
-        'data' => array(
-          // 'id' => $entity->mid,
-          'created' => format_date($entity->created, 'custom', 'l d \d\e F \d\e\l Y | G:i'),
-          'subject' => l($entity->subject, 'ces/message/' . $entity->mid),
-          // 'bundle' => $entity->bundle_type,
-        ),
+      $exchange = ces_bank_get_exchange($entity->exchange);
+      $user_row = user_load($entity->user);     
+      if ($all) {
+        $rows[] = array(
+          'data' => array(
+            'user' => $user->name,
+            'exchange' => $exchange['shortname'],
+            'created' => format_date($entity->created, 'custom', 'l d \d\e F \d\e\l Y | G:i'),
+            'subject' => l($entity->subject, 'ces/message/' . $entity->mid),
+            'type_message' => $entity->type_message,
+          ),
+        );
+      }
+      else {
+        $rows[] = array(
+          'data' => array(
+            'exchange' => $exchange['shortname'],
+            'created' => format_date($entity->created, 'custom', 'l d \d\e F \d\e\l Y | G:i'),
+            'subject' => l($entity->subject, 'ces/message/' . $entity->mid),
+            'type_message' => $entity->type_message,
+          ),
+        );
+      }
+    }
+    if ($all) {
+      $content['entity_table'] = array(
+        '#theme' => 'table',
+        '#rows' => $rows,
+        '#header' => array(t('User'),t('Exchange'),t('Created'), t('Subject'), t('Type')),
       );
     }
-    // Put our entities into a themed table. See theme_table() for details.
-    $content['entity_table'] = array(
-      '#theme' => 'table',
-      '#rows' => $rows,
-      '#header' => array(t('Created'), t('Subject')),
-    );
+    else {
+      $content['entity_table'] = array(
+        '#theme' => 'table',
+        '#rows' => $rows,
+        '#header' => array(t('Exchange'),t('Created'), t('Subject'), t('Type')),
+      );
+    }
   }
   else {
     // There were no entities. Tell the user.
@@ -264,6 +301,7 @@ class CesMessageEntityController
     $entity->subject = '';
     $entity->body = '';
     $entity->user = 0;
+    $entity->exchange = 0;
     $entity->state = 0;
     return $entity;
   }
