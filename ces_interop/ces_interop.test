@@ -1,0 +1,44 @@
+<?php
+/**
+ * @file
+ * Test ces_interop module.
+ */
+
+class CesInteropTestCase extends CesBankTestCase {
+  /**
+   * Implementation of getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'ces_interop',
+      'description' => 'Test ICES Interop main features.',
+      'group' => 'ICES',
+    );
+  }
+  /**
+   * Overrides parent method to ad his module.
+   */
+  protected function getNeededModules() {
+    return parent::getNeededModules() + array('ces_interop');
+  }
+  /**
+   * This function performs all tests.
+   *
+   * Since we have to perform heavy operations (create and activate exchanges,
+   * accounts, etc) before we can actually test critical features we join all in
+   * one test function to save resources.
+   */
+  protected function testAll() {
+    $this->createExchanges();
+    $this->createAccounts();
+    // Now we are ready to test opentransact.
+    $this->doOpentransact();
+  }
+  /**
+   * Test opentransact features.
+   */
+  protected function doOpenTransact() {
+    // 1. Register test client.
+    
+  }
+}

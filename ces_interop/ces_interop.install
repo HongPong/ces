@@ -1,0 +1,41 @@
+<?php
+/**
+ * @file Installation for ces_interop module.
+ */
+/**
+ * Implements hook_install().
+ * 
+ * Attach field transaction to oauth2 authorisation codes and tokens.
+ */
+function ces_interop_install() {
+  // Create transaction field and instances for authorization code, acess token
+  // and refresh token from oauth2_server module.
+  if (!field_info_field('ces_interop_transaction')) {
+    field_create_field(array(
+      'field_name' => 'ces_interop_transaction',
+      'type' => 'number_integer',
+      'cardinality' => 1,
+    ));
+    field_create_instance(array(
+      'field_name' => 'ces_interop_transaction',
+      'entity_type' => 'oauth2_server_authorization_code',
+      'bundle' => 'oauth2_server_authorization_code',
+    ));
+    field_create_instance(array(
+      'field_name' => 'ces_interop_transaction',
+      'entity_type' => 'oauth2_server_token',
+      'bundle' => 'access',
+    ));
+    field_create_instance(array(
+      'field_name' => 'ces_interop_transaction',
+      'entity_type' => 'oauth2_server_token',
+      'bundle' => 'refresh',
+    ));
+  }
+}
+/**
+ * Implements hook_uninstall().
+ */
+function ces_interop_uninstall() {
+  field_delete_field('ces_interop_transaction');
+}

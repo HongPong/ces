@@ -1,0 +1,10 @@
+name = ICES interoperability services
+description = Impleemnts the opentransact protocol for financial transactions.
+core = 7.x
+package = ices
+
+files[] = ces_interop.inc
+
+dependencies[] = ces_bank
+dependencies[] = services
+dependencies[] = oauth2_server
