@@ -7,7 +7,7 @@
 
 /**
  * @defgroup ces_message_actions Ces Message Actions
- * @ingroup ces
+ * @ingroup ces_message
  * @{
  * creating a core Entity API entity.
  */

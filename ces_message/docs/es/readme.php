@@ -1,6 +1,8 @@
-@defgroup ces_message Ces Message
-@ingroup ices
+<?php
 
+/**
+
+@defgroup ces_message_doc Ces Message doc
 @{
 
 Ces Message
@@ -38,7 +40,7 @@ Para implementar una nueva acción se debe incluir en ces_message_install().
 
 Y añadir la correspondiente plantilla por defecto.
 
-Em módulo que gestione la acción debe poder gestionar los tokens. 
+El módulo que gestione la acción debe poder gestionar los tokens. 
 
 @see ces_message_install()
 @see ces_bank_token_info()
@@ -62,14 +64,6 @@ ayudar al administrador de cada exchange.
 Lista de pendientes
 -------------------
 
-@todo Gestionar la plantilla a recoger, por orden de prioridad:
-
-      - Plantilla del exchnage en idioma de usuario.
-      - Plantilla del exchnage en idioma del exchange.
-      - Plantilla por defecto en idioma de usuario.
-      - Plantilla por defecto en idioma del exchange.
-      - Plantilla por defecto en ingles.
-
 @todo Incluir en el listado de los mensajes: 
 
       - la opción de borrarlos.
@@ -80,7 +74,7 @@ Lista de pendientes
       base de datos para que el administrador del exchange pueda tener una 
       referencia de la actividad.
 
-@todo Conectar ces_bank con ces_message y borrar ces_notify
+@todo Mirar de enviar mensaje al hacer una transacción desde ces_bank.logic.inc:2234
 
 @todo Crear ces_message_send_account() para enviar el mensaje a todos los 
       usuarios de una cuenta.
@@ -97,3 +91,5 @@ Lista de pendientes
 @todo Paginar listado de mensajes de usuario.
 
 @}
+ */
+?>

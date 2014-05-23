@@ -16,4 +16,5 @@
  *   - @link ces_bank_interexchange_transactions Transacciones entre grupos @endlink
  * - @link ces_import Módulo de importación @endlink
  *   - @link ces_migration_data Datos de importación del CES @endlink
+ * - @link ces_message_doc Módulo de notificación @endlink
  */
