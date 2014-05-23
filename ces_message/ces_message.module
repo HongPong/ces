@@ -180,15 +180,6 @@ function ces_message_menu() {
     'file path' => drupal_get_path('module', 'ces_message'),
     'access callback' => TRUE,
   );
-  $items['ces/message/all'] = array(
-    'title' => 'Ces Message All',
-    'page callback' => 'ces_message_info_page',
-    'page arguments' => array('all'),
-    'file' => 'includes/ces_message.message.inc',
-    'file path' => drupal_get_path('module', 'ces_message'),
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
-  );
   $items['ces/message/%ces_message'] = array(
     'title callback' => 'ces_message_title',
     'title arguments' => array(2),
@@ -205,6 +196,15 @@ function ces_message_menu() {
     // 'expanded' => TRUE,
     'weight' => 10,
     'file' => 'includes/ces_message.templates.inc',
+    'file path' => drupal_get_path('module', 'ces_message'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', $current_exchange_id),
+  );
+  $items['ces/admin/message/all'] = array(
+    'title' => 'Ces Message All',
+    'page callback' => 'ces_message_info_page',
+    'page arguments' => array('all'),
+    'file' => 'includes/ces_message.message.inc',
     'file path' => drupal_get_path('module', 'ces_message'),
     'access callback' => 'ces_bank_access',
     'access arguments' => array('admin', 'exchange', $current_exchange_id),
@@ -271,6 +271,14 @@ function ces_message_menu() {
 
 /**
  * Get a template.
+ *
+ * Order search:
+ *
+ * We search the current exchange templates and 0 (default), with the language 
+ * of the receiving user and the default (English).
+ * Ordered by descending exchange first is to ensure that the current exchange.
+ * We travel the result and the first group we find the language of the user to 
+ * pick up.
  *
  * @param string $action
  *   Ces action.
@@ -376,9 +384,13 @@ function ces_message_send_notify($action, $params, $recipient = array(), $sender
     $subject  = token_replace($template->subject, $params);
     $body     = token_replace($template->body, $params);
 
+    $ces_actions = ces_action_load_multiple(FALSE, array('name' => $action), TRUE);
+    foreach ($ces_actions as $ces_action) {
+      $ces_action_description = $ces_action->description;
+    }
     // Save message in DB.
     $notify = entity_get_controller('ces_message')->create();
-    $notify->type_message = $action;
+    $notify->type_message = $ces_action_description;
     $notify->user         = $user_recipient_id;
     $notify->exchange     = $exchange_id;
     $notify->subject      = $subject;

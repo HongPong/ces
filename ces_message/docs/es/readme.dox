@@ -31,6 +31,19 @@ Ejemplo:
 - includes/actions/en/account_activated.inc
 - includes/actions/ca/account_activated.inc
 
+Implementar una nueva acción
+----------------------------
+
+Para implementar una nueva acción se debe incluir en ces_message_install().
+
+Y añadir la correspondiente plantilla por defecto.
+
+Em módulo que gestione la acción debe poder gestionar los tokens. 
+
+@see ces_message_install()
+@see ces_bank_token_info()
+@see ces_bank_tokens()
+
 Mensajes de usuario
 -------------------
 
@@ -49,13 +62,6 @@ ayudar al administrador de cada exchange.
 Lista de pendientes
 -------------------
 
-@todo Crear vista de los mensajes para usuario y para administardor
-
-@todo Evitar duplicados comprobando que no haya una plantilla con la misma 
-      acción y el mismo idioma.
-
-@todo Paginar listado de mensajes de usuario.
-
 @todo Gestionar la plantilla a recoger, por orden de prioridad:
 
       - Plantilla del exchnage en idioma de usuario.
@@ -64,20 +70,19 @@ Lista de pendientes
       - Plantilla por defecto en idioma del exchange.
       - Plantilla por defecto en ingles.
 
-@todo Mostrar idioma en el detalle de plantilla.
+@todo Incluir en el listado de los mensajes: 
+
+      - la opción de borrarlos.
+      - Leido no leido.
+
+      Al mostrar detalle de mensaje marcarlo automaticamente como leido.
+      Al borrar el mensaje el usuario marcar como borrado, pero mantener en la 
+      base de datos para que el administrador del exchange pueda tener una 
+      referencia de la actividad.
 
 @todo Conectar ces_bank con ces_message y borrar ces_notify
 
-@todo Determinar los permisos adecuados, ejemplo: 
-      
-      - El administrador general puede crear y modificar cualquier plantilla.
-      - El administrador de un exchange puede crear y modificar solo las 
-        plantillas de su exchange.
-
-      Estudiar la posibilidad de crear un rol cesadmin los administradores de 
-      un exchange.
-
-@todo Crear ces_message_send_account() para enviar el emnsaje a todos los 
+@todo Crear ces_message_send_account() para enviar el mensaje a todos los 
       usuarios de una cuenta.
 
 @todo Ampliar simpletest a las entidades ces_message
@@ -87,5 +92,8 @@ Lista de pendientes
       en el caso de sobrepasarlo borrar una cantidad de los más antiguos.
       Se debería de estudiar la mejor estrategia.
 
-@todo Documentar para doxygen
+@todo Documentar para doxygen, sobretodo la parte de implementar una acción nueva.
+
+@todo Paginar listado de mensajes de usuario.
+
 @}
