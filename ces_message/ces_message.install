@@ -147,7 +147,7 @@ function ces_message_schema() {
     ),
     'primary key' => array('template_id'),
     'unique keys' => array(
-      'exchange_action_lang' => array('exchange_id','ces_action_id','language')
+      'exchange_action_lang' => array('exchange_id','ces_action_id','language'),
     ),
     'foreign keys' => array(
       'exchange_id' => array(
@@ -205,38 +205,38 @@ function ces_message_install() {
     'name' => 'new_exchange',
     'description' => 'New exchange',
   );
-  ces_action_save($action);
+  ces_message_action_save($action);
   $action = (object) array(
     'name' => 'exchange_activated',
     'description' => 'Exchange activated',
   );
-  ces_action_save($action);
+  ces_message_action_save($action);
   $action = (object) array(
     'name' => 'new_account',
     'description' => 'New account',
   );
-  ces_action_save($action);
+  ces_message_action_save($action);
   $action = (object) array(
     'name' => 'account_activated',
     'description' => 'Account Activated',
   );
-  ces_action_save($action);
+  ces_message_action_save($action);
   $action = (object) array(
     'name' => 'account_debited',
     'description' => 'Account Debited',
   );
-  ces_action_save($action);
+  ces_message_action_save($action);
   $action = (object) array(
     'name' => 'account_credited',
     'description' => 'Account Credited',
   );
-  ces_action_save($action);
+  ces_message_action_save($action);
 
   foreach (glob(dirname(__FILE__) . '/includes/actions/*') as $lang) {
     $language = basename($lang);
     foreach (glob($lang . '/*.inc') as $template) {
       $action = basename($template, '.inc');
-      $actions = ces_action_load_multiple(FALSE, array('name' => $action), TRUE);
+      $actions = ces_message_action_load_multiple(FALSE, array('name' => $action), TRUE);
       if (!$actions) {
         trigger_error('Error, Does not exist action [' . $action . ']', E_USER_ERROR);
       }

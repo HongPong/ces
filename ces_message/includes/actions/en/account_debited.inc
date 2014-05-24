@@ -34,5 +34,3 @@ Seller contact: [transaction:toaccount:user:fullname]
 mail: [transaction:toaccount:user:mail]
 phone: [transaction:toaccount:user:mainphone]
 ';
-
-

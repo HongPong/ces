@@ -20,11 +20,6 @@ function ces_message_template_info_page() {
     '#type' => 'item',
     '#markup' => t('The entity ces message provides a template entity.'),
   );
-  if (user_access('administer ces_message_template entities')) {
-    $content['preface']['#markup'] = t('You can administer these and add fields and change the view !link.',
-      array('!link' => l(t('here'), 'admin/structure/ces_message_template/manage'))
-    );
-  }
   $content['table'] = ces_message_template_list_entities();
 
   return $content;
@@ -98,16 +93,17 @@ function ces_message_template_list_entities() {
       // Create tabular rows for our entities.
       $ident = $entity->ces_action_id . '-' . $entity->exchange_id;
 
-      $rows[$ident]['data']['ces_action'] = ces_action_load($entity->ces_action_id)->description;
+      $rows[$ident]['data']['ces_action'] = ces_message_action_load($entity->ces_action_id)->description;
       if (isset($rows[$ident]['data']['language'])) {
-        $rows[$ident]['data']['language'] = 
-          $rows[$ident]['data']['language'] . ' ' . l($entity->language, 'ces/admin/message/' . $entity->template_id);
+        $rows[$ident]['data']['language'] = $rows[$ident]['data']['language'] .
+          ' ' .
+          l($entity->language, 'ces/admin/message/' . $entity->template_id);
       }
       else {
         $rows[$ident]['data']['language'] = l($entity->language, 'ces/admin/message/' . $entity->template_id);
       }
       $rows[$ident]['data']['subject'] = $entity->subject;
-      if ( $entity->exchange_id == 0 ) {
+      if ($entity->exchange_id == 0) {
         $exchange = t('Default');
       }
       else {
@@ -120,7 +116,12 @@ function ces_message_template_list_entities() {
     $content['entity_table'] = array(
       '#theme' => 'table',
       '#rows' => $rows,
-      '#header' => array(t('Ces Action'),t('Languages'),t('Subject'),t('Exchange')),
+      '#header' => array(
+        t('Ces Action'),
+        t('Languages'),
+        t('Subject'),
+        t('Exchange'),
+      ),
     );
   }
   else {
@@ -137,7 +138,7 @@ function ces_message_template_list_entities() {
  * Callback for a page title when this entity is displayed.
  */
 function ces_message_template_title($entity) {
-  return t('@ces_action', array('@ces_action' => ces_action_load($entity->ces_action_id)->name));
+  return t('@ces_action', array('@ces_action' => ces_message_action_load($entity->ces_action_id)->name));
 }
 
 /**
@@ -179,7 +180,7 @@ function ces_message_template_view($entity, $view_mode = 'tweaky') {
   $entity->content['ces_action'] = array(
     '#type' => 'item',
     '#title' => t('Ces Action'),
-    '#markup' => t(ces_action_load($entity->ces_action_id)->description),
+    '#markup' => t(ces_message_action_load($entity->ces_action_id)->description),
   );
   $entity->content['language'] = array(
     '#type' => 'item',
@@ -536,7 +537,7 @@ class CesMessageTemplateController
    */
   public function save($entity) {
     // Can not edit the default templates.
-    if ($entity->exchange_id == 0 ) {
+    if ($entity->exchange_id == 0) {
       $entity->template_id = 0;
       $exchange_data = ces_bank_get_current_exchange();
       $exchange_id = ($exchange_data) ? $exchange_data['id'] : 0;
@@ -566,7 +567,7 @@ class CesMessageTemplateController
     // need to invoke.
     if (empty($primary_keys)) {
       field_attach_insert('ces_message_template', $entity);
-      $message = t('Inserted template %action', array('%action' => ces_action_load($entity->ces_action_id)->description));
+      $message = t('Inserted template %action', array('%action' => ces_message_action_load($entity->ces_action_id)->description));
       drupal_set_message($message);
     }
     else {

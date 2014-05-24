@@ -105,9 +105,9 @@ function ces_message_entity_info() {
         // 'admin' key is used by the Field UI to provide field and
         // display UI pages.
         // 'admin' => array(
-        //   'path' => 'admin/structure/ces_message_template/manage',
-          // 'access callback' => 'ces_bank_access',
-          // 'access arguments' => array('admin', 'exchange', ces_bank_get_current_exchange()),
+        // 'path' => 'admin/structure/ces_message_template/manage',
+        // 'access callback' => 'ces_bank_access',
+        // 'access arguments' => array('admin', 'exchange', ces_bank_get_current_exchange()),
         // ),
       ),
     ),
@@ -128,8 +128,8 @@ function ces_message_entity_info() {
     'base table' => 'ces_action',
     'static cache' => TRUE,
     'field cache' => TRUE,
-    'load hook' => 'ces_action_load',
-    'uri callback' => 'ces_action_uri',
+    'load hook' => 'ces_message_action_load',
+    'uri callback' => 'ces_message_action_uri',
     'fieldable' => TRUE,
     'entity keys' => array(
       'id' => 'id',
@@ -153,12 +153,14 @@ function ces_message_entity_info() {
 /**
  * Access message.
  *
- * @param $permissions Action, example: admin. 
- * @param $mid Id message.
+ * @param string $permission 
+ *   Action, example: admin. 
+ * @param object $message
+ *   Message.
  */
 function ces_message_access($permission, $message) {
   global $user;
-  if (ces_bank_access('admin', 'exchange', ces_bank_get_current_exchange())){
+  if (ces_bank_access('admin', 'exchange', ces_bank_get_current_exchange())) {
     return TRUE;
   }
   if ($user->uid == $message->user) {
@@ -364,7 +366,7 @@ function ces_message_send_notify($action, $params, $recipient = array(), $sender
 
   if (isset($params['exchange'])) {
     $exchange_id = $params['exchange']['id'];
-  } 
+  }
   else {
     $exchange_actual = ces_bank_get_current_exchange();
     $exchange_id = $exchange_actual['id'];
@@ -384,7 +386,7 @@ function ces_message_send_notify($action, $params, $recipient = array(), $sender
     $subject  = token_replace($template->subject, $params);
     $body     = token_replace($template->body, $params);
 
-    $ces_actions = ces_action_load_multiple(FALSE, array('name' => $action), TRUE);
+    $ces_actions = ces_message_action_load_multiple(FALSE, array('name' => $action), TRUE);
     foreach ($ces_actions as $ces_action) {
       $ces_action_description = $ces_action->description;
     }

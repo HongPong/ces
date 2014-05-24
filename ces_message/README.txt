@@ -31,4 +31,3 @@ To implement a new action must be included in ces_message_install().
 And add the template by default.
 
 The module to manage is to be able to manage the tokens.
-

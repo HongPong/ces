@@ -15,13 +15,13 @@
 /**
  * Basic information for the page.
  */
-function ces_message_info_page($args=FALSE) {
+function ces_message_info_page($args = FALSE) {
   $content['preface'] = array(
     '#type' => 'item',
     '#markup' => t('The ces message.'),
   );
   // @todo pagina para administrar todos los mensajes del exchange
-  if (ces_bank_access('admin','exchange', ces_bank_get_current_exchange())) {
+  if (ces_bank_access('admin', 'exchange', ces_bank_get_current_exchange())) {
     $content['preface']['#markup'] = t('You can view all ces meessage !link.',
       array('!link' => l(t('here'), 'ces/message/all'))
     );
@@ -81,28 +81,29 @@ function ces_message_uri($message) {
  *
  * @see pager_example.module
  */
-function ces_message_list_entities($args=FALSE) {
+function ces_message_list_entities($args = FALSE) {
   global $user;
   $current_exchange = ces_bank_get_current_exchange();
   $current_exchange_id = $current_exchange['id'];
 
-  $all = ($args == 'all' && ces_bank_access('admin','exchange',$current_exchange_id)) ? TRUE : FALSE;
+  $all = ($args == 'all' && ces_bank_access('admin', 'exchange', $current_exchange_id)) ? TRUE : FALSE;
   $content = array();
   if ($all) {
     // Load all message.
-    //$conditions = array('exchange' => $current_exchange_id); Limit current exchange
+    // Limit current exchange.
+    // $conditions = array('exchange' => $current_exchange_id);
     $conditions = FALSE;
   }
   else {
     // Load all of our messages.
     $conditions = array('user' => $user->uid);
   }
-  $entities = ces_message_load_multiple(FALSE, $conditions );
+  $entities = ces_message_load_multiple(FALSE, $conditions);
   if (!empty($entities)) {
     foreach ($entities as $entity) {
       // Create tabular rows for our entities.
       $exchange = ces_bank_get_exchange($entity->exchange);
-      $user_row = user_load($entity->user);     
+      $user_row = user_load($entity->user);
       if ($all) {
         $rows[] = array(
           'data' => array(
@@ -129,7 +130,13 @@ function ces_message_list_entities($args=FALSE) {
       $content['entity_table'] = array(
         '#theme' => 'table',
         '#rows' => $rows,
-        '#header' => array(t('User'),t('Exchange'),t('Created'), t('Subject'), t('Type')),
+        '#header' => array(
+          t('User'),
+          t('Exchange'),
+          t('Created'),
+          t('Subject'),
+          t('Type'),
+        ),
       );
     }
     else {

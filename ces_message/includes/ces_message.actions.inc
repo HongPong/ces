@@ -15,7 +15,7 @@
 /**
  * Entity uri callback.
  */
-function ces_action_uri($action) {
+function ces_message_action_uri($action) {
   return array(
     'path' => 'ces/bank/exchange/offerswants/action/' . $action->id,
   );
@@ -37,7 +37,7 @@ function _ces_message_get_actions_options() {
  */
 function ces_message_get_actions() {
   $ids = ces_message_get_actions_ids();
-  return ces_action_load_multiple($ids);
+  return ces_message_action_load_multiple($ids);
 }
 /**
  * Return the list of all actions.
@@ -56,36 +56,36 @@ function ces_message_get_actions_ids() {
 /**
  * Implements hook_entity_load().
  */
-function ces_action_load($id = NULL, $reset = FALSE) {
+function ces_message_action_load($id = NULL, $reset = FALSE) {
   $ids = (isset($id) ? array($id) : array());
   $conditions = array();
-  $action = ces_action_load_multiple($ids, $conditions, $reset);
+  $action = ces_message_action_load_multiple($ids, $conditions, $reset);
   return $action ? reset($action) : FALSE;
 }
 /**
  * Laod multiple categories.
  */
-function ces_action_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
+function ces_message_action_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('ces_action', $ids, $conditions, $reset);
 }
 /**
  * Delete action.
  */
-function ces_action_delete($id) {
+function ces_message_action_delete($id) {
   $controller = entity_get_controller('ces_action');
   return $controller->delete($id);
 }
 /**
  * Access action.
  */
-function ces_action_access($permission, $action) {
+function ces_message_action_access($permission, $action) {
   return ces_bank_access($permission, 'exchange', $action->exchange);
 }
 
 /**
  * Implements hook_entity_save().
  */
-function ces_action_save($action) {
+function ces_message_action_save($action) {
   $controller = entity_get_controller('ces_action');
   return $controller->save($action);
 }
@@ -116,7 +116,7 @@ class CesActionEntityController extends DrupalDefaultEntityController {
    */
   public function delete($id) {
     // Load full entity.
-    $action = ces_action_load($id);
+    $action = ces_message_action_load($id);
     // Change the parent of child categories.
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'ces_action')
@@ -124,7 +124,7 @@ class CesActionEntityController extends DrupalDefaultEntityController {
     $result = $query->execute();
     if (isset($result['ces_action'])) {
       $ids = array_keys($result['ces_action']);
-      $children = ces_action_load_multiple($ids);
+      $children = ces_message_action_load_multiple($ids);
       foreach ($children as $cat) {
         $cat->parent = $action->parent;
         $this->save($cat);
