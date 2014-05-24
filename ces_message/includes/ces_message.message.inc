@@ -23,7 +23,7 @@ function ces_message_info_page($args = FALSE) {
   // @todo pagina para administrar todos los mensajes del exchange
   if (ces_bank_access('admin', 'exchange', ces_bank_get_current_exchange())) {
     $content['preface']['#markup'] = t('You can view all ces meessage !link.',
-      array('!link' => l(t('here'), 'ces/message/all'))
+      array('!link' => l(t('here'), 'ces/bank/account/message/all'))
     );
   }
   $content['table'] = ces_message_list_entities($args);
@@ -66,7 +66,7 @@ function ces_message_load_multiple($mids = FALSE, $conditions = array(), $reset 
  */
 function ces_message_uri($message) {
   return array(
-    'path' => 'ces/message/' . $message->mid,
+    'path' => 'ces/bank/account/message/' . $message->mid,
   );
 }
 
@@ -110,7 +110,7 @@ function ces_message_list_entities($args = FALSE) {
             'user' => $user->name,
             'exchange' => $exchange['shortname'],
             'created' => format_date($entity->created, 'custom', 'l d \d\e F \d\e\l Y | G:i'),
-            'subject' => l($entity->subject, 'ces/message/' . $entity->mid),
+            'subject' => l($entity->subject, 'ces/bank/account/message/' . $entity->mid),
             'type_message' => $entity->type_message,
           ),
         );
@@ -120,7 +120,7 @@ function ces_message_list_entities($args = FALSE) {
           'data' => array(
             'exchange' => $exchange['shortname'],
             'created' => format_date($entity->created, 'custom', 'l d \d\e F \d\e\l Y | G:i'),
-            'subject' => l($entity->subject, 'ces/message/' . $entity->mid),
+            'subject' => l($entity->subject, 'ces/bank/account/message/' . $entity->mid),
             'type_message' => $entity->type_message,
           ),
         );
