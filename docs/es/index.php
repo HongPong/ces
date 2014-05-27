@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Documentation page
+ */
 
 /**
  * @mainpage Documentación para desarrolladores

@@ -6,7 +6,8 @@
 
 /**
  * 
- * @defgroup ces_message_doc Ces Message doc
+ * @defgroup ces_message_doc Ces Message documentation
+ * @ingroup ces_message
  * @{
  * 
  * Ces Message

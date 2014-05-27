@@ -11,7 +11,7 @@ forward could be a user option to receive emails and that
 kind. (Pending study).
 
 Default templates
-----------------------
+-----------------
 
 The default templates are in includes/actions/.
 
@@ -24,7 +24,7 @@ example:
 - Includes/actions/ca/account_activated.inc
 
 Implement a new action
-----------------------------
+----------------------
 
 To implement a new action must be included in ces_message_install().
 
