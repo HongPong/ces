@@ -1,7 +1,13 @@
 <?php
-
 /**
  * @file
+ * Tests the functionality offers and wants module.
+ */
+
+/**
+ * @defgroup ces_import4ces_tests Tests from offerswants
+ * @ingroup ces_offerswants
+ * @{
  * Tests the functionality offers and wants module.
  */
 
@@ -582,3 +588,4 @@ class OffersWantsTestCase extends DrupalWebTestCase {
   }
 
 }
+/** @} */

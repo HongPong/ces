@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_offerswants_install Install OffersWants
+ * @ingroup ces_offerswants
+ * @{
+ * Install and uninstall ces offerswants module.
+ */
+
+/**
  * Implements hook_schema().
  */
 function ces_offerswants_schema() {
@@ -196,3 +203,4 @@ function ces_offerswants_uninstall() {
   }
   field_purge_batch(1000);
 }
+/** @} */

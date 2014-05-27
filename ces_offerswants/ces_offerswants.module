@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_offerswants Ces OffersWants
+ * @ingroup ices
+ * @{
+ * Implements the drupal hooks for this module.
+ */
+
+/**
  * Implements hook_help().
  */
 function ces_offerswants_help($path, $arg) {
@@ -1841,3 +1848,4 @@ function ces_offerswants_user_register_submit($form, &$form_state) {
   }
   $form_state['redirect'] = 'ces';
 }
+/** @} */
