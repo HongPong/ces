@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_summaryblock SummaryBlock
+ * @ingroup ices
+ * @{
+ * Summary Block from ICES
+ */
+
+/**
  * Implements hook_block_info().
  */
 function ces_summaryblock_block_info() {
@@ -387,3 +394,4 @@ function theme_ces_summaryblock_user_box($variables) {
   $output .= '</div>';
   return $output;
 }
+/** @} */

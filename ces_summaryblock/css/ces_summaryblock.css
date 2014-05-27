@@ -1,5 +1,5 @@
 #featured h2 {
-	display: none;
+  display: none;
 }
 
 #block-ces-summaryblock-ces-summary {
@@ -22,6 +22,6 @@ div.ces_summaryblock_trade {
 }
 
 div.ces_summaryblock_trade {
-	padding-left: 15px;
-	padding-right: 10px;
+  padding-left: 15px;
+  padding-right: 10px;
 }
