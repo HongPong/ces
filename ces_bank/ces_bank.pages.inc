@@ -5,7 +5,10 @@
  */
 
 /**
- * @todo: redo all this page!
+ * @defgroup ces_bank_pages Pages from Ces Bank
+ * @ingroup ces_bank
+ * @{
+ * All page callback functions for bank module.
  */
 
  /**
@@ -890,3 +893,4 @@ function _ces_bank_get_transaction_states() {
     11 => t('Error'),
   );
 }
+/** @} */

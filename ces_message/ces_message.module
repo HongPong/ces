@@ -7,7 +7,7 @@
 
 /**
  * @defgroup ces_message Ces Message
- * @ingroup ces
+ * @ingroup ices
  * @{
  * creating a core Entity API entity.
  */
@@ -48,7 +48,8 @@ function ces_message_entity_info() {
         // 'admin' => array(
         // 'path' => 'ces/bank/account/message/manage',
         // 'access callback' => 'ces_bank_access',
-        // 'access arguments' => array('admin', 'exchange', ces_bank_get_current_exchange()),
+        // 'access arguments' => array('admin', 'exchange',
+        // ces_bank_get_current_exchange()),
         // ),
       ),
     ),
@@ -106,7 +107,8 @@ function ces_message_entity_info() {
         // 'admin' => array(
         // 'path' => 'admin/structure/ces_message_template/manage',
         // 'access callback' => 'ces_bank_access',
-        // 'access arguments' => array('admin', 'exchange', ces_bank_get_current_exchange()),
+        // 'access arguments' => array('admin', 'exchange',
+        // ces_bank_get_current_exchange()),
         // ),
       ),
     ),

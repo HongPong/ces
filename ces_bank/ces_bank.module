@@ -4,6 +4,13 @@
  * Implements the drupal hooks for this module.
  */
 
+/**
+ * @defgroup ces_bank Ces Bank
+ * @ingroup ices
+ * @{
+ * Ces bank hooks module
+ */
+
 define('CES_BANK_CURRENT_ACCOUNT', 'ces_current_account');
 define('CES_BANK_CURRENT_EXCHANGE', 'ces_current_exchange');
 
@@ -13,17 +20,21 @@ define('CES_BANK_CURRENT_EXCHANGE', 'ces_current_exchange');
 function ces_bank_help($path, $arg) {
   switch ($path) {
     case 'ces/bank/account/sell':
-      return '<p>' . t('Charge a sale. Select the payer account, enter a short
-        decription and the amount of the transaction. This amount will be
-        trasferred to your account.') . '</p>';
+      $msg  = '<p>';
+      $msg .= t('Charge a sale. Select the payer account, enter a short decription and the amount of the transaction. This amount will be trasferred to your account.');
+      $msg .= '</p>';
+      return $msg;
 
     case 'ces/bank/exchange/accounts':
-      return '<p>' . t('All users and banking accounts of your exchange.') .
-        '</p>';
+      $msg  = '<p>';
+      $msg .= t('All users and banking accounts of your exchange.');
+      $msg .= '</p>';
+      return $msg;
 
     case 'ces/bank/account/transaction':
-      return '<p>' . t('Showing your transactions. Set the "From" and "To"
-        dates to see a specific time range.') . '</p>';
+      $msg  = '<p>';
+      $msg .= t('Showing your transactions. Set the "From" and "To" dates to see a specific time range.');
+      $msg .= '</p>';
 
     case 'ces/register/%':
       return '<p>' . t('Click on the exchange you want to join.') . '</p>';
@@ -1093,3 +1104,4 @@ function ces_bank_user_autocomplete($string) {
   // Return for JS.
   drupal_json_output($matches);
 }
+/** @} */

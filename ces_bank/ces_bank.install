@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_bank_install Install Ces Bank
+ * @ingroup ces_bank
+ * @{
+ * Install, update and uninstall functions for the ces bank module.
+ */
+
+/**
  * Implements hook_install().
  */
 function ces_bank_install() {
@@ -556,3 +563,4 @@ function ces_bank_schema() {
 function ces_bank_uninstall() {
   drupal_uninstall_schema(ces_bank_schema());
 }
+/** @} */

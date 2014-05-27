@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_bank_test Tests from Ces Bank
+ * @ingroup ces_bank
+ * @{
+ * Tests the functionality bank module.
+ */
+
+/**
  * Implements DrupalWebTestCase.
  */
 class BankTestCase extends DrupalWebTestCase {
@@ -563,3 +570,4 @@ class BankTestCase extends DrupalWebTestCase {
     $this->drupalLogout();
   }
 }
+/** @} */

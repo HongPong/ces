@@ -5,9 +5,12 @@
  */
 
 /**
- * @ingroup ces.bank
+ * @defgroup ces_bank_logic Logic from Ces Bank
+ * @ingroup ces_bank
  * @{
+ * CES banking logic layer.
  */
+
 /**
  * The controller for all the banking logic. This is the only accessible class
  * from outside this package.
@@ -133,7 +136,7 @@ class Bank {
       $this->createAccount($account);
 
       ces_message_send_notify('exchange_activated', array('exchange' => $exchange->getRecord()), array($exchange->admin), $user->uid);
-      $this->activateAccount($account);	
+      $this->activateAccount($account);
       $record = $exchange->getRecord();
     }
     catch (Exception $e) {
@@ -2810,5 +2813,5 @@ class Permission extends DBObject {
   const SCOPE_USER = 'user';
 }
 /**
- * @} End of "ingroup ces.bank".
+ * @} End of "ingroup ces_bank".
  */

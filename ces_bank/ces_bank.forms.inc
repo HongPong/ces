@@ -5,7 +5,23 @@
  */
 
 /**
+ * @defgroup ces_bank_forms Forms from Ces Bank
+ * @ingroup ces_bank
+ * @{
+ * Forms definition.
+ */
+
+/**
  * Exchange form. Create, view and edit forms.
+ *
+ * @param array  $form
+ *   Form.
+ * @param array  $form_state
+ *   State from.
+ * @param string $op
+ *   Options.
+ * @param int    $exchange_id
+ *   Id of exchange.
  */
 function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
   global $user;
@@ -563,7 +579,7 @@ function ces_bank_limitchain_form_submit($form, &$form_state) {
 /**
  * Main bank account form.
  *
- * @TODO other operations.
+ * @todo other operations.
  */
 function ces_bank_account_form($form, &$form_state, $account = NULL) {
   $bank = new Bank();
@@ -781,7 +797,9 @@ function ces_bank_account_form_submit($form, &$form_state) {
   }
 }
 /**
- * Form for deleting an account in an exchange. TODO.
+ * Form for deleting an account in an exchange.
+ *
+ * @todo Implement delete account
  */
 function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
   $bank = new Bank();
@@ -1284,7 +1302,7 @@ function ces_bank_transaction_delete_form_submit($form, &$form_state) {
  * @return array
  *   page where to find the last transactions with this account.
  * @see ces_bank_account_statement_form_submit()
- * ces_bank_account_statement_page().
+ * @see ces_bank_account_statement_page()
  */
 function ces_bank_account_statement_form($form, &$form_state) {
   $form = array(
@@ -1493,3 +1511,4 @@ function ces_bank_permission_form_submit($form, &$form_state) {
     drupal_set_message(t('An error ocurred while saving the record. Details: %msg', array('msg' => $e->getMessage())), 'error');
   }
 }
+/** @} */
