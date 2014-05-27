@@ -5,10 +5,17 @@
  */
 
 /**
+ * @defgroup ces_statistics Statistics from integralces
+ * @ingroup ices
+ * @{
+ * Implements the drupal hooks for this module.
+ */
+
+/**
  * Implements hook_library().
  */
 function ces_statistics_library() {
-	$pathmodule = drupal_get_path('module', 'ces_statistics');
+  $pathmodule = drupal_get_path('module', 'ces_statistics');
   $libraries['jqplot'] = array(
     'title' => 'jqplot',
     'website' => 'https://bitbucket.org/cleonello/jqplot/downloads/',
@@ -206,3 +213,4 @@ function ces_statistics_page() {
     );
   }
 }
+/** @} */
