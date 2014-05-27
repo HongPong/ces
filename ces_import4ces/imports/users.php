@@ -1,27 +1,34 @@
 <?php
-
 /**
  * @file
  * Functions from parse users
  */
 
 /**
- * Parse users
+ * @defgroup ces_import4ces_user Parse users from CES
+ * @ingroup ces_import4ces
+ * @{
+ * Functions from parse users
+ */
+
+/**
+ * Parse users.
  */
 function parse_users($import_id, $data, $row, &$context) {
-  if (isset($context['results']['error']))
+  if (isset($context['results']['error'])) {
     return;
+  }
   $tx = db_transaction();
   try {
     $context['results']['import_id'] = $import_id;
     $import = ces_import4ces_import_load($import_id);
-    
-    // @todo Al crear un usuario se utiliza el mail como identificador y se 
+
+    // @todo Al crear un usuario se utiliza el mail como identificador y se
     // genera un password aleatorio, enviano un email al usuario que podra
     // resetear el password.
     //
     // Comprobar que es el comportamiento que deseamos.
-    
+
     if (CES_IMPORT4CES_RESET_PASSWORD) {
       $password = user_password(8);
     }
@@ -30,25 +37,26 @@ function parse_users($import_id, $data, $row, &$context) {
     }
 
     /*
-      UserType: El tipus de compte. adm per administrador, org per organització
-      sense ànim de lucre, ind per individual, fam per compartit, com per
-      empreses, pub per a comptes públics, vir per virtual. L'administrador té
-      més permisos i només n'hi ha un (que jo sàpiga), org, ind, fam i com són
-      iguals a la pràctica (crec). pub és més accessible en el sentit que les
-      transaccions d'aquest compte les pot veure tothom. vir són comptes per
-      comptabilitzar els intercanvis  amb altres xarxes i no pertanyen a ningú.
+    UserType: El tipus de compte. adm per administrador, org per organització
+    sense ànim de lucre, ind per individual, fam per compartit, com per
+    empreses, pub per a comptes públics, vir per virtual. L'administrador té
+    més permisos i només n'hi ha un (que jo sàpiga), org, ind, fam i com són
+    iguals a la pràctica (crec). pub és més accessible en el sentit que les
+    transaccions d'aquest compte les pot veure tothom. vir són comptes per
+    comptabilitzar els intercanvis  amb altres xarxes i no pertanyen a ningú.
 
-      kind One of INDIVIDUAL (0), SHARED (1), ORGANIZATION (2), COMPANY (3), PUBLIC (4)
+    kind One of INDIVIDUAL (0), SHARED (1), ORGANIZATION (2), COMPANY (3),
+    PUBLIC (4)
 
-      'kind' => LocalAccount::TYPE_INDIVIDUAL,
+    'kind' => LocalAccount::TYPE_INDIVIDUAL,
 
-      const TYPE_INDIVIDUAL = 0;
-      const TYPE_SHARED = 1;
-      const TYPE_ORGANIZATION = 2;
-      const TYPE_COMPANY = 3;
-      const TYPE_PUBLIC = 4;
-      const TYPE_VIRTUAL = 5;
-     */
+    const TYPE_INDIVIDUAL = 0;
+    const TYPE_SHARED = 1;
+    const TYPE_ORGANIZATION = 2;
+    const TYPE_COMPANY = 3;
+    const TYPE_PUBLIC = 4;
+    const TYPE_VIRTUAL = 5;
+    */
 
     $type_user = array(
       'adm' => LocalAccount::TYPE_INDIVIDUAL,
@@ -57,13 +65,13 @@ function parse_users($import_id, $data, $row, &$context) {
       'fam' => LocalAccount::TYPE_SHARED,
       'com' => LocalAccount::TYPE_COMPANY,
       'pub' => LocalAccount::TYPE_PUBLIC,
-      'vir' => LocalAccount::TYPE_VIRTUAL
+      'vir' => LocalAccount::TYPE_VIRTUAL,
     );
 
     /*
-      Lang: idioma en tres lletres. No segueix l'estàndard ISO. eng per anglès,
-      cat per català, spa per castellà.
-     */
+    Lang: idioma en tres lletres. No segueix l'estàndard ISO. eng per anglès,
+    cat per català, spa per castellà.
+    */
 
     $langs = array(
       'eng' => 'en',
@@ -72,18 +80,19 @@ function parse_users($import_id, $data, $row, &$context) {
       'default' => language_default()->language,
     );
 
-    //set up the user fields
+    // Set up the user fields.
     $fields = array(
       'name' => $data['UID'],
       'mail' => ($import->anonymous) ? 'test-' . $data['UID'] . '@test.com' : $data['Email'],
       'pass' => $password,
-      'status' => ( $data['Locked'] == 0 ) ? 1 : 0,
-      // 'init' => ( $GLOBALS['anonymous'] ) ? 'test-'.$data['UID'].'@test.com' : $data['Email'],
-      'language' => ( isset($langs[$data['Lang']]) ) ? $langs[$data['Lang']] : $langs['default'],
+      'status' => ($data['Locked'] == 0) ? 1 : 0,
+      // 'init' => ( $GLOBALS['anonymous'] ) ? 'test-'.$data['UID'].'@test.com'
+      // : $data['Email'],
+      'language' => (isset($langs[$data['Lang']])) ? $langs[$data['Lang']] : $langs['default'],
       'roles' => array(
         DRUPAL_AUTHENTICATED_RID => 'authenticated user',
       ),
-      // User custom fields
+      // User custom fields.
       'ces_firstname' => array(LANGUAGE_NONE => array(array('value' => $data['Firstname']))),
       'ces_surname' => array(LANGUAGE_NONE => array(array('value' => $data['Surname']))),
       'ces_address' => array(LANGUAGE_NONE => array(array('value' => $data['Address1'] . "\n" . $data['Address2']))),
@@ -157,7 +166,7 @@ function parse_users($import_id, $data, $row, &$context) {
     // exchange import.
     if (substr($user_drupal->name, -4) != '0000') {
       $bank = new Bank();
-      $limit = _ces_import4ces_get_limitchain($import->exchange_id, 
+      $limit = _ces_import4ces_get_limitchain($import->exchange_id,
         $data['DebLimit'], $data['CredLimit']);
       $account = array(
         'exchange' => $import->exchange_id,
@@ -194,6 +203,8 @@ function parse_users($import_id, $data, $row, &$context) {
 }
 
 /**
+ * Get limitchain.
+ *
  * Return a limit chain for this exchange with these properties. It creates the
  * object if necessary. 0 means no limit. $debit and $credit are nonnegatives.
  */
@@ -214,7 +225,7 @@ function _ces_import4ces_get_limitchain($exchange_id, $debit, $credit) {
         $limit_debit = $limit['value'];
       }
     }
-    if ($limit_credit == $credit && $limit_debit == - $debit) {
+    if ($limit_credit == $credit && $limit_debit == -$debit) {
       return $limitchain;
     }
   }
@@ -228,7 +239,7 @@ function _ces_import4ces_get_limitchain($exchange_id, $debit, $credit) {
     $limitchain['name'] = '-' . $debit . ' < ' . $limitchain['name'];
     $limitchain['limits'][] = array(
       'classname' => 'AbsoluteDebitLimit',
-      'value' => - $debit,
+      'value' => -$debit,
       'block' => FALSE,
     );
   }
@@ -244,3 +255,4 @@ function _ces_import4ces_get_limitchain($exchange_id, $debit, $credit) {
   drupal_static_reset(__FUNCTION__);
   return $limitchain;
 }
+/** @} */

@@ -1,7 +1,13 @@
 <?php
-
 /**
  * @file
+ * Functions from parse setting
+ */
+
+/**
+ * @defgroup ces_import4ces_setting Parse setting from CES
+ * @ingroup ces_import4ces
+ * @{
  * Functions from parse setting
  */
 
@@ -9,13 +15,14 @@
  * Parse exchange settings.
  */
 function parse_setting($import_id, $setting, $row, &$context) {
-  if (isset($context['results']['error']))
+  if (isset($context['results']['error'])) {
     return;
+  }
   $tx = db_transaction();
   try {
     global $user;
 
-    // Crear bank
+    // Crear bank.
     $bank = new Bank();
 
     // Create exchange administrator drupal user. It will be completed in users
@@ -23,7 +30,7 @@ function parse_setting($import_id, $setting, $row, &$context) {
     $record = array(
       'name' => $setting['ExchangeID'] . '0000',
       'mail' => (CES_IMPORT4CES_ANONYMOUS) ? 'test-' . $setting['ExchangeID'] .
-        '0000@test.com' : $setting['Email'],
+      '0000@test.com' : $setting['Email'],
       'pass' => $setting['Password'],
       'status' => 1,
       'roles' => array(DRUPAL_AUTHENTICATED_RID => 'authenticated user'),
@@ -35,7 +42,7 @@ function parse_setting($import_id, $setting, $row, &$context) {
       'm' => 0.01666667,
     );
     $currvalues = array(
-      'Euro' => 0.1
+      'Euro' => '0.1',
     );
     $value = 1;
     if ($setting['TimeBased'] == -1) {
@@ -138,7 +145,7 @@ function parse_setting($import_id, $setting, $row, &$context) {
     if ($default_debit != 0) {
       $default_limit['limits'][] = array(
         'classname' => 'AbsoluteDebitLimit',
-        'value' => - $default_debit,
+        'value' => -$default_debit,
         'block' => FALSE,
       );
     }
@@ -158,3 +165,4 @@ function parse_setting($import_id, $setting, $row, &$context) {
     $context['results']['error'] = check_plain($e->getMessage());
   }
 }
+/** @} */

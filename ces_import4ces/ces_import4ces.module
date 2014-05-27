@@ -6,6 +6,13 @@
  */
 
 /**
+ * @defgroup ces_import4ces Import from CES
+ * @ingroup ices
+ * @{
+ * Implements the drupal hooks for this module.
+ */
+
+/**
  * Set to 0 in production.
  */
 define('CES_IMPORT4CES_ANONYMOUS', 0);
@@ -816,3 +823,4 @@ function ces_import4ces_get_category($title, $import) {
   }
 
 }
+/** @} */
