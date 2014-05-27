@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_user_install Install ces_user
+ * @ingroup ces_user
+ * @{
+ * Install Ces User
+ */
+
+/**
  * Implements hook_install().
  */
 function ces_user_install() {
@@ -130,3 +137,4 @@ function _ces_user_create_user_fields() {
   }
   return TRUE;
 }
+/** @} */

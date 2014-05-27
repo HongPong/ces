@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_user CES User
+ * @ingroup ices
+ * @{
+ * Ces User module
+ */
+
+/**
  * Implements hook_menu().
  */
 function ces_user_menu() {
@@ -399,3 +406,4 @@ function ces_user_tokens($type, $tokens, array $data = array(), array $options =
   }
   return $replacements;
 }
+/** @} */
