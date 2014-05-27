@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_blog Ces Blog
+ * @ingroup ices
+ * @{
+ * Implements the drupal hooks for this module.
+ */
+
+/**
  * Implements hook_help().
  */
 function ces_blog_help($path, $arg) {
@@ -171,3 +178,4 @@ function ces_blog_menu_alter(&$items) {
   // Remove Add content from menu.
   $items['node/add']['type'] = MENU_LOCAL_TASK;
 }
+/** @} */

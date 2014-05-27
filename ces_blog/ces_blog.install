@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_blog_install Install Ces Blog
+ * @ingroup ces_blog
+ * @{
+ * Install, update and uninstall functions for the ces blog module.
+ */
+
+/**
  * Implements hook_install().
  */
 function ces_blog_install() {
@@ -107,3 +114,4 @@ function ces_blog_uninstall() {
     field_purge_batch(1000);
   }
 }
+/** @} */
