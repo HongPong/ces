@@ -8,6 +8,12 @@
  */
 
 /**
+ * @defgroup ices ICES
+ * @{
+ * The main virtual module called ces does not have any features.
+ */
+
+/**
  * Implements hook_help().
  */
 function ices_help($path, $arg) {
@@ -69,3 +75,4 @@ function ices_preprocess_page(&$variables, $hook) {
     $variables['title'] = '';
   }
 }
+/** @} */

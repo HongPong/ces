@@ -5,7 +5,7 @@
  */
 
 /**
- * @defgroup ces_user CES User
+ * @defgroup ces_user Ces User
  * @ingroup ices
  * @{
  * Ces User module

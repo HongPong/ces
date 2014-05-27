@@ -5,7 +5,7 @@
  */
 
 /**
- * @defgroup ces_statistics Statistics from integralces
+ * @defgroup ces_statistics Ces Statistics
  * @ingroup ices
  * @{
  * Implements the drupal hooks for this module.

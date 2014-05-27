@@ -147,7 +147,10 @@ function ces_message_schema() {
     ),
     'primary key' => array('template_id'),
     'unique keys' => array(
-      'exchange_action_lang' => array('exchange_id','ces_action_id','language'),
+      'exchange_action_lang' => array(
+        'exchange_id',
+        'ces_action_id',
+        'language'),
     ),
     'foreign keys' => array(
       'exchange_id' => array(

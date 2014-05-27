@@ -6,7 +6,7 @@
  */
 
 /**
- * @defgroup ces_import4ces Import from CES
+ * @defgroup ces_import4ces Ces Import
  * @ingroup ices
  * @{
  * Implements the drupal hooks for this module.

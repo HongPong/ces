@@ -143,7 +143,12 @@ function ces_message_list_entities($args = FALSE) {
       $content['entity_table'] = array(
         '#theme' => 'table',
         '#rows' => $rows,
-        '#header' => array(t('Exchange'),t('Created'), t('Subject'), t('Type')),
+        '#header' => array(
+          t('Exchange'),
+          t('Created'),
+          t('Subject'),
+          t('Type'),
+        ),
       );
     }
   }

@@ -5,7 +5,7 @@
  */
 
 /**
- * @defgroup ces_summaryblock SummaryBlock
+ * @defgroup ces_summaryblock Ces SummaryBlock
  * @ingroup ices
  * @{
  * Summary Block from ICES
