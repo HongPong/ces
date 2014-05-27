@@ -326,8 +326,10 @@ function ces_message_template_form($form, &$form_state, $entity) {
   }
   else {
     $form['language'] += array(
-      '#type' => 'item',
-      '#markup' => t('Undefined language'),
+      '#type' => 'textfield',
+      '#markup' => t('English'),
+      '#default_value' => 'en',
+      '#title' => t('Language'),
     );
   }
   $options = _ces_message_get_actions_options();
