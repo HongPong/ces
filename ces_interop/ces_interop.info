@@ -3,7 +3,7 @@ description = Impleemnts the opentransact protocol for financial transactions.
 core = 7.x
 package = ices
 
-files[] = ces_interop.inc
+files[] = ces_interop.test
 
 dependencies[] = ces_bank
 dependencies[] = services

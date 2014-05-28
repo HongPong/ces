@@ -40,8 +40,8 @@ class OffersWantsTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'ces_offerswants',
-      'description' => 'Test CES Offers Wants main features.',
-      'group' => 'CES',
+      'description' => 'Test ICES Offers Wants main features.',
+      'group' => 'ICES',
     );
   }
 

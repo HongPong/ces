@@ -6,7 +6,8 @@
 /**
  * Name of the opentransact OAuth2 server.
  */
-define('CES_INTEROP_OAUTH2_SERVER_NAME', 'opentransact');
+define('CES_INTEROP_OAUTH2_SERVER_NAME', 'interop');
+define('CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME', 'opentransact');
 
 /**
  * Implements hook_menu().
@@ -15,9 +16,9 @@ define('CES_INTEROP_OAUTH2_SERVER_NAME', 'opentransact');
  */
 function ces_interop_menu() {
   $items = array();
-  $items['ces/opentransact/%'] = array(
+  $items['ces/interop/opentransact/%'] = array(
     'page callback' => 'ces_interop_opentransact',
-    'page arguments' => array(2),
+    'page arguments' => array(3),
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
@@ -55,7 +56,7 @@ function ces_interop_opentransact($exchange_name) {
     // Transfer.
     // Delegate authentication to oauth2_server module. The execution will abort
     // on failure.
-    $token = oauth2_server_verify_access('opentransact');
+    $token = oauth2_server_verify_access(CES_INTEROP_OAUTH2_SERVER_NAME);
     if (!$token['user_id']) {
       ces_interop_send_authorize_error('access_denied', 'User unknown for this token.');
     }

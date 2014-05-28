@@ -32,10 +32,46 @@ function ces_interop_install() {
       'bundle' => 'refresh',
     ));
   }
+
+  // Create Oauth2 server for ICES interop services.
+  $server = entity_create('oauth2_server', array());
+  $server->name = CES_INTEROP_OAUTH2_SERVER_NAME;
+  $server->label = 'ICES Interop';
+  $server->settings = array(
+    'default_scope' => CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME,
+    'enforce_state' => TRUE,
+    'allow_implicit' => FALSE,
+    'require_exact_redirect_uri' => TRUE,
+    'grant_types' => array(
+      'authorization_code' => 'authorization_code',
+      'client_credentials' => 0,
+      'refresh_token' => 'refresh_token',
+      'password' => 0,
+    ),
+    'always_issue_new_refresh_token' => TRUE,
+    'access_lifetime' => 3600,
+    'refresh_token_lifetime' => 1209600,
+  );
+  $server->save();
+
+  // Create OAuth2 scope for OpenTransact protocol.
+  $scope = entity_create('oauth2_server_scope', array());
+  $scope->server = $server->name;
+  $scope->name = CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME;
+  $scope->description = 'Do financial operations with OpenTransact protocol.';
+  $scope->save();
 }
 /**
  * Implements hook_uninstall().
  */
 function ces_interop_uninstall() {
+  // Load constants definition.
+  require_once drupal_get_path('module', 'ces_interop') . '/ces_interop.module';
+  // Delete field attached to oauth2_server entities.
   field_delete_field('ces_interop_transaction');
+  // Delete oauth2_server scope and server.
+  $scope = oauth2_server_scope_load(CES_INTEROP_OAUTH2_SERVER_NAME, CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME);
+  entity_delete('oauth2_server_scope', $scope->identifier());
+  $server = oauth2_server_load(CES_INTEROP_OAUTH2_SERVER_NAME);
+  entity_delete('oauth2_server', $server->identifier());
 }

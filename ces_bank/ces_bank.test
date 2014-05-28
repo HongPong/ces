@@ -7,7 +7,7 @@
 /**
  * Implements DrupalWebTestCase.
  */
-class BankTestCase extends DrupalWebTestCase {
+class CesBankTestCase extends DrupalWebTestCase {
   /**
    * @var user
    * The global administrator.
@@ -54,9 +54,22 @@ class BankTestCase extends DrupalWebTestCase {
    */
   public static function getInfo() {
     return array(
-      'name' => 'ces',
-      'description' => 'Test CES main features.',
-      'group' => 'CES',
+      'name' => 'ces_bank',
+      'description' => 'Test ICES Bank main features.',
+      'group' => 'ICES',
+    );
+  }
+  /**
+   * Return the modules to be enabled. Useful for subclasses.
+   */
+  protected function getNeededModules() {
+    return array(
+      'ces_bank',
+      'ces_blog',
+      'ces_notify',
+      'ces_offerswants',
+      'ces_summaryblock',
+      'ces_user',
     );
   }
   /**
@@ -64,14 +77,7 @@ class BankTestCase extends DrupalWebTestCase {
    */
   public function setUp() {
     // Enable any modules required for the test.
-    parent::setUp(array(
-      'ces_bank',
-      'ces_blog',
-      'ces_notify',
-      'ces_offerswants',
-      'ces_summaryblock',
-      'ces_user')
-    );
+    parent::setUp($this->getNeededModules());
     $bank = new Bank();
     // Create global bank administrator.
     $this->globalAdminUser = $this->drupalCreateUser(array(
