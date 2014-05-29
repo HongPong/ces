@@ -23,19 +23,19 @@ function ces_statistics_libraries_info() {
     'version' => '1.0.8r1250',
     'files' => array(
       'js' => array(
-        'jqplot.barRenderer.min.js',
-        'jqplot.canvasAxisLabelRenderer.min.js',
-        'jqplot.canvasAxisTickRenderer.min.js',
-        'jqplot.canvasTextRenderer.min.js',
-        'jqplot.categoryAxisRenderer.min.js',
-        'jqplot.dateAxisRenderer.min.js',
-        'jqplot.pieRenderer.min.js',
-        'jqplot.pieRenderer.min.js',
-        'jqplot.pointLabels.min.js',
-        'jquery.jqplot.min.js',
+        'src/plugins/jqplot.barRenderer.js',
+        'src/plugins/jqplot.canvasAxisLabelRenderer.js',
+        'src/plugins/jqplot.canvasAxisTickRenderer.js',
+        'src/plugins/jqplot.canvasTextRenderer.js',
+        'src/plugins/jqplot.categoryAxisRenderer.js',
+        'src/plugins/jqplot.dateAxisRenderer.js',
+        'src/plugins/jqplot.pieRenderer.js',
+        'src/plugins/jqplot.pieRenderer.js',
+        'src/plugins/jqplot.pointLabels.js',
+        'src/jquery.jqplot.js',
       ),
       'css' => array(
-        'jquery.jqplot.min.css',
+        'src/jquery.jqplot.css',
       ),
     ),
   );
@@ -122,7 +122,6 @@ function ces_statistics_page() {
 
     // Js and css files.
     if (($library = libraries_load('jqplot')) && !empty($library['loaded'])) {
-      // drupal_add_library('ces_statistics', 'jqplot');
       drupal_add_js(drupal_get_path('module', 'ces_statistics') . '/js/chart.js');
     }
     else {
