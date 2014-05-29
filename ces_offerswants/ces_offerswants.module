@@ -1160,13 +1160,13 @@ class OffersWantsEntityController extends DrupalDefaultEntityController {
       // Insert.
       drupal_write_record('ces_offerwant', $offerwant);
       field_attach_insert('ces_offerwant', $offerwant);
-      module_invoke_all('entity_insert', 'ces_offerwant', $offerwant);
+      module_invoke_all('entity_insert', $offerwant, 'ces_offerwant');
     }
     else {
       // Update.
       drupal_write_record('ces_offerwant', $offerwant, 'id');
       field_attach_update('ces_offerwant', $offerwant);
-      module_invoke_all('entity_update', 'ces_offerwant', $offerwant);
+      module_invoke_all('entity_update', $offerwant, 'ces_offerwant');
     }
     return $offerwant;
   }
@@ -1191,12 +1191,12 @@ class CategoryEntityController extends DrupalDefaultEntityController {
       // Insert.
       drupal_write_record('ces_category', $category);
       field_attach_insert('ces_category', $category);
-      module_invoke_all('entity_insert', 'ces_category', $category);
+      module_invoke_all('entity_insert', $category, 'ces_category');
     }
     else {
       drupal_write_record('ces_category', $category, 'id');
       field_attach_update('ces_category', $category);
-      module_invoke_all('entity_update', 'ces_category', $category);
+      module_invoke_all('entity_update', $category, 'ces_category');
     }
     return $category;
   }
