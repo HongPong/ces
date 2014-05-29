@@ -513,7 +513,7 @@ class BankTestCase extends DrupalWebTestCase {
    *   - buyer: buyer' account number.
    *   - concept
    *   - amount
-   *   - seller: seller's account number. If ommited, the default user's account
+   *   - seller: seller's account number. If omited, the default user's account
    *             will be used.
    * @param bool $success
    *   Whether this transaction should be permitted by the system.

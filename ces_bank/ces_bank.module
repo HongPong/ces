@@ -500,7 +500,7 @@ function ces_account_load($id = NULL) {
   return $account;
 }
 /**
- * Calls drupal_get_form() with appropiate parameters.
+ * Calls drupal_get_form() with appropriate parameters.
  *
  * Replaces some of its arguments by the default exchange or account of the
  * current user.

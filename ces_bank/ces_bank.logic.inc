@@ -397,7 +397,7 @@ class Bank {
    *   Transaction records meeting all conditions specified by $conditions
    *   parameter. The amount is expressed in a currency depending on the given
    *   conditions: if 'account' is set, then it is used the account's currency.
-   *   If 'fromaccount' is set but 'toaccount' is ommited, then the
+   *   If 'fromaccount' is set but 'toaccount' is omited, then the
    *   fromaccount's currency is used. Otherwise the currency is the seller's
    *   account one for each exchenge.
    */
@@ -1927,7 +1927,7 @@ interface TransactionInterface {
    */
   public function getState();
   /**
-   * Get messages logged for this trasaction.
+   * Get messages logged for this transaction.
    *
    * @return array
    *   Array of messages with details about given $state.

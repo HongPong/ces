@@ -345,7 +345,7 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
     }
   }
   catch (Exception $e) {
-    drupal_set_message(t('An error ocurred while saving the exchange record. Details: %msg', array('msg' => $e->getMessage())), 'error');
+    drupal_set_message(t('An error occurred while saving the exchange record. Details: %msg', array('msg' => $e->getMessage())), 'error');
   }
 }
 /**
@@ -573,7 +573,7 @@ function ces_bank_limitchain_form_submit($form, &$form_state) {
     }
   }
   catch (Exception $e) {
-    drupal_set_message(t('An error ocurred while saving the record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
+    drupal_set_message(t('An error occurred while saving the record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
   }
 }
 /**
@@ -765,7 +765,7 @@ function ces_bank_account_form_submit($form, &$form_state) {
       $bank->createAccount($record);
       drupal_set_message(t('Account successfully created.'));
       if ($record['state'] == LocalAccount::STATE_HIDDEN) {
-        drupal_set_message(t("The account will not be available until it is being activated by this exchange's administrator. You will recieve an email when this is done."));
+        drupal_set_message(t("The account will not be available until it is being activated by this exchange's administrator. You will receive an email when this is done."));
       }
       elseif ($record['state'] == LocalAccount::STATE_ACTIVE) {
         $activate = TRUE;
@@ -1072,7 +1072,7 @@ function ces_bank_transaction_form_submit($form, &$form_state) {
  *   - revoke: revoke a committed transaction (TODO).
  * @param int $id
  *   the id of the transaction. If $op='new', then it is ignored
- *   in favor of $form_state values comming from ces_bank_transaction_form.
+ *   in favor of $form_state values coming from ces_bank_transaction_form.
  */
 function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
   if ($op == 'new' || $op == 'edit') {

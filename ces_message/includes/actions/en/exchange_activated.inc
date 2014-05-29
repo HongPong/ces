@@ -20,7 +20,7 @@ we can give you to get this new exchange operational. If there is no trading
 activity within six months of today then unfortunately we will have to take the
 exchange down to make space for others.
 
-This is only the begining. You have a great work making this exchange network a
+This is only the beginning. You have a great work making this exchange network a
 really useful tool.
 
 Please confirm that you have received this welcome letter.
