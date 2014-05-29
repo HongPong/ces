@@ -14,7 +14,7 @@
 /**
  * Parse wants.
  */
-function parse_wants($import_id, $data, $row, &$context) {
+function ces_import4ces_parse_wants($import_id, $data, $row, &$context) {
   if (isset($context['results']['error'])) {
     return;
   }

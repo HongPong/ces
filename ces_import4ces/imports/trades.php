@@ -14,7 +14,7 @@
 /**
  * Parse trades.
  */
-function parse_trades($import_id, $data, $row, &$context) {
+function ces_import4ces_parse_trades($import_id, $data, $row, &$context) {
   global $user;
   if (isset($context['results']['error'])) {
     return;

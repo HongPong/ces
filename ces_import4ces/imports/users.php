@@ -14,7 +14,7 @@
 /**
  * Parse users.
  */
-function parse_users($import_id, $data, $row, &$context) {
+function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
   if (isset($context['results']['error'])) {
     return;
   }

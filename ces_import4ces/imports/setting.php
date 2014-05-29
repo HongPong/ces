@@ -14,7 +14,7 @@
 /**
  * Parse exchange settings.
  */
-function parse_setting($import_id, $setting, $row, &$context) {
+function ces_import4ces_parse_setting($import_id, $setting, $row, &$context) {
   if (isset($context['results']['error'])) {
     return;
   }

@@ -14,7 +14,7 @@
 /**
  * Parse setting.
  */
-function parse_offers($import_id, $data, $row, &$context) {
+function ces_import4ces_parse_offers($import_id, $data, $row, &$context) {
   if (isset($context['results']['error'])) {
     return;
   }
