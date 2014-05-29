@@ -1,10 +1,12 @@
 <?php
 /**
- * @file Installation for ces_interop module.
+ * @file
+ * Installation for ces_interop module.
  */
+
 /**
  * Implements hook_install().
- * 
+ *
  * Attach field transaction to oauth2 authorisation codes and tokens.
  */
 function ces_interop_install() {

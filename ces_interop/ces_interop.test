@@ -4,37 +4,38 @@
  * Test ces_interop module.
  */
 
-
-
 class CesInteropTestCase extends CesBankTestCase {
   /**
+   * @var string
    * OAuth2 test client key.
    */
-  var $client_key = 'test';
+  protected $clientKey = 'test';
   /**
+   * @var string
    * OAuth2 test client secret.
    */
-  var $client_secret = 'test_secret';
+  protected $clientSecret = 'test_secret';
   /**
+   * @var string
    * Oauth2 test client redirect URI.
    */
-  var $client_uri;
+  protected $clientUri;
   /**
    * Implementation of setUp().
    */
   public function setUp() {
     parent::setUp();
-    $this->client_uri = url('ces/interop/test', array('absolute' => TRUE));
+    $this->clientUri = url('ces/interop/test', array('absolute' => TRUE));
     // Create oauth2 client for ICES interop.
     $client = entity_create('oauth2_server_client', array());
     $client->server = 'interop';
     $client->label = 'Test client';
-    $client->client_key = $this->client_key;
-    $client->client_secret = $this->client_secret;
-    $client->redirect_uri = $this->client_uri;
+    $client->client_key = $this->clientKey;
+    $client->client_secret = $this->clientSecret;
+    $client->redirect_uri = $this->clientUri;
     $client->automatic_authorization = FALSE;
     $client->save();
-    
+
     // Grant the anonymous users the permission to use oauth2.
     $anon_role = user_role_load_by_name('anonymous user');
     user_role_grant_permissions($anon_role->rid, array('use oauth2 server'));
@@ -59,7 +60,7 @@ class CesInteropTestCase extends CesBankTestCase {
     $modules[] = 'ces_interop';
     return $modules;
   }
-  
+
   /**
    * This function performs all tests.
    *
@@ -75,7 +76,7 @@ class CesInteropTestCase extends CesBankTestCase {
   }
   /**
    * Test opentransact features.
-   * 
+   *
    * One can use this function as an example on how to use opentransact
    * protocol, and specifically the ICES interop implementation of it.
    */
@@ -86,16 +87,17 @@ class CesInteropTestCase extends CesBankTestCase {
     $query = array(
       // OAuth2 parameters.
       'response_type' => 'code',
-      'client_id' => $this->client_key,
-      'state' => drupal_get_token($this->client_key),
+      'client_id' => $this->clientKey,
+      'state' => drupal_get_token($this->clientKey),
       // The "authorized" url doesn't actually exist, but we don't need it.
-      'redirect_uri' => $this->client_uri,
+      'redirect_uri' => $this->clientUri,
       // OpenTransact parameters.
       'from' => 'HORA0001',
       'to' => 'HORA0002',
       'amount' => '1.5',
       'note' => 'OpenTransact test transaction.',
-      'validity' => 'PH10', //10 hours
+      // 10 hours.
+      'validity' => 'PH10',
     );
     $this->drupalGet('ces/interop/opentransact/' . $this->exchange1['code'],
       array('absolute' => TRUE, 'query' => $query));
@@ -118,21 +120,21 @@ class CesInteropTestCase extends CesBankTestCase {
     // And get the authorization code from that redirection. A real application
     // should get the authorization code from the redirected URL handler.
     $authorization_code = $redirect_url_params['code'];
- 
+
     // 2. Exchange authorization code by access token.
     $this->drupalLogout();
     $token_url = url('ces/interop/opentransact/token', array('absolute' => TRUE));
     $data = array(
       'grant_type' => 'authorization_code',
       'code' => $authorization_code,
-      'redirect_uri' => $this->client_uri,
+      'redirect_uri' => $this->clientUri,
     );
     $options = array(
       'method' => 'POST',
       'data' => http_build_query($data),
       'headers' => array(
         'Content-Type' => 'application/x-www-form-urlencoded',
-        'Authorization' => 'Basic ' . base64_encode($this->client_key . ':' . $this->client_secret),
+        'Authorization' => 'Basic ' . base64_encode($this->clientKey . ':' . $this->clientSecret),
       ),
     );
     $result = $this->httpRequest($token_url, $options);

@@ -6,5 +6,4 @@ package = ices
 files[] = ces_interop.test
 
 dependencies[] = ces_bank
-dependencies[] = services
 dependencies[] = oauth2_server

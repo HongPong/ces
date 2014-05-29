@@ -3,6 +3,7 @@
  * @file
  * Drupal hooks for the ICES interoperability services module.
  */
+
 /**
  * Name of the opentransact OAuth2 server.
  */
@@ -11,7 +12,7 @@ define('CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME', 'opentransact');
 
 /**
  * Implements hook_menu().
- * 
+ *
  * Defines the endpoint fo opentransact operations.
  */
 function ces_interop_menu() {
@@ -27,16 +28,16 @@ function ces_interop_menu() {
 
 /**
  * Opentrasact url callback.
- * 
+ *
  * This is the entry point for all opetransact-related operations.
  */
 function ces_interop_opentransact($exchange_name) {
   // Verify url.
   if ($exchange_name == 'token') {
-    // This is a code to token exchange call. Save the authorization code to be 
+    // This is a code to token exchange call. Save the authorization code to be
     // able later to link the created token with the transaction.
-    global $ces_interop_authorization_code;
-    $ces_interop_authorization_code = $_POST['code'];
+    global $_ces_interop_authorization_code;
+    $_ces_interop_authorization_code = $_POST['code'];
     // Delegate the authorization to the oauth2_server module.
     require_once drupal_get_path('module', 'oauth2_server') . '/oauth2_server.pages.inc';
     return oauth2_server_token();
@@ -73,7 +74,7 @@ function ces_interop_opentransact($exchange_name) {
 
 /**
  * Implements hook_form_alter().
- * 
+ *
  * Alter the oauth2_server authorization form adding the transaction-related
  * information. It also validates the transaction data.
  */
@@ -82,6 +83,17 @@ function ces_interop_form_oauth2_server_authorize_form_alter(&$form, &$form_stat
   $server = $arguments[1];
   if ($server->name == CES_INTEROP_OAUTH2_SERVER_NAME) {
     global $user;
+    // Remove the standard text.
+    unset($form['scopes']);
+    $form['authorize']['#weight'] = 100;
+    // Setup a new text.
+    $form['ces_interop'] = array(
+      '#prefix' => '<div class="ces_interop_description">',
+      '#suffix' => '</div>',
+    );
+    $form['ces_interop']['question'] = array(
+      '#markup' => '<h3>' . t('Do you authorize the following transaction?') . '</h3>',
+    );
     // Get parameters from query string.
     $parameters = _ces_interop_get_query_parameters();
     $bank = new Bank();
@@ -156,53 +168,53 @@ function ces_interop_oauth2_server_authorize_form_submit($form, &$form_state) {
   // Since this is an opentransact authorised authorisation request, it will
   // trigger the creation of an authorisation code. We will handle then our
   // main logic, but now we keep the data into global variable to be used later.
-  global $ces_interop_transaction;
-  $ces_interop_transaction = $form_state['values']['transaction'];
+  global $_ces_interop_transaction;
+  $_ces_interop_transaction = $form_state['values']['transaction'];
 }
 /**
  * Implements hook_entity_presave().
- * 
+ *
  * For authorization_code entities, it creates the associated transaction and
  * fills the field in entity with the transaction id.
- * For token entities, it moves the transaction id field value from the 
+ * For token entities, it moves the transaction id field value from the
  * authorization code to the token.
  */
 function ces_interop_entity_presave($entity, $type) {
-  global $ces_interop_transaction;
-  global $ces_interop_authorization_code;
-  
+  global $_ces_interop_transaction;
+  global $_ces_interop_authorization_code;
+
   switch ($type) {
     case 'oauth2_server_authorization_code':
       // Get transaction from form submit function.
-      if (!empty($ces_interop_transaction)) {
-      // Create transaction.
+      if (!empty($_ces_interop_transaction)) {
+        // Create transaction.
         $bank = new Bank();
-        $bank->createTransaction($ces_interop_transaction);
+        $bank->createTransaction($_ces_interop_transaction);
         // Link transaction to authorisation code.
         $entity->ces_interop_transaction = array();
-        $entity->ces_interop_transaction[LANGUAGE_NONE][0]['value'] = $ces_interop_transaction['id'];
+        $entity->ces_interop_transaction[LANGUAGE_NONE][0]['value'] = $_ces_interop_transaction['id'];
         // No longer needed.
-        unset($ces_interop_transaction);
+        unset($_ces_interop_transaction);
       }
       break;
-      
+
     case 'oauth2_server_token':
       // Get code from page callback.
-      if (!empty($ces_interop_authorization_code)) {
+      if (!empty($_ces_interop_authorization_code)) {
         // Save transaction id from authorization code to access token.
-        $code = oauth2_server_authorization_code_load($ces_interop_authorization_code);
+        $code = oauth2_server_authorization_code_load($_ces_interop_authorization_code);
         $transaction_id = $code->ces_interop_transaction[LANGUAGE_NONE][0]['value'];
         $entity->ces_interop_transaction[LANGUAGE_NONE][0]['value'] = $transaction_id;
         // No longer needed.
-        unset($ces_interop_authorization_code);
+        unset($_ces_interop_authorization_code);
       }
       break;
-      
+
   }
 }
 /**
  * Apply an authorized transaction from the access token.
- * 
+ *
  * @param string $access_token
  *   The access token string.
  */
@@ -215,10 +227,15 @@ function ces_interop_apply_transaction($access_token) {
   $bank = new Bank();
   try{
     $res = $bank->applyTransaction($transaction_id);
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
     ces_interop_send_json('500 Internal Server Error', $e->getMessage());
   }
+  // Expire access token.
+  $token->delete();
+
   if ($res === TRUE) {
+    // Build opentransact receipt.
     $transaction = $bank->getTransaction($transaction_id);
     $toaccount = $bank->getAccount($transaction['toaccount']);
     $fromaccount = $bank->getAccount($transaction['fromaccount']);
@@ -242,9 +259,9 @@ function ces_interop_apply_transaction($access_token) {
 }
 /**
  * Send error and abort execution.
- * 
+ *
  * Send JSON OAuth2-like errors for invalid opentransact parameters.
- * 
+ *
  * @param string $error
  *   The error code.
  * @param string $description
@@ -259,12 +276,12 @@ function ces_interop_send_authorize_error($error, $description) {
 }
 /**
  * Send JSON response to the client.
- * 
+ *
  * The execution will end in this function.
- * 
+ *
  * @param string $status
  *   The HTTP status string.
- * @param $object
+ * @param object $object
  *   The object to be encoded in JSON fomat.
  */
 function ces_interop_send_json($status, $object) {
