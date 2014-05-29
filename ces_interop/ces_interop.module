@@ -62,7 +62,7 @@ function ces_interop_opentransact($exchange_name) {
     }
     global $user;
     $user = user_load_by_name($token['user_id']);
-    return ces_interop_apply_transaction($token['token']);
+    return ces_interop_apply_transaction($token['access_token']);
   }
   else {
     // Transfer Authorization.
@@ -208,10 +208,10 @@ function ces_interop_entity_presave($entity, $type) {
  */
 function ces_interop_apply_transaction($access_token) {
   $token = oauth2_server_token_load($access_token);
-  if (empty($token->ces_interop_transction[LANGUAGE_NONE][0]['value'])) {
+  if (empty($token->ces_interop_transaction[LANGUAGE_NONE][0]['value'])) {
     ces_interop_send_authorize_error('access_denied', 'No transaction associated with this access token');
   }
-  $transaction_id = $token->ces_interop_transction[LANGUAGE_NONE][0]['value'];
+  $transaction_id = $token->ces_interop_transaction[LANGUAGE_NONE][0]['value'];
   $bank = new Bank();
   try{
     $res = $bank->applyTransaction($transaction_id);
