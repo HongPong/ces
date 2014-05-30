@@ -46,7 +46,7 @@ function ces_offerswants_help($path, $arg) {
 function ces_offerswants_entity_info() {
   $info['ces_offerwant'] = array(
     'label' => t('Offer or want'),
-    'controller class' => 'OffersWantsEntityController',
+    'controller class' => 'CesOffersWantsEntityController',
     'base table' => 'ces_offerwant',
     'static cache' => TRUE,
     'field cache' => TRUE,
@@ -93,7 +93,7 @@ function ces_offerswants_entity_info() {
 
   $info['ces_category'] = array(
     'label' => t('Category'),
-    'controller class' => 'CategoryEntityController',
+    'controller class' => 'CesOffersWantsCategoryEntityController',
     'base table' => 'ces_category',
     'static cache' => TRUE,
     'field cache' => TRUE,
@@ -619,7 +619,6 @@ function ces_offerwant_form_validate($form, &$form_state) {
  * Form submit function.
  */
 function ces_offerwant_form_submit($form, &$form_state) {
-  global $user;
   $offerwant = (object) $form_state['values'];
   $offerwant->state = $form_state['values']['hide'] ? 0 : 1;
   $offerwant->expire = mktime(24, 0, 0, $form_state['values']['expire']['month'], $form_state['values']['expire']['day'], $form_state['values']['expire']['year']);
@@ -1030,6 +1029,7 @@ function _ces_offerswants_get_categories_options($offerwant_type = NULL, $exchan
   $options = array();
   $categories = ces_offerswants_get_categories($offerwant_type, $exchange);
   foreach ($categories as $id => $cat) {
+    // @todo $category?
     if (!isset($category->id) || ($id != $category->id)) {
       $options[$id] = $cat->title;
     }
@@ -1158,7 +1158,7 @@ function ces_offerswants_admin_categories_page() {
 /**
  * Entity controller.
  */
-class OffersWantsEntityController extends DrupalDefaultEntityController {
+class CesOffersWantsEntityController extends DrupalDefaultEntityController {
   /**
    * Save entity.
    */
@@ -1189,7 +1189,7 @@ class OffersWantsEntityController extends DrupalDefaultEntityController {
 /**
  * Entity controller.
  */
-class CategoryEntityController extends DrupalDefaultEntityController {
+class CesOffersWantsCategoryEntityController extends DrupalDefaultEntityController {
   /**
    * Save entity.
    */

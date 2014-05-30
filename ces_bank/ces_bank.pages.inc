@@ -15,7 +15,7 @@
   * TODO: document.
   */
 function ces_bank_exchange_admin() {
-  $bank = new Bank();
+  $bank = new CesBank();
   $exchange = ces_bank_get_current_exchange();
   $page = array();
   // New accounts request.
@@ -50,7 +50,7 @@ function ces_bank_exchange_admin() {
  * TODO: document.
  */
 function ces_bank_accounts_admin() {
-  $bank = new Bank();
+  $bank = new CesBank();
   $exchange = ces_bank_get_current_exchange();
   if ($exchange === FALSE) {
     return array(
@@ -139,7 +139,7 @@ function ces_bank_accounts_admin() {
  * Page with the list of all exchanges organized by country.
  */
 function ces_bank_exchange_list_page($country) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $conditions = array(
     'state' => 1,
     'country' => $country,
@@ -212,7 +212,7 @@ function ces_bank_exchange_list_page($country) {
  * TODO: document.
  */
 function ces_bank_exchange_accounts_page() {
-  $bank = new Bank();
+  $bank = new CesBank();
   $exchange = ces_bank_get_current_exchange();
   $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id']));
   // Accounts per user.
@@ -288,7 +288,7 @@ function ces_bank_exchange_accounts_page() {
  */
 function ces_bank_account_list_page() {
   global $user;
-  $bank = new Bank();
+  $bank = new CesBank();
   $page = array();
   $accounts = $bank->getUserAccounts($user->uid);
   foreach ($accounts as $account) {
@@ -332,7 +332,7 @@ function ces_bank_account_list_page() {
  * TODO: document.
  */
 function ces_bank_admin_page() {
-  $bank = new Bank();
+  $bank = new CesBank();
   $page = array();
   $page['new_exchanges'] = array(
     '#type' => 'fieldset',
@@ -361,7 +361,7 @@ function ces_bank_admin_page() {
  * TODO: Document.
  */
 function ces_bank_permissions_page() {
-  $bank = new Bank();
+  $bank = new CesBank();
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
@@ -430,7 +430,7 @@ function ces_bank_limitchain_list_page() {
       ),
     );
   }
-  $bank = new Bank();
+  $bank = new CesBank();
   $limitchains = $bank->getAllLimitChains($exchange['id']);
   $page = array();
   $page['table'] = array(
@@ -466,13 +466,13 @@ function ces_bank_limitchain_list_page() {
     }
     $row[] = implode('<br/>', $limits);
     $actions = array();
-    if (ces_bank_access(Permission::PERMISSION_VIEW, 'exchange limitchains', CES_BANK_CURRENT_EXCHANGE)) {
+    if (ces_bank_access(CesBankPermission::PERMISSION_VIEW, 'exchange limitchains', CES_BANK_CURRENT_EXCHANGE)) {
       $actions[] = l(t('View'), 'ces/admin/limit/' . $limitchain['id'] . '/view');
     }
-    if (ces_bank_access(Permission::PERMISSION_EDIT, 'exchange', CES_BANK_CURRENT_EXCHANGE)) {
+    if (ces_bank_access(CesBankPermission::PERMISSION_EDIT, 'exchange', CES_BANK_CURRENT_EXCHANGE)) {
       $actions[] = l(t('Edit'), 'ces/admin/limit/' . $limitchain['id'] . '/edit');
     }
-    if (ces_bank_access(Permission::PERMISSION_ADMIN, 'exchange', CES_BANK_CURRENT_EXCHANGE)) {
+    if (ces_bank_access(CesBankPermission::PERMISSION_ADMIN, 'exchange', CES_BANK_CURRENT_EXCHANGE)) {
       $actions[] = l(t('Delete'), 'ces/admin/limit/' . $limitchain['id'] . '/delete');
     }
     $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'limitchain' => $limitchain['id']));
@@ -488,7 +488,7 @@ function ces_bank_limitchain_list_page() {
  * TODO: document.
  */
 function ces_bank_limitchain_view($limitchain) {
-  $bank = new Bank();
+  $bank = new CesBank();
   foreach ($limitchain['limits'] as $key => $value) {
     $limitchain['limits'][$key]['value'] = $bank->formatAmount($value['value'], ces_bank_get_current_exchange(), TRUE);
   }
@@ -530,7 +530,7 @@ function ces_bank_account_view() {
     'account' => $account,
     '#theme' => 'ces_bank_account_view',
   );
-  $bank = new Bank();
+  $bank = new CesBank();
   // Add and override some items.
   $exchange = $bank->getExchange($account['exchange']);
   $page['account']['exchange'] = $exchange['name'];
@@ -565,7 +565,7 @@ function ces_bank_account_view() {
  *   transaction id.
  */
 function ces_bank_transaction_view($transaction) {
-  $bank = new Bank();
+  $bank = new CesBank();
 
   $fromaccount = $bank->getTransactionFromAccount($transaction);
   $toaccount = $bank->getTransactionToAccount($transaction);
@@ -641,7 +641,7 @@ function _ces_bank_sort_table_cmpr($a, $b) {
  * Lastest transactions admin page.
  */
 function ces_bank_transactions_admin_page() {
-  $bank = new Bank();
+  $bank = new CesBank();
   $exchange = ces_bank_get_current_exchange();
   if ($exchange === FALSE) {
     $page = array();
@@ -766,7 +766,7 @@ function ces_bank_account_statement_page() {
   require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.forms.inc';
   $form = drupal_build_form('ces_bank_account_statement_form', $form_state);
 
-  $bank = new Bank();
+  $bank = new CesBank();
   $exchange = $bank->getExchange($account['exchange']);
 
   $from = $form_state['values']['from'];

@@ -117,18 +117,18 @@ function ces_develop_register_user($name) {
  * Create new bank account.
  */
 function ces_develop_register_account($user, $exchange, $i) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $limit = $bank->getDefaultLimitChain($exchange['id']);
   $account = array(
     'exchange' => $exchange['id'],
     'name' => $exchange['code'] . sprintf('%04d', $i),
     'limitchain' => $limit['id'],
-    'kind' => LocalAccount::TYPE_INDIVIDUAL,
-    'state' => LocalAccount::STATE_HIDDEN,
+    'kind' => CesBankLocalAccount::TYPE_INDIVIDUAL,
+    'state' => CesBankLocalAccount::STATE_HIDDEN,
     'users' => array(
       array(
         'user' => $user->uid,
-        'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+        'role' => CesBankAccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
       ),
     ),
   );

@@ -125,7 +125,7 @@ function ces_message_entity_info() {
 
   $info['ces_action'] = array(
     'label' => t('Action'),
-    'controller class' => 'CesActionEntityController',
+    'controller class' => 'CesMessageActionEntityController',
     'base table' => 'ces_action',
     'static cache' => TRUE,
     'field cache' => TRUE,
@@ -437,7 +437,7 @@ function ces_message_template_test($action = 'account_activated', $recipient = 1
   $salida = '<h2>Test Ces Message</h2>';
 
   // $action = 'account_debited';
-  $bank = new Bank();
+  $bank = new CesBank();
   $accounts = $bank->getAllAccounts();
   if (!$accounts || empty($accounts)) {
     drupal_set_message('No accounts to test');

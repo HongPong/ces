@@ -22,7 +22,7 @@ function ces_import4ces_parse_trades($import_id, $data, $row, &$context) {
   $tx = db_transaction();
   try {
     $context['results']['import_id'] = $import_id;
-    $bank = new Bank();
+    $bank = new CesBank();
     $account_seller = _ces_import4ces_trades_get_account($import_id, $data['Seller'], $data);
     if ($account_seller === FALSE) {
       throw new Exception('Acount @account not found.', array('@account' => $data['Seller']));
@@ -95,7 +95,7 @@ function ces_import4ces_parse_trades($import_id, $data, $row, &$context) {
  *   The accout record or FALSE if it donesn't exist.
  */
 function _ces_import4ces_trades_get_account($import_id, $name, $data) {
-  $bank = new Bank();
+  $bank = new CesBank();
   if (substr($name, 4) == 'VIRT') {
     // This is an inter-exchange transaction. Use the corresponding virtual
     // account.
@@ -110,14 +110,14 @@ function _ces_import4ces_trades_get_account($import_id, $name, $data) {
         'exchange' => $exchange['id'],
         'name' => $name,
         'balance' => 0.0,
-        'state' => LocalAccount::STATE_HIDDEN,
-        'kind' => LocalAccount::TYPE_VIRTUAL,
+        'state' => CesBankLocalAccount::STATE_HIDDEN,
+        'kind' => CesBankLocalAccount::TYPE_VIRTUAL,
         'limitchain' => $exchange['limitchain'],
         'users' => array(
           array(
             'account' => NULL,
             'user' => 1,
-            'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+            'role' => CesBankAccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
           ),
         ),
       );

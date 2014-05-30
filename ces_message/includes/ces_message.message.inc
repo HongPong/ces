@@ -103,7 +103,6 @@ function ces_message_list_entities($args = FALSE) {
     foreach ($entities as $entity) {
       // Create tabular rows for our entities.
       $exchange = ces_bank_get_exchange($entity->exchange);
-      $user_row = user_load($entity->user);
       if ($all) {
         $rows[] = array(
           'data' => array(
@@ -304,7 +303,6 @@ class CesMessageEntityController
    * Create and return a new ces_message entity.
    */
   public function create() {
-    global $language;
     $entity = new stdClass();
     $entity->type = 'ces_message';
     $entity->mid = 0;

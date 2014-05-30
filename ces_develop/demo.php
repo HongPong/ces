@@ -10,7 +10,7 @@
 ces_develop_clean();
 
 // Create stuff.
-$bank = new Bank();
+$bank = new CesBank();
 
 // Create users.
 $usernames = array('Riemann', 'Euclides', 'Gauss' , 'Noether', 'Fermat');

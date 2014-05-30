@@ -33,7 +33,7 @@ function ces_bank_install() {
  */
 function _ces_bank_create_default_permissions() {
   $record = array(
-    'permission' => Permission::PERMISSION_VIEW,
+    'permission' => CesBankPermission::PERMISSION_VIEW,
     'object' => 'global statistics',
     'objectid' => 0,
     'scope' => 'global',
@@ -41,7 +41,7 @@ function _ces_bank_create_default_permissions() {
   );
   $ok = (drupal_write_record('ces_permission', $record) !== FALSE);
   $record = array(
-    'permission' => Permission::PERMISSION_USE,
+    'permission' => CesBankPermission::PERMISSION_USE,
     'object' => 'global exchangecreator',
     'objectid' => 0,
     'scope' => 'global',

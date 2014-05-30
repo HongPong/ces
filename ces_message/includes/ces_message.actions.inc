@@ -93,7 +93,7 @@ function ces_message_action_save($action) {
 /**
  * Entity controller.
  */
-class CesActionEntityController extends DrupalDefaultEntityController {
+class CesMessageActionEntityController extends DrupalDefaultEntityController {
   /**
    * Save entity.
    */

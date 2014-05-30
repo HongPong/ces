@@ -15,12 +15,12 @@
  * The controller for all the banking logic. This is the only accessible class
  * from outside this package.
  */
-class Bank {
+class CesBank {
   /**
    * TODO Documentation.
    */
   public function access($permission, $object, $objectid, $account = NULL) {
-    $perm = new UserPermission($account);
+    $perm = new CesBankUserPermission($account);
     return $perm->access($permission, $object, $objectid);
   }
   /**
@@ -30,14 +30,14 @@ class Bank {
    *   exchange object record.
    */
   public function createExchange(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try {
       // Create exchange record.
       if (isset($record['id'])) {
         unset($record['id']);
       }
-      $record['state'] = Exchange::STATE_INACTIVE;
-      $this->updateObject('Exchange', $record);
+      $record['state'] = CesBankExchange::STATE_INACTIVE;
+      $this->updateObject('CesBankExchange', $record);
       ces_message_send_notify('new_exchange', array('exchange' => $record), array(1), 1);
     }
     catch (Exception $e) {
@@ -52,9 +52,9 @@ class Bank {
    *   exchange object record.
    */
   public function updateExchange(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try {
-      return $this->updateObject('Exchange', $record);
+      return $this->updateObject('CesBankExchange', $record);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -68,10 +68,10 @@ class Bank {
    *   exchange object record.
    */
   public function activateExchange(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     global $user;
     try{
-      $s = new Serializer('Exchange');
+      $s = new IcesSerializer('CesBankExchange');
       // Activate exchange.
       $exchange = $s->loadFromRecord($record);
       $exchange->activate();
@@ -80,46 +80,46 @@ class Bank {
       // potentially be configured and stored in $record.
       // Let exchange users see the exchange details.
       $perm = array(
-        'permission' => Permission::PERMISSION_VIEW,
+        'permission' => CesBankPermission::PERMISSION_VIEW,
         'object' => 'exchange details',
         'objectid' => $exchange->id,
-        'scope' => Permission::SCOPE_EXCHANGE,
+        'scope' => CesBankPermission::SCOPE_EXCHANGE,
         'scopeid' => $exchange->id,
       );
       $this->createPermission($perm);
       // Let everybody register accounts to this exchange.
       $perm = array(
-        'permission' => Permission::PERMISSION_USE,
+        'permission' => CesBankPermission::PERMISSION_USE,
         'object' => 'exchange accountcreator',
         'objectid' => $exchange->id,
-        'scope' => Permission::SCOPE_GLOBAL,
+        'scope' => CesBankPermission::SCOPE_GLOBAL,
         'scopeid' => 0,
       );
       $this->createPermission($perm);
       // Let exchange users see other exchange accounts.
       $perm = array(
-        'permission' => Permission::PERMISSION_VIEW,
+        'permission' => CesBankPermission::PERMISSION_VIEW,
         'object' => 'exchange accounts',
         'objectid' => $exchange->id,
-        'scope' => Permission::SCOPE_EXCHANGE,
+        'scope' => CesBankPermission::SCOPE_EXCHANGE,
         'scopeid' => $exchange->id,
       );
       $this->createPermission($perm);
       // Let exchange creator administer the exchange.
       $perm = array(
-        'permission' => Permission::PERMISSION_ADMIN,
+        'permission' => CesBankPermission::PERMISSION_ADMIN,
         'object' => 'exchange',
         'objectid' => $exchange->id,
-        'scope' => Permission::SCOPE_USER,
+        'scope' => CesBankPermission::SCOPE_USER,
         'scopeid' => $exchange->admin,
       );
       $this->createPermission($perm);
       // Let exchange users see blog posts and comment them.
       $perm = array(
-        'permission' => Permission::PERMISSION_USE,
+        'permission' => CesBankPermission::PERMISSION_USE,
         'object' => 'exchange blog',
         'objectid' => $exchange->id,
-        'scope' => Permission::SCOPE_EXCHANGE,
+        'scope' => CesBankPermission::SCOPE_EXCHANGE,
         'scopeid' => $exchange->id,
       );
       $this->createPermission($perm);
@@ -129,7 +129,7 @@ class Bank {
       $account['users'] = array(
         $exchange->admin => array(
           'user' => $exchange->admin,
-          'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+          'role' => CesBankAccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
         ),
       );
       $account['name'] = $exchange->code . '0000';
@@ -151,10 +151,10 @@ class Bank {
    *   account object record.
    */
   public function activateAccount(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     global $user;
     try{
-      $s = new Serializer('LocalAccount');
+      $s = new IcesSerializer('CesBankLocalAccount');
       $account = $s->loadFromRecord($record);
       $account->activate();
       $s->save($account);
@@ -162,10 +162,10 @@ class Bank {
       $accountusers = $account->getUsers();
       foreach ($accountusers as $accountuser) {
         $perm = array(
-          'permission' => Permission::PERMISSION_EDIT,
+          'permission' => CesBankPermission::PERMISSION_EDIT,
           'object' => 'account',
           'objectid' => $account->id,
-          'scope' => Permission::SCOPE_USER,
+          'scope' => CesBankPermission::SCOPE_USER,
           'scopeid' => $accountuser->user,
         );
         $this->createPermission($perm);
@@ -190,7 +190,7 @@ class Bank {
    *   exchange identifier.
    */
   public function getExchange($id) {
-    return $this->getObjectRecord('Exchange', $id);
+    return $this->getObjectRecord('CesBankExchange', $id);
   }
   /**
    * Gets the exchange object by name.
@@ -202,7 +202,7 @@ class Bank {
    *   an exchange object record, or FALSE if not available.
    */
   public function getExchangeByName($name) {
-    $s = new Serializer('Exchange');
+    $s = new IcesSerializer('CesBankExchange');
     $exchange = $s->loadFromUniqueKey('code', $name);
     if ($exchange === FALSE) {
       return FALSE;
@@ -216,9 +216,9 @@ class Bank {
    *   exchange identifier.
    */
   public function deleteExchange($id) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try{
-      $s = new Serializer('Exchange');
+      $s = new IcesSerializer('CesBankExchange');
       $exchange = $s->load($id);
       $s->delete($exchange);
       $this->deletePermissionsToScope('exchange', $id);
@@ -240,10 +240,10 @@ class Bank {
    *   the active ones.
    */
   public function getAllExchanges(array $conditions = array('state' => 1)) {
-    $s = new Serializer('Exchange');
+    $s = new IcesSerializer('CesBankExchange');
     $exchanges = $s->loadCollection($conditions);
     $records = array();
-    $as = new Serializer('LocalAccount');
+    $as = new IcesSerializer('CesBankLocalAccount');
     foreach ($exchanges as $exchange) {
       $record = $exchange->getRecord();
       $record['accounts'] = $as->count('exchange', $exchange->id);
@@ -264,7 +264,7 @@ class Bank {
    *   </code>
    */
   public function getAllAccounts(array $conditions = array('state' => 1), $order = NULL) {
-    $as = new Serializer('LocalAccount');
+    $as = new IcesSerializer('CesBankLocalAccount');
     $accounts = $as->loadCollection($conditions, $order);
     $records = array();
     foreach ($accounts as $account) {
@@ -282,10 +282,10 @@ class Bank {
    * so it can safely be modified.
    */
   public function createTransaction(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try {
       $transaction = $this->newTransaction($record);
-      $s = new Serializer(get_class($transaction));
+      $s = new IcesSerializer(get_class($transaction));
       $s->save($transaction);
       $record['id'] = $transaction->getId();
     }
@@ -304,7 +304,7 @@ class Bank {
    *   The transaction object record.
    */
   public function updateTransaction(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try {
       $this->deleteTransaction($record['id']);
       unset($record['id']);
@@ -322,11 +322,11 @@ class Bank {
    * @param int $id
    *   transaction identifier.
    *
-   * @return TransactionInterface
+   * @return CesBankTransactionInterface
    *   a transaction record given its id.
    */
   public function getTransaction($id) {
-    return $this->getObjectRecord('BasicTransaction', $id);
+    return $this->getObjectRecord('CesBankBasicTransaction', $id);
   }
   /**
    * Get the buyer's account given a transaction.
@@ -338,7 +338,7 @@ class Bank {
    *   the account object record which is the buyer of the given transaction.
    */
   public function getTransactionFromAccount(array $record) {
-    $s = new Serializer('BasicTransaction');
+    $s = new IcesSerializer('CesBankBasicTransaction');
     $transaction = $s->loadFromRecord($record);
     $name = $transaction->getFromAccountName();
     return $this->getAccountByName($name);
@@ -353,7 +353,7 @@ class Bank {
    *   the account object record which is the seller of the given transaction.
    */
   public function getTransactionToAccount(array $record) {
-    $s = new Serializer('BasicTransaction');
+    $s = new IcesSerializer('CesBankBasicTransaction');
     $transaction = $s->loadFromRecord($record);
     $name = $transaction->getToAccountName();
     return $this->getAccountByName($name);
@@ -370,9 +370,9 @@ class Bank {
    *   the transaction amount.
    */
   public function getTransactionAmount(array $transaction, array $exchange) {
-    $st = new Serializer('BasicTransaction');
+    $st = new IcesSerializer('CesBankBasicTransaction');
     $trans = $st->loadFromRecord($transaction);
-    $se = new Serializer('Exchange');
+    $se = new IcesSerializer('CesBankExchange');
     $excha = $se->loadFromRecord($exchange);
     return $trans->getAmount($excha->getCurrency());
   }
@@ -402,7 +402,7 @@ class Bank {
    *   account one for each exchenge.
    */
   public function getTransactions(array $conditions) {
-    $s = new Serializer('BasicTransaction');
+    $s = new IcesSerializer('CesBankBasicTransaction');
     // Choose currency.
     $currencyaccount = NULL;
     $currency = NULL;
@@ -413,13 +413,13 @@ class Bank {
       $currencyaccount = $conditions['fromaccount'];
     }
     if ($currencyaccount != NULL) {
-      $as = new Serializer('LocalAccount');
+      $as = new IcesSerializer('CesBankLocalAccount');
       $account = $as->load($currencyaccount);
       $currency = $account->getExchange()->getCurrency();
     }
     // Load collection.
     if (isset($conditions['account'])) {
-      // Shall we improve Serializer so it can directly handle 'or' conditions?
+      // Shall we improve IcesSerializer so it can directly handle 'or' conditions?
       $account = $conditions['account'];
       unset($conditions['account']);
       $conditions['fromaccount'] = $account;
@@ -436,7 +436,7 @@ class Bank {
         unset($conditions['exchange']);
         $conditions['join'] = array(
           'field' => 'toaccount',
-          'class' => 'LocalAccount',
+          'class' => 'CesBankLocalAccount',
           'condition' => array(
             'field' => 'exchange',
             'value' => $exchange_id,
@@ -493,20 +493,20 @@ class Bank {
    *   If a problem occurs an exception is thrown.
    */
   public function deleteTransaction($id) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try{
-      $s = new Serializer('BasicTransaction');
+      $s = new IcesSerializer('CesBankBasicTransaction');
       $transaction = $s->load($id);
       if ($transaction === FALSE) {
         throw new Exception(t('Transaction id %id is invalid',
           array('%id' => $id)));
       }
-      if ($transaction->getState() == TransactionInterface::STATE_COMMITTED) {
+      if ($transaction->getState() == CesBankTransactionInterface::STATE_COMMITTED) {
         $transaction->revoke();
       }
       // The following statement will throw an exception if the transaction is
       // not revoked or rejected.
-      $transaction->setState(TransactionInterface::STATE_DISCARDED);
+      $transaction->setState(CesBankTransactionInterface::STATE_DISCARDED);
       $s->delete($transaction);
       return TRUE;
     }
@@ -524,16 +524,16 @@ class Bank {
    *   (T/F)
    */
   public function createAccount(array &$record, $send_mail = TRUE) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try {
       // Create account record.
       unset($record['id']);
       $record['balance'] = 0;
-      $account = new LocalAccount($record);
-      $s = new Serializer('LocalAccount');
+      $account = new CesBankLocalAccount($record);
+      $s = new IcesSerializer('CesBankLocalAccount');
       $s->save($account);
       // saveExtraData() after create account record because we need the new
-      // account id in order to create the AccountUser record(s).
+      // account id in order to create the CesBankAccountUser record(s).
       $account->saveExtraData();
       $record = $account->getRecord();
       $exchange = $account->getExchange();
@@ -551,10 +551,10 @@ class Bank {
    *   account object record.
    */
   public function updateAccount(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     unset($record['balance']);
     try{
-      return $this->updateObject('LocalAccount', $record);
+      return $this->updateObject('CesBankLocalAccount', $record);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -571,7 +571,7 @@ class Bank {
    *   account object record.
    */
   public function getAccount($id) {
-    return $this->getObjectRecord('LocalAccount', $id);
+    return $this->getObjectRecord('CesBankLocalAccount', $id);
   }
   /**
    * Gets an account object record by its name.
@@ -583,7 +583,7 @@ class Bank {
    *   an account given its name
    */
   public function getAccountByName($name) {
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $account = $s->loadFromUniqueKey('name', $name);
     if ($account === FALSE) {
       return FALSE;
@@ -595,9 +595,9 @@ class Bank {
    * @todo: Use protected function?
    */
   protected function getAccountHistoricValue($id, $field, $from, $to) {
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $account = $s->load($id);
-    $st = new Serializer('BasicTransaction');
+    $st = new IcesSerializer('CesBankBasicTransaction');
     $result = $st->selectFunctionField('SUM', 'amount',
       array(
         array($field, $account->id),
@@ -629,7 +629,7 @@ class Bank {
    * Gets an account's historic balance at a certain time point.
    */
   public function getAccountHistoricBalance($id, $time) {
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $account = $s->load($id);
     $balance = $account->balance;
     $positive = $this->getAccountHistoricSales($id, $time);
@@ -644,7 +644,7 @@ class Bank {
    *   of this user accounts.
    */
   public function getUserAccounts($uid) {
-    $s = new Serializer('AccountUser');
+    $s = new IcesSerializer('CesBankAccountUser');
     $useraccounts = $s->loadCollection(array('user' => $uid));
     $accounts = array();
     foreach ($useraccounts as $useracc) {
@@ -656,9 +656,9 @@ class Bank {
    * Deletes an account.
    */
   public function deleteAccount($id) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try{
-      $s = new Serializer('LocalAccount');
+      $s = new IcesSerializer('CesBankLocalAccount');
       $account = $s->load($id);
       $s->delete($account);
       $this->deletePermissionsToScope('account', $id);
@@ -673,12 +673,12 @@ class Bank {
    * Creates a limit chain object.
    */
   public function createLimitChain(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try {
       // Create account record.
       unset($record['id']);
-      $limitchain = new LimitChain($record);
-      $s = new Serializer('LimitChain');
+      $limitchain = new CesBankLimitChain($record);
+      $s = new IcesSerializer('CesBankLimitChain');
       $s->save($limitchain);
       // Save extra data because we need to have the limitchain id in orde to
       // properly save the atomic limits.
@@ -694,9 +694,9 @@ class Bank {
    * Updates a limit chain object.
    */
   public function updateLimitChain(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try{
-      return $this->updateObject('LimitChain', $record);
+      return $this->updateObject('CesBankLimitChain', $record);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -709,15 +709,15 @@ class Bank {
    *   a limit chain given its id.
    */
   public function getLimitChain($id) {
-    return $this->getObjectRecord('LimitChain', $id);
+    return $this->getObjectRecord('CesBankLimitChain', $id);
   }
   /**
    * Deletes a limit chain.
    */
   public function deleteLimitChain($id) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try{
-      $s = new Serializer('LimitChain');
+      $s = new IcesSerializer('CesBankLimitChain');
       $chain = $s->load($id);
       $s->delete($chain);
       return TRUE;
@@ -734,7 +734,7 @@ class Bank {
    */
   public function getDefaultExchange() {
     // @TODO: hardcode it!
-    $exchange = Exchange::getDefaultExchange();
+    $exchange = CesBankExchange::getDefaultExchange();
     $exchange->admin = NULL;
     $exchange->id = NULL;
     return $exchange->getRecord();
@@ -749,7 +749,7 @@ class Bank {
     if ($exchange_id == '') {
       drupal_set_message(t('CES Debug: getDefaultAccount: No exchangeId.'));
     }
-    $exchange = $this->getObject('Exchange', $exchange_id);
+    $exchange = $this->getObject('CesBankExchange', $exchange_id);
     if ($exchange == FALSE) {
       drupal_set_message(t('CES Debug: getDefaultAccount: exchange is false.'));
     }
@@ -762,7 +762,7 @@ class Bank {
    *   for new limit chains.
    */
   public function getDefaultLimitChain($exchange_id) {
-    $exchange = $this->getObject('Exchange', $exchange_id);
+    $exchange = $this->getObject('CesBankExchange', $exchange_id);
     $account  = $exchange->getDefaultAccount();
     return $account->getLimitChain()->getRecord();
   }
@@ -772,7 +772,7 @@ class Bank {
    *   all defined limit chains for this exchange.
    */
   public function getAllLimitChains($exchange_id) {
-    $s = new Serializer('LimitChain');
+    $s = new IcesSerializer('CesBankLimitChain');
     $limits = $s->loadCollection(array('exchange' => $exchange_id));
     $records = array();
     foreach ($limits as $limit) {
@@ -792,24 +792,24 @@ class Bank {
    *   of messages with the reasons why the transaction couldn't be applied.
    */
   public function applyTransaction($transaction_id) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try {
       // Get transaction. May be any type of transaction.
-      $transaction = $this->getObject('BasicTransaction', $transaction_id);
+      $transaction = $this->getObject('CesBankBasicTransaction', $transaction_id);
       // Trigger transaction application.
       $transaction->trigger();
       $transaction->check();
       $ret = FALSE;
-      if ($transaction->getState() == TransactionInterface::STATE_ACCEPTED) {
+      if ($transaction->getState() == CesBankTransactionInterface::STATE_ACCEPTED) {
         $transaction->apply();
-        if ($transaction->getState() == TransactionInterface::STATE_COMMITTED) {
+        if ($transaction->getState() == CesBankTransactionInterface::STATE_COMMITTED) {
           $ret = TRUE;
         }
       }
       if (!$ret) {
         $ret = $transaction->getLog($transaction->getState());
       }
-      $s = new Serializer('BasicTransaction');
+      $s = new IcesSerializer('CesBankBasicTransaction');
       $s->save($transaction);
       return $ret;
     }
@@ -819,11 +819,11 @@ class Bank {
     }
   }
   /**
-   * Get the names of classes implementing DecoratedTransaction interface.
+   * Get the names of classes implementing CesBankDecoratedTransaction interface.
    * @return array
-   *   the names of classes that implement the DecoratedTransaction interface.
+   *   the names of classes that implement the CesBankDecoratedTransaction interface.
    */
-  public function getDecoratedTransactionClasses() {
+  public function getCesBankDecoratedTransactionClasses() {
     $classes = module_invoke_all('decorated_transaction_classes');
     return $classes;
   }
@@ -833,16 +833,16 @@ class Bank {
    *   the permission given its id.
    */
   public function getPermission($id) {
-    return $this->getObjectRecord('Permission', $id);
+    return $this->getObjectRecord('CesBankPermission', $id);
   }
   /**
    * Create permission object.
    */
   public function createPermission(array &$record) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try {
       unset($record['id']);
-      return $this->updateObject('Permission', $record);
+      return $this->updateObject('CesBankPermission', $record);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -856,9 +856,9 @@ class Bank {
    *   The identifier of the permission object.
    */
   public function deletePermission($id) {
-    $t = Serializer::DBTransaction();
+    $t = IcesSerializer::DBTransaction();
     try{
-      $s = new Serializer('Permission');
+      $s = new IcesSerializer('CesBankPermission');
       $permission = $s->load($id);
       $s->delete($permission);
       return TRUE;
@@ -871,10 +871,10 @@ class Bank {
   /**
    * Update permission.
    */
-  public function updatePermission(array &$record) {
-    $t = Serializer::DBTransaction();
+  public function updateCesBankPermission(array &$record) {
+    $t = IcesSerializer::DBTransaction();
     try {
-      return $this->updateObject('Permission', $record);
+      return $this->updateObject('CesBankPermission', $record);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -894,7 +894,7 @@ class Bank {
    *   The identfier of the scope object.
    */
   private function deletePermissionsToScope($scope, $scope_id) {
-    $s = new Serializer('Permission');
+    $s = new IcesSerializer('CesBankPermission');
     $permissions = $s->loadCollection(
       array(
         'scope' => $scope,
@@ -915,7 +915,7 @@ class Bank {
    *   The records to which the userid has permissions.
    */
   public function getAdministrablePermissions($userid = NULL) {
-    $userperms = new UserPermission($userid);
+    $userperms = new CesBankUserPermission($userid);
     $permissions = $userperms->getPermissions();
     $result = array();
     foreach ($permissions as $perm) {
@@ -944,7 +944,7 @@ class Bank {
    * TODO: document.
    */
   protected function getObject($class_name, $id) {
-    $s = new Serializer($class_name);
+    $s = new IcesSerializer($class_name);
     return $s->load($id);
   }
   /**
@@ -961,7 +961,7 @@ class Bank {
    * Update object in classname with array of records.
    */
   protected function updateObject($class_name, array &$record) {
-    $s = new Serializer($class_name);
+    $s = new IcesSerializer($class_name);
     $object = $s->loadFromRecord($record);
     $s->save($object);
     if (isset($object->id)) {
@@ -974,7 +974,7 @@ class Bank {
    * @see newTransaction()
    */
   protected function transactionFormToRecord($record) {
-    $record['state'] = TransactionInterface::STATE_NEW;
+    $record['state'] = CesBankTransactionInterface::STATE_NEW;
     // Load accounts.
     if (isset($record['toaccount'])) {
       $toaccount = $this->getAccount($record['toaccount']);
@@ -1010,21 +1010,21 @@ class Bank {
   }
   /**
    * Creates a new transaction object based on the record array.
-   * @return TransactionInterface
+   * @return CesBankTransactionInterface
    *   New transaction object based on the record array.
    */
   protected function newTransaction(array &$record) {
     unset($record['id']);
     $record = $this->transactionFormToRecord($record);
-    $fromaccount = $this->getObject('LocalAccount', $record['fromaccount']);
-    $toaccount = $this->getObject('LocalAccount', $record['toaccount']);
+    $fromaccount = $this->getObject('CesBankLocalAccount', $record['fromaccount']);
+    $toaccount = $this->getObject('CesBankLocalAccount', $record['toaccount']);
     // Basic transaction. Within one exchange.
     if ($toaccount->exchange == $fromaccount->exchange) {
-      $transaction = new BasicTransaction($record);
+      $transaction = new CesBankBasicTransaction($record);
     }
     else {
       // Complex transaction interexchange.
-      $transaction = InterExchangeTransaction::newInterExchangeTransaction($record);
+      $transaction = CesBankInterExchangeTransaction::newCesBankInterExchangeTransaction($record);
     }
     return $transaction;
   }
@@ -1034,9 +1034,9 @@ class Bank {
    * Sends a message to both buyer and seller noticing that their balances have
    * changed.
    *
-   * @see Bank::notifyTransactionAccount()
+   * @see CesBank::notifyTransactionAccount()
    */
-  protected function notifyTransaction(TransactionInterface $transaction) {
+  protected function notifyTransaction(CesBankTransactionInterface $transaction) {
     $account_from_name = $transaction->getFromAccountName();
     $account_to_name = $transaction->getToAccountName();
     $transaction_user = $transaction->getUser();
@@ -1056,7 +1056,7 @@ class Bank {
    * Triggers notification for transaction account.
    */
   protected function notifyTransactionAccount($message_key, $account_name, $transaction_user, $params) {
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $account = $s->loadFromUniqueKey('name', $account_name);
     $account_users = $account->getUsers();
     foreach ($account_users as $account_user) {
@@ -1070,7 +1070,7 @@ class Bank {
 /**
  * An exchange community.
  */
-class Exchange extends DBObject {
+class CesBankExchange extends IcesDBObject {
   public static $table = 'ces_exchange';
   /**
    * @var int
@@ -1146,7 +1146,7 @@ class Exchange extends DBObject {
    */
   public function loadRecord($record) {
     parent::loadRecord($record);
-    $this->currency = new Currency($record);
+    $this->currency = new CesBankCurrency($record);
   }
   /**
    * Gets record.
@@ -1160,7 +1160,7 @@ class Exchange extends DBObject {
   /**
    * Returns a default exchange as model for new exchanges.
    *
-   * @return Exchange
+   * @return CesBankExchange
    *   The default exchange. To be used as a model for new
    *   exchanges.
    */
@@ -1187,15 +1187,15 @@ class Exchange extends DBObject {
       'modified' => REQUEST_TIME,
       'data' => array(),
     );
-    $s = new Serializer('Exchange');
+    $s = new IcesSerializer('CesBankExchange');
     $exchange = $s->loadFromRecord($record);
     return $exchange;
   }
 
   /**
-   * Returns a default, hidden LocalAccount as model for new accounts.
+   * Returns a default, hidden CesBankLocalAccount as model for new accounts.
    *
-   * @return LocalAccount
+   * @return CesBankLocalAccount
    *   Account to be used as a model for new accounts.
    */
   public function getDefaultAccount() {
@@ -1203,18 +1203,18 @@ class Exchange extends DBObject {
       'exchange' => $this->id,
       'name' => $this->getFreeAccountName(),
       'balance' => 0.0,
-      'state' => LocalAccount::STATE_HIDDEN,
-      'kind' => LocalAccount::TYPE_INDIVIDUAL,
+      'state' => CesBankLocalAccount::STATE_HIDDEN,
+      'kind' => CesBankLocalAccount::TYPE_INDIVIDUAL,
       'limitchain' => $this->limitchain,
       'users' => array(
         array(
           'account' => NULL,
           'user' => 0,
-          'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+          'role' => CesBankAccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
         ),
       ),
     );
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $account = $s->loadFromRecord($record);
     return $account;
   }
@@ -1225,7 +1225,7 @@ class Exchange extends DBObject {
   protected function getFreeAccountName() {
     // NOTE: this function is highly inefficient. It can be changed with a
     // single specific DB query if causes performance problems.
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $accounts = $s->loadCollection(array('exchange' => $this->id), 'name');
     $start = floor((count($accounts) - 1) / 2);
     // This is a bit tricky.
@@ -1260,7 +1260,7 @@ class Exchange extends DBObject {
    * Exchange needs to be saved after this call so the state flag persists.
    */
   public function activate() {
-    $es = new Serializer('Exchange');
+    $es = new IcesSerializer('CesBankExchange');
     // Setup default limit chain.
     if (empty($this->limitchain)) {
       // Create default limit chain.
@@ -1268,14 +1268,14 @@ class Exchange extends DBObject {
         'exchange' => $this->id,
         'name' => 'default',
       );
-      $ls = new Serializer('LimitChain');
+      $ls = new IcesSerializer('CesBankLimitChain');
       $def_limit_chain = $ls->loadFromRecord($record);
       $ls->save($def_limit_chain);
       // Update this exchange with the default limit chain.
       $this->limitchain = $def_limit_chain->id;
       $es->updateField($this, 'limitchain');
     }
-    $this->state = Exchange::STATE_ACTIVE;
+    $this->state = CesBankExchange::STATE_ACTIVE;
   }
   /**
    * Get virtual account for this exchange, or create if needed.
@@ -1285,8 +1285,8 @@ class Exchange extends DBObject {
    *   doesn't exist.
    * @todo notify exchange admin in case of virtual user creation.
    */
-  public function getVirtualAccount(Exchange $exchange) {
-    $s = new Serializer('LocalAccount');
+  public function getVirtualAccount(CesBankExchange $exchange) {
+    $s = new IcesSerializer('CesBankLocalAccount');
     $name = $this->code . $exchange->code;
     $virt_account = $s->loadFromUniqueKey('name', $name);
     if ($virt_account === FALSE) {
@@ -1295,28 +1295,28 @@ class Exchange extends DBObject {
         'exchange' => $this->id,
         'name' => $name,
         'balance' => 0.0,
-        'state' => LocalAccount::STATE_HIDDEN,
-        'kind' => LocalAccount::TYPE_VIRTUAL,
+        'state' => CesBankLocalAccount::STATE_HIDDEN,
+        'kind' => CesBankLocalAccount::TYPE_VIRTUAL,
         'limitchain' => $this->limitchain,
         'users' => array(
           array(
             'account' => NULL,
             'user' => 1,
-            'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+            'role' => CesBankAccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
           ),
         ),
       );
-      $bank = new Bank();
+      $bank = new CesBank();
       $bank->createAccount($record);
-      $virt_account = new LocalAccount($record);
+      $virt_account = new CesBankLocalAccount($record);
     }
     return $virt_account;
   }
   /**
    * Get currency of this exchange.
-   * @return Currency
+   * @return CesBankCurrency
    *   This exchange's currency.
-   * @see Currency
+   * @see CesBankCurrency
    */
   public function getCurrency() {
     return $this->currency;
@@ -1325,7 +1325,7 @@ class Exchange extends DBObject {
 /**
  * A currency. A currency belongs to a unique Exchange.
  */
-class Currency extends DBObject {
+class CesBankCurrency extends IcesDBObject {
   /**
    * @var string
    */
@@ -1348,17 +1348,17 @@ class Currency extends DBObject {
   public $currencyscale;
   /**
    * Converts amount from a currency into a new amount.
-   * @see BasicTransaction
+   * @see CesBankBasicTransaction
    * @return float
    *   the amount in this currency of the value represented by the
    *   two given parameters.
    *
    * @param float $amount
    *   the amount to be converted.
-   * @param Currency $currency
+   * @param CesBankCurrency $currency
    *   the original currency.
    */
-  public function convert($amount, Currency $currency) {
+  public function convert($amount, CesBankCurrency $currency) {
     $rate = ($currency->currencyvalue / $this->currencyvalue);
     $newamount = $amount * $rate;
     return $newamount;
@@ -1369,26 +1369,26 @@ class Currency extends DBObject {
  * Account interface names basic methods for an account applying and checking
  * transactions.
  */
-interface AccountInterface {
+interface CesBankAccountInterface {
   /**
    * In most implementations, gets name of account holder.
    */
   public function getName();
   /**
    * Apply transaction.
-   * @see LocalAccount
+   * @see CesBankLocalAccount
    */
-  public function applyTransaction(TransactionInterface &$transaction);
+  public function applyTransaction(CesBankTransactionInterface &$transaction);
   /**
    * Check transaction.
-   * @see LocalAccount
+   * @see CesBankLocalAccount
    */
-  public function checkTransaction(TransactionInterface &$transaction);
+  public function checkTransaction(CesBankTransactionInterface &$transaction);
 }
 /**
- * LocalAccount is a banking account. Implements AccountInterface.
+ * CesBankLocalAccount is a banking account. Implements CesBankAccountInterface.
  */
-class LocalAccount extends DBObject implements AccountInterface {
+class CesBankLocalAccount extends IcesDBObject implements CesBankAccountInterface {
   /**
    * @var int
    */
@@ -1428,7 +1428,7 @@ class LocalAccount extends DBObject implements AccountInterface {
   /**
    * @var array of users related to this account. Tipically this array is a
    * singleton with the account's administrator user. Each entry is an
-   * AccountUser object.
+   * CesBankAccountUser object.
    */
   protected $users;
   public static $table = 'ces_account';
@@ -1443,23 +1443,23 @@ class LocalAccount extends DBObject implements AccountInterface {
   const TYPE_PUBLIC = 4;
   const TYPE_VIRTUAL = 5;
   /**
-   * LoadRecord loads loadRecord function from the parent DBObject.
+   * LoadRecord loads loadRecord function from the parent IcesDBObject.
    */
   public function loadRecord($record) {
     parent::loadRecord($record);
     if (isset($record['users']) && is_array($record['users'])) {
       $this->users = array();
       foreach ($record['users'] as $accuser) {
-        $this->users[] = new AccountUser($accuser);
+        $this->users[] = new CesBankAccountUser($accuser);
       }
     }
     else {
-      $s = new Serializer('AccountUser');
+      $s = new IcesSerializer('CesBankAccountUser');
       $this->users = $s->loadCollection(array('account' => $this->id));
     }
   }
   /**
-   * GetRecord loads getRecord function from the parent DBObject.
+   * GetRecord loads getRecord function from the parent IcesDBObject.
    */
   public function getRecord() {
     $record = parent::getRecord();
@@ -1472,34 +1472,34 @@ class LocalAccount extends DBObject implements AccountInterface {
   }
   /**
    * Saves extra data.
-   * @see Bank::createAccount()
+   * @see CesBank::createAccount()
    */
   public function saveExtraData() {
     if (!empty($this->id)) {
       foreach ($this->users as $accuser) {
         $accuser->account = $this->id;
-        $s = new Serializer('AccountUser');
+        $s = new IcesSerializer('CesBankAccountUser');
         $s->save($accuser);
       }
     }
   }
   /**
    * Delete extra data.
-   * @see Bank::deleteAccount()
+   * @see CesBank::deleteAccount()
    */
   public function deleteExtraData() {
-    $s = new Serializer('AccountUser');
+    $s = new IcesSerializer('CesBankAccountUser');
     foreach ($this->users as $accuser) {
       $s->delete($accuser);
     }
   }
   /**
    * Gets limit chain.
-   * @return LimitChain
+   * @return CesBankLimitChain
    *   The limit chain associated to this account.
    */
   public function getLimitChain() {
-    $s = new Serializer('LimitChain');
+    $s = new IcesSerializer('CesBankLimitChain');
     return $s->load($this->limitchain);
   }
   /**
@@ -1507,8 +1507,8 @@ class LocalAccount extends DBObject implements AccountInterface {
    *
    * If it is accepted, the updated account is safely saved to the DB.
    */
-  public function applyTransaction(TransactionInterface &$transaction) {
-    $s = new LockSerializer('LocalAccount');
+  public function applyTransaction(CesBankTransactionInterface &$transaction) {
+    $s = new IcesLockSerializer('CesBankLocalAccount');
     // Work with updated data and lock this account in database.
     $account = $s->load($this->id);
     $amount = $transaction->getAmount();
@@ -1525,8 +1525,8 @@ class LocalAccount extends DBObject implements AccountInterface {
   /**
    * Verifies if an account can accept a transaction by being active.
    */
-  public function checkTransaction(TransactionInterface &$transaction) {
-    if ($this->state == LocalAccount::STATE_ACTIVE) {
+  public function checkTransaction(CesBankTransactionInterface &$transaction) {
+    if ($this->state == CesBankLocalAccount::STATE_ACTIVE) {
       return $this->getLimitChain()->checkTransaction($this, $transaction);
     }
     else {
@@ -1537,7 +1537,7 @@ class LocalAccount extends DBObject implements AccountInterface {
    * Changes local account state to active.
    */
   public function activate() {
-    $this->state = LocalAccount::STATE_ACTIVE;
+    $this->state = CesBankLocalAccount::STATE_ACTIVE;
   }
   /**
    * Gets name of account holder.
@@ -1559,18 +1559,18 @@ class LocalAccount extends DBObject implements AccountInterface {
   }
   /**
    * TODO: Document.
-   * @return Exchange
+   * @return CesBankExchange
    *   the exchange object to which this account belongs.
    */
   public function getExchange() {
-    $es = new Serializer('Exchange');
+    $es = new IcesSerializer('CesBankExchange');
     return $es->load($this->exchange);
   }
 }
   /**
-   * TODO: document. Class AccountUser.
+   * TODO: document. Class CesBankAccountUser.
    */
-class AccountUser extends DBObject {
+class CesBankAccountUser extends IcesDBObject {
   public static $table = 'ces_accountuser';
   public static $primaryKey = array('user', 'account');
   public $id;
@@ -1582,7 +1582,7 @@ class AccountUser extends DBObject {
 /**
  * A chain of account limits. It is used by account.
  */
-class LimitChain extends DBObject {
+class CesBankLimitChain extends IcesDBObject {
   public static $table = 'ces_limitchain';
   /**
    * @var int
@@ -1598,7 +1598,7 @@ class LimitChain extends DBObject {
   public $name;
   const DEFAULT_LIMITCHAIN_ID = 1;
   /**
-   * @var array of AccountLimit
+   * @var array of CesBankAccountLimit
    */
   protected $limits;
   /**
@@ -1610,7 +1610,7 @@ class LimitChain extends DBObject {
     parent::loadRecord($record);
     // Load limits.
     $this->limits = array();
-    $s = new Serializer('AccountLimit');
+    $s = new IcesSerializer('CesBankAccountLimit');
     if (isset($record['limits'])) {
       // Record comes with limits. This is because it comes from UI.
       foreach ($record['limits'] as $limit_record) {
@@ -1634,11 +1634,11 @@ class LimitChain extends DBObject {
     return $record;
   }
   /**
-   * Saves all instances of AccountLimit that belong to this LimitChain.
+   * Saves all instances of CesBankAccountLimit that belong to this CesBankLimitChain.
    * @override
    */
   public function saveExtraData() {
-    $s = new Serializer('AccountLimit');
+    $s = new IcesSerializer('CesBankAccountLimit');
     $newids = array();
     // create/update limits.
     foreach ($this->limits as $limit) {
@@ -1663,10 +1663,10 @@ class LimitChain extends DBObject {
     }
   }
   /**
-   * Delets associated AccountLimit.
+   * Delets associated CesBankAccountLimit.
    */
   public function deleteExtraData() {
-    $s = new Serializer('AccountLimit');
+    $s = new IcesSerializer('CesBankAccountLimit');
     foreach ($this->limits as $limit) {
       $s->delete($limit);
     }
@@ -1674,7 +1674,7 @@ class LimitChain extends DBObject {
   /**
    * TODO: document.
    */
-  public function checkAccount(LocalAccount &$account) {
+  public function checkAccount(CesBankLocalAccount &$account) {
     $messages = array();
     foreach ($this->limits as $limit) {
       if ($limit->checkAccount($account) !== TRUE) {
@@ -1691,7 +1691,7 @@ class LimitChain extends DBObject {
   /**
    * TODO: document.
    */
-  public function checkTransaction(LocalAccount &$account, TransactionInterface &$transaction) {
+  public function checkTransaction(CesBankLocalAccount &$account, CesBankTransactionInterface &$transaction) {
     $messages = array();
     foreach ($this->limits as $limit) {
       if (!$limit->checkTransaction($account, $transaction)) {
@@ -1708,7 +1708,7 @@ class LimitChain extends DBObject {
   /**
    * TODO: document.
    */
-  public function getAccountLimits() {
+  public function getCesBankAccountLimits() {
     return $this->limits;
   }
 }
@@ -1716,7 +1716,7 @@ class LimitChain extends DBObject {
  * Generic class for account limits. Each account limit limites one aspect of
  * accounts.
  */
-abstract class AccountLimit extends DBObject {
+abstract class CesBankAccountLimit extends IcesDBObject {
   public static $table = 'ces_limit';
   /**
    * @var int
@@ -1745,10 +1745,10 @@ abstract class AccountLimit extends DBObject {
   /**
    * Todo: document.
    * @return bool
-   *   The state of this account against this AccountLimit. TRUE
+   *   The state of this account against this CesBankAccountLimit. TRUE
    *   for pass and FALSE for fail.
    */
-  public function checkAccount(LocalAccount &$account) {
+  public function checkAccount(CesBankLocalAccount &$account) {
     return ($this->getAccountValue($account) > $this->getLimit());
   }
   /**
@@ -1757,7 +1757,7 @@ abstract class AccountLimit extends DBObject {
    *   The state of this account when this transaction is performed.
    *   The account can be the seller or the buyer.
    */
-  public function checkTransaction(LocalAccount &$account, TransactionInterface &$transaction) {
+  public function checkTransaction(CesBankLocalAccount &$account, CesBankTransactionInterface &$transaction) {
     if (!$this->block) {
       return TRUE;
     }
@@ -1797,55 +1797,55 @@ abstract class AccountLimit extends DBObject {
    * @return double
    *   The amount of this account.
    */
-  public abstract function getAccountValue(LocalAccount &$account);
+  public abstract function getAccountValue(CesBankLocalAccount &$account);
   /**
    * TODO: document.
    * @return double
    *   The amount of this transaction.
    */
-  public abstract function getTransactionValue(TransactionInterface &$transaction);
+  public abstract function getTransactionValue(CesBankTransactionInterface &$transaction);
   /**
    * TODO: document.
    */
-  public abstract function getFailMessage(LocalAccount &$account);
+  public abstract function getFailMessage(CesBankLocalAccount &$account);
 }
 /**
  * Limits an account if its balance is less than a given value.
  */
-class AbsoluteDebitLimit extends AccountLimit {
+class CesBankAbsoluteDebitLimit extends CesBankAccountLimit {
   /**
    * TODO: document.
    */
-  public function getAccountValue(LocalAccount &$account) {
+  public function getAccountValue(CesBankLocalAccount &$account) {
     return $account->balance;
   }
   /**
    * TODO: document.
    */
-  public function getTransactionValue(TransactionInterface &$transaction) {
+  public function getTransactionValue(CesBankTransactionInterface &$transaction) {
     return $transaction->getAmount();
   }
   /**
    * TODO: document.
    */
-  public function getFailMessage(LocalAccount &$account) {
+  public function getFailMessage(CesBankLocalAccount &$account) {
     return t('Account %account exceeds the debit limit of %limit.', array('%limit' => $this->getLimit(), '%account' => $account->getName()));
   }
 }
 /**
  * Limits an account if its balance is more than a given value.
  */
-class AbsoluteCreditLimit extends AccountLimit {
+class CesBankAbsoluteCreditLimit extends CesBankAccountLimit {
   /**
    * TODO: document.
    */
-  public function getAccountValue(LocalAccount &$account) {
+  public function getAccountValue(CesBankLocalAccount &$account) {
     return -$account->balance;
   }
   /**
    * TODO: document.
    */
-  public function getTransactionValue(TransactionInterface &$transaction) {
+  public function getTransactionValue(CesBankTransactionInterface &$transaction) {
     return -$transaction->getAmount();
   }
   /**
@@ -1857,7 +1857,7 @@ class AbsoluteCreditLimit extends AccountLimit {
   /**
    * TODO: document.
    */
-  public function getFailMessage(LocalAccount &$account) {
+  public function getFailMessage(CesBankLocalAccount &$account) {
     return t('Account %account exceeds the credit limit of %limit.', array('%limit' => $this->value, '%account' => $account->getName()));
   }
 }
@@ -1875,7 +1875,7 @@ class AbsoluteCreditLimit extends AccountLimit {
  * account acts as the foreign account for all inter-exchange transactions. It
  * is also used to temporally save the money in delayed transactions.
  */
-interface TransactionInterface {
+interface CesBankTransactionInterface {
 
   /**
    * Get the identifier of this transaction.
@@ -1890,7 +1890,7 @@ interface TransactionInterface {
    * @return float
    *   The currency amount of this transaction.
    */
-  public function getAmount(Currency $currency = NULL);
+  public function getAmount(CesBankCurrency $currency = NULL);
   /**
    * Get the user id that has created this transaction.
    *
@@ -2026,7 +2026,7 @@ interface TransactionInterface {
  * Concrete class for the basic transaction. It can be enhanced using
  * DecoratorTransactions.
  */
-class BasicTransaction extends DBObject implements TransactionInterface {
+class CesBankBasicTransaction extends IcesDBObject implements CesBankTransactionInterface {
   /**
    * @var int
    *   Transaction identifier.
@@ -2089,14 +2089,14 @@ class BasicTransaction extends DBObject implements TransactionInterface {
    * @return float
    *   the amount of this transaction in the given currency.
    *
-   * @param Currency $currency
+   * @param CesBankCurrency $currency
    *   The currency to be used. If omitted it returns the value
    *   in the seller's exchange currency.
    */
-  public function getAmount(Currency $currency = NULL) {
+  public function getAmount(CesBankCurrency $currency = NULL) {
     if ($currency != NULL) {
       // Get current (seller's) currency.
-      $as = new Serializer('LocalAccount');
+      $as = new IcesSerializer('CesBankLocalAccount');
       $toaccount = $as->load($this->toaccount);
       return $currency->convert($this->amount, $toaccount->getExchange()->getCurrency());
     }
@@ -2120,7 +2120,7 @@ class BasicTransaction extends DBObject implements TransactionInterface {
    * TODO: document.
    */
   public function getFromAccountName() {
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $acc = $s->load($this->fromaccount);
     return $acc->name;
   }
@@ -2128,7 +2128,7 @@ class BasicTransaction extends DBObject implements TransactionInterface {
    * TODO: document.
    */
   public function getToAccountName() {
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $acc = $s->load($this->toaccount);
     return $acc->name;
   }
@@ -2172,15 +2172,15 @@ class BasicTransaction extends DBObject implements TransactionInterface {
    */
   public function setState($state) {
     $flow = array(
-      TransactionInterface::STATE_NEW => array(TransactionInterface::STATE_TRIGGERED, TransactionInterface::STATE_DISCARDED),
-      TransactionInterface::STATE_TRIGGERED => array(TransactionInterface::STATE_ACCEPTED, TransactionInterface::STATE_REJECTED),
-      TransactionInterface::STATE_ACCEPTED => array(TransactionInterface::STATE_COMMITTED, TransactionInterface::STATE_ERROR),
-      TransactionInterface::STATE_REJECTED => array(TransactionInterface::STATE_TRIGGERED, TransactionInterface::STATE_DISCARDED),
-      TransactionInterface::STATE_COMMITTED => array(TransactionInterface::STATE_ARCHIVED, TransactionInterface::STATE_REVOKE_TRIGGERED),
-      TransactionInterface::STATE_REVOKE_TRIGGERED => array(TransactionInterface::STATE_REVOKE_ACCEPTED, TransactionInterface::STATE_REVOKE_REJECTED),
-      TransactionInterface::STATE_REVOKE_ACCEPTED => array(TransactionInterface::STATE_REVOKED, TransactionInterface::STATE_ERROR),
-      TransactionInterface::STATE_REVOKE_REJECTED => array(TransactionInterface::STATE_REVOKE_TRIGGERED),
-      TransactionInterface::STATE_REVOKED => array(TransactionInterface::STATE_DISCARDED, TransactionInterface::STATE_TRIGGERED),
+      CesBankTransactionInterface::STATE_NEW => array(CesBankTransactionInterface::STATE_TRIGGERED, CesBankTransactionInterface::STATE_DISCARDED),
+      CesBankTransactionInterface::STATE_TRIGGERED => array(CesBankTransactionInterface::STATE_ACCEPTED, CesBankTransactionInterface::STATE_REJECTED),
+      CesBankTransactionInterface::STATE_ACCEPTED => array(CesBankTransactionInterface::STATE_COMMITTED, CesBankTransactionInterface::STATE_ERROR),
+      CesBankTransactionInterface::STATE_REJECTED => array(CesBankTransactionInterface::STATE_TRIGGERED, CesBankTransactionInterface::STATE_DISCARDED),
+      CesBankTransactionInterface::STATE_COMMITTED => array(CesBankTransactionInterface::STATE_ARCHIVED, CesBankTransactionInterface::STATE_REVOKE_TRIGGERED),
+      CesBankTransactionInterface::STATE_REVOKE_TRIGGERED => array(CesBankTransactionInterface::STATE_REVOKE_ACCEPTED, CesBankTransactionInterface::STATE_REVOKE_REJECTED),
+      CesBankTransactionInterface::STATE_REVOKE_ACCEPTED => array(CesBankTransactionInterface::STATE_REVOKED, CesBankTransactionInterface::STATE_ERROR),
+      CesBankTransactionInterface::STATE_REVOKE_REJECTED => array(CesBankTransactionInterface::STATE_REVOKE_TRIGGERED),
+      CesBankTransactionInterface::STATE_REVOKED => array(CesBankTransactionInterface::STATE_DISCARDED, CesBankTransactionInterface::STATE_TRIGGERED),
     );
     $candidates = $flow[$this->state];
     if (!in_array($state, $candidates)) {
@@ -2192,22 +2192,22 @@ class BasicTransaction extends DBObject implements TransactionInterface {
    * TODO: document.
    */
   public function trigger() {
-    $this->setState(TransactionInterface::STATE_TRIGGERED);
+    $this->setState(CesBankTransactionInterface::STATE_TRIGGERED);
   }
   /**
    * TODO: document.
    */
   public function check() {
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $account_from = $s->load($this->fromaccount);
     $account_to = $s->load($this->toaccount);
     $messages_from = $account_from->checkTransaction($this);
     $messages_to   = $account_to->checkTransaction($this);
     if ($messages_from === TRUE && $messages_to === TRUE) {
-      $this->setState(TransactionInterface::STATE_ACCEPTED);
+      $this->setState(CesBankTransactionInterface::STATE_ACCEPTED);
     }
     else {
-      $this->setState(TransactionInterface::STATE_REJECTED);
+      $this->setState(CesBankTransactionInterface::STATE_REJECTED);
       if ($messages_from === TRUE) {
         $messages = $messages_to;
       }
@@ -2226,21 +2226,21 @@ class BasicTransaction extends DBObject implements TransactionInterface {
    */
   public function apply() {
     // Load account objects.
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $account_from = $s->load($this->fromaccount);
     $account_to = $s->load($this->toaccount);
     // Apply transaction to both accounts.
     try {
       $account_to->applyTransaction($this);
       $account_from->applyTransaction($this);
-      $this->setState(TransactionInterface::STATE_COMMITTED);
+      $this->setState(CesBankTransactionInterface::STATE_COMMITTED);
       // @todo Da error por falta de estado, mirar de solucionarlo
-      // $bank = new Bank();
+      // $bank = new CesBank();
       // $bank->notifyTransaction($this);
       return TRUE;
     }
     catch (Exception $e) {
-      $this->setState(TransactionInterface::STATE_ERROR);
+      $this->setState(CesBankTransactionInterface::STATE_ERROR);
       $this->log(array($e->getMessage()));
       throw $e;
     }
@@ -2251,23 +2251,23 @@ class BasicTransaction extends DBObject implements TransactionInterface {
    */
   public function revoke() {
     // Load account objects.
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $account_from = $s->load($this->fromaccount);
     $account_to = $s->load($this->toaccount);
     // Revoke transaction from both accounts.
     try {
-      $this->setState(TransactionInterface::STATE_REVOKE_TRIGGERED);
+      $this->setState(CesBankTransactionInterface::STATE_REVOKE_TRIGGERED);
       $this->amount = -$this->amount;
       $account_to->applyTransaction($this);
       $account_from->applyTransaction($this);
       $this->amount = -$this->amount;
       // Go through the three necessary workflow states.
-      $this->setState(TransactionInterface::STATE_REVOKE_ACCEPTED);
-      $this->setState(TransactionInterface::STATE_REVOKED);
+      $this->setState(CesBankTransactionInterface::STATE_REVOKE_ACCEPTED);
+      $this->setState(CesBankTransactionInterface::STATE_REVOKED);
       return TRUE;
     }
     catch (Exception $e) {
-      $this->setState(TransactionInterface::STATE_ERROR);
+      $this->setState(CesBankTransactionInterface::STATE_ERROR);
       $this->log(array($e->getMessage()));
       throw $e;
     }
@@ -2302,7 +2302,7 @@ class BasicTransaction extends DBObject implements TransactionInterface {
 /**
  * Abstract class for transaction decorators.
  */
-abstract class DecoratedTransaction extends DBObject implements TransactionInterface {
+abstract class CesBankDecoratedTransaction extends IcesDBObject implements CesBankTransactionInterface {
   /**
    * @var Transaction
    */
@@ -2319,7 +2319,7 @@ abstract class DecoratedTransaction extends DBObject implements TransactionInter
    * @return float
    *   The amount in this currency in the transaction.
    */
-  public function getAmount(Currency $currency = NULL) {
+  public function getAmount(CesBankCurrency $currency = NULL) {
     return $this->parent->getAmount($currency);
   }
   /**
@@ -2401,7 +2401,7 @@ abstract class DecoratedTransaction extends DBObject implements TransactionInter
     return $this->parent->setState($state);
   }
   /**
-   * Implements TransactionInterface::getCreated().
+   * Implements CesBankTransactionInterface::getCreated().
    */
   public function getCreated() {
     return $this->parent->getCreated();
@@ -2419,14 +2419,14 @@ abstract class DecoratedTransaction extends DBObject implements TransactionInter
  * between distinct exchanges. The amount of this transaction has always to be
  * understood in the seller's exchange currency.
  */
-class InterExchangeTransaction extends DecoratedTransaction {
+class CesBankInterExchangeTransaction extends CesBankDecoratedTransaction {
   /**
    * @var int The identifier of the other transaction
    */
   public $pairid;
   /**
-   * @var int one of InterExchangeTransaction::$FROM or
-   * InterExchangeTransaction::$TO.
+   * @var int one of CesBankInterExchangeTransaction::$FROM or
+   * CesBankInterExchangeTransaction::$TO.
    */
   public $side;
 
@@ -2435,32 +2435,32 @@ class InterExchangeTransaction extends DecoratedTransaction {
   /**
    * Creates a transaction between two accounts from distinct exchanges.
    *
-   * @return InterExchangeTransaction
+   * @return CesBankInterExchangeTransaction
    *   A new transaction object between two distinct exchanges.
    */
-  public static function newInterExchangeTransaction($record) {
-    $sa = new Serializer('LocalAccount');
+  public static function newCesBankInterExchangeTransaction($record) {
+    $sa = new IcesSerializer('CesBankLocalAccount');
     $fromaccount = $sa->load($record['fromaccount']);
     $toaccount = $sa->load($record['toaccount']);
-    $se = new Serializer('Exchange');
+    $se = new IcesSerializer('CesBankExchange');
     $fromexchange = $se->load($fromaccount->exchange);
     $toexchange = $se->load($toaccount->exchange);
 
     $torecord = $record;
     $torecord['fromaccount'] = $toexchange->getVirtualAccount($fromexchange)->id;
-    $totransaction = new InterExchangeTransaction(
-      new BasicTransaction($torecord), array(
-        'side' => InterExchangeTransaction::$TO,
+    $totransaction = new CesBankInterExchangeTransaction(
+      new CesBankBasicTransaction($torecord), array(
+        'side' => CesBankInterExchangeTransaction::$TO,
         'pairid' => NULL,
       ));
-    $st = new Serializer('InterExchangeTransaction');
+    $st = new IcesSerializer('CesBankInterExchangeTransaction');
     $st->save($totransaction);
 
     $fromrecord = $record;
     $fromrecord['toaccount'] = $fromexchange->getVirtualAccount($toexchange)->id;
     $fromrecord['amount'] = $totransaction->getAmount($fromexchange->getCurrency());
     $fromtransaction = new InterExchangeTransaction(
-      new BasicTransaction($fromrecord), array(
+      new CesBankBasicTransaction($fromrecord), array(
         'side' => InterExchangeTransaction::$FROM,
         'pairid' => $totransaction->getId(),
       ));
@@ -2475,7 +2475,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $this->getParent()->trigger();
     $pair = $this->getPair();
     $pair->getParent()->trigger();
-    $s = new Serializer('BasicTransaction');
+    $s = new IcesSerializer('CesBankBasicTransaction');
     $s->save($pair);
     // @TODO: If the first transaction fails, don't try the second.
     // If the second fails, undo the first.
@@ -2488,7 +2488,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $this->getParent()->check();
     $pair = $this->getPair();
     $pair->getParent()->check();
-    $s = new Serializer('BasicTransaction');
+    $s = new IcesSerializer('CesBankBasicTransaction');
     $s->save($pair);
   }
   /**
@@ -2499,7 +2499,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $this->getParent()->apply();
     $pair = $this->getPair();
     $pair->getParent()->apply();
-    $s = new Serializer('BasicTransaction');
+    $s = new IcesSerializer('CesBankBasicTransaction');
     $s->save($pair);
   }
   /**
@@ -2510,7 +2510,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
     $this->getParent()->revoke();
     $pair = $this->getPair();
     $pair->getParent()->revoke();
-    $s = new Serializer('BasicTransaction');
+    $s = new IcesSerializer('CesBankBasicTransaction');
     $s->save($pair);
   }
   /**
@@ -2518,7 +2518,7 @@ class InterExchangeTransaction extends DecoratedTransaction {
    */
   public function deleteExtraData() {
     $pair = $this->getPair()->getParent();
-    $s = new Serializer('BasicTransaction');
+    $s = new IcesSerializer('CesBankBasicTransaction');
     $s->delete($pair);
   }
   /**
@@ -2563,15 +2563,15 @@ class InterExchangeTransaction extends DecoratedTransaction {
    * The associated transaction.
    */
   protected function getPair() {
-    $s = new Serializer('BasicTransaction');
+    $s = new IcesSerializer('CesBankBasicTransaction');
     $iet = $s->load($this->pairid);
     return $iet;
   }
 }
 /**
- * LevyedTransaction, a kind of decorated transaction.
+ * CesBankLevyedTransaction, a kind of decorated transaction.
  */
-class LevyedTransaction extends DecoratedTransaction {
+class CesBankLevyedTransaction extends CesBankDecoratedTransaction {
   /**
    * @var double percentage (over 100)
    */
@@ -2581,12 +2581,12 @@ class LevyedTransaction extends DecoratedTransaction {
    */
   public function apply() {
     $from_account_name = $this->getFromAccountName();
-    $s = new Serializer('LocalAccount');
+    $s = new IcesSerializer('CesBankLocalAccount');
     $from_account = $s->loadFromUniqueKey('name', $from_account_name);
     $exchange = $from_account->getExchange();
     $levy_account = $exchange->getLevyAccount();
     $amount = $this->getAmount() * $this->levy / 100.0;
-    $levy_transaction = new BasicTransaction(array(
+    $levy_transaction = new CesBankBasicTransaction(array(
         'fromaccount' => $this->fromaccount,
         'toaccount' => $levy_account->id,
         'amount' => $amount,
@@ -2600,7 +2600,7 @@ class LevyedTransaction extends DecoratedTransaction {
 /**
  * The set of permissions of a particular user.
  */
-class UserPermission {
+class CesBankUserPermission {
   /**
    * @var int
    */
@@ -2655,8 +2655,8 @@ class UserPermission {
     }
     // Treat here the recursive case of transaction.
     if ($object == 'transaction') {
-      $ts = new Serializer('BasicTransaction');
-      $as = new Serializer('LocalAccount');
+      $ts = new IcesSerializer('CesBankBasicTransaction');
+      $as = new IcesSerializer('CesBankLocalAccount');
       $transaction = $ts->load($objectid);
       $fromaccount = $as->loadFromUniqueKey('name', $transaction->getFromAccountName());
       $toaccount = $as->loadFromUniqueKey('name', $transaction->getToAccountName());
@@ -2685,7 +2685,7 @@ class UserPermission {
    */
   public function &getPermissions() {
     if (!isset(self::$permissions[$this->userid])) {
-      $sp = new Serializer('Permission');
+      $sp = new IcesSerializer('CesBankPermission');
       if ($this->userid == 1) {
         $permissions = $sp->loadCollection(array());
       }
@@ -2695,7 +2695,7 @@ class UserPermission {
         $userperms = $sp->loadCollection(array('scope' => 'user', 'scopeid' => $this->userid));
         $permissions = array_merge($permissions, $userperms);
         // Get permissions granted to user's accounts. Compute exchanges.
-        $sau = new Serializer('AccountUser');
+        $sau = new IcesSerializer('CesBankAccountUser');
         $useraccounts = $sau->loadCollection(array('user' => $this->userid));
         foreach ($useraccounts as $useraccount) {
           $accountperms = $sp->loadCollection(array('scope' => 'account', 'scopeid' => $useraccount->account));
@@ -2704,7 +2704,7 @@ class UserPermission {
         }
         // Compute exchanges.
         $exchanges = array();
-        $sla = new Serializer('LocalAccount');
+        $sla = new IcesSerializer('CesBankLocalAccount');
         foreach ($useraccounts as $useraccount) {
           $account = $sla->load($useraccount->account);
           if (!in_array($account->exchange, $exchanges)) {
@@ -2734,7 +2734,7 @@ class UserPermission {
     // Case permission. Permission belongs to A if the object of that permission
     // belongs to A.
     if ($objectid1 == 'permission') {
-      $s = new Serializer('Permission');
+      $s = new IcesSerializer('CesBankPermission');
       $perm = $s->load($objectid1);
       return belongs($perm->object, $perm->objectid, $object2, $objectid2);
     }
@@ -2744,7 +2744,7 @@ class UserPermission {
     }
     elseif (strpos($object2, ' ') === FALSE) {
       // All belongs to global scope.
-      if ($object2 == Permission::SCOPE_GLOBAL) {
+      if ($object2 == CesBankPermission::SCOPE_GLOBAL) {
         return TRUE;
       }
       // Strip non-scope keywords from object1.
@@ -2753,8 +2753,8 @@ class UserPermission {
       // $object1 one of 'account', 'exchange', 'global'
       // and $object2 != $object1
       // so the only favorable possibility is the following.
-      if ($object1 == Permission::SCOPE_ACCOUNT && $object2 == Permission::SCOPE_EXCHANGE) {
-        $s = new Serializer('LocalAccount');
+      if ($object1 == CesBankPermission::SCOPE_ACCOUNT && $object2 == CesBankPermission::SCOPE_EXCHANGE) {
+        $s = new IcesSerializer('CesBankLocalAccount');
         $account = $s->load($objectid1);
         return ($account->exchange == $objectid2);
       }
@@ -2770,7 +2770,7 @@ class UserPermission {
   /**
    * TODO: document.
    */
-class Permission extends DBObject {
+class CesBankPermission extends IcesDBObject {
   /**
    * @var int
    */

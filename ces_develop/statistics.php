@@ -19,7 +19,7 @@ $lasttime = time();$firsttime = $lasttime - 31536000;
 ces_develop_clean();
 
 // Create stuff.
-$bank = new Bank();
+$bank = new CesBank();
 
 // Create users.
 $usernames = array();
@@ -62,18 +62,18 @@ for ($i = 1; $i <= $numaccounts; $i++) {
 }
 
 // Create account for admin (uid=1)
-  $bank = new Bank();
+  $bank = new CesBank();
   $limit = $bank->getDefaultLimitChain($net1['id']);
   $account = array(
     'exchange' => $net1['id'],
     'name' => $net1['code'] . 'ADMI',
     'limitchain' => $limit['id'],
-    'kind' => LocalAccount::TYPE_INDIVIDUAL,
-    'state' => LocalAccount::STATE_HIDDEN,
+    'kind' => CesBankLocalAccount::TYPE_INDIVIDUAL,
+    'state' => CesBankLocalAccount::STATE_HIDDEN,
     'users' => array(
       array(
         'user' => 1,
-        'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+        'role' => CesBankAccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
       ),
     ),
   );

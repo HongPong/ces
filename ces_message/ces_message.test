@@ -32,7 +32,7 @@ class CesMessageTestCase extends DrupalWebTestCase {
     // Enable the module.
     parent::setUp('ces_message');
 
-    $bank = new Bank();
+    $bank = new CesBank();
 
     // Create global bank administrator.
     $permissions = array(
@@ -45,7 +45,7 @@ class CesMessageTestCase extends DrupalWebTestCase {
     $account = $this->drupalCreateUser($permissions);
     $this->drupalLogin($account);
     $permission = array(
-      'permission' => Permission::PERMISSION_ADMIN,
+      'permission' => CesBankPermission::PERMISSION_ADMIN,
       'object' => 'global',
       'objectid' => 0,
       'scope' => 'user',

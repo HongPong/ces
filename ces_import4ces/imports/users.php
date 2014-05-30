@@ -48,7 +48,7 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
     kind One of INDIVIDUAL (0), SHARED (1), ORGANIZATION (2), COMPANY (3),
     PUBLIC (4)
 
-    'kind' => LocalAccount::TYPE_INDIVIDUAL,
+    'kind' => CesBankLocalAccount::TYPE_INDIVIDUAL,
 
     const TYPE_INDIVIDUAL = 0;
     const TYPE_SHARED = 1;
@@ -59,13 +59,13 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
     */
 
     $type_user = array(
-      'adm' => LocalAccount::TYPE_INDIVIDUAL,
-      'org' => LocalAccount::TYPE_ORGANIZATION,
-      'ind' => LocalAccount::TYPE_INDIVIDUAL,
-      'fam' => LocalAccount::TYPE_SHARED,
-      'com' => LocalAccount::TYPE_COMPANY,
-      'pub' => LocalAccount::TYPE_PUBLIC,
-      'vir' => LocalAccount::TYPE_VIRTUAL,
+      'adm' => CesBankLocalAccount::TYPE_INDIVIDUAL,
+      'org' => CesBankLocalAccount::TYPE_ORGANIZATION,
+      'ind' => CesBankLocalAccount::TYPE_INDIVIDUAL,
+      'fam' => CesBankLocalAccount::TYPE_SHARED,
+      'com' => CesBankLocalAccount::TYPE_COMPANY,
+      'pub' => CesBankLocalAccount::TYPE_PUBLIC,
+      'vir' => CesBankLocalAccount::TYPE_VIRTUAL,
     );
 
     /*
@@ -165,7 +165,7 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
     // Account in CES. The administrative account has already been created in
     // exchange import.
     if (substr($user_drupal->name, -4) != '0000') {
-      $bank = new Bank();
+      $bank = new CesBank();
       $limit = _ces_import4ces_get_limitchain($import->exchange_id,
         $data['DebLimit'], $data['CredLimit']);
       $account = array(
@@ -173,11 +173,11 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
         'name' => $data['UID'],
         'limitchain' => $limit['id'],
         'kind' => $type_user[$data['UserType']],
-        'state' => LocalAccount::STATE_HIDDEN,
+        'state' => CesBankLocalAccount::STATE_HIDDEN,
         'users' => array(
           array(
             'user' => $user_drupal->uid,
-            'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+            'role' => CesBankAccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
           ),
         ),
       );
@@ -209,7 +209,7 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
  * object if necessary. 0 means no limit. $debit and $credit are nonnegatives.
  */
 function _ces_import4ces_get_limitchain($exchange_id, $debit, $credit) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $limitchains = &drupal_static(__FUNCTION__);
   if (empty($limitchains)) {
     $limitchains = $bank->getAllLimitChains($exchange_id);
@@ -218,10 +218,10 @@ function _ces_import4ces_get_limitchain($exchange_id, $debit, $credit) {
     $limit_credit = 0;
     $limit_debit = 0;
     foreach ($limitchain['limits'] as $limit) {
-      if ($limit['classname'] == 'AbsoluteCreditLimit') {
+      if ($limit['classname'] == 'CesBankAbsoluteCreditLimit') {
         $limit_credit = $limit['value'];
       }
-      elseif ($limit['classname'] == 'AbsoluteDebitLimit') {
+      elseif ($limit['classname'] == 'CesBankAbsoluteDebitLimit') {
         $limit_debit = $limit['value'];
       }
     }
@@ -238,7 +238,7 @@ function _ces_import4ces_get_limitchain($exchange_id, $debit, $credit) {
   if ($debit != 0) {
     $limitchain['name'] = '-' . $debit . ' < ' . $limitchain['name'];
     $limitchain['limits'][] = array(
-      'classname' => 'AbsoluteDebitLimit',
+      'classname' => 'CesBankAbsoluteDebitLimit',
       'value' => -$debit,
       'block' => FALSE,
     );
@@ -246,7 +246,7 @@ function _ces_import4ces_get_limitchain($exchange_id, $debit, $credit) {
   if ($credit != 0) {
     $limitchain['name'] .= ' < ' . $credit;
     $limitchain['limits'][] = array(
-      'classname' => 'AbsoluteCreditLimit',
+      'classname' => 'CesBankAbsoluteCreditLimit',
       'value' => $credit,
       'block' => FALSE,
     );

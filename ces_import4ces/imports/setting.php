@@ -23,7 +23,7 @@ function ces_import4ces_parse_setting($import_id, $setting, $row, &$context) {
     global $user;
 
     // Crear bank.
-    $bank = new Bank();
+    $bank = new CesBank();
 
     // Create exchange administrator drupal user. It will be completed in users
     // step.
@@ -137,14 +137,14 @@ function ces_import4ces_parse_setting($import_id, $setting, $row, &$context) {
     $default_debit = $setting['DebLim'];
     if ($default_credit != 0) {
       $default_limit['limits'][] = array(
-        'classname' => 'AbsoluteCreditLimit',
+        'classname' => 'CesBankAbsoluteCreditLimit',
         'value' => $default_credit,
         'block' => FALSE,
       );
     }
     if ($default_debit != 0) {
       $default_limit['limits'][] = array(
-        'classname' => 'AbsoluteDebitLimit',
+        'classname' => 'CesBankAbsoluteDebitLimit',
         'value' => -$default_debit,
         'block' => FALSE,
       );

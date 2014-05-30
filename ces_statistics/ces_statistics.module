@@ -19,7 +19,7 @@ function ces_statistics_libraries_info() {
   $libraries['jqplot'] = array(
     'name' => 'jqplot library',
     'vendor url' => 'https://bitbucket.org/cleonello/jqplot/downloads/',
-    'download url' => 'https://bitbucket.org/cleonello/jqplot/downloads/jquery.jqplot.1.0.8r1250.tar.bz2',
+    'download url' => 'http://bitbucket.org/cleonello/jqplot/get/1.0.8.zip',
     'version' => '1.0.8r1250',
     'files' => array(
       'js' => array(
@@ -82,20 +82,21 @@ function ces_statistics_help($path, $arg) {
     $output .= '</dd>';
 
     $output .= '<dd>';
-    $output .= 'And place to list files in the corresponding folder ';
-    $output .= 'site/all/libraries/jqplot';
+    $output .= 'And place to files in site/all/libraries/jqplot';
 
+    /*
     foreach ($library['files']['js'] as $file => $o) {
-      $output .= '<dd>';
-      $output .= '- ' . $file;
-      $output .= '</dd>';
+    $output .= '<dd>';
+    $output .= '- ' . $file;
+    $output .= '</dd>';
     }
 
     foreach ($library['files']['css'] as $file => $o) {
-      $output .= '<dd>';
-      $output .= '- ' . $file;
-      $output .= '</dd>';
+    $output .= '<dd>';
+    $output .= '- ' . $file;
+    $output .= '</dd>';
     }
+    */
     $output .= '<dd>';
     $output .= 'If there is no directory should be created.';
     $output .= '</dd>';

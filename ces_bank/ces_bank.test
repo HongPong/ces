@@ -14,7 +14,7 @@
 /**
  * Implements DrupalWebTestCase.
  */
-class BankTestCase extends DrupalWebTestCase {
+class CesBankTestCase extends DrupalWebTestCase {
   /**
    * @var user
    * The global administrator.
@@ -79,7 +79,7 @@ class BankTestCase extends DrupalWebTestCase {
       'ces_summaryblock',
       'ces_user')
     );
-    $bank = new Bank();
+    $bank = new CesBank();
     // Create global bank administrator.
     $this->globalAdminUser = $this->drupalCreateUser(array(
       'administer blocks',
@@ -97,7 +97,7 @@ class BankTestCase extends DrupalWebTestCase {
     $edit['user_email_verification'] = FALSE;
     $this->drupalPost('admin/config/people/accounts', $edit, t('Save configuration'));
     $permission = array(
-      'permission' => Permission::PERMISSION_ADMIN,
+      'permission' => CesBankPermission::PERMISSION_ADMIN,
       'object' => 'global',
       'objectid' => 0,
       'scope' => 'user',
@@ -419,7 +419,7 @@ class BankTestCase extends DrupalWebTestCase {
     // User account. Change field names.
     $account = $this->accountRecord($record['account']);
     $this->drupalPost(NULL, $account, t('Next >>'));
-    // Bank account, offers and wants.
+    // CesBank account, offers and wants.
     $offers = 0;
     $wants = 0;
     $edit = $record['bankaccount'];

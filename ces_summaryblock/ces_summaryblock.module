@@ -35,7 +35,7 @@ function ces_summaryblock_block_view($delta = '') {
   $to = isset($user->data['ces_summaryblock_period_to']) ? $user->data['ces_summaryblock_period_to'] : time();
   $account = ces_bank_get_current_account();
   if (!empty($account)) {
-    $bank = new Bank();
+    $bank = new CesBank();
     $exchange = ces_bank_get_current_exchange();
     $sales = $bank->getAccountHistoricSales($account['id'], $from, $to);
     $sales = $bank->formatAmount($sales, $exchange);
@@ -199,7 +199,7 @@ function ces_summaryblock_query_random_alter($query) {
 function ces_summaryblock_form($form, &$form_state) {
   global $user;
   $user = user_load($user->uid);
-  $bank = new Bank();
+  $bank = new CesBank();
   $accounts = $bank->getUserAccounts($user->uid);
   $options = array();
   foreach ($accounts as $account) {
