@@ -2463,9 +2463,9 @@ class CesBankInterExchangeTransaction extends CesBankDecoratedTransaction {
     $fromrecord = $record;
     $fromrecord['toaccount'] = $fromexchange->getVirtualAccount($toexchange)->id;
     $fromrecord['amount'] = $totransaction->getAmount($fromexchange->getCurrency());
-    $fromtransaction = new InterExchangeTransaction(
+    $fromtransaction = new CesBankInterExchangeTransaction(
       new CesBankBasicTransaction($fromrecord), array(
-        'side' => InterExchangeTransaction::$FROM,
+        'side' => CesBankInterExchangeTransaction::$FROM,
         'pairid' => $totransaction->getId(),
       ));
     $st->save($fromtransaction);
@@ -2541,7 +2541,7 @@ class CesBankInterExchangeTransaction extends CesBankDecoratedTransaction {
    * The virtual transaction in buyer's exchange.
    */
   protected function getVirtualTransactionFrom() {
-    if ($this->side == InterExchangeTransaction::$FROM) {
+    if ($this->side == CesBankInterExchangeTransaction::$FROM) {
       $t = $this->getParent();
       return $t;
     }
@@ -2554,7 +2554,7 @@ class CesBankInterExchangeTransaction extends CesBankDecoratedTransaction {
    * The virtual transaction in seller's exchange.
    */
   protected function getVirtualTransactionTo() {
-    if ($this->side == InterExchangeTransaction::$TO) {
+    if ($this->side == CesBankInterExchangeTransaction::$TO) {
       $t = $this->getParent();
       return $t;
     }
