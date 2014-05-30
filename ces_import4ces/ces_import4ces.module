@@ -444,7 +444,7 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
  * @param string $file_csv
  *   The absolute path of the CSV file.
  * @param string $file
- *   File where the parse funtion is, relative to this module.
+ *   File where the parse function is, relative to this module.
  * @param string $parse_function
  *   The name of the function able to parse the file.
  * @param object $record
@@ -464,7 +464,6 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
   $operations = array();
 
   // Read CSV.
-
   $row = $record->row;
   if (($gestor = fopen($file_csv, "r")) !== FALSE) {
     $heads = array();
@@ -683,7 +682,6 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
     }
 
     // Delete offers and wants.
-
     $offers = ces_import4ces_get_object_ids($import->id, 'offers');
     $offers = array_keys(ces_offerwant_load_multiple($offers));
     foreach ($offers as $id) {

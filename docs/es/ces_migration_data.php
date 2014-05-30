@@ -311,7 +311,7 @@
  * “No estar per sobre de X”.
  *
  * El que cal fer és crear una instància de limitchain per a cada límit
- * diferent que hi hagi, però no una per a cada compte! És d'esperar 
+ * different que hi hagi, però no una per a cada compte! És d'esperar 
  * que tots els comptes excepte uns quants tinguin els mateixos valors.
  * @}
  */

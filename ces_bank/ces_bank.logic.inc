@@ -397,7 +397,7 @@ class CesBank {
    *   Transaction records meeting all conditions specified by $conditions
    *   parameter. The amount is expressed in a currency depending on the given
    *   conditions: if 'account' is set, then it is used the account's currency.
-   *   If 'fromaccount' is set but 'toaccount' is omited, then the
+   *   If 'fromaccount' is set but 'toaccount' is omitted, then the
    *   fromaccount's currency is used. Otherwise the currency is the seller's
    *   account one for each exchenge.
    */
@@ -419,7 +419,8 @@ class CesBank {
     }
     // Load collection.
     if (isset($conditions['account'])) {
-      // Shall we improve IcesSerializer so it can directly handle 'or' conditions?
+      // Shall we improve IcesSerializer so it can directly handle 'or'
+      // conditions?
       $account = $conditions['account'];
       unset($conditions['account']);
       $conditions['fromaccount'] = $account;
@@ -819,9 +820,11 @@ class CesBank {
     }
   }
   /**
-   * Get the names of classes implementing CesBankDecoratedTransaction interface.
+   * Get names of classes implementing CesBankDecoratedTransaction interface.
+   *
    * @return array
-   *   the names of classes that implement the CesBankDecoratedTransaction interface.
+   *   the names of classes that implement the CesBankDecoratedTransaction
+   *   interface.
    */
   public function getCesBankDecoratedTransactionClasses() {
     $classes = module_invoke_all('decorated_transaction_classes');
@@ -1634,7 +1637,8 @@ class CesBankLimitChain extends IcesDBObject {
     return $record;
   }
   /**
-   * Saves all instances of CesBankAccountLimit that belong to this CesBankLimitChain.
+   * Saves instances of CesBankAccountLimit that belong to CesBankLimitChain.
+   *
    * @override
    */
   public function saveExtraData() {

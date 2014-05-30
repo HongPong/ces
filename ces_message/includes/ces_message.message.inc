@@ -181,8 +181,8 @@ function ces_message_title($entity) {
 function ces_message_view($entity, $view_mode = 'tweaky') {
   // Our entity type, for convenience.
   $entity_type = 'ces_message';
-  // Start setting up the content.
 
+  // Start setting up the content.
   $entity->content = array(
     '#view_mode' => $view_mode,
   );

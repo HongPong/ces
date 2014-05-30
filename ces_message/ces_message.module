@@ -301,7 +301,6 @@ function ces_message_get_template($action, $language, $exchange_id = FALSE) {
   }
 
   // Get template.
-
   $query = db_select('ces_message_template', 'cmt');
   $query
     ->fields('cmt', array('subject', 'body', 'language'))

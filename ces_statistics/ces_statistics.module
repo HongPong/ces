@@ -249,7 +249,6 @@ function ces_statistics_page() {
     // -> Drupal.settings.ces_statistics.staticsusers
     // -> Drupal.settings.ces_statistics.staticstrans
     // -> Drupal.settings.ces_statistics.staticsactivity
-
     $charts = array(
       'staticsusers' => $staticsusers,
       'staticsactivity' => $staticsactivity,

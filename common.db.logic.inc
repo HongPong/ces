@@ -300,8 +300,8 @@ class IcesSerializer {
   }
 }
 /**
- * Special class of IcesSerializer for those objects needing transactional load and
- * save process. It uses drupal lock framework.
+ * Special class of IcesSerializer for those objects needing transactional load
+ *  and save process. It uses drupal lock framework.
  */
 class IcesLockSerializer extends IcesSerializer {
   /**
@@ -418,7 +418,8 @@ abstract class IcesDBObject {
    * Delete object data.
    *
    * Called when this object is to be deleted. If the overrider has other
-   * IcesDBObject objects as class members override this function to delete them.
+   * IcesDBObject objects as class members override this function to delete 
+   * them.
    */
   public function deleteExtraData() {
   }

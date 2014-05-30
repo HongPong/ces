@@ -350,7 +350,6 @@ function ces_message_template_form($form, &$form_state, $entity) {
   // '#default_value' => $entity->ces_action,
   // '#weight' => 0,
   // );
-
   $form['subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subject'),

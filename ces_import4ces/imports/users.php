@@ -28,7 +28,6 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
     // resetear el password.
     //
     // Comprobar que es el comportamiento que deseamos.
-
     if (CES_IMPORT4CES_RESET_PASSWORD) {
       $password = user_password(8);
     }

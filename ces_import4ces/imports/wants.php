@@ -62,7 +62,7 @@ function ces_import4ces_parse_wants($import_id, $data, $row, &$context) {
 
     if (empty($want_user_id)) {
       $m = t('The user @user was not found in want import row @row. It may be a
-      user from another excange not yet imported.', array('@user' => $data['UID'], '@row' => $row));
+      user from another exchange not yet imported.', array('@user' => $data['UID'], '@row' => $row));
 
       throw new Exception($m);
     }

@@ -1508,7 +1508,7 @@ function ces_bank_permission_form_submit($form, &$form_state) {
     }
   }
   catch (Exception $e) {
-    drupal_set_message(t('An error ocurred while saving the record. Details: %msg', array('msg' => $e->getMessage())), 'error');
+    drupal_set_message(t('An error occurred while saving the record. Details: %msg', array('msg' => $e->getMessage())), 'error');
   }
 }
 /** @} */
