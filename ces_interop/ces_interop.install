@@ -62,6 +62,86 @@ function ces_interop_install() {
   $scope->name = CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME;
   $scope->description = 'Do financial operations with OpenTransact protocol.';
   $scope->save();
+  
+  // Create OAuth2 scope for resurces API
+  $scope = entity_create('oauth2_server_scope', array());
+  $scope->server = $server->name;
+  $scope->name = CES_INTEROP_OAUTH2_RESOURCES_SCOPE_NAME;
+  $scope->description = 'Access your account data';
+  $scope->save();
+  
+  // Create services endpoint. Code automatically created from the export 
+  // feature of services module.
+  $endpoint = new stdClass();
+  $endpoint->disabled = FALSE;
+  $endpoint->api_version = 3;
+  $endpoint->name = 'ces_interop_resources';
+  $endpoint->server = 'rest_server';
+  $endpoint->path = 'ces/interop/resources';
+  $endpoint->authentication = array(
+    'oauth2_server' => array(
+      'server' => 'interop',
+    ),
+  );
+  $endpoint->server_settings = array(
+    'formatters' => array(
+      'json' => TRUE,
+      'xml' => TRUE,
+      'bencode' => FALSE,
+      'jsonp' => FALSE,
+      'php' => FALSE,
+    ),
+    'parsers' => array(
+      'application/json' => TRUE,
+      'application/x-www-form-urlencoded' => TRUE,
+      'application/xml' => TRUE,
+      'text/xml' => TRUE,
+      'application/vnd.php.serialized' => FALSE,
+      'multipart/form-data' => FALSE,
+    ),
+  );
+  $endpoint->resources = array(
+    'account' => array(
+      'operations' => array(
+        'retrieve' => array(
+          'enabled' => '1',
+          'settings' => array(
+            'oauth2_server' => array(
+              'require_authentication' => '1',
+              'scope' => 'resources',
+            ),
+          ),
+        ),
+      ),
+    ),
+    'transaction' => array(
+      'operations' => array(
+        'retrieve' => array(
+          'enabled' => '1',
+          'settings' => array(
+            'oauth2_server' => array(
+              'require_authentication' => '1',
+              'scope' => 'resources',
+            ),
+          ),
+        ),
+      ),
+    ),
+    'user' => array(
+      'operations' => array(
+        'retrieve' => array(
+          'enabled' => '1',
+          'settings' => array(
+            'oauth2_server' => array(
+              'require_authentication' => '1',
+              'scope' => 'resources',
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  services_endpoint_save($endpoint);
 }
 /**
  * Implements hook_uninstall().
@@ -71,9 +151,14 @@ function ces_interop_uninstall() {
   require_once drupal_get_path('module', 'ces_interop') . '/ces_interop.module';
   // Delete field attached to oauth2_server entities.
   field_delete_field('ces_interop_transaction');
-  // Delete oauth2_server scope and server.
+  // Delete oauth2_server scopes and server.
   $scope = oauth2_server_scope_load(CES_INTEROP_OAUTH2_SERVER_NAME, CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME);
+  entity_delete('oauth2_server_scope', $scope->identifier());
+  $scope = oauth2_server_scope_load(CES_INTEROP_OAUTH2_SERVER_NAME, CES_INTEROP_OAUTH2_RESOURCES_SCOPE_NAME);
   entity_delete('oauth2_server_scope', $scope->identifier());
   $server = oauth2_server_load(CES_INTEROP_OAUTH2_SERVER_NAME);
   entity_delete('oauth2_server', $server->identifier());
+  // Delete services endpoint
+  $endpoint = services_endpoint_load('ces_interop_resources');
+  services_endpoint_delete($endpoint);
 }

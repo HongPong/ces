@@ -7,3 +7,4 @@ files[] = ces_interop.test
 
 dependencies[] = ces_bank
 dependencies[] = oauth2_server
+dependencies[] = services

@@ -9,6 +9,7 @@
  */
 define('CES_INTEROP_OAUTH2_SERVER_NAME', 'interop');
 define('CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME', 'opentransact');
+define('CES_INTEROP_OAUTH2_RESOURCES_SCOPE_NAME', 'resources');
 
 /**
  * Implements hook_menu().
@@ -304,4 +305,176 @@ function _ces_interop_get_query_parameters() {
     $parameters = drupal_get_query_parameters();
   }
   return $parameters;
+}
+
+/**
+ * Implements hook_services_resources().
+ */
+function ces_interop_services_resources() {
+  return array(
+    'user' => array(
+      'operations' => array(
+        'retrieve' => array(
+          'help' => 'Retrieves a user',
+          'callback' => '_ces_interop_user_retrieve',
+          'access callback' => '_ces_interop_resources_access',
+          'access arguments' => array('view', 'user'),
+          'access arguments append' => TRUE,
+          'args' => array(
+            array(
+              'name' => 'id',
+              'type' => 'int',
+              'description' => 'The id of the user to retrieve.',
+              'source' => array('path' => 0),
+              'optional' => FALSE,
+            ),
+          ),
+        ),
+      ),
+    ),
+    'account' => array(
+      'operations' => array(
+        'retrieve' => array(
+          'help' => 'Retrieves an account',
+          'callback' => '_ces_interop_account_retrieve',
+          'access callback' => '_ces_interop_resources_access',
+          'access arguments' => array('view', 'account'),
+          'access arguments append' => TRUE,
+          'args' => array(
+            array(
+              'name' => 'id',
+              'type' => 'int',
+              'description' => 'The id of the account to retrieve.',
+              'source' => array('path' => 0),
+              'optional' => FALSE,
+            ),
+          ),
+        ),
+      ),
+    ),
+    'transaction' => array(
+      'operations' => array(
+        'retrieve' => array(
+          'help' => 'Retrieves a transaction',
+          'callback' => '_ces_interop_transaction_retrieve',
+          'access callback' => '_ces_interop_resources_access',
+          'access arguments' => array('view', 'transaction'),
+          'access arguments append' => TRUE,
+          'args' => array(
+            array(
+              'name' => 'id',
+              'type' => 'int',
+              'description' => 'The id of the transaction to retrieve.',
+              'source' => array('path' => 0),
+              'optional' => FALSE,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+/**
+ * Access callback for resources service.
+ */
+function _ces_interop_resources_access($op, $type, $args) {
+  switch ($type) {
+    case 'user':
+      $account = user_load($args[0]);
+      if (!$account) {
+        return services_error(t('There is no user with ID @id.', array('@id' => $args[0])), 406);
+      }
+      switch ($op) {
+        case 'view':
+          return user_view_access($account);
+
+      }
+      break;
+    
+    case 'account':
+      $bank = new Bank();
+      $account = $bank->getAccount($args[0]);
+      if (!$account) {
+        return services_error(t('There is no account with ID @id.', array('@id' => $args[0])), 406);
+      }
+      switch ($op) {
+        case 'view':
+          return ces_bank_access('view', 'account', $args[0]);
+
+      }
+      break;
+
+    case 'transaction':
+      $bank = new Bank();
+      $transaction = $bank->getTransaction($args[0]);
+      if (!$transaction) {
+        return services_error(t('There is no transaction with ID @id.', array('@id' => $args[0])), 406);
+      }
+      switch ($op) {
+        case 'view':
+          return ces_transaction_access('view', $args[0]);
+
+      }
+      break;
+    
+  }
+  return FALSE;
+}
+/**
+ * Retrieve callback for user resource.
+ */
+function _ces_interop_user_retrieve($id) {
+  $user = user_load($id);
+  if (!$user) {
+    return services_error(t('There is no user with ID @id.', array('@id' => $id)), 406);
+  }
+  $return_user = array();
+  $return_user['id'] = $user->uid;
+  $return_user['name'] = $user->name;
+  $bank = new bank();
+  $accounts = $bank->getUserAccounts($id);
+  $return_user['accounts'] = array();
+  foreach ($accounts as $account) {
+    $return_user['accounts'][] = $account['id'];
+  }
+  return $return_user;
+}
+/**
+ * Retrieve callback for account resource.
+ */
+function _ces_interop_account_retrieve($id) {
+  $bank = new Bank();
+  $account = $bank->getAccount($id);
+  if (!$account) {
+    return services_error(t('There is no account with ID @id.', array('@id' => $id)), 406);
+  }
+  $return_account = array();
+  $return_account['id'] = $account['id'];
+  $return_account['name'] = $account['name'];
+  $return_account['balance'] = $account['balance'];
+  $return_account['state'] = $account['state'];
+  $return_account['kind'] = $account['kind'];
+  return $return_account;
+}
+/**
+ * Retrieve callback for transaction resource.
+ */
+function _ces_interop_transaction_retrieve($id) {
+  $bank = new Bank();
+  $transaction = $bank->getTransaction($id);
+  if (!$transaction) {
+    return services_error(t('There is no transaction with ID @id.', array('@id' => $id)), 406);
+  }
+  $transaction_return = array();
+  // Use OpenTransact names.
+  $transaction_return['id'] = $transaction['id'];
+  $transaction_return['from'] = $transaction['fromaccount'];
+  $transaction_return['to'] = $transaction['toaccount'];
+  $transaction_return['amount'] = $transaction['amount'];
+  $transaction_return['user'] = $transaction['user'];
+  $transaction_return['note'] = $transaction['concept'];
+  $transaction_return['state'] = $transaction['state'];
+  $transaction_return['created'] = $transaction['created'];
+  $transaction_return['modified'] = $transaction['modified'];
+  return $transaction_return;
 }
