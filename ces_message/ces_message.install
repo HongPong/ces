@@ -234,6 +234,11 @@ function ces_message_install() {
     'description' => 'Account Credited',
   );
   ces_message_action_save($action);
+  $action = (object) array(
+    'name' => 'send_offerwant_notify',
+    'description' => 'Send Offer or Want notify',
+  );
+  ces_message_action_save($action);
 
   foreach (glob(dirname(__FILE__) . '/includes/actions/*') as $lang) {
     $language = basename($lang);

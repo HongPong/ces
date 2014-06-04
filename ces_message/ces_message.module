@@ -358,9 +358,12 @@ function ces_message_send_notify($action, $params, $recipient = array(), $sender
   if (!isset($params['exchange'])) {
     if (isset($params['account'])) {
       $params['exchange'] = ces_bank_get_exchange($params['account']['exchange']);
-    }
-    if (isset($params['transaction']['fromaccount'])) {
+    } 
+    elseif (isset($params['transaction']['fromaccount'])) {
       $params['exchange'] = ces_bank_get_exchange($params['transaction']['fromaccount']);
+    } 
+    else {
+      $params['exchange'] = ces_bank_get_current_exchange();
     }
   }
 

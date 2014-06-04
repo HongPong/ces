@@ -74,3 +74,6 @@ div.ces-offerwant-properties dd {
   height: 30px;
   margin-left: 150px;
 }
+.ces-offerwant-send_notify {
+  float: right;
+}

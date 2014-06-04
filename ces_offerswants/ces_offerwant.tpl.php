@@ -13,6 +13,7 @@
 ?>
 <div class="ces-offerwant">
   <div class="ces-offerwant-display" >
+    <div class="ces-offerwant-send_notify"><?php echo $ces_offerwant_send_notify_link; ?></div>
     <div class="ces-offerwant-title"><?php echo $ces_offerwant_title; ?></div>
     <div class="ces-offerwant-content">
       <div class="ces-offerwant-image"><?php 
