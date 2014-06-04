@@ -303,12 +303,12 @@ function ces_user_register_block_form($form, &$form_state) {
     'text' => array(
       '#type' => 'container',
       'p1' => array(
-        '#markup' => t('New to Integal CES?'),
+        '#markup' => t('New to IntegralCES?'),
         '#prefix' => '<p><strong>',
         '#suffix' => '</strong></p>',
       ),
       'p2' => array(
-        '#markup' => t('Start trading using social money! Select your country to find an exchange near you:'),
+        '#markup' => t('Find an exchange near you and start using social money:'),
       ),
       'country' => array(
         '#type' => 'select',
