@@ -82,85 +82,101 @@ function ces_interop_opentransact($exchange_name) {
 function ces_interop_form_oauth2_server_authorize_form_alter(&$form, &$form_state) {
   $arguments = $form_state['build_info']['args'];
   $server = $arguments[1];
-  if ($server->name == CES_INTEROP_OAUTH2_SERVER_NAME) {
-    global $user;
-    // Remove the standard text.
-    unset($form['scopes']);
-    $form['authorize']['#weight'] = 100;
-    // Setup a new text.
-    $form['ces_interop'] = array(
-      '#prefix' => '<div class="ces_interop_description">',
-      '#suffix' => '</div>',
-    );
-    $form['ces_interop']['question'] = array(
-      '#markup' => '<h3>' . t('Do you authorize the following transaction?') . '</h3>',
-    );
-    // Get parameters from query string.
-    $parameters = _ces_interop_get_query_parameters();
-    $bank = new Bank();
-    if (isset($parameters['from'])) {
-      $name = $parameters['from'];
-      $fromaccount = $bank->getAccountByName($name);
+  if ($server->name != CES_INTEROP_OAUTH2_SERVER_NAME) {
+    return;
+  }  
+  $scopes = $arguments[2];
+  $opentransact = false;
+  foreach ($scopes as $scope) {
+    if ($scope->name == CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME) {
+      $opentransact = true;
+      break;
     }
-    else {
-      $fromaccount = array_shift($bank->getUserAccounts($user->uid));
-    }
-    if (empty($fromaccount)) {
-      // Error: account not found.
-      return ces_interop_send_authorize_error('invalid_from', 'Invalid buyer account.');
-    }
-    $fromuser = reset($fromaccount['users']);
-    $fromusername = ces_user_get_name(user_load($fromuser['user']));
-    $form['ces_interop']['from'] = array(
-      '#type' => 'item',
-      '#title' => t('Buyer account'),
-      '#markup' => check_plain($fromaccount['name'] . ' - ' . $fromusername),
-    );
-    if (isset($parameters['to'])) {
-      $toaccount = $bank->getAccountByName($parameters['to']);
-    }
-    if (empty($toaccount)) {
-      return ces_interop_send_authorize_error('invalid_to', 'Invalid seller account.');
-    }
-    $touser = reset($toaccount['users']);
-    $tousername = ces_user_get_name(user_load($touser['user']));
-    $form['ces_interop']['to'] = array(
-      '#type' => 'item',
-      '#title' => t('Seller account'),
-      '#markup' => check_plain($toaccount['name'] . ' - ' . $tousername),
-    );
-    if (!isset($parameters['amount']) || !is_numeric($parameters['amount'])) {
-      return ces_interop_send_authorize_error('invalid_amount', 'Invalid amount.');
-    }
-    $exchange = $bank->getExchange($toaccount['exchange']);
-    $form['ces_interop']['amount'] = array(
-      '#type' => 'item',
-      '#title' => t('Amount'),
-      '#markup' => check_plain($bank->formatAmount($parameters['amount'], $exchange, TRUE)),
-    );
-    $note = isset($parameters['note']) ? $parameters['note'] : t('No details provided.');
-    $form['ces_interop']['note'] = array(
-      '#type' => 'item',
-      '#title' => t('Description'),
-      '#markup' => check_plain($note),
-    );
-    $transaction = array(
-      'fromaccount' => $fromaccount['id'],
-      'toaccount' => $toaccount['id'],
-      'amount' => $parameters['amount'],
-      'concept' => $note,
-    );
-    // Check whether the logged in user has access to create the transaction.
-    if (!ces_transaction_access('use', $transaction)) {
-      return ces_interop_send_authorize_error('access_denied', 'The user is not authorized to create this transaction.');
-    }
-    // Save transaction data into a form value.
-    $form['ces_interop']['transaction'] = array(
-      '#type' => 'value',
-      '#value' => $transaction,
-    );
-    array_unshift($form['#submit'], 'ces_interop_oauth2_server_authorize_form_submit');
   }
+  if (!$opentransact) {
+    return;
+  }
+  // This is a request for opentransct autorization.
+  if (count($scopes) > 1) {
+    return ces_interop_send_authorize_error('invalid_scope', 'The scope "opentransact" must be alone.');
+  }
+  global $user;
+  // Remove the standard text.
+  unset($form['scopes']);
+  $form['authorize']['#weight'] = 100;
+  // Setup a new text.
+  $form['ces_interop'] = array(
+    '#prefix' => '<div class="ces_interop_description">',
+    '#suffix' => '</div>',
+  );
+  $form['ces_interop']['question'] = array(
+    '#markup' => '<h3>' . t('Do you authorize the following transaction?') . '</h3>',
+  );
+  // Get parameters from query string.
+  $parameters = _ces_interop_get_query_parameters();
+  $bank = new Bank();
+  if (isset($parameters['from'])) {
+    $name = $parameters['from'];
+    $fromaccount = $bank->getAccountByName($name);
+  }
+  else {
+    $fromaccount = array_shift($bank->getUserAccounts($user->uid));
+  }
+  if (empty($fromaccount)) {
+    // Error: account not found.
+    return ces_interop_send_authorize_error('invalid_from', 'Invalid buyer account.');
+  }
+  $fromuser = reset($fromaccount['users']);
+  $fromusername = ces_user_get_name(user_load($fromuser['user']));
+  $form['ces_interop']['from'] = array(
+    '#type' => 'item',
+    '#title' => t('Buyer account'),
+    '#markup' => check_plain($fromaccount['name'] . ' - ' . $fromusername),
+  );
+  if (isset($parameters['to'])) {
+    $toaccount = $bank->getAccountByName($parameters['to']);
+  }
+  if (empty($toaccount)) {
+    return ces_interop_send_authorize_error('invalid_to', 'Invalid seller account.');
+  }
+  $touser = reset($toaccount['users']);
+  $tousername = ces_user_get_name(user_load($touser['user']));
+  $form['ces_interop']['to'] = array(
+    '#type' => 'item',
+    '#title' => t('Seller account'),
+    '#markup' => check_plain($toaccount['name'] . ' - ' . $tousername),
+  );
+  if (!isset($parameters['amount']) || !is_numeric($parameters['amount'])) {
+    return ces_interop_send_authorize_error('invalid_amount', 'Invalid amount.');
+  }
+  $exchange = $bank->getExchange($toaccount['exchange']);
+  $form['ces_interop']['amount'] = array(
+    '#type' => 'item',
+    '#title' => t('Amount'),
+    '#markup' => check_plain($bank->formatAmount($parameters['amount'], $exchange, TRUE)),
+  );
+  $note = isset($parameters['note']) ? $parameters['note'] : t('No details provided.');
+  $form['ces_interop']['note'] = array(
+    '#type' => 'item',
+    '#title' => t('Description'),
+    '#markup' => check_plain($note),
+  );
+  $transaction = array(
+    'fromaccount' => $fromaccount['id'],
+    'toaccount' => $toaccount['id'],
+    'amount' => $parameters['amount'],
+    'concept' => $note,
+  );
+  // Check whether the logged in user has access to create the transaction.
+  if (!ces_transaction_access('use', $transaction)) {
+    return ces_interop_send_authorize_error('access_denied', 'The user is not authorized to create this transaction.');
+  }
+  // Save transaction data into a form value.
+  $form['ces_interop']['transaction'] = array(
+    '#type' => 'value',
+    '#value' => $transaction,
+  );
+  array_unshift($form['#submit'], 'ces_interop_oauth2_server_authorize_form_submit');
 }
 /**
  * Additional submit function for oauth2_server_authorize_form.
@@ -312,7 +328,7 @@ function _ces_interop_get_query_parameters() {
  */
 function ces_interop_services_resources() {
   return array(
-    'user' => array(
+    'ces_user' => array(
       'operations' => array(
         'retrieve' => array(
           'help' => 'Retrieves a user',
@@ -332,7 +348,7 @@ function ces_interop_services_resources() {
         ),
       ),
     ),
-    'account' => array(
+    'ces_account' => array(
       'operations' => array(
         'retrieve' => array(
           'help' => 'Retrieves an account',
@@ -352,7 +368,7 @@ function ces_interop_services_resources() {
         ),
       ),
     ),
-    'transaction' => array(
+    'ces_transaction' => array(
       'operations' => array(
         'retrieve' => array(
           'help' => 'Retrieves a transaction',
@@ -373,6 +389,21 @@ function ces_interop_services_resources() {
       ),
     ),
   );
+}
+/**
+ * Implments hook_services_resources_alter().
+ */
+function ces_interop_services_resources_alter(&$resources, &$endpoint) {
+  if ($endpoint->name == 'ces_interop_resources') {
+    // We remove all but ces_x resources in order to avoid name clashes. This is
+    // the case with ces_user, that we want to access throug /user endpoint name
+    // and it fights with standard Drupal user resource.
+    foreach ($resources as $name => $resource) {
+      if (strpos($name, 'ces_') !== 0) {
+        unset($resources[$name]);
+      }
+    }
+  }
 }
 /**
  * Access callback for resources service.

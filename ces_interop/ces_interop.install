@@ -86,7 +86,7 @@ function ces_interop_install() {
   $endpoint->server_settings = array(
     'formatters' => array(
       'json' => TRUE,
-      'xml' => TRUE,
+      'xml' => FALSE,
       'bencode' => FALSE,
       'jsonp' => FALSE,
       'php' => FALSE,
@@ -94,51 +94,35 @@ function ces_interop_install() {
     'parsers' => array(
       'application/json' => TRUE,
       'application/x-www-form-urlencoded' => TRUE,
-      'application/xml' => TRUE,
-      'text/xml' => TRUE,
+      'application/xml' => FALSE,
+      'text/xml' => FALSE,
       'application/vnd.php.serialized' => FALSE,
       'multipart/form-data' => FALSE,
     ),
   );
+  $operations = array(
+    'retrieve' => array(
+      'enabled' => '1',
+      'settings' => array(
+        'oauth2_server' => array(
+          'require_authentication' => '1',
+          'scope' => 'resources',
+        ),
+      ),
+    ),
+  );
   $endpoint->resources = array(
-    'account' => array(
-      'operations' => array(
-        'retrieve' => array(
-          'enabled' => '1',
-          'settings' => array(
-            'oauth2_server' => array(
-              'require_authentication' => '1',
-              'scope' => 'resources',
-            ),
-          ),
-        ),
-      ),
+    'ces_account' => array(
+      'alias' => 'account',
+      'operations' => $operations,
     ),
-    'transaction' => array(
-      'operations' => array(
-        'retrieve' => array(
-          'enabled' => '1',
-          'settings' => array(
-            'oauth2_server' => array(
-              'require_authentication' => '1',
-              'scope' => 'resources',
-            ),
-          ),
-        ),
-      ),
+    'ces_transaction' => array(
+      'alias' => 'transaction',
+      'operations' => $operations,
     ),
-    'user' => array(
-      'operations' => array(
-        'retrieve' => array(
-          'enabled' => '1',
-          'settings' => array(
-            'oauth2_server' => array(
-              'require_authentication' => '1',
-              'scope' => 'resources',
-            ),
-          ),
-        ),
-      ),
+    'ces_user' => array(
+      'alias' => 'user',
+      'operations' => $operations,
     ),
   );
   services_endpoint_save($endpoint);
