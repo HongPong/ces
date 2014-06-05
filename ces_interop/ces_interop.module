@@ -84,12 +84,12 @@ function ces_interop_form_oauth2_server_authorize_form_alter(&$form, &$form_stat
   $server = $arguments[1];
   if ($server->name != CES_INTEROP_OAUTH2_SERVER_NAME) {
     return;
-  }  
+  }
   $scopes = $arguments[2];
-  $opentransact = false;
+  $opentransact = FALSE;
   foreach ($scopes as $scope) {
     if ($scope->name == CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME) {
-      $opentransact = true;
+      $opentransact = TRUE;
       break;
     }
   }
@@ -421,7 +421,7 @@ function _ces_interop_resources_access($op, $type, $args) {
 
       }
       break;
-    
+
     case 'account':
       $bank = new CesBank();
       $account = $bank->getAccount($args[0]);
@@ -447,7 +447,7 @@ function _ces_interop_resources_access($op, $type, $args) {
 
       }
       break;
-    
+
   }
   return FALSE;
 }

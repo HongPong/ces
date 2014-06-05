@@ -159,10 +159,11 @@ class CesInteropTestCase extends CesBankTestCase {
     $this->assertEqual($response->name, $user1->name);
   }
   /**
-   * This function handles OAuth2 autorization both for OpenTransact and for
-   * Resources services.
+   * Handles OAuth2 autorization.
+   * 
+   * This function is used both for OpenTransact and for Resources services.
    *
-   * @param string $enpoint_auth
+   * @param string $endpoint_auth
    *   The authorization url.
    * @param stirng $endpoint_token
    *   The token url.
