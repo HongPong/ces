@@ -62,15 +62,15 @@ function ces_interop_install() {
   $scope->name = CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME;
   $scope->description = 'Do financial operations with OpenTransact protocol.';
   $scope->save();
-  
-  // Create OAuth2 scope for resurces API
+
+  // Create OAuth2 scope for resurces API.
   $scope = entity_create('oauth2_server_scope', array());
   $scope->server = $server->name;
   $scope->name = CES_INTEROP_OAUTH2_RESOURCES_SCOPE_NAME;
   $scope->description = 'Access your account data';
   $scope->save();
-  
-  // Create services endpoint. Code automatically created from the export 
+
+  // Create services endpoint. Code automatically created from the export
   // feature of services module.
   $endpoint = new stdClass();
   $endpoint->disabled = FALSE;
@@ -144,7 +144,7 @@ function ces_interop_uninstall() {
   entity_delete('oauth2_server_scope', $scope->identifier());
   $server = oauth2_server_load(CES_INTEROP_OAUTH2_SERVER_NAME);
   entity_delete('oauth2_server', $server->identifier());
-  // Delete services endpoint
+  // Delete services endpoint.
   $endpoint = services_endpoint_load('ces_interop_resources');
   services_endpoint_delete($endpoint);
 }
