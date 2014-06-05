@@ -4,6 +4,13 @@
  * Implements the drupal hooks for this module.
  */
 
+/**
+ * @defgroup ces_bank Ces Bank
+ * @ingroup ices
+ * @{
+ * Ces bank hooks module
+ */
+
 define('CES_BANK_CURRENT_ACCOUNT', 'ces_current_account');
 define('CES_BANK_CURRENT_EXCHANGE', 'ces_current_exchange');
 
@@ -13,17 +20,21 @@ define('CES_BANK_CURRENT_EXCHANGE', 'ces_current_exchange');
 function ces_bank_help($path, $arg) {
   switch ($path) {
     case 'ces/bank/account/sell':
-      return '<p>' . t('Charge a sale. Select the payer account, enter a short
-        decription and the amount of the transaction. This amount will be
-        trasferred to your account.') . '</p>';
+      $msg  = '<p>';
+      $msg .= t('Charge a sale. Select the payer account, enter a short decription and the amount of the transaction. This amount will be trasferred to your account.');
+      $msg .= '</p>';
+      return $msg;
 
     case 'ces/bank/exchange/accounts':
-      return '<p>' . t('All users and banking accounts of your exchange.') .
-        '</p>';
+      $msg  = '<p>';
+      $msg .= t('All users and banking accounts of your exchange.');
+      $msg .= '</p>';
+      return $msg;
 
     case 'ces/bank/account/transaction':
-      return '<p>' . t('Showing your transactions. Set the "From" and "To"
-        dates to see a specific time range.') . '</p>';
+      $msg  = '<p>';
+      $msg .= t('Showing your transactions. Set the "From" and "To" dates to see a specific time range.');
+      $msg .= '</p>';
 
     case 'ces/register/%':
       return '<p>' . t('Click on the exchange you want to join.') . '</p>';
@@ -70,7 +81,7 @@ function ces_bank_access($permission, $object, $objectid, $account = NULL) {
   if ($objectid === FALSE) {
     return FALSE;
   }
-  $bank = new Bank();
+  $bank = new CesBank();
   return $bank->access($args[0], $args[1], $args[2], $args[3]);
 }
 /**
@@ -455,7 +466,7 @@ function ces_transaction_load($id = NULL) {
   if (empty($id) || !is_numeric($id)) {
     return FALSE;
   }
-  $bank = new Bank();
+  $bank = new CesBank();
   $transaction = $bank->getTransaction($id);
   return $transaction;
 }
@@ -473,7 +484,7 @@ function ces_limitchain_load($id = NULL) {
   if (empty($id) || !is_numeric($id)) {
     return FALSE;
   }
-  $bank = new Bank();
+  $bank = new CesBank();
   $limitchain = $bank->getLimitChain($id);
   return $limitchain;
 }
@@ -484,12 +495,12 @@ function ces_account_load($id = NULL) {
   if (empty($id) || !is_numeric($id)) {
     return FALSE;
   }
-  $bank = new Bank();
+  $bank = new CesBank();
   $account = $bank->getAccount($id);
   return $account;
 }
 /**
- * Calls drupal_get_form() with appropiate parameters.
+ * Calls drupal_get_form() with appropriate parameters.
  *
  * Replaces some of its arguments by the default exchange or account of the
  * current user.
@@ -528,8 +539,8 @@ function _ces_bank_replace_current_args(&$args) {
  */
 function ces_bank_account_limit_classes() {
   return array(
-    'AbsoluteCreditLimit' => t('Absolute credit limit'),
-    'AbsoluteDebitLimit' => t('Absolute debit limit'),
+    'CesBankAbsoluteCreditLimit' => t('Absolute credit limit'),
+    'CesBankAbsoluteDebitLimit' => t('Absolute debit limit'),
   );
 }
 
@@ -537,7 +548,7 @@ function ces_bank_account_limit_classes() {
  * Implements hook_decorated_transaction_classes().
  */
 function ces_bank_decorated_transaction_classes() {
-  return array('InterExchangeTransaction', 'LevyedTransaction');
+  return array('InterExchangeTransaction', 'CesBankLevyedTransaction');
 }
 /**
  * Implements hook_user_presave().
@@ -551,7 +562,7 @@ function ces_bank_user_presave(&$edit, $account, $category) {
  * Implements hook_user_load().
  */
 function ces_bank_user_load($users) {
-  $bank = new Bank();
+  $bank = new CesBank();
   foreach ($users as $uid => $account) {
     if (ces_bank_get_current_account($account) === FALSE) {
       $bankaccounts = $bank->getUserAccounts($uid);
@@ -646,6 +657,11 @@ function ces_bank_token_info() {
           'name' => t('Account user'),
           'description' => t('Account user.'),
           'type' => 'user',
+        ),
+        'exchange' => array(
+          'name' => t('Exchange Account'),
+          'description' => t('Exchange Account'),
+          'type' => 'exchange',
         ),
       ),
       'transaction' => array(
@@ -751,6 +767,12 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
       $uid = $account_user['user'];
       $replacements += token_generate('user', $user_tokens, array('user' => user_load($uid)), $options);
     }
+    // Exchange from account.
+    if ($exchange_tokens = token_find_with_prefix($tokens, 'exchange')) {
+      $exchange = $account['exchange'];
+      $exchange_object = ces_bank_get_exchange($exchange);
+      $replacements += token_generate('exchange', $exchange_tokens, array('exchange' => $exchange_object), $options);
+    }
   }
   if ($type == 'transaction' && !empty($data['transaction'])) {
     $transaction = $data['transaction'];
@@ -765,187 +787,17 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
           break;
       }
       if ($fromaccount_tokens = token_find_with_prefix($tokens, 'fromaccount')) {
-        $bank = new Bank();
+        $bank = new CesBank();
         $replacements += token_generate('account', $fromaccount_tokens, array('account' => $bank->getAccountByName($transaction['fromaccount'])), $options);
       }
       if ($toaccount_tokens = token_find_with_prefix($tokens, 'toaccount')) {
-        $bank = new Bank();
+        $bank = new CesBank();
         $replacements += token_generate('account', $toaccount_tokens, array('account' => $bank->getAccountByName($transaction['toaccount'])), $options);
       }
     }
   }
   return $replacements;
 }
-/**
- * Implements ces_notify_messages().
- */
-function ces_bank_ces_notify_messages($key, $langcode) {
-  $a = array();
-  $b = array('langcode' => $langcode);
-  switch ($key) {
-    case 'new exchange':
-      return array(
-        'subject' => t('[Integral CES] New Exchange [exchange:code] - [exchange:shortname] request', $a, $b),
-        'body' => t('A new exchange has been registered.
-
-Visit the CES administrative interface at [url:absolute]/admin/ces to activate or discard it. See some details below:
-
-Code: [exchange:code]
-Short name: [exchange:shortname]
-Full name: [exchange:name]
-Country: [exchange:country]
-Location: [exchange:town] ([exchange:region])
-Web site: [exchange:website]
-Currency: [exchange:currencysymbol] ( [exchange:currencyname] ), value [exchange:currencyvalue]
-User: [exchange:admin:name] <[exchange:admin:mail]>
-
-', $a, $b),
-      );
-
-    case 'exchange activated':
-      return array(
-        'subject' => t('[Integral CES] Exchange [exchange:code] - [exchange:shortname] activated', $a, $b),
-        'body' => t('Dear [exchange:admin:name],
-The new [exchange:fullname] has been activated. So far we have only created the
-administrator\'s account, [exchange:code]0000. Don\'t use this account for
-personal operations. Create a new user and a new account for your personal
-activity within the exchange network.
-
-As there is great demand for this web service we have to limit the period that
-we can give you to get this new exchange operational. If there is no trading
-activity within six months of today then unfortunately we will have to take the
-exchange down to make space for others.
-
-This is only the begining. You have a great work making this exchange network a
-really useful tool.
-
-Please confirm that you have received this welcome letter.
-
-IntegralCES', $a, $b),
-      );
-
-    case 'new account':
-      return array(
-        'subject' => t('[[exchange:shortname]] New account request [account:name]', $a, $b),
-        'body' => t('Another account request for [exchange:name]. Go to the administrative interface at [url:absolute]/ces/bank/exchange/admin to activate or discard it.
-
-See registration details below:
-
-Exchange: [exchange:code]
-Account name: [account:name]
-Account type: [account:kind]
-User: [account:user:fullname]
-
-Integral CES
-', $a, $b),
-      );
-
-    case 'account activated':
-      return array(
-        'subject' => t('[[exchange:shortname]] Account activated'),
-        'body' => t('Dear [account:name],
-
-Welcome to the [exchange:fullname], your local exchange of the global Integral
-Community Exchange System platform.
-Below are the details you need to access your account on the [exchange:code]
-network. To get to the web site go to [url:absolute]. This will take you to the
-login page.
-
-Enter the following information:
-
-Account No: [account:code]
-Password: *
-
-The web interface is available in several languages. If you wish to select
-another language, click on the your name at the top right corner. In your
-personal profile simply select the language of your preference.
-
-Please read the <a href="http://www.integralces.net/doc/user">User Guide</a> to
-find out how the site works.
-
-After looking around please enter your \'offers\' and \'wants\' by clicking on
-the My offers and My wants buttons at the left menu. If you provided offers with
-your application you may add as many additional offerings as you like.
-
-You can also upload a photograph of yourself so that other users can see what
-you look like.
-
-Feel free to contact any advertiser in the \'Offers\' list to purchase any goods
-and services offered. Please don\'t wait for someone to buy from you before you
-use the system. You don\'t need to be in credit before making a purchase; going
-into debit is part of the system and simply represents your commitment to the
-community.
-
-If you require any assistance please contact me. I will be glad to help.
-
-Happy trading!
-
-[exchange:shortname] administrator:
-[exchange:admin:fullname]
-[exchange:admin:mail]
-[exchange:admin:mainphone]
-', $a, $b),
-      );
-
-    case 'account debited':
-      return array(
-        'subject' => t('[[exchange:shortname]] Your account [transaction:fromaccount:name] has been debited'),
-        'body' => t(
-'[transaction:fromaccount:exchange:name]: Your account [transaction:fromaccount:name]
-has been debited.
-
-Transaction details:
-
-Seller account: [transaction:toaccount:name]
-Seller name: [transaction:toaccount:user:fullname]
-
-Buyer account: [transaction:fromaccount:name]
-Buyer name: [transaction:fromaccount:user:fullname]
-
-Description: [transaction:concept]
-Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
-
-Ordered by: [transaction:user:fullname] <[transaction:user:mail]>
-
-View your current <a href="[url:absolute]/ces/bank/account/transaction">statement of account</a>.
-
-If this debit is incorrect contact the seller or the exchange administrator
-within 10 days to have it corrected.
-
-Seller contact:
-[transaction:toaccount:user:fullname]
-mail: <[transaction:toaccount:user:mail]>
-phone: [transaction:toaccount:user:mainphone]
-', $a, $b),
-      );
-
-    case 'account credited':
-      return array(
-        'subject' => t('[[exchange:shortname]] Your account [transaction:toaccount:name] has been credited'),
-        'body' => t('[transaction:toaccount:exchange:name]:Your account [transaction:toaccount:name] has been credited.
-
-Transaction details:
-
-Seller account: [transaction:toaccount:name]
-Seller name: [transaction:toaccount:user:fullname]
-
-Buyer account: [transaction:fromaccount:name]
-Buyer name: [transaction:fromaccount:user:fullname]
-
-Description: [transaction:concept]
-Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
-
-Ordered by: [transaction:user:fullname] <[transaction:user:mail]>
-
-If this credit is incorrect contact the seller or the exchange administrator
-within 10 days to have it corrected.
-', $a, $b),
-      );
-
-  }
-  return FALSE;
-}
-
 /**
  * Given a drupal account, returns its full username.
  *
@@ -981,7 +833,7 @@ function ces_bank_get_current_account($account = NULL) {
     global $user;
     $account = user_load($user->uid);
   }
-  $bank = new Bank();
+  $bank = new CesBank();
   if (isset($account->data['ces_current_account'])) {
     try {
       $bankaccount = $bank->getAccount($account->data['ces_current_account']);
@@ -1021,7 +873,7 @@ function ces_bank_get_current_exchange($account = NULL) {
  * Returns exchange given its id.
  */
 function ces_bank_get_exchange($id) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $exchange = $bank->getExchange($id);
   return $exchange;
 }
@@ -1029,7 +881,7 @@ function ces_bank_get_exchange($id) {
  * Returns exchange given its name.
  */
 function ces_bank_get_exchange_by_name($name) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $exchange = $bank->getExchangeByName($name);
   return $exchange;
 }
@@ -1037,7 +889,7 @@ function ces_bank_get_exchange_by_name($name) {
  * Returns all exchanges.
  */
 function ces_bank_get_exchanges() {
-  $bank = new Bank();
+  $bank = new CesBank();
   $exchanges = $bank->getAllExchanges();
   return $exchanges;
 }
@@ -1054,7 +906,7 @@ function ces_bank_not_yet_implemented() {
  * Implements hook_user_view().
  */
 function ces_bank_user_view($user, $view_mode, $langcode) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $accounts = $bank->getUserAccounts($user->uid);
   foreach ($accounts as $account) {
     if (!ces_bank_access('view', 'exchange accounts', $account['exchange'])) {
@@ -1114,7 +966,7 @@ function ces_bank_menu_alter(&$items) {
  * Checks access to bank account.
  */
 function ces_bank_user_access($permission, $target, $account = NULL) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $accounts = $bank->getUserAccounts($target->uid);
 
   foreach ($accounts as $acc) {
@@ -1134,7 +986,7 @@ function ces_bank_country_get_list() {
   else {
     require_once DRUPAL_ROOT . '/includes/locale.inc';
     $allcountries = country_get_list();
-    $bank = new Bank();
+    $bank = new CesBank();
     $exchanges = $bank->getAllExchanges();
     $countries = array();
     foreach ($exchanges as $exchange) {
@@ -1161,7 +1013,7 @@ function ces_bank_form_alter(&$form, &$form_state, $form_id) {
     }
     elseif ($form_state['page'] == 'bankaccount') {
       $name = arg(2);
-      $bank = new Bank();
+      $bank = new CesBank();
       $exchange = $bank->getExchangeByName($name);
       if ($exchange !== FALSE && $bank->access('use', 'exchange accountcreator', $exchange['id'])) {
         module_load_include('inc', 'ces_bank', 'ces_bank.forms');
@@ -1230,7 +1082,7 @@ function ces_bank_user_register_submit($form, &$form_state) {
  */
 function ces_bank_user_autocomplete($string) {
   $exchange = ces_bank_get_current_exchange();
-  $bank = new Bank();
+  $bank = new CesBank();
   $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'state' => 1));
   $userids = array();
   foreach ($accounts as $account) {
@@ -1252,3 +1104,4 @@ function ces_bank_user_autocomplete($string) {
   // Return for JS.
   drupal_json_output($matches);
 }
+/** @} */

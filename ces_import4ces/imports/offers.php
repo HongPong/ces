@@ -1,23 +1,30 @@
 <?php
-
 /**
  * @file
  * Functions from parse offers and category
  */
 
 /**
- * Parse setting
+ * @defgroup ces_import4ces_offers Parse offers from CES
+ * @ingroup ces_import4ces
+ * @{
+ * Functions from parse offers
  */
-function parse_offers($import_id, $data, $row, &$context) {
-  if (isset($context['results']['error']))
+
+/**
+ * Parse setting.
+ */
+function ces_import4ces_parse_offers($import_id, $data, $row, &$context) {
+  if (isset($context['results']['error'])) {
     return;
+  }
   $tx = db_transaction();
   try {
     $context['results']['import_id'] = $import_id;
     $import = ces_import4ces_import_load($import_id);
     $import->row = $row;
 
-    /** Having no category wants, create one for which indicates the lack of it  */
+    // Having no category wants, create one for which indicates the lack of it.
     $category = !empty($data['Category']) ? $data['Category'] : 'unclassified';
 
     $category_id = ces_import4ces_get_category($category, $import);
@@ -28,7 +35,7 @@ function parse_offers($import_id, $data, $row, &$context) {
       'body' => $data['Description'],
       'category' => $category_id,
       'keywords' => $data['Keys'],
-      'state' => ( ( $data['Hidden'] == 0 ) ? 1 : 0 ),
+      'state' => (($data['Hidden'] == 0) ? 1 : 0),
       'created' => strtotime($data['DateAdded']),
       'modified' => time(),
       'expire' => strtotime($data['DateExpires']),
@@ -44,13 +51,13 @@ function parse_offers($import_id, $data, $row, &$context) {
       'ConRate' => $data['ConRate'],
     );
 
-    // Find uid from user
+    // Find uid from user.
     $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['UID']));
     $offer_user_id = $query->fetchColumn(0);
 
     if (empty($offer_user_id)) {
       $m = t('The user @user was not found in want import row @row. It may be a
-      user from another excange not yet imported.', array('@user' => $data['UID'], '@row' => $row));
+      user from another exchange not yet imported.', array('@user' => $data['UID'], '@row' => $row));
 
       throw new Exception($m);
     }
@@ -95,8 +102,8 @@ function parse_offers($import_id, $data, $row, &$context) {
         'object' => 'offers',
         'object_id' => $offer->id,
         'row' => $row,
-        'data' => serialize($extra_info)
-    ))->execute();
+        'data' => serialize($extra_info),
+      ))->execute();
     ces_import4ces_update_row($import_id, $row);
   }
   catch (Exception $e) {
@@ -105,3 +112,4 @@ function parse_offers($import_id, $data, $row, &$context) {
     $context['results']['error'] = check_plain($e->getMessage());
   }
 }
+/** @} */

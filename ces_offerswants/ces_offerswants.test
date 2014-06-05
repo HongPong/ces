@@ -1,14 +1,20 @@
 <?php
-
 /**
  * @file
  * Tests the functionality offers and wants module.
  */
 
 /**
+ * @defgroup ces_import4ces_tests Tests from offerswants
+ * @ingroup ces_offerswants
+ * @{
+ * Tests the functionality offers and wants module.
+ */
+
+/**
  * Implements DrupalWebTestCase.
  */
-class OffersWantsTestCase extends DrupalWebTestCase {
+class CesOffersWantsTestCase extends DrupalWebTestCase {
 
   /**
    * @var user
@@ -39,7 +45,7 @@ class OffersWantsTestCase extends DrupalWebTestCase {
    */
   public static function getInfo() {
     return array(
-      'name' => 'ces_offerswants',
+      'name' => 'ICES offerswants',
       'description' => 'Test ICES Offers Wants main features.',
       'group' => 'ICES',
     );
@@ -53,12 +59,12 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     parent::setUp(array(
       'ces_bank',
       'ces_blog',
-      'ces_notify',
+      'ces_message',
       'ces_offerswants',
       'ces_summaryblock',
       'ces_user',
     ));
-    $bank = new Bank();
+    $bank = new CesBank();
     $this->globalAdminUser = $this->drupalCreateUser(array(
       'administer blocks',
       'access administration pages',
@@ -76,7 +82,7 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     $this->drupalPost('admin/config/people/accounts', $edit,
       t('Save configuration'));
     $permission = array(
-      'permission' => Permission::PERMISSION_ADMIN,
+      'permission' => CesBankPermission::PERMISSION_ADMIN,
       'object' => 'global',
       'objectid' => 0,
       'scope' => 'user',
@@ -308,7 +314,7 @@ class OffersWantsTestCase extends DrupalWebTestCase {
     // User account. Change field names.
     $account = $this->accountRecord($record['account']);
     $this->drupalPost(NULL, $account, t('Next >>'));
-    // Bank account, offers and wants.
+    // CesBank account, offers and wants.
     $offers = 0;
     $wants = 0;
     $edit = $record['bankaccount'];
@@ -582,3 +588,4 @@ class OffersWantsTestCase extends DrupalWebTestCase {
   }
 
 }
+/** @} */

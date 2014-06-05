@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_bank_theme Theme functions from Ces Bank
+ * @ingroup ces_bank
+ * @{
+ * All theme default functions for bank module.
+ */
+
+/**
  * Theme function for page ces_bank_exchange_view().
  */
 function theme_ces_bank_exchange_view($variables) {
@@ -172,3 +179,4 @@ function theme_ces_bank_limitchain_view($variables) {
   $out .= '</div>';
   return $out;
 }
+/** @} */

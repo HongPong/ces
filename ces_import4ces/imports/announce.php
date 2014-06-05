@@ -1,17 +1,24 @@
 <?php
-
 /**
  * @file
  * Functions from parse announces
  */
 
 /**
- * Parse setting
+ * @defgroup ces_import4ces_announce Parse announces from CES
+ * @ingroup ces_import4ces
+ * @{
+ * Functions from parse announces
  */
-function parse_announce($import_id, $data, $row, &$context) {
+
+/**
+ * Parse setting.
+ */
+function ces_import4ces_parse_announce($import_id, $data, $row, &$context) {
   global $user;
-  if (isset($context['results']['error']))
+  if (isset($context['results']['error'])) {
     return;
+  }
   $tx = db_transaction();
   try {
     $context['results']['import_id'] = $import_id;
@@ -33,7 +40,7 @@ function parse_announce($import_id, $data, $row, &$context) {
       $announce_user_id = $user->id;
     }
 
-    // Create a blog post
+    // Create a blog post.
     $node = new stdClass();
     $node->title = $data['Title'];
     $node->type = 'ces_blog';

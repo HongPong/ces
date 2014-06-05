@@ -5,11 +5,27 @@
  */
 
 /**
- * Exchange form. Create, view and edit forms.
+ * @defgroup ces_bank_forms Forms from Ces Bank
+ * @ingroup ces_bank
+ * @{
+ * Forms definition.
+ */
+
+/**
+ * CesBankExchange form. Create, view and edit forms.
+ *
+ * @param array  $form
+ *   Form.
+ * @param array  $form_state
+ *   State from.
+ * @param string $op
+ *   Options.
+ * @param int    $exchange_id
+ *   Id of exchange.
  */
 function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
   global $user;
-  $bank = new Bank();
+  $bank = new CesBank();
   if (isset($form_state['values'])) {
     // Form rebuild.
     $exchange = $form_state['values'];
@@ -299,7 +315,7 @@ function ces_bank_exchange_form_validate($form, &$form_state) {
  * Processes bank exchange form for new or existing exchanges.
  */
 function ces_bank_exchange_form_submit($form, &$form_state) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $op = $form_state['values']['operation'];
   try {
     if ($op == 'new') {
@@ -329,14 +345,14 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
     }
   }
   catch (Exception $e) {
-    drupal_set_message(t('An error ocurred while saving the exchange record. Details: %msg', array('msg' => $e->getMessage())), 'error');
+    drupal_set_message(t('An error occurred while saving the exchange record. Details: %msg', array('msg' => $e->getMessage())), 'error');
   }
 }
 /**
  * Form for controlling limit chains.
  */
 function ces_bank_limitchain_form($form, &$form_state, $limitchain = NULL) {
-  $bank = new Bank();
+  $bank = new CesBank();
   if (!empty($form_state['values'])) {
     // Form rebuild. Take values from last user input.
     $limitchain = &$form_state['values'];
@@ -526,12 +542,12 @@ function ces_bank_limitchain_form_validate($form, &$form_state) {
       if (!is_numeric($amount)) {
         form_set_error('value', t('The limit amount must be numeric.'));
       }
-      if ($limit['classname'] == 'AbsoluteCreditLimit') {
+      if ($limit['classname'] == 'CesBankAbsoluteCreditLimit') {
         if ($amount < 0) {
           form_set_error('value', t('The credit limit must not be negative.'));
         }
       }
-      elseif ($limit['classname'] == 'AbsoluteDebitLimit') {
+      elseif ($limit['classname'] == 'CesBankAbsoluteDebitLimit') {
         if ($amount > 0) {
           form_set_error('value', t('The debit limit must not be positive.'));
         }
@@ -543,7 +559,7 @@ function ces_bank_limitchain_form_validate($form, &$form_state) {
  * Submit the limit chain form, for new or current limit chains.
  */
 function ces_bank_limitchain_form_submit($form, &$form_state) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $op = $form_state['values']['operation'];
   try {
     if ($op == 'new') {
@@ -557,16 +573,16 @@ function ces_bank_limitchain_form_submit($form, &$form_state) {
     }
   }
   catch (Exception $e) {
-    drupal_set_message(t('An error ocurred while saving the record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
+    drupal_set_message(t('An error occurred while saving the record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
   }
 }
 /**
  * Main bank account form.
  *
- * @TODO other operations.
+ * @todo other operations.
  */
 function ces_bank_account_form($form, &$form_state, $account = NULL) {
-  $bank = new Bank();
+  $bank = new CesBank();
   if ($account != NULL) {
     if (is_int($account)) {
       $account = $bank->getAccount($account);
@@ -725,7 +741,7 @@ function ces_bank_account_form_validate($form, &$form_state) {
   }
   // Validate account number.
   $name = $record['name'];
-  $bank = new Bank();
+  $bank = new CesBank();
   $account = $bank->getAccountByName($name);
   if ($account != FALSE && (!isset($record['id']) || $account['id'] != $record['id'])) {
     form_set_error('name', t('Account number %name already exists.', array('%name' => $name)));
@@ -741,24 +757,24 @@ function ces_bank_account_form_submit($form, &$form_state) {
       $record['users'][$key]['account'] = $record['id'];
     }
   }
-  $bank = new Bank();
+  $bank = new CesBank();
   try {
     $activate = FALSE;
     if (!isset($record['id'])) {
       // New account.
       $bank->createAccount($record);
       drupal_set_message(t('Account successfully created.'));
-      if ($record['state'] == LocalAccount::STATE_HIDDEN) {
-        drupal_set_message(t("The account will not be available until it is being activated by this exchange's administrator. You will recieve an email when this is done."));
+      if ($record['state'] == CesBankLocalAccount::STATE_HIDDEN) {
+        drupal_set_message(t("The account will not be available until it is being activated by this exchange's administrator. You will receive an email when this is done."));
       }
-      elseif ($record['state'] == LocalAccount::STATE_ACTIVE) {
+      elseif ($record['state'] == CesBankLocalAccount::STATE_ACTIVE) {
         $activate = TRUE;
       }
     }
     else {
       $previous = $bank->getAccount($record['id']);
       $bank->updateAccount($record);
-      if ($previous['state'] == LocalAccount::STATE_HIDDEN && $record['state'] == LocalAccount::STATE_ACTIVE) {
+      if ($previous['state'] == CesBankLocalAccount::STATE_HIDDEN && $record['state'] == CesBankLocalAccount::STATE_ACTIVE) {
         $activate = TRUE;
       }
     }
@@ -781,10 +797,12 @@ function ces_bank_account_form_submit($form, &$form_state) {
   }
 }
 /**
- * Form for deleting an account in an exchange. TODO.
+ * Form for deleting an account in an exchange.
+ *
+ * @todo Implement delete account
  */
 function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
-  $bank = new Bank();
+  $bank = new CesBank();
   if ($account != NULL) {
     if (!is_array($account)) {
       $account = $bank->getAccount($account);
@@ -830,7 +848,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
     return ces_bank_transaction_confirm_form($form, $form_state, $form_state['values']['operation']);
   }
   global  $user;
-  $bank = new Bank();
+  $bank = new CesBank();
   // Exchange options for selects.
   $exchanges = $bank->getAllExchanges();
   if (empty($exchanges)) {
@@ -898,11 +916,11 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
       'exchange' => $toexchangeid,
       'state' => 1,
       'kind' => array(
-        LocalAccount::TYPE_INDIVIDUAL,
-        LocalAccount::TYPE_SHARED,
-        LocalAccount::TYPE_ORGANIZATION,
-        LocalAccount::TYPE_COMPANY,
-        LocalAccount::TYPE_PUBLIC,
+        CesBankLocalAccount::TYPE_INDIVIDUAL,
+        CesBankLocalAccount::TYPE_SHARED,
+        CesBankLocalAccount::TYPE_ORGANIZATION,
+        CesBankLocalAccount::TYPE_COMPANY,
+        CesBankLocalAccount::TYPE_PUBLIC,
       ));
     $accounts = $bank->getAllAccounts($accountconditions);
     $tooptions = array();
@@ -1054,7 +1072,7 @@ function ces_bank_transaction_form_submit($form, &$form_state) {
  *   - revoke: revoke a committed transaction (TODO).
  * @param int $id
  *   the id of the transaction. If $op='new', then it is ignored
- *   in favor of $form_state values comming from ces_bank_transaction_form.
+ *   in favor of $form_state values coming from ces_bank_transaction_form.
  */
 function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
   if ($op == 'new' || $op == 'edit') {
@@ -1063,7 +1081,7 @@ function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL)
     $form_state['edit_page'] = $values;
   }
   else {
-    $bank = new Bank();
+    $bank = new CesBank();
     try {
       $transaction = $bank->getTransaction($id);
       $fromaccount = $bank->getAccount($transaction['fromaccount']);
@@ -1168,7 +1186,7 @@ function ces_bank_transaction_form_validate($form, &$form_state) {
     return;
   }
 
-  $bank = new Bank();
+  $bank = new CesBank();
   $record = $form_state['values'];
 
   $amount = $record['amount'];
@@ -1194,7 +1212,7 @@ function ces_bank_transaction_form_validate($form, &$form_state) {
  * Submit confirmation form for transaction.
  */
 function ces_bank_transaction_confirm_form_submit($form, &$form_state) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $result = TRUE;
   $op = $form_state['values']['operation'];
   $id = '';
@@ -1271,7 +1289,7 @@ function ces_bank_transaction_delete_form($form, &$form_state, $transaction) {
  * Submit to delete a transaction permanently.
  */
 function ces_bank_transaction_delete_form_submit($form, &$form_state) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $transaction = $form_state['values']['transaction'];
   $bank->deleteTransaction($transaction['id']);
   drupal_set_message(t('Transaction %concept has been deleted.', array('%concept' => $transaction['concept'])));
@@ -1279,12 +1297,12 @@ function ces_bank_transaction_delete_form_submit($form, &$form_state) {
 }
 
 /**
- * Bank account statement form.
+ * CesBank account statement form.
  *
  * @return array
  *   page where to find the last transactions with this account.
  * @see ces_bank_account_statement_form_submit()
- * ces_bank_account_statement_page().
+ * @see ces_bank_account_statement_page()
  */
 function ces_bank_account_statement_form($form, &$form_state) {
   $form = array(
@@ -1330,18 +1348,18 @@ function ces_bank_account_statement_form($form, &$form_state) {
   return $form;
 }
 /**
- * Bank account statement form submit.
+ * CesBank account statement form submit.
  */
 function ces_bank_account_statement_form_submit($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
 }
 /**
- * Bank permission form.
+ * CesBank permission form.
  */
 function ces_bank_permission_form($form, &$form_state, $op, $id = NULL) {
   $form = array();
   if ($op != 'new') {
-    $bank = new Bank();
+    $bank = new CesBank();
     $values = $bank->getPermission($id);
   }
   else {
@@ -1447,11 +1465,11 @@ function _ces_bank_permission_check_object_exists($object, $objectid) {
       return user_load($objectid) !== FALSE;
 
     case 'exchange':
-      $bank = new Bank();
+      $bank = new CesBank();
       return $bank->getExchange($objectid) !== FALSE;
 
     case 'account':
-      $bank = new Bank();
+      $bank = new CesBank();
       return $bank->getAccount($objectid) !== FALSE;
 
   }
@@ -1461,7 +1479,7 @@ function _ces_bank_permission_check_object_exists($object, $objectid) {
  * Validation for bank permission form.
  */
 function ces_bank_permission_form_validate($form, &$form_state) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $values = $form_state['values'];
   if (!$bank->access('admin', $values['object'], $values['objectid'])) {
     form_set_error('object', t('You are not authorized to modify permissions on this object.'));
@@ -1477,7 +1495,7 @@ function ces_bank_permission_form_validate($form, &$form_state) {
  * Submit bank permission form.
  */
 function ces_bank_permission_form_submit($form, &$form_state) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $op = $form_state['values']['operation'];
   try {
     if ($op == 'new') {
@@ -1490,6 +1508,7 @@ function ces_bank_permission_form_submit($form, &$form_state) {
     }
   }
   catch (Exception $e) {
-    drupal_set_message(t('An error ocurred while saving the record. Details: %msg', array('msg' => $e->getMessage())), 'error');
+    drupal_set_message(t('An error occurred while saving the record. Details: %msg', array('msg' => $e->getMessage())), 'error');
   }
 }
+/** @} */

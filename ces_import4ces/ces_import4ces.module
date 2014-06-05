@@ -6,6 +6,13 @@
  */
 
 /**
+ * @defgroup ces_import4ces Ces Import
+ * @ingroup ices
+ * @{
+ * Implements the drupal hooks for this module.
+ */
+
+/**
  * Set to 0 in production.
  */
 define('CES_IMPORT4CES_ANONYMOUS', 0);
@@ -372,37 +379,37 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
     case '1':
       $file = 'imports/setting.php';
       $file_csv = 'settings.csv';
-      $parse_function = 'parse_setting';
+      $parse_function = 'ces_import4ces_parse_setting';
       break;
 
     case '2':
       $file = 'imports/users.php';
       $file_csv = 'users.csv';
-      $parse_function = 'parse_users';
+      $parse_function = 'ces_import4ces_parse_users';
       break;
 
     case '3':
       $file = 'imports/offers.php';
       $file_csv = 'offers.csv';
-      $parse_function = 'parse_offers';
+      $parse_function = 'ces_import4ces_parse_offers';
       break;
 
     case '4':
       $file = 'imports/wants.php';
       $file_csv = 'wants.csv';
-      $parse_function = 'parse_wants';
+      $parse_function = 'ces_import4ces_parse_wants';
       break;
 
     case '5':
       $file = 'imports/trades.php';
       $file_csv = 'trades.csv';
-      $parse_function = 'parse_trades';
+      $parse_function = 'ces_import4ces_parse_trades';
       break;
 
     case '6':
       $file = 'imports/announce.php';
       $file_csv = 'announce.csv';
-      $parse_function = 'parse_announce';
+      $parse_function = 'ces_import4ces_parse_announce';
       break;
 
     case '7':
@@ -437,7 +444,7 @@ function ces_import4ces_import_form_submit($form, &$form_state) {
  * @param string $file_csv
  *   The absolute path of the CSV file.
  * @param string $file
- *   File where the parse funtion is, relative to this module.
+ *   File where the parse function is, relative to this module.
  * @param string $parse_function
  *   The name of the function able to parse the file.
  * @param object $record
@@ -457,7 +464,6 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
   $operations = array();
 
   // Read CSV.
-
   $row = $record->row;
   if (($gestor = fopen($file_csv, "r")) !== FALSE) {
     $heads = array();
@@ -480,7 +486,7 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
       }
       if ($fila !== 0) {
         // Automatic correction for field AapAddress.
-        if ($parse_function == 'parse_setting') {
+        if ($parse_function == 'ces_import4ces_parse_setting') {
           $field = 36;
           $error_map = TRUE;
           $field_error = array();
@@ -661,7 +667,7 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
     }
 
     // Delete trades.
-    $bank = new Bank();
+    $bank = new CesBank();
     $exchange = $bank->getExchange($import->exchange_id);
 
     $transactions = ces_import4ces_get_object_ids($import->id, 'trades');
@@ -676,7 +682,6 @@ function ces_import4ces_import_delete_form_submit($form, &$form_state) {
     }
 
     // Delete offers and wants.
-
     $offers = ces_import4ces_get_object_ids($import->id, 'offers');
     $offers = array_keys(ces_offerwant_load_multiple($offers));
     foreach ($offers as $id) {
@@ -816,3 +821,4 @@ function ces_import4ces_get_category($title, $import) {
   }
 
 }
+/** @} */

@@ -3,21 +3,23 @@
  * @file
  * This file is a script for filling the database with initial data for
  * statistics purposes. It empties the users and all ces tables and populates
- * it with ($numaccounts) users with their respective accounts in one exchange and
- * applies ($numtransactions) random transactions between them.
+ * it with ($numaccounts) users with their respective accounts in one exchange 
+ * and applies ($numtransactions) random transactions between them.
  * Randomizes 'created' field for accounts and transactions,
  * between ($firsttime) and ($lasttime).
  */
 
-$numaccounts = 20; //number of accounts to create
-$numtransactions = 100; //number of transactions to create
-$lasttime = time(); //now
-$firsttime = $lasttime - 31536000; //randomize along this time (one year= 31536000segs)
+/** Number of accounts to create */
+$numaccounts = 20;
+/** number of transactions to create */
+$numtransactions = 100;
+/** now, randomize along this time (one year= 31536000segs) */
+$lasttime = time();$firsttime = $lasttime - 31536000;
 
 ces_develop_clean();
 
 // Create stuff.
-$bank = new Bank();
+$bank = new CesBank();
 
 // Create users.
 $usernames = array();
@@ -60,25 +62,25 @@ for ($i = 1; $i <= $numaccounts; $i++) {
 }
 
 // Create account for admin (uid=1)
-  $bank = new Bank();
+  $bank = new CesBank();
   $limit = $bank->getDefaultLimitChain($net1['id']);
   $account = array(
     'exchange' => $net1['id'],
     'name' => $net1['code'] . 'ADMI',
     'limitchain' => $limit['id'],
-    'kind' => LocalAccount::TYPE_INDIVIDUAL,
-    'state' => LocalAccount::STATE_HIDDEN,
+    'kind' => CesBankLocalAccount::TYPE_INDIVIDUAL,
+    'state' => CesBankLocalAccount::STATE_HIDDEN,
     'users' => array(
       array(
         'user' => 1,
-        'role' => AccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
+        'role' => CesBankAccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
       ),
     ),
   );
   $bank->createAccount($account);
   $bank->activateAccount($account);
 
-// Randomize created date in accounts
+// Randomize created date in accounts.
 for ($i = 1; $i <= $numaccounts; $i++) {
   $rndcreated = rand($firsttime, $lasttime);
   db_update('ces_account')
@@ -98,7 +100,7 @@ for ($i = 1; $i <= $numtransactions; $i++) {
   while ($rndtouser == $rndfromuser) {
     $rndtouser = rand(1, $numaccounts);
   }
-  $rndvalue = rand(1, 1000)/100;
+  $rndvalue = rand(1, 1000) / 100;
   $rndtransaction[$i] = array(
     'NET1' . sprintf('%04d', $rndfromuser),
     'NET1' . sprintf('%04d', $rndtouser),
@@ -120,7 +122,7 @@ foreach ($rndtransaction as $t) {
   $bank->applyTransaction($trans['id']);
 }
 
-// Randomize created date in transactions
+// Randomize created date in transactions.
 for ($i = 1; $i <= $numtransactions; $i++) {
   $rndcreated = rand($firsttime, $lasttime);
   db_update('ces_transaction')
@@ -131,7 +133,8 @@ for ($i = 1; $i <= $numtransactions; $i++) {
 
 // OFFERWANTS.
 // Add categories.
-$names = array('Food', 'Hygiene', 'Professional services', 'Reparation', 'Education');
+$names = array('Food', 'Hygiene', 'Professional services', 'Reparation',
+  'Education');
 $exchanges = array($net1);
 $categories = array();
 foreach ($exchanges as $e) {
@@ -160,72 +163,72 @@ $offers = array(array(
   'modified' => time(),
   'expire' => time() + 3600 * 24 * 365,
   'rate' => '0.2',
-),
-array(
-  'type' => 'offer',
-  'user' => $users['user2']->uid,
-  'title' => 'Bicycle mechanic',
-  'body' => 'I fix or setup your bike in less than an hour.',
-  'category' => $categories[$net1['id']]['Reparation']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => '1h/hour',
-),
-array(
-  'type' => 'offer',
-  'user' => $users['user3']->uid,
-  'title' => 'Natural soap',
-  'body' => 'Natural soap with smell of Alpine flowers. Very good for your skin.',
-  'category' => $categories[$net1['id']]['Hygiene']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => '0.40',
-),
-array(
-  'type' => 'offer',
-  'user' => $users['user4']->uid,
-  'title' => 'Cow\'s milk',
-  'body' => 'Natural sheep\'s milk. Probably the best you\'ve ever tasted.',
-  'category' => $categories[$net1['id']]['Food']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => '2.5',
-),
-array(
-  'type' => 'offer',
-  'user' => $users['user5']->uid,
-  'title' => 'Car mechanic',
-  'body' => 'I fix or setup your car in less than an hour.',
-  'category' => $categories[$net1['id']]['Reparation']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => 'it depends'
-),
-array(
-  'type' => 'offer',
-  'user' => $users['user6']->uid,
-  'title' => 'Natural shampoo',
-  'body' => 'Natural shampoo with smell of Pyrinee flowers. Very good for your hair.',
-  'category' => $categories[$net1['id']]['Hygiene']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => '6ECO each'
-));
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['user2']->uid,
+    'title' => 'Bicycle mechanic',
+    'body' => 'I fix or setup your bike in less than an hour.',
+    'category' => $categories[$net1['id']]['Reparation']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => '1h/hour',
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['user3']->uid,
+    'title' => 'Natural soap',
+    'body' => 'Natural soap with smell of Alpine flowers. Very good for your skin.',
+    'category' => $categories[$net1['id']]['Hygiene']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => '0.40',
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['user4']->uid,
+    'title' => 'Cow\'s milk',
+    'body' => 'Natural sheep\'s milk. Probably the best you\'ve ever tasted.',
+    'category' => $categories[$net1['id']]['Food']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => '2.5',
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['user5']->uid,
+    'title' => 'Car mechanic',
+    'body' => 'I fix or setup your car in less than an hour.',
+    'category' => $categories[$net1['id']]['Reparation']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => 'it depends',
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['user6']->uid,
+    'title' => 'Natural shampoo',
+    'body' => 'Natural shampoo with smell of Pyrinee flowers. Very good for your hair.',
+    'category' => $categories[$net1['id']]['Hygiene']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => '6ECO each',
+  ));
 foreach ($offers as $offer) {
   $o = (object) $offer;
   $o->ces_offer_rate = array(LANGUAGE_NONE => array(array('value' => $offer['rate'])));
@@ -242,5 +245,3 @@ Happy testing!', $net1, $users['user1']);
 ces_develop_post_blog('Lorem ipsum', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net1, $users['user2']);
 ces_develop_post_blog('May exchange newsletter', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net1, $users['user3']);
 ces_develop_post_blog('Another post', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net1, $users['user4']);
-
-

@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_offerswants Ces OffersWants
+ * @ingroup ices
+ * @{
+ * Implements the drupal hooks for this module.
+ */
+
+/**
  * Implements hook_help().
  */
 function ces_offerswants_help($path, $arg) {
@@ -39,7 +46,7 @@ function ces_offerswants_help($path, $arg) {
 function ces_offerswants_entity_info() {
   $info['ces_offerwant'] = array(
     'label' => t('Offer or want'),
-    'controller class' => 'OffersWantsEntityController',
+    'controller class' => 'CesOffersWantsEntityController',
     'base table' => 'ces_offerwant',
     'static cache' => TRUE,
     'field cache' => TRUE,
@@ -86,7 +93,7 @@ function ces_offerswants_entity_info() {
 
   $info['ces_category'] = array(
     'label' => t('Category'),
-    'controller class' => 'CategoryEntityController',
+    'controller class' => 'CesOffersWantsCategoryEntityController',
     'base table' => 'ces_category',
     'static cache' => TRUE,
     'field cache' => TRUE,
@@ -232,6 +239,17 @@ function ces_offerswants_menu() {
     'access arguments' => array('admin', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 40,
+  );
+  $menu['ces/bank/account/myoffers/%ces_offerwant/send_notify'] = array(
+    'title' => 'Send Notify',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_offerwant_send_notify_form', NULL, 4),
+    'file' => 'includes/ces_offerswants_send_notify.inc',
+    'file path' => drupal_get_path('module', 'ces_offerswants'),
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('view', 4),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 20,
   );
   $menu['ces/bank/account/mywants'] = array(
     'title' => 'My wants',
@@ -519,6 +537,13 @@ function ces_offerwant_form($form, &$form_state, $offerwant_type = 'offer', $off
       '#weight' => 0,
     );
   }
+  elseif (count($options) == 1) {
+    foreach ($options as $category_id => $category_name);
+    $form['category'] = array(
+      '#type' => 'value',
+      '#value' => $category_id,
+    );
+  }
   else {
     $category = !empty($options) ? reset(array_keys($options)) : 1;
     $form['category'] = array(
@@ -612,7 +637,6 @@ function ces_offerwant_form_validate($form, &$form_state) {
  * Form submit function.
  */
 function ces_offerwant_form_submit($form, &$form_state) {
-  global $user;
   $offerwant = (object) $form_state['values'];
   $offerwant->state = $form_state['values']['hide'] ? 0 : 1;
   $offerwant->expire = mktime(24, 0, 0, $form_state['values']['expire']['month'], $form_state['values']['expire']['day'], $form_state['values']['expire']['year']);
@@ -765,6 +789,7 @@ function template_preprocess_ces_offerwant(&$variables) {
     $actions[] = l(t('Delete'), $prefix . '/delete');
   }
   $variables['ces_offerwant_actions'] = implode(' ', $actions);
+  $variables['ces_offerwant_send_notify_link'] = l(t('Send Notify'), 'ces/bank/account/myoffers/' . $offerwant->id . '/send_notify');
   // Seller info.
   $variables['ces_offerwant_seller_uid'] = $offerwant->user;
   $account = user_load($offerwant->user);
@@ -792,6 +817,9 @@ function ces_offerwant_access($operation, $offerwant, $account = NULL) {
     $account = $user;
   }
   if ($offerwant->user == $account->uid) {
+    return TRUE;
+  }
+  if ( $operation == 'view' && $offerwant->state == 1 ) {
     return TRUE;
   }
   $category = ces_category_load($offerwant->category);
@@ -881,11 +909,22 @@ function ces_category_form($form, &$form_state, $category = NULL) {
   return $form;
 }
 /**
- * Validate form.
- * @TODO
+ * Validate form category.
  */
 function ces_category_form_validate($form, &$form_state) {
-
+  $category = (object) $form_state['values'];
+  if (!isset($category->title) || empty($category->title) ) {
+    form_set_error('title', t('A title from category is necessary.'));
+  }
+  if (!isset($category->description) || empty($category->description) ) {
+    form_set_error('description', t('A description from category is necessary.'));
+  }
+  if (!isset($category->exchange) || empty($category->exchange) ) {
+    form_set_error('exchange', t('A exchange from category is necessary.'));
+  }
+  if (!isset($category->context) || empty($category->context) ) {
+    form_set_error('context', t('A context from category is necessary.'));
+  }
 }
 /**
  * Form submit.
@@ -1023,9 +1062,7 @@ function _ces_offerswants_get_categories_options($offerwant_type = NULL, $exchan
   $options = array();
   $categories = ces_offerswants_get_categories($offerwant_type, $exchange);
   foreach ($categories as $id => $cat) {
-    if (!isset($category->id) || ($id != $category->id)) {
-      $options[$id] = $cat->title;
-    }
+    $options[$id] = $cat->title;
   }
   return $options;
 }
@@ -1151,7 +1188,7 @@ function ces_offerswants_admin_categories_page() {
 /**
  * Entity controller.
  */
-class OffersWantsEntityController extends DrupalDefaultEntityController {
+class CesOffersWantsEntityController extends DrupalDefaultEntityController {
   /**
    * Save entity.
    */
@@ -1182,7 +1219,7 @@ class OffersWantsEntityController extends DrupalDefaultEntityController {
 /**
  * Entity controller.
  */
-class CategoryEntityController extends DrupalDefaultEntityController {
+class CesOffersWantsCategoryEntityController extends DrupalDefaultEntityController {
   /**
    * Save entity.
    */
@@ -1841,3 +1878,86 @@ function ces_offerswants_user_register_submit($form, &$form_state) {
   }
   $form_state['redirect'] = 'ces';
 }
+/**
+ * Implements hook_token_info().
+ */
+function ces_offerswants_token_info() {
+  return array(
+    'types' => array(
+      'offer' => array(
+        'name' => t('Offer'),
+        'description' => t('Tokens for offer.'),
+      ),
+      'notify' => array(
+        'name'  => t('Notify'),
+        'description' => t('Tokens for user notify.'),
+      ),
+    ),
+    'tokens' => array(
+      'offer' => array(
+        'id' => array(
+          'name'   => t('Id of offer'),
+          'description' => t('The id of offer.'),
+        ),
+        'title' => array(
+          'name' => t('Title'),
+          'description' => t('Title of offer.'),
+        ),
+      ),
+      'notify' => array(
+        'body' => array(
+          'name' => t('Bodu of User notify'),
+          'description' => t('Body of User notify.'),
+        ),
+        'user' => array(
+          'name' => t('Account user'),
+          'description' => t('Account user.'),
+          'type' => 'user',
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function ces_offerswants_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+  $sanitize = !empty($options['sanitize']);
+
+  if ($type == 'offer' && !empty($data['offer'])) {
+    $offer = $data['offer'];
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'title':
+          $replacements[$original] = $sanitize ? check_plain($offer->title) : $offer->title;
+          break;
+
+        case 'id':
+          $replacements[$original] = $sanitize ? check_plain($offer['id']) : $offer['id'];
+          break;
+      }
+    }
+  }
+  if ($type == 'notify' && !empty($data['notify'])) {
+    $notify = $data['notify'];
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'body':
+          $replacements[$original] = $sanitize ? check_plain($notify['body']) : $notify['body'];
+          break;
+
+        case 'user':
+          $replacements[$original] = $sanitize ? check_plain($notify['user']) : $notify['user'];
+          break;
+      }
+    }
+    if ($user_tokens = token_find_with_prefix($tokens, 'user')) {
+      $uid = $notify['user'];
+      $replacements += token_generate('user', $user_tokens, array('user' => user_load($uid)), $options);
+    }
+  }
+  return $replacements;
+}
+/** @} */

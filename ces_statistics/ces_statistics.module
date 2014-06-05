@@ -5,27 +5,37 @@
  */
 
 /**
- * Implements hook_library().
+ * @defgroup ces_statistics Ces Statistics
+ * @ingroup ices
+ * @{
+ * Implements the drupal hooks for this module.
  */
-function ces_statistics_library() {
-	$pathmodule = drupal_get_path('module', 'ces_statistics');
+/**
+ * Implements hook_libraries_info().
+ *
+ * For defining external libraries.
+ */
+function ces_statistics_libraries_info() {
   $libraries['jqplot'] = array(
-    'title' => 'jqplot',
-    'website' => 'https://bitbucket.org/cleonello/jqplot/downloads/',
-    'version' => '1.0.8r1250',
-    'js' => array(
-      $pathmodule . '/js/jquery.jqplot.min.js' => array(),
-      $pathmodule . '/js/jqplot.dateAxisRenderer.min.js' => array(),
-      $pathmodule . '/js/jqplot.barRenderer.min.js' => array(),
-      $pathmodule . '/js/jqplot.canvasTextRenderer.min.js' => array(),
-      $pathmodule . '/js/jqplot.canvasAxisLabelRenderer.min.js' => array(),
-      $pathmodule . '/js/jqplot.canvasAxisTickRenderer.min.js' => array(),
-      $pathmodule . '/js/jqplot.categoryAxisRenderer.min.js' => array(),
-      $pathmodule . '/js/jqplot.pointLabels.min.js' => array(),
-      $pathmodule . '/js/jqplot.pieRenderer.min.js' => array(),
-    ),
-    'css' => array(
-      $pathmodule . '/css/jquery.jqplot.min.css' => array(),
+    'name' => 'jqplot library',
+    'vendor url' => 'https://bitbucket.org/cleonello/jqplot/downloads/',
+    'download url' => 'http://bitbucket.org/cleonello/jqplot/get/1.0.8.zip',
+    'version' => '1.0.8',
+    'files' => array(
+      'js' => array(
+        'src/jquery.jqplot.js',
+        'src/plugins/jqplot.dateAxisRenderer.js',
+        'src/plugins/jqplot.barRenderer.js',
+        'src/plugins/jqplot.canvasTextRenderer.js',
+        'src/plugins/jqplot.canvasAxisLabelRenderer.js',
+        'src/plugins/jqplot.canvasAxisTickRenderer.js',
+        'src/plugins/jqplot.categoryAxisRenderer.js',
+        'src/plugins/jqplot.pointLabels.js',
+        'src/plugins/jqplot.pieRenderer.js',
+      ),
+      'css' => array(
+        'src/jquery.jqplot.css',
+      ),
     ),
   );
   return $libraries;
@@ -49,6 +59,57 @@ function ces_statistics_menu() {
 }
 
 /**
+ * Implements hook_help().
+ */
+function ces_statistics_help($path, $arg) {
+  if ($path == 'admin/help#ces_statistics') {
+    if (current_path() != 'admin/help/ces_statistics') {
+      // Because system_modules() executes hook_help() for each module to 'test'
+      // if they will return anything, but not actually display it, we want to
+      // return a TRUE value if this is not actually the help page.
+      return TRUE;
+    }
+    $library = libraries_detect('jqplot');
+    $output  = '<dl>';
+    $output .= '<dt>' . t('Installation of') . ' ' . $library['name'] . '</dt>';
+    $output .= '<dd>';
+    $output .= l(t('Download the package with the necessary libraries'), $library['download url']);
+    $output .= '</dd>';
+
+    $output .= '<dd>';
+    $output .= 'Unzip the file';
+    $output .= '</dd>';
+
+    $output .= '<dd>';
+    $output .= 'And place to files in site/all/libraries/jqplot';
+
+    /*
+    foreach ($library['files']['js'] as $file => $o) {
+    $output .= '<dd>';
+    $output .= '- ' . $file;
+    $output .= '</dd>';
+    }
+
+    foreach ($library['files']['css'] as $file => $o) {
+    $output .= '<dd>';
+    $output .= '- ' . $file;
+    $output .= '</dd>';
+    }
+    */
+    $output .= '<dd>';
+    $output .= 'If there is no directory should be created.';
+    $output .= '</dd>';
+    $output .= '<dd>';
+    $output .= "That's it.";
+    $output .= '</dd>';
+
+    $output .= '</dd>';
+    $output .= '</dl>';
+    return $output;
+  }
+}
+
+/**
  * Page for exchange statistics.
  */
 function ces_statistics_page() {
@@ -60,8 +121,14 @@ function ces_statistics_page() {
     $exchange = ces_bank_get_current_exchange();
 
     // Js and css files.
-    drupal_add_library('ces_statistics', 'jqplot');
-    drupal_add_js(drupal_get_path('module', 'ces_statistics') . '/js/chart.js');
+    if (($library = libraries_load('jqplot')) && !empty($library['loaded'])) {
+      drupal_add_js(drupal_get_path('module', 'ces_statistics') . '/js/chart.js');
+    }
+    else {
+      $error = $library['error'];
+      $error_message = $library['error message'] . ' ' . l(t('Help'), 'admin/help/ces_statistics');
+      drupal_set_message($error_message);
+    }
 
     // Extract and format users data.
     $resultusers = db_query("
@@ -181,7 +248,6 @@ function ces_statistics_page() {
     // -> Drupal.settings.ces_statistics.staticsusers
     // -> Drupal.settings.ces_statistics.staticstrans
     // -> Drupal.settings.ces_statistics.staticsactivity
-
     $charts = array(
       'staticsusers' => $staticsusers,
       'staticsactivity' => $staticsactivity,
@@ -206,3 +272,4 @@ function ces_statistics_page() {
     );
   }
 }
+/** @} */

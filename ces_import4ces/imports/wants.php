@@ -1,35 +1,39 @@
 <?php
-
 /**
  * @file
  * Functions from parse wants
  */
 
 /**
+ * @defgroup ces_import4ces_wants Parse wants from CES
+ * @ingroup ces_import4ces
+ * @{
+ * Functions from parse wants
+ */
+
+/**
  * Parse wants.
  */
-function parse_wants($import_id, $data, $row, &$context) {
-  if (isset($context['results']['error']))
+function ces_import4ces_parse_wants($import_id, $data, $row, &$context) {
+  if (isset($context['results']['error'])) {
     return;
+  }
   $tx = db_transaction();
   try {
     $context['results']['import_id'] = $import_id;
     $import = ces_import4ces_import_load($import_id);
     $import->row = $row;
 
-
     $category_id = ces_import4ces_get_category('unclassified', $import);
 
     /*
-
-      [ID] => 2
-      [UID] => HORA0024
-      [Keep] => 0
-      [DateAdded] => 2011/05/14 23:47:45
-      [Title] => Classes d'harmonia (musical, de moment)
-      [Description] => Busquem qui ens pugui donar classes d'harmonia.
-
-     */
+    [ID] => 2
+    [UID] => HORA0024
+    [Keep] => 0
+    [DateAdded] => 2011/05/14 23:47:45
+    [Title] => Classes d'harmonia (musical, de moment)
+    [Description] => Busquem qui ens pugui donar classes d'harmonia.
+    */
 
     $want = array(
       'type' => 'want',
@@ -41,7 +45,8 @@ function parse_wants($import_id, $data, $row, &$context) {
       'state' => 1,
       'created' => strtotime($data['DateAdded']),
       'modified' => strtotime($data['DateAdded']),
-      'expire' => ( strtotime($data['DateAdded']) + ( 60 * 60 * 24 * 150 ) ), // Add 150 days more of DateAdded (need something)
+      // Add 150 days more of DateAdded (need something).
+      'expire' => (strtotime($data['DateAdded']) + (60 * 60 * 24 * 150)),
       // 'rate'       => $data['Rate'],
       // 'image'      => $data['Image'],
     );
@@ -51,13 +56,13 @@ function parse_wants($import_id, $data, $row, &$context) {
       'UID' => $data['UID'],
     );
 
-    // Find uid from user
+    // Find uid from user.
     $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['UID']));
     $want_user_id = $query->fetchColumn(0);
 
     if (empty($want_user_id)) {
       $m = t('The user @user was not found in want import row @row. It may be a
-      user from another excange not yet imported.', array('@user' => $data['UID'], '@row' => $row));
+      user from another exchange not yet imported.', array('@user' => $data['UID'], '@row' => $row));
 
       throw new Exception($m);
     }
@@ -85,3 +90,4 @@ function parse_wants($import_id, $data, $row, &$context) {
     $context['results']['error'] = check_plain($e->getMessage());
   }
 }
+/** @} */

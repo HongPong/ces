@@ -11,10 +11,10 @@
  */
 
 /**
- * Loads and saves to db objects of class DBObject. It gives a unified and
+ * Loads and saves to db objects of class IcesDBObject. It gives a unified and
  * drupal-indevendent way for bank logic objects to be loaded and saved.
  */
-class Serializer {
+class IcesSerializer {
 
   protected $classname;
   protected $table;
@@ -35,24 +35,24 @@ class Serializer {
   }
   /**
    * Loads an object given its identifier.
-   * @return DBObject|boolean
+   * @return IcesDBObject|boolean
    *   The loaded object on success or FALSE if object can not be loaded.
    */
   public function load($id) {
-    if (!isset(Serializer::$cache[$this->classname])) {
+    if (!isset(IcesSerializer::$cache[$this->classname])) {
       $cache[$this->classname] = array();
     }
-    if (!isset(Serializer::$cache[$this->classname]['id'])) {
+    if (!isset(IcesSerializer::$cache[$this->classname]['id'])) {
       $cache[$this->classname]['id'] = array();
     }
-    if (!isset(Serializer::$cache[$this->classname]['id'][$id])) {
+    if (!isset(IcesSerializer::$cache[$this->classname]['id'][$id])) {
       $record = db_select($this->table, 't')->fields('t')->condition('id', $id)->execute()->fetchAssoc();
       if ($record === FALSE) {
         return FALSE;
       }
-      Serializer::$cache[$this->classname]['id'][$id] = $this->loadFromRecord($record);
+      IcesSerializer::$cache[$this->classname]['id'][$id] = $this->loadFromRecord($record);
     }
-    return Serializer::$cache[$this->classname]['id'][$id];
+    return IcesSerializer::$cache[$this->classname]['id'][$id];
   }
   /**
    * Count entries.
@@ -66,7 +66,7 @@ class Serializer {
     return $result;
   }
   /**
-   * Loads a DBObject from it record.
+   * Loads a IcesDBObject from it record.
    *
    * The record may come from the database (when retrieving an existing
    * instance) or from user input (when creating a new instance).
@@ -74,7 +74,7 @@ class Serializer {
    * @param array $record
    *   An associative array with the parameters of the object.
    *
-   * @return DBObject
+   * @return IcesDBObject
    *   A loaded object from its database record.
    */
   public function loadFromRecord($record) {
@@ -98,7 +98,7 @@ class Serializer {
   /**
    * Saves an object to database.
    */
-  public function save(DBObject $object) {
+  public function save(IcesDBObject $object) {
     $record = $object->getRecord();
     // Call save extra data to all implied objects.
     // Don't loose the main reference!
@@ -108,7 +108,7 @@ class Serializer {
       $auxobject->saveExtraData();
       $inner = $auxobject;
       $auxobject = $auxobject->getParent();
-    } while ($auxobject != NULL && ($auxobject instanceof DBObject));
+    } while ($auxobject != NULL && ($auxobject instanceof IcesDBObject));
     // Decide between insert and update, and automatically populate temporal
     // fields.
     $record['modified'] = REQUEST_TIME;
@@ -132,7 +132,7 @@ class Serializer {
   /**
    * Updates a single database field from a single row.
    */
-  public function updateField(DBObject $object, $key) {
+  public function updateField(IcesDBObject $object, $key) {
     $id = $object->id;
     $value = $object->{$key};
     $this->deleteCache();
@@ -197,7 +197,7 @@ class Serializer {
     }
     if (isset($conditions['join'])) {
       $field = $conditions['join']['field'];
-      $s = new Serializer($conditions['join']['class']);
+      $s = new IcesSerializer($conditions['join']['class']);
       $table = $s->table;
       $condition_field = $conditions['join']['condition']['field'];
       $condition_value = $conditions['join']['condition']['value'];
@@ -225,26 +225,26 @@ class Serializer {
   /**
    * Retrieves and loads an object from a unique key.
    * 
-   * @return DBObject
-   *   The initialized instance of DBObject with $key = $value, or FALSE.
+   * @return IcesDBObject
+   *   The initialized instance of IcesDBObject with $key = $value, or FALSE.
    */
   public function loadFromUniqueKey($key, $value) {
-    if (!isset(Serializer::$cache[$this->classname])) {
+    if (!isset(IcesSerializer::$cache[$this->classname])) {
       $cache[$this->classname] = array();
     }
-    if (!isset(Serializer::$cache[$this->classname][$key])) {
+    if (!isset(IcesSerializer::$cache[$this->classname][$key])) {
       $cache[$this->classname][$key] = array();
     }
-    if (!isset(Serializer::$cache[$this->classname][$key][$value])) {
+    if (!isset(IcesSerializer::$cache[$this->classname][$key][$value])) {
       $query = db_select($this->table, 't')->fields('t')->condition($key, $value)->range(0, 1);
       $result = $query->execute();
       $record = $result->fetchAssoc();
       if ($record === FALSE) {
         return FALSE;
       }
-      Serializer::$cache[$this->classname][$key][$value] = $this->loadFromRecord($record);
+      IcesSerializer::$cache[$this->classname][$key][$value] = $this->loadFromRecord($record);
     }
-    return Serializer::$cache[$this->classname][$key][$value];
+    return IcesSerializer::$cache[$this->classname][$key][$value];
   }
   /**
    * Deletes a database record.
@@ -252,7 +252,7 @@ class Serializer {
    * @param DBobject $object
    *   The object to be deleted.
    */
-  public function delete(DBObject $object) {
+  public function delete(IcesDBObject $object) {
     $object->deleteExtraData();
     $this->deleteCache();
     $record = $object->getRecord();
@@ -284,10 +284,10 @@ class Serializer {
    * Deletes record from static cache.
    */
   protected function deleteRecordFromCache(array $record) {
-    if (isset(Serializer::$cache[$this->classname])) {
-      foreach (Serializer::$cache[$this->classname] as $key => $value) {
+    if (isset(IcesSerializer::$cache[$this->classname])) {
+      foreach (IcesSerializer::$cache[$this->classname] as $key => $value) {
         if (isset($record[$key]) && isset($value[$record[$key]])) {
-          unset(Serializer::$cache[$this->classname][$key][$record[$key]]);
+          unset(IcesSerializer::$cache[$this->classname][$key][$record[$key]]);
         }
       }
     }
@@ -296,14 +296,14 @@ class Serializer {
    * Deletes whole static cache.
    */
   protected function deleteCache() {
-    Serializer::$cache[$this->classname] = array();
+    IcesSerializer::$cache[$this->classname] = array();
   }
 }
 /**
- * Special class of Serializer for those objects needing transactional load and
- * save process. It uses drupal lock framework.
+ * Special class of IcesSerializer for those objects needing transactional load
+ *  and save process. It uses drupal lock framework.
  */
-class LockSerializer extends Serializer {
+class IcesLockSerializer extends IcesSerializer {
   /**
    * Not implemented.
    */
@@ -334,7 +334,7 @@ class LockSerializer extends Serializer {
   /**
    * Saves object and releases lock.
    */
-  public function save(DBObject $object) {
+  public function save(IcesDBObject $object) {
     $res = parent::save($object);
     lock_release($this->table . ' ' . $object->id);
     return $res;
@@ -342,7 +342,7 @@ class LockSerializer extends Serializer {
   /**
    * Updates field and releases lock.
    */
-  public function updateField(DBObject $object, $key) {
+  public function updateField(IcesDBObject $object, $key) {
     $res = parent::updateField($object, $key);
     lock_release($this->table . ' ' . $object->id);
     return $res;
@@ -351,7 +351,7 @@ class LockSerializer extends Serializer {
 /**
  * Base class for all objects that are serializable with this framework.
  */
-abstract class DBObject {
+abstract class IcesDBObject {
   public static $table;
   /**
    * Return object record.
@@ -364,7 +364,7 @@ abstract class DBObject {
     $object = $this;
     $parent = $object->getParent();
     $decoration = array();
-    if ($parent != NULL && ($parent instanceof DBObject)) {
+    if ($parent != NULL && ($parent instanceof IcesDBObject)) {
       do {
         $decoration[] = array(
           'classname' => get_class($object),
@@ -372,7 +372,7 @@ abstract class DBObject {
         );
         $object = $parent;
         $parent = $object->getParent();
-      } while ($parent != NULL && ($parent instanceof DBObject));
+      } while ($parent != NULL && ($parent instanceof IcesDBObject));
       array_reverse($decoration);
     }
     // Get record.
@@ -409,7 +409,7 @@ abstract class DBObject {
   /**
    * Save object data.
    *
-   * If the overrider has other DBObject objects as class members override
+   * If the overrider has other IcesDBObject objects as class members override
    * this function to save them.
    */
   public function saveExtraData() {
@@ -418,7 +418,8 @@ abstract class DBObject {
    * Delete object data.
    *
    * Called when this object is to be deleted. If the overrider has other
-   * DBObject objects as class members override this function to delete them.
+   * IcesDBObject objects as class members override this function to delete 
+   * them.
    */
   public function deleteExtraData() {
   }
@@ -441,7 +442,7 @@ abstract class DBObject {
 /**
  * A wrapper interface for Drupal transaction objects.
  */
-interface DBTransactionInterface {
+interface IcesDBTransactionInterface {
   /**
    * Discards transaction.
    */

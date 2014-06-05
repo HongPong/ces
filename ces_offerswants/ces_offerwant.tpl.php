@@ -3,9 +3,17 @@
  * @file
  * Template for rendering offers and wants.
  */
+
+/**
+ * @defgroup ces_import4ces_templates Templates from OffersWants
+ * @ingroup ces_offerswants
+ * @{
+ * Template for rendering offers and wants.
+ */
 ?>
 <div class="ces-offerwant">
   <div class="ces-offerwant-display" >
+    <div class="ces-offerwant-send_notify"><?php echo $ces_offerwant_send_notify_link; ?></div>
     <div class="ces-offerwant-title"><?php echo $ces_offerwant_title; ?></div>
     <div class="ces-offerwant-content">
       <div class="ces-offerwant-image"><?php 
@@ -55,7 +63,7 @@
         <div class="ces-offerwant-seller-phone">
             <?php echo $ces_offerwant_seller_phone; ?>
         </div>
-        <?php if ($view_mode_full && $ces_offerwant_belongs_to_me == false) : ?>
+        <?php if ($view_mode_full && $ces_offerwant_belongs_to_me == FALSE) : ?>
             <div class="ces-offerwant-seller-email">
             <?php echo $ces_offerwant_seller_mail; ?>
             </div>

@@ -47,7 +47,7 @@ class CesInteropTestCase extends CesBankTestCase {
    */
   public static function getInfo() {
     return array(
-      'name' => 'ces_interop',
+      'name' => 'ICES interop',
       'description' => 'Test ICES Interop main features.',
       'group' => 'ICES',
     );

@@ -3,5 +3,6 @@ description = Some exchange statistics.
 ;files[] = ces_statistics.test
 dependencies[] = ices
 dependencies[] = ces_bank
+dependencies[] = libraries
 core = 7.x
 package = ices

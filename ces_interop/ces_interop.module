@@ -114,7 +114,7 @@ function ces_interop_form_oauth2_server_authorize_form_alter(&$form, &$form_stat
   );
   // Get parameters from query string.
   $parameters = _ces_interop_get_query_parameters();
-  $bank = new Bank();
+  $bank = new CesBank();
   if (isset($parameters['from'])) {
     $name = $parameters['from'];
     $fromaccount = $bank->getAccountByName($name);
@@ -205,7 +205,7 @@ function ces_interop_entity_presave($entity, $type) {
       // Get transaction from form submit function.
       if (!empty($_ces_interop_transaction)) {
         // Create transaction.
-        $bank = new Bank();
+        $bank = new CesBank();
         $bank->createTransaction($_ces_interop_transaction);
         // Link transaction to authorisation code.
         $entity->ces_interop_transaction = array();
@@ -241,7 +241,7 @@ function ces_interop_apply_transaction($access_token) {
     ces_interop_send_authorize_error('access_denied', 'No transaction associated with this access token');
   }
   $transaction_id = $token->ces_interop_transaction[LANGUAGE_NONE][0]['value'];
-  $bank = new Bank();
+  $bank = new CesBank();
   try{
     $res = $bank->applyTransaction($transaction_id);
   }
@@ -423,7 +423,7 @@ function _ces_interop_resources_access($op, $type, $args) {
       break;
     
     case 'account':
-      $bank = new Bank();
+      $bank = new CesBank();
       $account = $bank->getAccount($args[0]);
       if (!$account) {
         return services_error(t('There is no account with ID @id.', array('@id' => $args[0])), 406);
@@ -436,7 +436,7 @@ function _ces_interop_resources_access($op, $type, $args) {
       break;
 
     case 'transaction':
-      $bank = new Bank();
+      $bank = new CesBank();
       $transaction = $bank->getTransaction($args[0]);
       if (!$transaction) {
         return services_error(t('There is no transaction with ID @id.', array('@id' => $args[0])), 406);
@@ -462,7 +462,7 @@ function _ces_interop_user_retrieve($id) {
   $return_user = array();
   $return_user['id'] = $user->uid;
   $return_user['name'] = $user->name;
-  $bank = new bank();
+  $bank = new CesBank();
   $accounts = $bank->getUserAccounts($id);
   $return_user['accounts'] = array();
   foreach ($accounts as $account) {
@@ -474,7 +474,7 @@ function _ces_interop_user_retrieve($id) {
  * Retrieve callback for account resource.
  */
 function _ces_interop_account_retrieve($id) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $account = $bank->getAccount($id);
   if (!$account) {
     return services_error(t('There is no account with ID @id.', array('@id' => $id)), 406);
@@ -491,7 +491,7 @@ function _ces_interop_account_retrieve($id) {
  * Retrieve callback for transaction resource.
  */
 function _ces_interop_transaction_retrieve($id) {
-  $bank = new Bank();
+  $bank = new CesBank();
   $transaction = $bank->getTransaction($id);
   if (!$transaction) {
     return services_error(t('There is no transaction with ID @id.', array('@id' => $id)), 406);

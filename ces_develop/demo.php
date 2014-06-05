@@ -10,7 +10,7 @@
 ces_develop_clean();
 
 // Create stuff.
-$bank = new Bank();
+$bank = new CesBank();
 
 // Create users.
 $usernames = array('Riemann', 'Euclides', 'Gauss' , 'Noether', 'Fermat');
@@ -75,9 +75,11 @@ for ($i = 0; $i < 3; $i++) {
 }
 // Create local transactions.
 $transactions = array(
-  array('NET10001', 'NET10002', 1.2, '3kg of potatoes.', $users['Euclides']->uid),
+  array('NET10001', 'NET10002', 1.2, '3kg of potatoes.',
+    $users['Euclides']->uid),
   array('NET10002', 'NET10003', 0.8, 'Standard haircut.', $users['Gauss']->uid),
-  array('NET10003', 'NET10001', 2.1, 'Yearly website mantainment', $users['Riemann']->uid),
+  array('NET10003', 'NET10001', 2.1, 'Yearly website mantainment',
+    $users['Riemann']->uid),
   array('NET20001', 'NET20002', 25, 'Bike revision.', $users['Noether']->uid),
   array('NET20002', 'NET20003', 6, 'Natural soap.', $users['Fermat']->uid),
   array('NET20003', 'NET20001', 5.5, 'Ecologic carrots', $users['Gauss']->uid),
@@ -113,7 +115,8 @@ $bank->applyTransaction($trans['id']);
 
 // OFFERWANTS.
 // Add categories.
-$names = array('Food', 'Hygiene', 'Professional services', 'Reparation', 'Education');
+$names = array('Food', 'Hygiene', 'Professional services', 'Reparation',
+  'Education');
 $exchanges = array($net1, $net2);
 $categories = array();
 foreach ($exchanges as $e) {
@@ -142,72 +145,72 @@ $offers = array(array(
   'modified' => time(),
   'expire' => time() + 3600 * 24 * 365,
   'rate' => '0.2',
-),
-array(
-  'type' => 'offer',
-  'user' => $users['Euclides']->uid,
-  'title' => 'Bicycle mechanic',
-  'body' => 'I fix or setup your bike in less than an hour.',
-  'category' => $categories[$net1['id']]['Reparation']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => '1h/hour',
-),
-array(
-  'type' => 'offer',
-  'user' => $users['Gauss']->uid,
-  'title' => 'Natural soap',
-  'body' => 'Natural soap with smell of Alpine flowers. Very good for your skin.',
-  'category' => $categories[$net1['id']]['Hygiene']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => '0.40',
-),
-array(
-  'type' => 'offer',
-  'user' => $users['Gauss']->uid,
-  'title' => 'Cow\'s milk',
-  'body' => 'Natural sheep\'s milk. Probably the best you\'ve ever tasted.',
-  'category' => $categories[$net2['id']]['Food']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => '2.5',
-),
-array(
-  'type' => 'offer',
-  'user' => $users['Noether']->uid,
-  'title' => 'Car mechanic',
-  'body' => 'I fix or setup your car in less than an hour.',
-  'category' => $categories[$net2['id']]['Reparation']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => 'it depends'
-),
-array(
-  'type' => 'offer',
-  'user' => $users['Fermat']->uid,
-  'title' => 'Natural shampoo',
-  'body' => 'Natural shampoo with smell of Pyrinee flowers. Very good for your hair.',
-  'category' => $categories[$net2['id']]['Hygiene']->id,
-  'keywords' => '',
-  'state' => 1,
-  'created' => time(),
-  'modified' => time(),
-  'expire' => time() + 3600 * 24 * 365,
-  'rate' => '6ECO each'
-));
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['Euclides']->uid,
+    'title' => 'Bicycle mechanic',
+    'body' => 'I fix or setup your bike in less than an hour.',
+    'category' => $categories[$net1['id']]['Reparation']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => '1h/hour',
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['Gauss']->uid,
+    'title' => 'Natural soap',
+    'body' => 'Natural soap with smell of Alpine flowers. Very good for your skin.',
+    'category' => $categories[$net1['id']]['Hygiene']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => '0.40',
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['Gauss']->uid,
+    'title' => 'Cow\'s milk',
+    'body' => 'Natural sheep\'s milk. Probably the best you\'ve ever tasted.',
+    'category' => $categories[$net2['id']]['Food']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => '2.5',
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['Noether']->uid,
+    'title' => 'Car mechanic',
+    'body' => 'I fix or setup your car in less than an hour.',
+    'category' => $categories[$net2['id']]['Reparation']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => 'it depends',
+  ),
+  array(
+    'type' => 'offer',
+    'user' => $users['Fermat']->uid,
+    'title' => 'Natural shampoo',
+    'body' => 'Natural shampoo with smell of Pyrinee flowers. Very good for your hair.',
+    'category' => $categories[$net2['id']]['Hygiene']->id,
+    'keywords' => '',
+    'state' => 1,
+    'created' => time(),
+    'modified' => time(),
+    'expire' => time() + 3600 * 24 * 365,
+    'rate' => '6ECO each',
+  ));
 foreach ($offers as $offer) {
   $o = (object) $offer;
   $o->ces_offer_rate = array(LANGUAGE_NONE => array(array('value' => $offer['rate'])));
@@ -224,4 +227,3 @@ Happy testing!', $net1, $users['Riemann']);
 ces_develop_post_blog('Lorem ipsum', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net1, $users['Riemann']);
 ces_develop_post_blog('May exchange newsletter', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
 ces_develop_post_blog('Another post', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', $net2, $users['Fermat']);
-

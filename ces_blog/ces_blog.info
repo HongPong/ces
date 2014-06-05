@@ -3,4 +3,3 @@ description = Individual blog for each exchange.
 core = 7.x
 package = ices
 dependencies[] = ices
-files[] = 

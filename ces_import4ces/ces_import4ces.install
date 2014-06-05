@@ -1,7 +1,13 @@
 <?php
-
 /**
  * @file
+ * Create a tables from imports.
+ */
+
+/**
+ * @defgroup ces_import4ces_install Install ces_import4ces
+ * @ingroup ces_import4ces
+ * @{
  * Create a tables from imports.
  */
 
@@ -158,3 +164,4 @@ function ces_import4ces_schema() {
 function ces_import4ces_uninstall() {
   drupal_uninstall_schema(ces_import4ces_schema());
 }
+/** @} */

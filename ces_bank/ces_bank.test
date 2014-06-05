@@ -5,6 +5,13 @@
  */
 
 /**
+ * @defgroup ces_bank_test Tests from Ces Bank
+ * @ingroup ces_bank
+ * @{
+ * Tests the functionality bank module.
+ */
+
+/**
  * Implements DrupalWebTestCase.
  */
 class CesBankTestCase extends DrupalWebTestCase {
@@ -54,7 +61,7 @@ class CesBankTestCase extends DrupalWebTestCase {
    */
   public static function getInfo() {
     return array(
-      'name' => 'ces_bank',
+      'name' => 'ICES bank',
       'description' => 'Test ICES Bank main features.',
       'group' => 'ICES',
     );
@@ -66,7 +73,7 @@ class CesBankTestCase extends DrupalWebTestCase {
     return array(
       'ces_bank',
       'ces_blog',
-      'ces_notify',
+      'ces_message',
       'ces_offerswants',
       'ces_summaryblock',
       'ces_user',
@@ -78,7 +85,7 @@ class CesBankTestCase extends DrupalWebTestCase {
   public function setUp() {
     // Enable any modules required for the test.
     parent::setUp($this->getNeededModules());
-    $bank = new Bank();
+    $bank = new CesBank();
     // Create global bank administrator.
     $this->globalAdminUser = $this->drupalCreateUser(array(
       'administer blocks',
@@ -96,7 +103,7 @@ class CesBankTestCase extends DrupalWebTestCase {
     $edit['user_email_verification'] = FALSE;
     $this->drupalPost('admin/config/people/accounts', $edit, t('Save configuration'));
     $permission = array(
-      'permission' => Permission::PERMISSION_ADMIN,
+      'permission' => CesBankPermission::PERMISSION_ADMIN,
       'object' => 'global',
       'objectid' => 0,
       'scope' => 'user',
@@ -418,7 +425,7 @@ class CesBankTestCase extends DrupalWebTestCase {
     // User account. Change field names.
     $account = $this->accountRecord($record['account']);
     $this->drupalPost(NULL, $account, t('Next >>'));
-    // Bank account, offers and wants.
+    // CesBank account, offers and wants.
     $offers = 0;
     $wants = 0;
     $edit = $record['bankaccount'];
@@ -512,7 +519,7 @@ class CesBankTestCase extends DrupalWebTestCase {
    *   - buyer: buyer' account number.
    *   - concept
    *   - amount
-   *   - seller: seller's account number. If ommited, the default user's account
+   *   - seller: seller's account number. If omitted, the default user's account
    *             will be used.
    * @param bool $success
    *   Whether this transaction should be permitted by the system.
@@ -569,3 +576,4 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->drupalLogout();
   }
 }
+/** @} */

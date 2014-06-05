@@ -1,29 +1,36 @@
 <?php
-
 /**
  * @file
  * Functions from parse setting
  */
 
 /**
+ * @defgroup ces_import4ces_setting Parse setting from CES
+ * @ingroup ces_import4ces
+ * @{
+ * Functions from parse setting
+ */
+
+/**
  * Parse exchange settings.
  */
-function parse_setting($import_id, $setting, $row, &$context) {
-  if (isset($context['results']['error']))
+function ces_import4ces_parse_setting($import_id, $setting, $row, &$context) {
+  if (isset($context['results']['error'])) {
     return;
+  }
   $tx = db_transaction();
   try {
     global $user;
 
-    // Crear bank
-    $bank = new Bank();
+    // Crear bank.
+    $bank = new CesBank();
 
     // Create exchange administrator drupal user. It will be completed in users
     // step.
     $record = array(
       'name' => $setting['ExchangeID'] . '0000',
       'mail' => (CES_IMPORT4CES_ANONYMOUS) ? 'test-' . $setting['ExchangeID'] .
-        '0000@test.com' : $setting['Email'],
+      '0000@test.com' : $setting['Email'],
       'pass' => $setting['Password'],
       'status' => 1,
       'roles' => array(DRUPAL_AUTHENTICATED_RID => 'authenticated user'),
@@ -35,7 +42,7 @@ function parse_setting($import_id, $setting, $row, &$context) {
       'm' => 0.01666667,
     );
     $currvalues = array(
-      'Euro' => 0.1
+      'Euro' => '0.1',
     );
     $value = 1;
     if ($setting['TimeBased'] == -1) {
@@ -130,15 +137,15 @@ function parse_setting($import_id, $setting, $row, &$context) {
     $default_debit = $setting['DebLim'];
     if ($default_credit != 0) {
       $default_limit['limits'][] = array(
-        'classname' => 'AbsoluteCreditLimit',
+        'classname' => 'CesBankAbsoluteCreditLimit',
         'value' => $default_credit,
         'block' => FALSE,
       );
     }
     if ($default_debit != 0) {
       $default_limit['limits'][] = array(
-        'classname' => 'AbsoluteDebitLimit',
-        'value' => - $default_debit,
+        'classname' => 'CesBankAbsoluteDebitLimit',
+        'value' => -$default_debit,
         'block' => FALSE,
       );
     }
@@ -158,3 +165,4 @@ function parse_setting($import_id, $setting, $row, &$context) {
     $context['results']['error'] = check_plain($e->getMessage());
   }
 }
+/** @} */
