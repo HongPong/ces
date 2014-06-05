@@ -80,7 +80,7 @@ function ces_interop_install() {
   $endpoint->path = 'ces/interop/resources';
   $endpoint->authentication = array(
     'oauth2_server' => array(
-      'server' => 'interop',
+      'server' => CES_INTEROP_OAUTH2_SERVER_NAME,
     ),
   );
   $endpoint->server_settings = array(
@@ -106,7 +106,7 @@ function ces_interop_install() {
       'settings' => array(
         'oauth2_server' => array(
           'require_authentication' => '1',
-          'scope' => 'resources',
+          'scope' => CES_INTEROP_OAUTH2_RESOURCES_SCOPE_NAME,
         ),
       ),
     ),
@@ -125,6 +125,8 @@ function ces_interop_install() {
       'operations' => $operations,
     ),
   );
+  // Avoid PHP warning.
+  $endpoint->export_type = EXPORT_IN_CODE;
   services_endpoint_save($endpoint);
 }
 /**

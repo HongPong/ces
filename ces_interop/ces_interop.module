@@ -259,12 +259,12 @@ function ces_interop_apply_transaction($access_token) {
     $exchange = $bank->getExchange($toaccount['exchange']);
     global $base_url;
     $receipt = array(
-      'txn_url' => $base_url . '/ces/bank/account/transaction/' . $transaction_id . '/view',
+      'txn_url' => $base_url . '/ces/interop/resurces/transaction/' . $transaction_id,
       'to' => $toaccount['name'],
       'from' => $fromaccount['name'],
       'amount' => $transaction['amount'],
       'note' => $transaction['concept'],
-      'asset_url' => $base_url . '/ces/interop/opentransact' . $exchange['code'],
+      'asset_url' => $base_url . '/ces/interop/opentransact/' . $exchange['code'],
       'timestamp' => REQUEST_TIME,
     );
     ces_interop_send_json('201 Created', $receipt);
