@@ -160,7 +160,7 @@ function ces_offerswants_install() {
     'parent' => 0,
     'description' => 'Top category',
     'exchange' => 1,
-    'context' => 0,
+    'context' => 3,
   );
   ces_category_save($category);
 

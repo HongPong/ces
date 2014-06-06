@@ -356,12 +356,6 @@ class CesOffersWantsTestCase extends DrupalWebTestCase {
   protected function crudOffersWants() {
     $this->drupalLogin($this->admin1);
     $record_category = array(
-      'title' => 'categoryTest None',
-      'description' => 'Test Category None',
-      'context' => '0',
-    );
-    $this->addCategory($record_category);
-    $record_category = array(
       'title' => 'categoryTest Offers',
       'description' => 'Test Category Offer',
       'context' => '1',
@@ -441,7 +435,7 @@ class CesOffersWantsTestCase extends DrupalWebTestCase {
       'body' => 'This is the first test offer from John Smith account.',
       'ces_offer_rate[und][0][value]' => '1.50',
       'keywords' => 'test keyword',
-      'category' => '3',
+      'category' => '2',
       'expire[day]' => date("d"),
       'expire[month]' => date("m"),
       'expire[year]' => (date("Y") + 1),
@@ -523,7 +517,7 @@ class CesOffersWantsTestCase extends DrupalWebTestCase {
       'title' => 'First test want',
       'body' => 'This is the first test want from John Smith account.',
       'keywords' => 'test keyword',
-      'category' => '4',
+      'category' => '3',
       'expire[day]' => date("d"),
       'expire[month]' => date("m"),
       'expire[year]' => (date("Y") + 1),

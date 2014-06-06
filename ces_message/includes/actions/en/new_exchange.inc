@@ -11,7 +11,7 @@ $subject = '[Integral CES] New Exchange [exchange:code] - [exchange:shortname] r
 
 $body = 'A new exchange has been registered.
 
-Visit the CES administrative interface at [url:absolute]/admin/ces to activate or discard it. See some details below:
+Visit the CES administrative interface at [site:url]/admin/ces to activate or discard it. See some details below:
 
 Code: [exchange:code]
 Short name: [exchange:shortname]
