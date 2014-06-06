@@ -245,15 +245,6 @@ function ces_offerswants_update_7100() {
 function ces_offerswants_install() {
   $t = get_t();
 
-  // Create root category.
-  $category = (object) array(
-    'title' => 'root',
-    'parent' => 0,
-    'description' => 'Top category',
-    'exchange' => 1,
-    'context' => 3,
-  );
-  ces_category_save($category);
 
   // Create price field.
   $field = array(

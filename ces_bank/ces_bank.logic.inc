@@ -38,6 +38,15 @@ class CesBank {
       }
       $record['state'] = CesBankExchange::STATE_INACTIVE;
       $this->updateObject('CesBankExchange', $record);
+      // create new default category from exchange.
+      $category = (object) array(
+        'title' => 'general',
+        'parent' => 0,
+        'description' => 'General category',
+        'exchange' => $record['id'],
+        'context' => 3,
+      );
+      ces_category_save($category);
       ces_message_send_notify('new_exchange', array('exchange' => $record), array(1), 1);
     }
     catch (Exception $e) {
