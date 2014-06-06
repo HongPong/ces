@@ -122,6 +122,29 @@ function ces_offerswants_entity_info() {
       ),
     ),
   );
+
+  $info['ces_offercomment'] = array(
+    'label' => t('Offer comment'),
+    'controller class' => 'OfferCommentEntityController',    
+    'base table' => 'ces_offercomment',
+    'fieldable' => FALSE,
+    'entity keys' => array(
+      'id' => 'cid',
+    ),
+    'static cache' => TRUE,
+    'bundles' => array(
+      'offercomment' => array(
+        'label' => 'Offer comment',
+      ),
+    ),
+    'view modes' => array(
+      'full' => array(
+        'label' => t('Full OfferComment'),
+        'custom settings' =>  FALSE,
+      ),
+    )
+  );
+  
   return $info;
 }
 
@@ -164,6 +187,30 @@ function ces_offerwant_delete($id) {
   $controller = entity_get_controller('ces_offerwant');
   return $controller->delete($id);
 }
+/**
+ * Implements hook_load().
+ */
+function ces_offercomment_load($cid = NULL, $reset = FALSE) {
+  $cids = (isset($cid) ? array($cid) : array());
+  $offercomment = ces_offercomment_load_multiple($cids, $reset);
+  return $offercomment ? reset($offercomment) : FALSE;
+}
+
+/**
+ * Loads multiple offercomment entities.
+ */
+function ces_offercomment_load_multiple($cids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load('ces_offercomment', $cids, $conditions, $reset);
+}
+
+/**
+ * Delete offercomment entity.
+ */
+function ces_offercomment_delete($cid) {
+  $controller = entity_get_controller('ces_offercomment');
+  return $controller->delete($cid);
+}
+
 /**
  * Implements hook_menu().
  */
@@ -342,6 +389,15 @@ function ces_offerswants_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 300,
   );
+    $menu['ces/bank/exchange/offercomment/%/view'] = array(
+    'title' => 'Offer comments and ratings',
+    'description' => 'View offer with comments and ratings',
+    'page callback' => 'ces_offercomment_page',
+    'page arguments' => array(4),
+    'access callback' => TRUE,
+//    'access callback' => 'ces_offerwant_access',
+//    'access arguments' => array('edit', 4),
+  ); 
   return $menu;
 }
 /**
@@ -787,6 +843,15 @@ function template_preprocess_ces_offerwant(&$variables) {
   if (ces_offerwant_access('edit', $offerwant)) {
     $actions[] = l(t('Edit'), $prefix . '/edit');
     $actions[] = l(t('Delete'), $prefix . '/delete');
+  }
+  if ($offerwant->type == 'offer') {
+    $countcomments = db_query("SELECT cid FROM {ces_offercomment} WHERE oid = :oid",
+    array(':oid' => $offerwant->id));
+    $numcomm = 0;
+    foreach ($countcomments as $coucom) { 
+      $numcomm++;
+    }
+    $actions[] = l(t('Comments(') . $numcomm . ')', 'ces/bank/exchange/offercomment/' . $offerwant->id . '/view');
   }
   $variables['ces_offerwant_actions'] = implode(' ', $actions);
   $variables['ces_offerwant_send_notify_link'] = l(t('Send Notify'), 'ces/bank/account/myoffers/' . $offerwant->id . '/send_notify');
@@ -1272,6 +1337,27 @@ class CesOffersWantsCategoryEntityController extends DrupalDefaultEntityControll
     // Finally delete category from database.
     db_delete('ces_category')->condition('id', $category->id)->execute();
     field_attach_delete('ces_category', $category);
+  }
+}
+
+/**
+ * Entity controller.
+ */
+class OfferCommentEntityController extends DrupalDefaultEntityController {
+  /**
+   * Save entity.
+   */
+  public function save($offercomment) {
+    drupal_write_record('ces_offercomment', $offercomment);
+    module_invoke_all('entity_insert', 'ces_offercomment', $offercomment);
+    return $offercomment;
+  }
+  /**
+   * Delete entity.
+   */
+  public function delete($cid) {
+    $offercomment = ces_offercomment_load($cid);
+    db_delete('ces_offercomment')->condition('cid', $offercomment->cid)->execute();
   }
 }
 
@@ -1878,6 +1964,111 @@ function ces_offerswants_user_register_submit($form, &$form_state) {
   }
   $form_state['redirect'] = 'ces';
 }
+function ces_offercomment_page($offerid) {
+  drupal_add_css(drupal_get_path('module', 'ces_offerswants') . '/css/ces_offerswants.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
+  $page = array();
+// Build entity query.
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'ces_offerwant');
+  $query->entityCondition('bundle', 'offer');
+  $query->propertyCondition('id', $offerid);
+  $result = $query->execute();
+
+  if (isset($result['ces_offerwant']) && count($result['ces_offerwant']) > 0) {
+    $offerids = array_keys($result['ces_offerwant']);
+    $offers = ces_offerwant_load_multiple($offerids);
+    $page[] = _ces_offerwants_render_list($offers);
+
+    $query2 = new EntityFieldQuery();
+    $query2->entityCondition('entity_type', 'ces_offercomment');
+    $query2->propertyCondition('oid', $offerid);
+    $result2 = $query2->execute();
+    if (isset($result2['ces_offercomment']) && count($result2['ces_offercomment']) > 0) {
+      $offercommentids = array_keys($result2['ces_offercomment']);
+      $offercomments = ces_offercomment_load_multiple($offercommentids);
+
+      $buildoutput = array();
+      $count = 1;
+      foreach ($offercomments as $ofco) {
+        $odd = $count++ % 2;
+        $userauthor = user_load($ofco->uid);
+        $buildoutput = array(
+          '#type' => 'container',
+          '#attributes' => array(
+            'class' => array(
+              'ces_offercomment_wrapper',
+              $odd ? 'odd' : 'even',
+            ),
+          ),
+          'content' => array(
+            '#type' => 'markup',
+            '#markup' => '<div class="offercomment-body">' . $ofco->body . '</div>' .
+            '<div class="offercomment-rated-author">Rated <strong>' . $ofco->rating . '/5</strong> by ' .
+            l($userauthor->name, 'user/' . $userauthor->uid) . ' - ' . format_date($ofco->created, 'custom', 'd/m/y') . '</div>',
+          ),   
+        );
+        $page[] = $buildoutput;
+      }
+    }
+    $page[] = drupal_get_form('ces_offercomment_add_form', $offerid);
+  }  
+  else {
+    $text = array(
+      '#markup' => t('There is no offer with ' . $offerid . ' id number.'),
+    );
+    $page[] = $text;
+  }
+  return $page;
+}
+function ces_offercomment_add_form($form, &$form_state, $offerid) {
+  $form['offercomment'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Add a new comment and rating to this offer.'),
+  );
+  
+  $form['offercomment']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Comment'),
+    '#rows' => 3,
+    '#required' => TRUE,
+  );
+  
+  $form['offercomment']['rating'] = array(
+    '#type' => 'select',
+    '#title' => t('Rating from 0 to 5'),
+    '#options' => array(
+      0 => '0',
+      1 => '1',
+      2 => '2',
+      3 => '3',
+      4 => '4',
+      5 => '5',
+    ),
+    '#required' => TRUE,
+  );
+  
+  $form['oid'] = array(
+    '#type' => 'hidden',
+    '#value' => $offerid,
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save comment'),
+    '#prefix' => '<br>',
+  );
+  return $form;
+}
+function ces_offercomment_add_form_submit($form, &$form_state) {
+  global $user;
+  $form_state['values']['uid'] = $user->uid;
+  $form_state['values']['created'] = REQUEST_TIME;
+  $ces_offercomment_submission = (object) $form_state['values'];
+  $offercomment = entity_get_controller('ces_offercomment')->save($ces_offercomment_submission);
+  drupal_set_message(t('Your comment has been successfully saved.'));
+  $form_state['redirect'] = "ces/bank/exchange/offercomment/$offercomment->oid/view";
+}
+
 /**
  * Implements hook_token_info().
  */
