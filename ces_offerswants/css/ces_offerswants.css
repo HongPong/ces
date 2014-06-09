@@ -77,3 +77,14 @@ div.ces-offerwant-properties dd {
 .ces-offerwant-send_notify {
   float: right;
 }
+
+div.ces_offercomment_wrapper {
+  background-color: #f1f1f1;
+  margin-bottom: 5px;
+  margin-top: 0;
+  padding: 10px;
+}
+
+div.offercomment-rated-author {
+  font-size: 90%;
+}

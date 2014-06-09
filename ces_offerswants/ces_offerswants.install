@@ -145,7 +145,98 @@ function ces_offerswants_schema() {
       ),
     ),
   );
+  $schema['ces_offercomment'] = array(
+    'description' => 'Table for comments and ratings on offers.',
+    'fields' => array(
+      'cid' => array(
+        'description' => 'Primary Key: Unique comment ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'oid' => array(
+        'description' => 'The {ces_offerwant}.id of the parent offer.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {users}.uid who authored the comment.',
+      ),
+      'body' => array(
+        'description' => 'The body of this comment. It is HTML.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+      'rating' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'description' => 'Rating of the offer: from 0 to 5.',
+      ),
+      'created' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The time that the comment was created, as a Unix timestamp.',
+      ),
+    ),
+    'primary key' => array('cid'),
+  );
   return $schema;
+}
+
+/**
+ * Implements hook_update_N().
+ */
+function ces_offerswants_update_7100() {
+  $schema['ces_offercomment'] = array(
+    'description' => 'Table for comments and ratings on offers.',
+    'fields' => array(
+      'cid' => array(
+        'description' => 'Primary Key: Unique comment ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'oid' => array(
+        'description' => 'The {ces_offerwant}.id of the parent offer.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {users}.uid who authored the comment.',
+      ),
+      'body' => array(
+        'description' => 'The body of this comment. It is HTML.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+      'rating' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'description' => 'Rating of the offer: from 0 to 5.',
+      ),
+      'created' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The time that the comment was created, as a Unix timestamp.',
+      ),
+    ),
+    'primary key' => array('cid'),
+0  );
+  db_create_table('ces_offercomment', $schema['ces_offercomment']);
 }
 
 /**
@@ -154,15 +245,6 @@ function ces_offerswants_schema() {
 function ces_offerswants_install() {
   $t = get_t();
 
-  // Create root category.
-  $category = (object) array(
-    'title' => 'root',
-    'parent' => 0,
-    'description' => 'Top category',
-    'exchange' => 1,
-    'context' => 0,
-  );
-  ces_category_save($category);
 
   // Create price field.
   $field = array(

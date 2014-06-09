@@ -101,6 +101,7 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
       'ces_phonework' => array(LANGUAGE_NONE => array(array('value' => $data['PhoneW']))),
       'ces_phonehome' => array(LANGUAGE_NONE => array(array('value' => $data['PhoneH']))),
       'ces_website' => array(LANGUAGE_NONE => array(array('value' => $data['WebSite']))),
+      'created' => strtotime($data['Created']),
     );
 
     $extra_data = array(
@@ -179,6 +180,8 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
             'role' => CesBankAccountUser::ROLE_ACCOUNT_ADMINISTRATOR,
           ),
         ),
+        'created' => strtotime($data['Created']),
+        'modified' => strtotime($data['Created']),
       );
       $bank->createAccount($account, FALSE);
       $bank->activateAccount($account);
