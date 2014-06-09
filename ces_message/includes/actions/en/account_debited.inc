@@ -25,7 +25,7 @@ Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
 
 Ordered by: [current-user:fullname] <[current-user:mail]>
 
-View your current <a href="[url:absolute]/ces/bank/account/transaction">statement of account</a>.
+View your current <a href="[site:url]/ces/bank/account/transaction">statement of account</a>.
 
 If this debit is incorrect contact the seller or the exchange administrator
 within 10 days to have it corrected.

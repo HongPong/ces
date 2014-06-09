@@ -20,8 +20,6 @@ function ces_import4ces_parse_setting($import_id, $setting, $row, &$context) {
   }
   $tx = db_transaction();
   try {
-    global $user;
-
     // Crear bank.
     $bank = new CesBank();
 

@@ -24,7 +24,6 @@
  *   Id of exchange.
  */
 function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
-  global $user;
   $bank = new CesBank();
   if (isset($form_state['values'])) {
     // Form rebuild.
@@ -537,7 +536,7 @@ function ces_bank_limitchain_form_deletelimit($form, &$form_state) {
 function ces_bank_limitchain_form_validate($form, &$form_state) {
   $values = $form_state['values'];
   if (!empty($values['limits'])) {
-    foreach ($values['limits'] as $key => $limit) {
+    foreach ($values['limits'] as $limit) {
       $amount = $limit['value'];
       if (!is_numeric($amount)) {
         form_set_error('value', t('The limit amount must be numeric.'));
@@ -807,9 +806,7 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
     if (!is_array($account)) {
       $account = $bank->getAccount($account);
     }
-    $exchange = $bank->getExchange($account['exchange']);
   }
-  $admin = ces_bank_access('admin', 'exchange', $exchange['id']);
   $form['bankaccount'] = array();
   $form['bankaccount']['title'] = array(
     '#type' => 'item',

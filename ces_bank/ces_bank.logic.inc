@@ -38,7 +38,7 @@ class CesBank {
       }
       $record['state'] = CesBankExchange::STATE_INACTIVE;
       $this->updateObject('CesBankExchange', $record);
-      // create new default category from exchange.
+      // Create new default category from exchange.
       $category = (object) array(
         'title' => 'general',
         'parent' => 0,
@@ -821,6 +821,8 @@ class CesBank {
       }
       $s = new IcesSerializer('CesBankBasicTransaction');
       $s->save($transaction);
+
+      $this->notifyTransaction($transaction);
       return $ret;
     }
     catch (Exception $e) {
@@ -2249,7 +2251,7 @@ class CesBankBasicTransaction extends IcesDBObject implements CesBankTransaction
       $this->setState(CesBankTransactionInterface::STATE_COMMITTED);
       // @todo Da error por falta de estado, mirar de solucionarlo
       // $bank = new CesBank();
-      // $bank->notifyTransaction($this);
+      // $this->notifyTransaction($this);
       return TRUE;
     }
     catch (Exception $e) {
@@ -2593,6 +2595,7 @@ class CesBankLevyedTransaction extends CesBankDecoratedTransaction {
    * TODO: document.
    */
   public function apply() {
+    /** @TODO: finish this!
     $from_account_name = $this->getFromAccountName();
     $s = new IcesSerializer('CesBankLocalAccount');
     $from_account = $s->loadFromUniqueKey('name', $from_account_name);
@@ -2606,7 +2609,7 @@ class CesBankLevyedTransaction extends CesBankDecoratedTransaction {
         'concept' => t('Levy. Transaction %trans', array('%trans', $this->getId())),
         'user' => $this->getUser(),
     ));
-    // @TODO: finish this!
+    */
   }
 
 }
