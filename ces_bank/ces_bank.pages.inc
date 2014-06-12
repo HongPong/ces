@@ -561,8 +561,8 @@ function ces_bank_account_view() {
 /**
  * TODO: Document.
  *
- * @param int $transaction
- *   transaction id.
+ * @param array $transaction
+ *   transaction record.
  */
 function ces_bank_transaction_view($transaction) {
   $bank = new CesBank();

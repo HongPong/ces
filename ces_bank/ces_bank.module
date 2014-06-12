@@ -433,6 +433,18 @@ function ces_bank_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
   );
+  $menu['ces/bank/account/transaction/%ces_transaction/accept'] = array(
+    'title' => 'Accept',
+    'description' => 'Accept transaction.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_transaction_accept_form', 4),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_transaction_access',
+    'access arguments' => array('accept', 4),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 15,
+  );
   $menu['ces/bank/account/transaction/%ces_transaction/edit'] = array(
     'title' => 'Edit',
     'description' => 'Edit transaction.',
@@ -474,8 +486,16 @@ function ces_transaction_load($id = NULL) {
  * Access transaction information or use.
  */
 function ces_transaction_access($permission, $transaction, $account = NULL) {
-  return ces_bank_access($permission, 'account buyer', $transaction['fromaccount'], $account)
+  if ($permission == 'accept') {
+    if ($transaction['state'] == CesBankTransactionInterface::STATE_TRIGGERED) {
+      return ces_bank_access('use', 'account buyer', $transaction['fromaccount'], $account);
+    }
+    return FALSE;
+  }
+  else {
+    return ces_bank_access($permission, 'account buyer', $transaction['fromaccount'], $account)
       || ces_bank_access($permission, 'account seller', $transaction['toaccount'], $account);
+  }
 }
 /**
  * Implements hook_load().
@@ -976,6 +996,88 @@ function ces_bank_user_access($permission, $target, $account = NULL) {
   }
   return FALSE;
 }
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ces_bank_form_user_profile_form_alter(&$form, &$form_state) {
+  global $user;
+  $bank = new CesBank();
+  $accounts = $bank->getUserAccounts($user->uid);
+  if (!empty($accounts)) {
+    $form['ces_account'] = array(
+      '#tree' => TRUE,
+      '#weight' => 59,
+    );
+    foreach ($accounts as $account) {
+      $fieldset = array(
+        '#type' => 'fieldset',
+        '#title' => t('Account @name', array('@name' => $account['name'])),
+      );
+      $fieldset['manual'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Accept payments manually'),
+        '#description' => t('If cheked, all payments from all accounts but those in the whitelist will not be effective until you manually accept them. Otherwise all payments will automatically be done. If you check this item you must regularly check your messages to quickly accept your pending payments.'),
+        '#default_value' => $account['data']['accept']['manual'],
+      );
+      $fieldset['whitelist'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Accept payments whitelist'),
+        '#description' => t('Write one account per line. The payments from these accounts will be automatically accepted.'),
+        '#default_value' => implode("\n", $account['data']['accept']['whitelist']),
+      );
+      $form['ces_account'][$account['id']] = $fieldset;
+    }
+    $form['#submit'][] = 'ces_bank_form_user_profile_submit';
+    $form['#validate'][] = 'ces_bank_form_user_profile_validate';
+  }
+}
+
+/**
+ * Form validate function for ces_bank_form_user_profile_form_alter.
+ */
+function ces_bank_form_user_profile_validate($form, &$form_state) {
+  $bank = new CesBank();
+  $values = $form_state['values']['ces_account'];
+  foreach ($values as $id => $account) {
+    $whitelist = trim($account['whitelist']);
+    if (!empty($whitelist)) {
+      $whitelist = explode("\n", $whitelist);
+      foreach ($whitelist as $name) {
+        $name = trim($name);
+        if (empty($bank->getAccountByName($name))) {
+          form_set_error('ces_account[' . $id . '][whitelist]',
+            t('Could not find account @account.', array('@account' => $name)));
+        }
+      }
+    }
+  }
+}
+/**
+ * Form submit function for ces_bank_form_user_profile_form_alter.
+ */
+function ces_bank_form_user_profile_submit($form, &$form_state) {
+  global $user;
+  $bank = new CesBank();
+  $accounts = $bank->getUserAccounts($user->uid);
+  $values = $form_state['values']['ces_account'];
+  foreach ($accounts as $account) {
+    $value = $values[$account['id']];
+    $account['data']['accept']['manual'] = $value['manual'];
+    $whitelist = trim($value['whitelist']);
+    if (!empty($whitelist)) {
+      $whitelist = explode("\n", trim($value['whitelist']));
+      foreach ($whitelist as $i => $item) {
+        $whitelist[$i] = trim($item);
+      }
+    }
+    else {
+      $whitelist = array();
+    }
+    $account['data']['accept']['whitelist'] = $whitelist;
+    $bank->updateAccount($account);
+  }
+}
+
 /**
  * Returns the list of countries having at least one exchange.
  */

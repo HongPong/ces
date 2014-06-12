@@ -1039,6 +1039,61 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
   return $form;
 }
 /**
+ * Form for accept transaction.
+ */
+function ces_bank_transaction_accept_form($form, &$form_state, $transaction) {
+  global $user;
+  $user = user_load($user->uid);
+  // Choose current account.
+  $account_id = $transaction['fromaccount'];
+  $user->data['ces_current_account'] = $account_id;
+  user_save($user);
+  // Prepare form.
+  drupal_set_title(t('Authorize transaction'), PASS_THROUGH);
+  $form['transaction'] = array(
+    '#type' => 'value',
+    '#value' => $transaction['id'],
+  );
+  $form['account'] = array(
+    '#type' => 'value',
+    '#value' => $account_id,
+  );
+  $form['#attributes']['class'][] = 'confirmation';
+  $form['description'] = array(
+    '#markup' => t('Do you accept the following transaction from your account?'),
+    '#prefix' => '<h3>',
+    '#suffix' => '</h3>',
+  );
+  module_load_include('pages.inc', 'ces_bank');
+  $details = ces_bank_transaction_view($transaction);
+  $form['details'] = array(
+    '#markup' => drupal_render($details),
+  );
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Accept'),
+  );
+  $form['actions']['cancel'] = array(
+    '#type' => 'link',
+    '#title' => t('Cancel'),
+    '#href' => 'ces/bank/account/transaction',
+  );
+  return $form;
+}
+/**
+ * Submit function for ces_bank_accept_transaction_form.
+ */
+function ces_bank_transaction_accept_form_submit($form, &$form_state) {
+  $transaction_id = $form_state['values']['transaction'];
+  $account_id = $form_state['values']['account'];
+  $bank = new CesBank();
+  $res = $bank->acceptTransaction($transaction_id, $account_id);
+  $record = $bank->getTransaction($transaction_id);
+  _ces_bank_set_transaction_message($res, $record);
+  $form_state['redirect'] = 'ces/bank/account/transaction/' . $transaction_id . '/view';
+}
+/**
  * AJAX callback for transaction form.
  */
 function ces_bank_toaccountname_dropdown_callback($form, $form_state) {
@@ -1236,36 +1291,47 @@ function ces_bank_transaction_confirm_form_submit($form, &$form_state) {
       default:
         throw new Exception(t('Operation not permitted or not implemented yet.'));
     }
-    if ($result !== TRUE) {
-      $text = t('The transaction has NOT been applied.');
-      if (is_array($result)) {
-        $text .= '<br/>' . t('Details:') . '<br/>';
-        $text .= '<ul>';
-        foreach ($result as $message) {
-          $text .= '<li>' . filter_xss($message) . '</li>';
-        }
-        $text .= '</ul>';
-      }
-      throw new Exception($text);
-    }
+    $record = $bank->getTransaction($record['id']);
+    _ces_bank_set_transaction_message($result, $record, $op);
+    $form_state['redirect'] = 'ces/bank/account/transaction/' . $id . '/view';
   }
   catch (Exception $e) {
     drupal_set_message($e->getMessage(), 'error');
     return;
   }
-  switch ($op) {
-    case 'new':
-    case 'trigger':
-      $msg = t('Transaction successfully applied.');
-      break;
+}
+/**
+ * Helper.
+ */
+function _ces_bank_set_transaction_message($result, $record, $op = 'trigger') {
+  if ($result) {
+    switch ($op) {
+      case 'new':
+      case 'trigger':
+        drupal_set_message(t('Transaction successfully applied.'));
+        break;
 
-    case 'edit':
-      $msg = t('Transaction successfully updated.');
-      break;
+      case 'edit':
+        drupal_set_message(t('Transaction successfully updated.'));
+        break;
 
+    }
   }
-  $form_state['redirect'] = 'ces/bank/account/transaction/' . $id . '/view';
-  drupal_set_message(filter_xss($msg));
+  else {
+    $text = t('The transaction has NOT been applied.');
+    if (!empty($record['data']['log'][$record['state']])) {
+      $messages = $record['data']['log'][$record['state']];
+      $text .= '<br/>' . t('Details:') . '<br/>';
+      $text .= '<ul>';
+      foreach ($messages as $message) {
+        $text .= '<li>' . $message . '</li>';
+      }
+      $text .= '</ul>';
+    }
+    $status = $record['state'] == CesBankTransactionInterface::STATE_TRIGGERED ? 'status' : 'error';
+    // This filter_xss is here only so that coder module shut up.
+    drupal_set_message(filter_xss($text), $status);
+  }
 }
 /**
  * Form to delete a transaction permanently.

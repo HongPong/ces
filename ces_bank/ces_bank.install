@@ -368,6 +368,12 @@ function ces_bank_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'data' => array(
+        'description' => 'PHP-serialized account configuration.',
+        'type' => 'blob',
+        'not null' => TRUE,
+        'serialize' => TRUE,
+      ),
     ),
     'primary key' => array('id'),
     'unique keys' => array(
@@ -562,5 +568,13 @@ function ces_bank_schema() {
  */
 function ces_bank_uninstall() {
   drupal_uninstall_schema(ces_bank_schema());
+}
+
+/**
+ * Add new data field in accunt table.
+ */
+function ces_bank_update_7100() {
+  $schema = ces_bank_schema();
+  db_add_field('ces_account', 'data', $schema['ces_account']['data']);
 }
 /** @} */

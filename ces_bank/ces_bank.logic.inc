@@ -311,6 +311,10 @@ class CesBank {
    *
    * @param array $record
    *   The transaction object record.
+   *
+   * @return bool
+   *   TRUE if the transaction could be successfully updated and FALSE
+   *   otherwise.
    */
   public function updateTransaction(array &$record) {
     $t = IcesSerializer::DBTransaction();
@@ -796,34 +800,89 @@ class CesBank {
    * @param int $transaction_id
    *   the id of the transaction object record.
    *
-   * @return bool|array
+   * @return bool
    *   TRUE if the transaction is successfully applied and
-   *   committed at the end of this function. Otherwise, it returns an array
-   *   of messages with the reasons why the transaction couldn't be applied.
+   *   committed at the end of this function. FALSE otherwise, and some log
+   *   messages can be accessed through the log field of the transaction.
+   *
+   * @throw Exception
+   *   And rollback the database transaction if something goes unexpectedly.
    */
   public function applyTransaction($transaction_id) {
     $t = IcesSerializer::DBTransaction();
     try {
       // Get transaction. May be any type of transaction.
       $transaction = $this->getObject('CesBankBasicTransaction', $transaction_id);
-      // Trigger transaction application.
-      $transaction->trigger();
-      $transaction->check();
-      $ret = FALSE;
+      if ($transaction->getState() == CesBankTransactionInterface::STATE_NEW) {
+        // Trigger transaction application.
+        $transaction->trigger();
+      }
+      if ($transaction->getState() == CesBankTransactionInterface::STATE_TRIGGERED) {
+        // Check if we can apply the transaction.
+        $transaction->check();
+      }
       if ($transaction->getState() == CesBankTransactionInterface::STATE_ACCEPTED) {
+        // Effectively apply transaction.
         $transaction->apply();
-        if ($transaction->getState() == CesBankTransactionInterface::STATE_COMMITTED) {
-          $ret = TRUE;
-        }
       }
-      if (!$ret) {
-        $ret = $transaction->getLog($transaction->getState());
+      // Check for error.
+      if ($transaction->getState() != CesBankTransactionInterface::STATE_ACCEPTED
+        && $transaction->getState() != CesBankTransactionInterface::STATE_REJECTED
+        && $transaction->getState() != CesBankTransactionInterface::STATE_TRIGGERED
+        && $transaction->getState() != CesBankTransactionInterface::STATE_COMMITTED) {
+        // Here we could do some more elaborate logic to handle this exceptional
+        // case.
+        $errors = $transaction->getLog($transaction->getState());
+        $t->rollback();
+        throw new Exception(implode("\n", $errors));
       }
+
       $s = new IcesSerializer('CesBankBasicTransaction');
       $s->save($transaction);
 
       $this->notifyTransaction($transaction);
-      return $ret;
+      return ($transaction->getState() == CesBankTransactionInterface::STATE_COMMITTED);
+
+    }
+    catch (Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
+  }
+  /**
+   * Accept a transaction.
+   *
+   * After accept the transaction, it will be automatically applied.
+   *
+   * @param int $transaction_id
+   *   The transaction must be already triggered.
+   *
+   * @param int $account_id
+   *   Account id.
+   *
+   * @param bool $force
+   *   If set to TRUE, the transaction will be accepted even if the account
+   *   limits do not allow the transaction. Use this parameter only from
+   *   administrative users.
+   *
+   * @return bool
+   *   TRUE if the transaction has been sucessfully applied, FALSE otherwise.
+   */
+  public function acceptTransaction($transaction_id, $account_id, $force = FALSE) {
+    $t = IcesSerializer::DBTransaction();
+    try {
+      // Get transaction. May be any type of transaction.
+      $transaction = $this->getObject('CesBankBasicTransaction', $transaction_id);
+      if (!$force) {
+        $transaction->acceptByAccount($account_id);
+      }
+      else {
+        $transaction->setState(CesBankTransactionInterface::STATE_ACCEPTED);
+      }
+      $s = new IcesSerializer('CesBankBasicTransaction');
+      $s->save($transaction);
+
+      return $this->applyTransaction($transaction_id);
     }
     catch (Exception $e) {
       $t->rollback();
@@ -1054,16 +1113,32 @@ class CesBank {
     $account_from_name = $transaction->getFromAccountName();
     $account_to_name = $transaction->getToAccountName();
     $transaction_user = $transaction->getUser();
+    $details = $transaction->getLog($transaction->getState());
     $params = array(
       'transaction' => array(
         'amount' => $transaction->getAmount(),
         'concept' => $transaction->getConcept(),
         'fromaccount' => $account_from_name,
         'toaccount' => $account_to_name,
+        'details' => $details,
       ),
     );
-    $this->notifyTransactionAccount('account_debited', $account_from_name, $transaction_user, $params);
-    $this->notifyTransactionAccount('account_credited', $account_to_name, $transaction_user, $params);
+    switch ($transaction->getState()) {
+      case CesBankTransactionInterface::STATE_COMMITTED:
+        $this->notifyTransactionAccount('account_debited', $account_from_name, $transaction_user, $params);
+        $this->notifyTransactionAccount('account_credited', $account_to_name, $transaction_user, $params);
+        break;
+
+      case CesBankTransactionInterface::STATE_REJECTED:
+        $this->notifyTransactionAccount('account_debit_rejected', $account_from_name, $transaction_user, $params);
+        $this->notifyTransactionAccount('account_credit_rejected', $account_to_name, $transaction_user, $params);
+        break;
+
+      case CesBankTransactionInterface::STATE_TRIGGERED:
+        $this->notifyTransactionAccount('account_debit_pending', $account_from_name, $transaction_user, $params);
+        $this->notifyTransactionAccount('account_credit_pending', $account_to_name, $transaction_user, $params);
+        break;
+    }
   }
 
   /**
@@ -1440,6 +1515,10 @@ class CesBankLocalAccount extends IcesDBObject implements CesBankAccountInterfac
    */
   public $state;
   /**
+   * @var array
+   */
+  public $data = array();
+  /**
    * @var array of users related to this account. Tipically this array is a
    * singleton with the account's administrator user. Each entry is an
    * CesBankAccountUser object.
@@ -1470,6 +1549,13 @@ class CesBankLocalAccount extends IcesDBObject implements CesBankAccountInterfac
     else {
       $s = new IcesSerializer('CesBankAccountUser');
       $this->users = $s->loadCollection(array('account' => $this->id));
+    }
+    // Default value for manual accept payments.
+    if (empty($this->data['accept'])) {
+      $this->data['accept'] = array(
+        'manual' => FALSE,
+        'whitelist' => array(),
+      );
     }
   }
   /**
@@ -1538,6 +1624,10 @@ class CesBankLocalAccount extends IcesDBObject implements CesBankAccountInterfac
   }
   /**
    * Verifies if an account can accept a transaction by being active.
+   *
+   * @return bool|array
+   *   TRUE if the transaction is accepted or an array with messages why the
+   *   transaction is not accepted.
    */
   public function checkTransaction(CesBankTransactionInterface &$transaction) {
     if ($this->state == CesBankLocalAccount::STATE_ACTIVE) {
@@ -1572,7 +1662,8 @@ class CesBankLocalAccount extends IcesDBObject implements CesBankAccountInterfac
     return $this->users;
   }
   /**
-   * TODO: Document.
+   * Get the Exchange of this account.
+   *
    * @return CesBankExchange
    *   the exchange object to which this account belongs.
    */
@@ -1580,6 +1671,27 @@ class CesBankLocalAccount extends IcesDBObject implements CesBankAccountInterfac
     $es = new IcesSerializer('CesBankExchange');
     return $es->load($this->exchange);
   }
+
+  /**
+   * Check whether the transaction must be accepted by this account.
+   *
+   * This account must be the buyer account of the transaction parameter.
+   *
+   * @return bool
+   *   TRUE if the transaction is manually accepted by this account and hence
+   *   may be immediatelly applied, FALSE if the transaction has to be manually
+   *   accepted.
+   */
+  public function manualCheck($transaction) {
+    if ($this->data['accept']['manual']) {
+      $toaccount = $transaction->getToAccountName();
+      if (!in_array($toaccount, $this->data['accept']['whitelist'])) {
+        return array(t('The transaction must be manually authorized.'));
+      }
+    }
+    return TRUE;
+  }
+
 }
   /**
    * TODO: document. Class CesBankAccountUser.
@@ -1704,7 +1816,11 @@ class CesBankLimitChain extends IcesDBObject {
     }
   }
   /**
-   * TODO: document.
+   * Check whether the transaction can be applied.
+   * 
+   * @return bool|array
+   *   TRUE if transaction is accepted, or an array of messages why the
+   *   transaction has not been accepted.
    */
   public function checkTransaction(CesBankLocalAccount &$account, CesBankTransactionInterface &$transaction) {
     $messages = array();
@@ -1767,10 +1883,10 @@ abstract class CesBankAccountLimit extends IcesDBObject {
     return ($this->getAccountValue($account) > $this->getLimit());
   }
   /**
-   * Todo: document.
-   * @return int
-   *   The state of this account when this transaction is performed.
-   *   The account can be the seller or the buyer.
+   * Check if the transaction is accepted by this limit.
+   *
+   * @return bool
+   *   TRUE if transaction is accepted and FALSE if not.
    */
   public function checkTransaction(CesBankLocalAccount &$account, CesBankTransactionInterface &$transaction) {
     if (!$this->block) {
@@ -1971,6 +2087,11 @@ interface CesBankTransactionInterface {
    * Revoke this transaction.
    */
   public function revoke();
+  /**
+   * Set that the account accepted this transaction.
+   */
+  public function acceptByAccount($account_id);
+
   /**
    * The transaction has been created but hasn't already been triggered to
    * apply. This is the state while the transaction can be edited. Waiting
@@ -2210,7 +2331,11 @@ class CesBankBasicTransaction extends IcesDBObject implements CesBankTransaction
     $this->setState(CesBankTransactionInterface::STATE_TRIGGERED);
   }
   /**
-   * TODO: document.
+   * Checks if this transaction can be applied and updates the state.
+   *
+   * The effect of this function can be this transaction to be accepted,
+   * rejected or nothing (if the transaction cannot be checked immediately due
+   * to the need of human intervention).
    */
   public function check() {
     $s = new IcesSerializer('CesBankLocalAccount');
@@ -2219,7 +2344,16 @@ class CesBankBasicTransaction extends IcesDBObject implements CesBankTransaction
     $messages_from = $account_from->checkTransaction($this);
     $messages_to   = $account_to->checkTransaction($this);
     if ($messages_from === TRUE && $messages_to === TRUE) {
-      $this->setState(CesBankTransactionInterface::STATE_ACCEPTED);
+      // Check manual accept.
+      if (empty($this->data['authorized_from'])) {
+        $messages_from = $account_from->manualCheck($this);
+      }
+      if ($messages_from === TRUE) {
+        $this->setState(CesBankTransactionInterface::STATE_ACCEPTED);
+      }
+      else {
+        $this->log($messages_from);
+      }
     }
     else {
       $this->setState(CesBankTransactionInterface::STATE_REJECTED);
@@ -2230,7 +2364,7 @@ class CesBankBasicTransaction extends IcesDBObject implements CesBankTransaction
         $messages = $messages_from;
       }
       else {
-        $messages = array_($messages_from, $messages_to);
+        $messages = array_merge($messages_from, $messages_to);
       }
       $this->log($messages);
     }
@@ -2312,6 +2446,14 @@ class CesBankBasicTransaction extends IcesDBObject implements CesBankTransaction
    */
   public function getCreated() {
     return $this->created;
+  }
+  /**
+   * Implements CesBankTransactionInterface::acceptByAccount().
+   */
+  public function acceptByAccount($account_id) {
+    if ($this->fromaccount == $account_id) {
+      $this->data['authorized_from'] = TRUE;
+    }
   }
 }
 /**
@@ -2410,7 +2552,10 @@ abstract class CesBankDecoratedTransaction extends IcesDBObject implements CesBa
     return $this->parent->revoke();
   }
   /**
-   * TODO: document.
+   * Set the state of this transction.
+   *
+   * @param int $state
+   *   One of the constants defined in CesBankTransacionInterface.
    */
   public function setState($state) {
     return $this->parent->setState($state);
@@ -2427,6 +2572,12 @@ abstract class CesBankDecoratedTransaction extends IcesDBObject implements CesBa
   public function __construct($parent, $record) {
     parent::__construct($record);
     $this->parent = $parent;
+  }
+  /**
+   * Implements CesBankTransactionInterface::acceptByAccount().
+   */
+  public function acceptByAccount($account_id) {
+    $this->parent->acceptByAccount($account_id);
   }
 }
 /**
@@ -2575,6 +2726,12 @@ class CesBankInterExchangeTransaction extends CesBankDecoratedTransaction {
     }
   }
   /**
+   * Implements CesBankTransactionInterface::acceptByAccount.
+   */
+  public function acceptByAccount($account_id) {
+    $this->getVirtualTransactionFrom()->acceptByAccount($account_id);
+  }
+  /**
    * The associated transaction.
    */
   protected function getPair() {
@@ -2595,21 +2752,7 @@ class CesBankLevyedTransaction extends CesBankDecoratedTransaction {
    * TODO: document.
    */
   public function apply() {
-    /** @TODO: finish this!
-    $from_account_name = $this->getFromAccountName();
-    $s = new IcesSerializer('CesBankLocalAccount');
-    $from_account = $s->loadFromUniqueKey('name', $from_account_name);
-    $exchange = $from_account->getExchange();
-    $levy_account = $exchange->getLevyAccount();
-    $amount = $this->getAmount() * $this->levy / 100.0;
-    $levy_transaction = new CesBankBasicTransaction(array(
-        'fromaccount' => $this->fromaccount,
-        'toaccount' => $levy_account->id,
-        'amount' => $amount,
-        'concept' => t('Levy. Transaction %trans', array('%trans', $this->getId())),
-        'user' => $this->getUser(),
-    ));
-    */
+    // TODO.
   }
 
 }
