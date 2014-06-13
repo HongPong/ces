@@ -1,3 +1,11 @@
+/**
+* @file
+* Js script to produce the graphics in statistics page.
+*/
+
+(function () {
+  "use strict";
+  
 jQuery(document).ready(function($) {
   var usersobject = Drupal.settings.ces_statistics.staticsusers;
   var activityobject = Drupal.settings.ces_statistics.staticsactivity;
@@ -18,13 +26,12 @@ jQuery(document).ready(function($) {
   });
 
   $.each(transobject, function (index, order) {
-    amountarray.push([order.transdate,parseFloat(order.transamount).toFixed(2)]);
+    amountarray.push([order.transdate,parseFloat(order.transamount).toFixed(0),parseFloat(order.transamount).toFixed(2)]);
     numberarray.push([order.transdate,order.transnumber]);
   });
 
   // Number of accounts chart
   $.jqplot('chartdiv1', [usersarray], {
-    title:'Number of accounts',
     axes:{
       xaxis:{
         renderer:$.jqplot.DateAxisRenderer,
@@ -35,9 +42,7 @@ jQuery(document).ready(function($) {
       },
     yaxis:{
       autoscale:true,
-    label: "Users",
     min: 0,
-    labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
     },
     },
     series:[{
@@ -54,7 +59,6 @@ jQuery(document).ready(function($) {
 
   // Last year accounts' activity chart
   $.jqplot ('chartdiv2', [activityarray], {
-    title:'Last year accounts activity',
     seriesColors: ["#eeffaa", "#bbee55", "#aadd44", "#99cc33", "#88bb22"],
     seriesDefaults: {
       renderer: jQuery.jqplot.PieRenderer,
@@ -65,7 +69,6 @@ jQuery(document).ready(function($) {
 
   // Number and amount of transactions chart
   $.jqplot('chartdiv3', [amountarray,numberarray], {
-    title:'Number and amount of transactions',
     axes:{
       xaxis:{
         renderer:$.jqplot.DateAxisRenderer,
@@ -76,9 +79,7 @@ jQuery(document).ready(function($) {
       },
     yaxis:{
       autoscale:true,
-    label: "Amount",
     min: 0,
-    labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
     },
     },
 
@@ -96,9 +97,9 @@ jQuery(document).ready(function($) {
       color: "#66AA00",
     }],
     legend:{
-      show: true,
-      labels: ['Amount of transactions','Number of transactions'],
-      location: 'ne',
+      show: false,
     }
   });
 });
+
+})();

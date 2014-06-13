@@ -27,7 +27,6 @@ function ces_statistics_libraries_info() {
         'src/plugins/jqplot.dateAxisRenderer.js',
         'src/plugins/jqplot.barRenderer.js',
         'src/plugins/jqplot.canvasTextRenderer.js',
-        'src/plugins/jqplot.canvasAxisLabelRenderer.js',
         'src/plugins/jqplot.canvasAxisTickRenderer.js',
         'src/plugins/jqplot.categoryAxisRenderer.js',
         'src/plugins/jqplot.pointLabels.js',
@@ -127,7 +126,7 @@ function ces_statistics_page() {
     else {
       $error = $library['error'];
       $error_message = $library['error message'] . ' ' . l(t('Help'), 'admin/help/ces_statistics');
-      drupal_set_message($error_message);
+      drupal_set_message(check_plain($error_message));
     }
 
     // Extract and format users data.
@@ -181,8 +180,8 @@ function ces_statistics_page() {
         ':lastyear' => $lastyear,
         ':state' => 3,
       ));
-    $labels = array('Total inactivity', '1-3 transactions', '4-6 transactions',
-      '6-12 transactions', '+12 transactions');
+    $labels = array(t('Total inactivity'), t('1-3 transactions'), t('4-6 transactions'),
+      t('6-12 transactions'), t('+12 transactions'));
     $staticsactivity = array();
     // 0 to 4 levels of activity.
     for ($i = 0; $i <= 4; $i++) {
@@ -244,6 +243,7 @@ function ces_statistics_page() {
       );
     };
 
+
     // Pass data to js:
     // -> Drupal.settings.ces_statistics.staticsusers
     // -> Drupal.settings.ces_statistics.staticstrans
@@ -261,8 +261,12 @@ function ces_statistics_page() {
       <li>' . t('Average transaction:') . ' ' . $totalamount / $totalnumber
       . '</li>
       </ul>
+      <h3 style="text-align:center;margin-bottom:0;">' . t('Number of accounts') . '</h3>
       <div id="chartdiv1"></div><br/><br/>
+      <h3 style="text-align:center;margin-bottom:0;">' . t('Last year accounts activity') . '</h3>
       <div id="chartdiv2"></div><br/><br/>
+      <h3 style="text-align:center;margin-bottom:0;">' . t('Line: number of transactions') . '<br>'
+      . t('Bars: amount of transactions in') . ' ' . $exchange['currenciesname'] . ' (' . $exchange['currencysymbol'] . ')</h3>
       <div id="chartdiv3"></div><br/><br/><br/><br/>';
     return array('#markup' => $markup);
   }
