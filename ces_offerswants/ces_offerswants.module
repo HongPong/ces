@@ -766,7 +766,7 @@ function ces_offerwant_delete_form($form, &$form_state, $offerwant) {
 function ces_offerwant_delete_form_submit($form, &$form_state) {
   ces_offerwant_delete($form_state['values']['offerwant']);
   if ($form_state['values']['offerwant_type'] == 'offer') {
-  	 $message = t('Offer %offer has been deleted.', array('%offer' => $form_state['values']['offerwant_title']));
+    $message = t('Offer %offer has been deleted.', array('%offer' => $form_state['values']['offerwant_title']));
     $query = new EntityFieldQuery();
       $query->entityCondition('entity_type', 'ces_offercomment');
       $query->propertyCondition('oid', $form_state['values']['offerwant']);
@@ -776,7 +776,7 @@ function ces_offerwant_delete_form_submit($form, &$form_state) {
         foreach ($offercommentids as $ofcoid) {
           ces_offercomment_delete($ofcoid);
         }
-        $message = $message . t(' All offer comments have been deleted too.');
+        $message = $message . t('- All offer comments have been deleted too.');
       }
   }
   else {
