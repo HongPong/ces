@@ -164,7 +164,7 @@ function ces_statistics_page() {
     // Unix time stamp last year ago.
     $lastyear = time() - 31536000;
     while (strtotime($staticsusers[0]['usersdate']) > $lastyear) {
-    	$monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticsusers[0]['usersdate'])));
+      $monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticsusers[0]['usersdate'])));
       array_unshift($staticsusers, array(
         'usersdate' => $monthbefore,
         'usersnumber' => 0,
@@ -253,7 +253,7 @@ function ces_statistics_page() {
     };
 
     while (strtotime($staticstrans[0]['transdate']) > $lastyear) {
-    	$monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticstrans[0]['transdate'])));
+      $monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticstrans[0]['transdate'])));
       array_unshift($staticstrans, array(
         'transdate' => $monthbefore,
         'transamount' => 0,
