@@ -160,9 +160,18 @@ function ces_statistics_page() {
         'usersnumber' => $totalusers,
       );
     }
-    // Extract and format user's last year activity data.
+
     // Unix time stamp last year ago.
     $lastyear = time() - 31536000;
+    while (strtotime($staticsusers[0]['usersdate']) > $lastyear) {
+    	$monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticsusers[0]['usersdate'])));
+      array_unshift($staticsusers, array(
+        'usersdate' => $monthbefore,
+        'usersnumber' => 0,
+      ));
+    }
+
+    // Extract and format user's last year activity data.
     $resultactivity = db_query("
       SELECT COUNT(t.id) AS activitynumber,
       a.id AS activityaccount
@@ -243,6 +252,14 @@ function ces_statistics_page() {
       );
     };
 
+    while (strtotime($staticstrans[0]['transdate']) > $lastyear) {
+    	$monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticstrans[0]['transdate'])));
+      array_unshift($staticstrans, array(
+        'transdate' => $monthbefore,
+        'transamount' => 0,
+        'transnumber' => 0,
+      ));
+    }
 
     // Pass data to js:
     // -> Drupal.settings.ces_statistics.staticsusers
@@ -265,9 +282,10 @@ function ces_statistics_page() {
       <div id="chartdiv1"></div><br/><br/>
       <h3 style="text-align:center;margin-bottom:0;">' . t('Last year accounts activity') . '</h3>
       <div id="chartdiv2"></div><br/><br/>
-      <h3 style="text-align:center;margin-bottom:0;">' . t('Line: number of transactions') . '<br>'
-      . t('Bars: amount of transactions in') . ' ' . $exchange['currenciesname'] . ' (' . $exchange['currencysymbol'] . ')</h3>
-      <div id="chartdiv3"></div><br/><br/><br/><br/>';
+      <h3 style="text-align:center;margin-bottom:0;">' . t('Number of transactions') . '</h3>
+      <div id="chartdiv3"></div><br/><br/>
+      <h3 style="text-align:center;margin-bottom:0;">' . t('Amount of transactions in') . ' ' . $exchange['currenciesname'] . ' (' . $exchange['currencysymbol'] . ')</h3>
+      <div id="chartdiv4"></div><br/><br/><br/><br/>';
     return array('#markup' => $markup);
   }
   else {
