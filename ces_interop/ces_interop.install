@@ -10,7 +10,7 @@
  * Attach field transaction to oauth2 authorisation codes and tokens.
  */
 function ces_interop_install() {
-  // Create transaction field and instances for authorization code, acess token
+  // Create transaction field and instances for authorization code, access token
   // and refresh token from oauth2_server module.
   if (!field_info_field('ces_interop_transaction')) {
     field_create_field(array(

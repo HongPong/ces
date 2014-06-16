@@ -97,10 +97,10 @@ function ces_message_template_list_entities() {
       if (isset($rows[$ident]['data']['language'])) {
         $rows[$ident]['data']['language'] = $rows[$ident]['data']['language'] .
           ' ' .
-          l($entity->language, 'ces/admin/message/' . $entity->template_id);
+          l($entity->language, 'ces/admin/message/' . $entity->template_id . '/view');
       }
       else {
-        $rows[$ident]['data']['language'] = l($entity->language, 'ces/admin/message/' . $entity->template_id);
+        $rows[$ident]['data']['language'] = l($entity->language, 'ces/admin/message/' . $entity->template_id . '/view');
       }
       $rows[$ident]['data']['subject'] = $entity->subject;
       if ($entity->exchange_id == 0) {
@@ -439,7 +439,7 @@ function ces_message_template_form_submit($form, &$form_state) {
   field_attach_submit('ces_message_template', $entity, $form, $form_state);
   $entity = ces_message_template_save($entity);
 
-  $form_state['redirect'] = 'ces/admin/message/' . $entity->template_id;
+  $form_state['redirect'] = 'ces/admin/message/' . $entity->template_id . '/view';
 
 }
 

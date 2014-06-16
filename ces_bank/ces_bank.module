@@ -833,6 +833,7 @@ function ces_bank_get_current_account($account = NULL) {
     global $user;
     $account = user_load($user->uid);
   }
+  include_once(dirname(__FILE__) . '/ces_bank.logic.inc');
   $bank = new CesBank();
   if (isset($account->data['ces_current_account'])) {
     try {

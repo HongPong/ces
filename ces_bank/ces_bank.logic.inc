@@ -2592,10 +2592,11 @@ class CesBankLevyedTransaction extends CesBankDecoratedTransaction {
    */
   public $levy;
   /**
-   * TODO: document.
+   * Apply.
+   *
+   * @todo Document and finish this!
    */
   public function apply() {
-    /** @TODO: finish this!
     $from_account_name = $this->getFromAccountName();
     $s = new IcesSerializer('CesBankLocalAccount');
     $from_account = $s->loadFromUniqueKey('name', $from_account_name);
@@ -2609,7 +2610,6 @@ class CesBankLevyedTransaction extends CesBankDecoratedTransaction {
         'concept' => t('Levy. Transaction %trans', array('%trans', $this->getId())),
         'user' => $this->getUser(),
     ));
-    */
   }
 
 }
