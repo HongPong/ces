@@ -19,8 +19,9 @@ jQuery(document).ready(function($) {
   var maxmin02 = new Array();  
 
   $.each(usersobject, function (index, order) {
-    usersarray.push([order.usersdate,order.usersnumber]);
+    usersarray.push([order.usersdate,parseInt(order.usersnumber)]);
   });
+console.log(usersarray);
 
   $.each(activityobject, function (index, order) {
     activityarray.push([order.activitylevel,parseInt(order.activitypercent)]);
@@ -34,6 +35,7 @@ jQuery(document).ready(function($) {
     maxmin02.push(order.transamount);
   });
 
+  // interval in x axis
   var usersint = '1 month';
   if (usersarray.length > 18) {
     var usersint = '2 month';
@@ -50,11 +52,19 @@ jQuery(document).ready(function($) {
     };	
   };
 
+  // Calculate max in y axis and protect against max=0
   var maxnumber = parseFloat(Math.max.apply(Math, maxmin01)*1.2).toFixed(0);
+  if (maxnumber == 0) {
+    maxnumber = 10;
+  }
   var maxamount = parseFloat(Math.max.apply(Math, maxmin02)*1.2).toFixed(0);
+  if (maxamount == 0) {
+    maxamount = 10;
+  }
+
 
   // Number of accounts chart
-  $.jqplot('chartdiv1', [usersarray], {
+  var plot1 = $.jqplot('chartdiv1', [usersarray], {
     axes:{
       xaxis:{
         renderer:$.jqplot.DateAxisRenderer,
@@ -81,7 +91,7 @@ jQuery(document).ready(function($) {
   });
 
   // Last year accounts' activity chart
-  $.jqplot ('chartdiv2', [activityarray], {
+  var plot2 = $.jqplot ('chartdiv2', [activityarray], {
     seriesColors: ["#eeffaa", "#bbee55", "#aadd44", "#99cc33", "#88bb22"],
     seriesDefaults: {
       renderer: jQuery.jqplot.PieRenderer,
@@ -91,7 +101,7 @@ jQuery(document).ready(function($) {
   });
 
   // Number of transactions chart
-  $.jqplot('chartdiv3', [numberarray], {
+  var plot3 = $.jqplot('chartdiv3', [numberarray], {
     axes:{
       xaxis:{
         renderer:$.jqplot.DateAxisRenderer,
@@ -118,7 +128,7 @@ jQuery(document).ready(function($) {
   });
 
   // Amount of transactions chart
-  $.jqplot('chartdiv4', [amountarray], {
+  var plot4 = $.jqplot('chartdiv4', [amountarray], {
     axes:{
       xaxis:{
         renderer:$.jqplot.DateAxisRenderer,
@@ -144,6 +154,14 @@ jQuery(document).ready(function($) {
       color: "#99CC33",
     }],
   });
+  
+//  $(window).resize(function() {
+//    plot1.replot( { resetAxes: true } );
+//    plot2.replot( { resetAxes: true } );
+//    plot3.replot( { resetAxes: true } );
+//    plot4.replot( { resetAxes: true } );
+//  });
+  
 });
 
 })();
