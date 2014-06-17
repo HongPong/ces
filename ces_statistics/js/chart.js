@@ -5,7 +5,7 @@
 
 (function () {
   "use strict";
-  
+
 jQuery(document).ready(function($) {
   var usersobject = Drupal.settings.ces_statistics.staticsusers;
   var activityobject = Drupal.settings.ces_statistics.staticsactivity;
@@ -16,7 +16,7 @@ jQuery(document).ready(function($) {
   var amountarray = new Array();
   var numberarray = new Array();
   var maxmin01 = new Array();
-  var maxmin02 = new Array();  
+  var maxmin02 = new Array();
 
   $.each(usersobject, function (index, order) {
     usersarray.push([order.usersdate,parseInt(order.usersnumber)]);
@@ -41,27 +41,26 @@ console.log(usersarray);
     var usersint = '2 month';
     if (usersarray.length > 30) {
       var usersint = '3 month';
-    };	
+    };
   };
-  
+
   var transint = '1 month';
   if (numberarray.length > 18) {
     var transint = '2 month';
     if (numberarray.length > 24) {
       var transint = '3 month';
-    };	
+    };
   };
 
   // Calculate max in y axis and protect against max=0
-  var maxnumber = parseFloat(Math.max.apply(Math, maxmin01)*1.2).toFixed(0);
+  var maxnumber = parseFloat(Math.max.apply(Math, maxmin01) * 1.2).toFixed(0);
   if (maxnumber == 0) {
     maxnumber = 10;
   }
-  var maxamount = parseFloat(Math.max.apply(Math, maxmin02)*1.2).toFixed(0);
+  var maxamount = parseFloat(Math.max.apply(Math, maxmin02) * 1.2).toFixed(0);
   if (maxamount == 0) {
     maxamount = 10;
   }
-
 
   // Number of accounts chart
   var plot1 = $.jqplot('chartdiv1', [usersarray], {
@@ -74,7 +73,7 @@ console.log(usersarray);
     tickInterval:usersint,
       },
     yaxis:{
-    	autoscale:true,
+      autoscale:true,
       min: 0,
     },
     },
@@ -146,7 +145,7 @@ console.log(usersarray);
     seriesDefaults: {
       pointLabels:{show:true, stackedValue: false},
     },
-    
+
     series:[{
       renderer:$.jqplot.BarRenderer,
       rendererOptions: {shadowAlpha: 0, barWidth: 20, barPadding: 20, barDirection: 'vertical'},
@@ -154,14 +153,14 @@ console.log(usersarray);
       color: "#99CC33",
     }],
   });
-  
+
 //  $(window).resize(function() {
 //    plot1.replot( { resetAxes: true } );
 //    plot2.replot( { resetAxes: true } );
 //    plot3.replot( { resetAxes: true } );
 //    plot4.replot( { resetAxes: true } );
 //  });
-  
+
 });
 
 })();
