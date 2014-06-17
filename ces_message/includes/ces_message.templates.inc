@@ -540,7 +540,7 @@ class CesMessageTemplateController
     // Can not edit the default templates.
     if ($entity->exchange_id == 0) {
       $entity->template_id = 0;
-      $exchange_data = ces_bank_get_current_exchange();
+      $exchange_data = (function_exists(ces_bank_get_current_exchange)) ? ces_bank_get_current_exchange() : FALSE;
       $exchange_id = ($exchange_data) ? $exchange_data['id'] : 0;
       $entity->exchange_id = $exchange_id;
     }
