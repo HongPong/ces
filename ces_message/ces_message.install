@@ -194,7 +194,7 @@ function ces_message_schema() {
 /**
  * Implements hook_install().
  *
- * Concept definitions and body templates are saved in separate files for easy 
+ * Concept definitions and body templates are saved in separate files for easy
  * management. Example:
  *
  * - includes/actions/en/new_exchange.inc
@@ -204,69 +204,29 @@ function ces_message_schema() {
 function ces_message_install() {
 
   // Create ces actions.
-  $action = (object) array(
-    'name' => 'new_exchange',
-    'description' => 'New exchange',
-  );
-  ces_message_action_save($action);
-  $action = (object) array(
-    'name' => 'exchange_activated',
-    'description' => 'Exchange activated',
-  );
-  ces_message_action_save($action);
-  $action = (object) array(
-    'name' => 'new_account',
-    'description' => 'New account',
-  );
-  ces_message_action_save($action);
-  $action = (object) array(
-    'name' => 'account_activated',
-    'description' => 'Account Activated',
-  );
-  ces_message_action_save($action);
-  $action = (object) array(
-    'name' => 'account_debited',
-    'description' => 'Account Debited',
-  );
-  ces_message_action_save($action);
-  $action = (object) array(
-    'name' => 'account_credited',
-    'description' => 'Account Credited',
-  );
-  ces_message_action_save($action);
-  $action = (object) array(
-    'name' => 'send_offerwant_notify',
-    'description' => 'Send Offer or Want notify',
-  );
-  ces_message_action_save($action);
+  ces_message_install_action('new_exchange', 'New exchange');
+  ces_message_install_action('exchange_activated', 'Exchange activated');
+  ces_message_install_action('new_account', 'New account');
+  ces_message_install_action('account_activated', 'Account activated');
+  ces_message_install_action('account_debited', 'Account debited');
+  ces_message_install_action('account_credited', 'Account credited');
+  ces_message_install_action('send_offerwant_notify', 'Send offer or want notify');
+  ces_message_install_action('account_credit_pending', 'Account credit pending');
+  ces_message_install_action('account_debit_pending', 'Account debit pending');
+  ces_message_install_action('account_debit_rejected', 'Account debit rejected');
+  ces_message_install_action('account_credit_rejected', 'Account credit rejected');
 
-  foreach (glob(dirname(__FILE__) . '/includes/actions/*') as $lang) {
-    $language = basename($lang);
-    foreach (glob($lang . '/*.inc') as $template) {
-      $action = basename($template, '.inc');
-      $actions = ces_message_action_load_multiple(FALSE, array('name' => $action), TRUE);
-      if (!$actions) {
-        trigger_error('Error, Does not exist action [' . $action . ']', E_USER_ERROR);
-      }
-      foreach ($actions as $action_object) {
-        $action_id = $action_object->id;
-      }
-      include $template;
-      $template = (object) array(
-        'subject' => $subject,
-        'body' => $body,
-        'exchange_id' => 0,
-        'ces_action_id' => $action_id,
-        'language' => $language,
-        'bundle_type' => 'ces_message_bundle',
-      );
-      ces_message_template_save($template);
-
-    }
-  }
+  ces_message_install_default_templates();
 }
-
-
+/**
+ * First update 18/06/2014.
+ */
+function ces_message_update_7100() {
+  ces_message_install_action('account_credit_pending', 'Account credit pending');
+  ces_message_install_action('account_debit_pending', 'Account debit pending');
+  ces_message_install_action('account_debit_rejected', 'Account debit rejected');
+  ces_message_install_action('account_credit_rejected', 'Account credit rejected');
+}
 /**
  * Implements hook_uninstall().
  *
@@ -278,4 +238,70 @@ function ces_message_install() {
 function ces_message_uninstall() {
   field_attach_delete_bundle('ces_message_template', 'ces_message_bundle');
   field_attach_delete_bundle('ces_message', 'default');
+}
+/**
+ * Installs or updates action.
+ */
+function ces_message_install_action($name, $description) {
+  $actions = ces_message_action_load_multiple(NULL, array('name' => $name));
+  if (empty($actions)) {
+    $action = (object) array(
+      'name' => $name,
+      'description' => $description,
+    );
+  }
+  else {
+    $action = reset($actions);
+    $action->description = $description;
+  }
+  ces_message_action_save($action);
+}
+/**
+ * Installs or updates default templates.
+ *
+ * Should be called in every install or update process, after installing
+ * actions.
+ */
+function ces_message_install_default_templates() {
+  foreach (glob(dirname(__FILE__) . '/includes/actions/*') as $lang) {
+    $language = basename($lang);
+    foreach (glob($lang . '/*.inc') as $template) {
+      $action = basename($template, '.inc');
+      include $template;
+      ces_message_install_default_template($action, $language, $subject, $body);
+    }
+  }
+}
+/**
+ * Installs or updates template.
+ */
+function ces_message_install_default_template($action, $language, $subject, $body) {
+  $actions = ces_message_action_load_multiple(NULL, array('name' => $action));
+  if (!empty($actions)) {
+    $action = reset($actions);
+    $templates = ces_message_template_load_multiple(FALSE, array(
+      'ces_action_id' => $action->id,
+      'language' => $language,
+      'exchange_id' => 0,
+    ));
+    if (empty($templates)) {
+      $template = (object) array(
+        'subject' => $subject,
+        'body' => $body,
+        'exchange_id' => 0,
+        'ces_action_id' => $action->id,
+        'language' => $language,
+        'bundle_type' => 'ces_message_bundle',
+      );
+    }
+    else {
+      $template = reset($templates);
+      $template->subject = $subject;
+      $template->body = $body;
+    }
+    ces_message_template_save($template);
+  }
+  else {
+    trigger_error(check_plain('Action ' . $action . ' not found while installing template.'), E_USER_ERROR);
+  }
 }

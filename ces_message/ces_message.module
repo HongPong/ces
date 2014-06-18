@@ -380,7 +380,7 @@ function ces_message_send_notify($action, $params, $recipient = array(), $sender
     $template = ces_message_get_template($action, $language, $exchange_id);
 
     if (!$template) {
-      drupal_set_message('Error: No template from action');
+      drupal_set_message(t('Error: No template from action'));
       return FALSE;
     }
     $subject  = token_replace($template->subject, $params);
@@ -439,7 +439,7 @@ function ces_message_template_test($action = 'account_activated', $recipient = 1
   $bank = new CesBank();
   $accounts = $bank->getAllAccounts();
   if (!$accounts || empty($accounts)) {
-    drupal_set_message('No accounts to test');
+    drupal_set_message(t('No accounts to test'));
     return FALSE;
   }
   foreach ($accounts as $account) {

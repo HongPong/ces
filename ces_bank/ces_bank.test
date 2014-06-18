@@ -123,7 +123,11 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->createExchanges();
     $this->createAccounts();
     $this->doTransactions();
+    // Balance: HORA0001: 1.5, HORA0002: -1.5
     $this->adminTransactions();
+    $this->checkLimits();
+    // Balance: HORA0001: 19.5, HORA0002: -19.5
+    $this->checkManualAuthorization();
   }
   /**
    * Creates two exchanges.
@@ -276,11 +280,11 @@ class CesBankTestCase extends DrupalWebTestCase {
     );
     $this->createAccount($this->account12);
     $this->activateAccount($this->account12, $this->admin1, 2);
-    $this->account22 = array(
+    $this->account21 = array(
       'exchange' => $this->exchange2,
       'account' => array(
-        'name' => 'account22',
-        'mail' => 'account22@integralces.net',
+        'name' => 'account21',
+        'mail' => 'account21@integralces.net',
         'pass_raw' => 'integralces',
         'firstname' => 'Emmy',
         'surname' => 'Noether',
@@ -298,8 +302,8 @@ class CesBankTestCase extends DrupalWebTestCase {
       'offer' => array(),
       'want' => array(),
     );
-    $this->createAccount($this->account22);
-    $this->activateAccount($this->account22, $this->admin2, 1);
+    $this->createAccount($this->account21);
+    $this->activateAccount($this->account21, $this->admin2, 1);
   }
   /**
    * Do several transactions.
@@ -320,7 +324,7 @@ class CesBankTestCase extends DrupalWebTestCase {
       'concept' => 'Second test transaction.',
       'amount' => '0.75',
     );
-    $this->doTransaction($this->accountUser($this->account11), $record);
+    $this->doTransaction($user1, $record);
     $this->assertBalance($user1, '2');
     $this->assertBalance($user2, '-2');
     $record = array(
@@ -523,8 +527,10 @@ class CesBankTestCase extends DrupalWebTestCase {
    *             will be used.
    * @param bool $success
    *   Whether this transaction should be permitted by the system.
+   * @param string $message
+   *   Optional, a message to assert after doing the transaction.
    */
-  protected function doTransaction($user, $record, $success = TRUE) {
+  protected function doTransaction($user, $record, $success = TRUE, $message = NULL) {
     $this->drupalLogin($user);
     $this->clickLink(t('My account'));
     $this->clickLink(t('Enter transaction'));
@@ -556,12 +562,17 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->assertText($record['amount']);
     $this->assertText($record['amount']);
     $this->drupalPost(NULL, array(), t('Confirm transaction'));
-    $okmessage = t('Transaction successfully applied.');
-    if ($success) {
-      $this->assertText($okmessage);
+    if (!$message) {
+      $message = t('Transaction successfully applied.');
+      if ($success) {
+        $this->assertText($message);
+      }
+      else {
+        $this->assertNoText($message);
+      }
     }
     else {
-      $this->assertNoText($okmessage);
+      $this->assertRaw($message);
     }
     $this->drupalLogout();
   }
@@ -574,6 +585,153 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->clickLink('Account statement');
     $this->assertText($amount);
     $this->drupalLogout();
+  }
+  /**
+   * Test function for limited accounts.
+   */
+  protected function checkLimits() {
+    $limitchain = array(
+      'name' => 'test_limit',
+      'limits' => array(
+        array(
+          'type' => 'debit',
+          'value' => '-10',
+          'block' => FALSE,
+        ),
+        array(
+          'type' => 'debit',
+          'value' => '-20',
+          'block' => TRUE,
+        ),
+      ),
+    );
+    $this->createLimit($this->admin1, $limitchain);
+    $this->setAccountLimit($this->admin1, 'HORA0002', 'test_limit');
+    $user1 = $this->accountUser($this->account11);
+    // Do transaction OK.
+    $this->doTransaction($user1, array(
+      'buyer' => 'HORA0002',
+      'concept' => 'Limit test transaction OK.',
+      'amount' => '8',
+    ));
+    // HORA0002: -9.5 (Inside limits).
+    $this->doTransaction($user1, array(
+      'buyer' => 'HORA0002',
+      'concept' => 'Limit test transaction OK.',
+      'amount' => '10',
+    ));
+    // HORA0002: -19.5 (Outside nonblocking limit, inside blocking limit).
+    // TODO: Check effect of outside nonblocking limit!.
+    $this->doTransaction($user1, array(
+      'buyer' => 'HORA0002',
+      'concept' => 'Limit test transaction OK.',
+      'amount' => '2',
+    ), FALSE);
+    $user2 = $this->accountUser($this->account12);
+    $this->assertBalance($user2, '-19.50');
+
+    // TODO: check interexchenge KO.
+  }
+
+  /**
+   * Create limit chain from administrative interface.
+   *
+   * @param object $admin
+   *   The exchange administrator user.
+   * @param array $limitchain
+   *   Array describing the limit chain to be created, with the structure:
+   *   - name: The name of the limit.
+   *   - limits: Array of arrays with elements:
+   *     - type: One of 'debit' or 'credit'.
+   *     - value: The value of limit.
+   *     - block: Whether the limit is blocking.
+   */
+  protected function createLimit($admin, $limitchain) {
+    $this->drupalLogin($admin);
+    $this->drupalGet('ces/admin/limit/new');
+    // Create limits.
+    foreach ($limitchain['limits'] as $limit) {
+      $edit = array(
+        'name' => $limitchain['name'],
+        'newlimit[classname]' => $limit['type'] == 'credit' ? 'CesBankAbsolteCreditLimit' : 'CesBankAbsoluteDebitLimit',
+      );
+      $this->drupalPost(NULL, $edit, t('Add limit'));
+    }
+    // Setup limits.
+    $count = 0;
+    $edit = array('name' => $limitchain['name']);
+    foreach ($limitchain['limits'] as $limit) {
+      $edit['limits[' . $count . '][block]'] = $limit['block'];
+      $edit['limits[' . $count . '][value]'] = $limit['value'];
+      $count++;
+    }
+    $this->drupalPost(NULL, $edit, t('Create limit chain'));
+    $this->assertRaw(t('Limit chain %name successfully created.',
+      array('%name' => $limitchain['name'])));
+  }
+  /**
+   * Set a limit chin to an account.
+   */
+  protected function setAccountLimit($admin, $accountname, $limitname) {
+    // Go to account edit form.
+    $this->drupalLogin($admin);
+    $this->drupalGet('ces/admin/account');
+    $a = $this->xpath("//td[text()=:account]/..//a[text()='Edit']", array(':account' => $accountname));
+    $this->drupalGet($this->getAbsoluteUrl($a[0]['href']));
+    // Setup account.
+    $limit = $this->xpath('//option[text()=:limitname]', array(':limitname' => $limitname));
+    $edit = array('limitchain' => $limit[0]['value']);
+    $this->drupalPost(NULL, $edit, t('Save'));
+  }
+  /**
+   * Test manual payments authorization feature.
+   */
+  protected function checkManualAuthorization() {
+    $user1 = $this->accountUser($this->account11);
+    $user2 = $this->accountUser($this->account12);
+    $this->setManualAuthorization($user1);
+    // From now on, user11 will have manual authorization enabled.
+    $transaction = array(
+      'buyer' => 'HORA0001',
+      'concept' => 'Test manual authorization.',
+      'amount' => '9.25',
+    );
+    $this->doTransaction($user2, $transaction, FALSE, t('The transaction must be manually authorized.'));
+    $this->assertBalance($user1, '19.5');
+    $this->acceptTransaction($user1, $transaction);
+    $this->assertBalance($user1, '10.25');
+  }
+  /**
+   * Set manual authorization to user.
+   */
+  protected function setManualAuthorization($loginuser, $whitelist = array()) {
+    $this->drupalLogin($loginuser);
+    $user = user_load_by_name($loginuser->name);
+    $this->drupalGet('user/' . $user->uid . '/edit');
+    // Get checkbox name.
+    $res = $this->xpath('//label[normalize-space(text())=:label]/..//input',
+      array(':label' => t('Accept payments manually')));
+    $manualname = (string) $res[0]['name'];
+    // Get whitelist textarea name.
+    $res = $this->xpath('//label[normalize-space(text())=:label]/..//textarea',
+      array(':label' => t('Accept payments whitelist')));
+    $whitelistname = (string) $res[0]['name'];
+    $edit = array(
+      $manualname => TRUE,
+      $whitelistname => implode("\n", $whitelist),
+    );
+    $this->drupalPost(NULL, $edit, t('Save'));
+  }
+  /**
+   * Manually accept transaction.
+   */
+  protected function acceptTransaction($user, $transaction) {
+    $this->drupalLogin($user);
+    $this->drupalGet('ces/bank/account/transaction');
+    $this->clickLink($transaction['concept']);
+    $this->clickLink(t('Accept'));
+    $this->drupalPost(NULL, array(), t('Accept'));
+    $this->assertText(t('Transaction successfully applied.'));
   }
 }
 /** @} */

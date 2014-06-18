@@ -9,7 +9,7 @@
 
 $subject = '[[exchange:shortname]] Account activated';
 
-$body = 'Dear [account:user:name],
+$body = 'Dear [account:user:fullname],
 
 Welcome to the [exchange:name], your local exchange of the global Integral
 Community Exchange System platform.

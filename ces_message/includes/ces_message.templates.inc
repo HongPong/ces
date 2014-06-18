@@ -298,12 +298,15 @@ function ces_message_template_add() {
  *   for fields attached to the entity.
  */
 function ces_message_template_form($form, &$form_state, $entity) {
+  if (!$entity->exchange_id) {
+    $exchange = ces_bank_get_current_exchange();
+    $entity->exchange_id = $exchange['id'];
+  }
 
   $form['language'] = array(
     '#title' => t('Language'),
     '#description' => t('The language code that will be saved with the field values. This is used to allow translation of fields.'),
   );
-
   $field_language = NULL;
   if (module_exists('locale')) {
     $options = array();
@@ -537,16 +540,10 @@ class CesMessageTemplateController
    * Saves the custom fields using drupal_write_record().
    */
   public function save($entity) {
-    // Can not edit the default templates.
-    if ($entity->exchange_id == 0) {
-      $entity->template_id = 0;
-      $exchange_data = ces_bank_get_current_exchange();
-      $exchange_id = ($exchange_data) ? $exchange_data['id'] : 0;
-      $entity->exchange_id = $exchange_id;
-    }
     // If our entity has no template_id, then we need to give it a
     // time of creation.
     if (empty($entity->template_id)) {
+      $entity->template_id = NULL;
       $entity->created = time();
     }
     // Invoke hook_entity_presave().
@@ -568,7 +565,7 @@ class CesMessageTemplateController
     // need to invoke.
     if (empty($primary_keys)) {
       field_attach_insert('ces_message_template', $entity);
-      $message = t('Inserted template %action', array('%action' => ces_message_action_load($entity->ces_action_id)->description));
+      $message = t('Inserted template %action.', array('%action' => ces_message_action_load($entity->ces_action_id)->description));
       drupal_set_message($message);
     }
     else {
