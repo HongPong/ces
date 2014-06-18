@@ -13,26 +13,6 @@
  */
 
 /**
- * Basic information for the page.
- */
-function ces_message_info_page($args = FALSE) {
-  $content['preface'] = array(
-    '#type' => 'item',
-    '#markup' => t('The ces message.'),
-  );
-  // @todo pagina para administrar todos los mensajes del exchange
-  if (ces_bank_access('admin', 'exchange', ces_bank_get_current_exchange())) {
-    $content['preface']['#markup'] = t('You can view all ces meessage !link.',
-      array('!link' => l(t('here'), 'ces/bank/account/message/all'))
-    );
-  }
-  $content['table'] = ces_message_list_entities($args);
-
-  return $content;
-}
-
-
-/**
  * Fetch a message object.
  *
  * @param int $mid
@@ -69,98 +49,6 @@ function ces_message_uri($message) {
     'path' => 'ces/bank/account/message/' . $message->mid,
   );
 }
-
-/**
- * Returns a render array with all ces_message entities.
- *
- * In this message example we know that there won't be many entities,
- * so we'll just load them all for display. See pager_example.module
- * to implement a pager. Most implementations would probably do this
- * with the contrib Entity API module, or a view using views module,
- * but we avoid using non-core features in the Templates project.
- *
- * @see pager_example.module
- */
-function ces_message_list_entities($args = FALSE) {
-  global $user;
-  $current_exchange = ces_bank_get_current_exchange();
-  $current_exchange_id = $current_exchange['id'];
-
-  $all = ($args == 'all' && ces_bank_access('admin', 'exchange', $current_exchange_id)) ? TRUE : FALSE;
-  $content = array();
-  if ($all) {
-    // Load all message.
-    // Limit current exchange.
-    // $conditions = array('exchange' => $current_exchange_id);
-    $conditions = FALSE;
-  }
-  else {
-    // Load all of our messages.
-    $conditions = array('user' => $user->uid);
-  }
-  $entities = ces_message_load_multiple(FALSE, $conditions);
-  if (!empty($entities)) {
-    foreach ($entities as $entity) {
-      // Create tabular rows for our entities.
-      $exchange = ces_bank_get_exchange($entity->exchange);
-      if ($all) {
-        $rows[] = array(
-          'data' => array(
-            'user' => $user->name,
-            'exchange' => $exchange['shortname'],
-            'created' => format_date($entity->created, 'custom', 'l d \d\e F \d\e\l Y | G:i'),
-            'subject' => l($entity->subject, 'ces/bank/account/message/' . $entity->mid),
-            'type_message' => $entity->type_message,
-          ),
-        );
-      }
-      else {
-        $rows[] = array(
-          'data' => array(
-            'exchange' => $exchange['shortname'],
-            'created' => format_date($entity->created, 'custom', 'l d \d\e F \d\e\l Y | G:i'),
-            'subject' => l($entity->subject, 'ces/bank/account/message/' . $entity->mid),
-            'type_message' => $entity->type_message,
-          ),
-        );
-      }
-    }
-    if ($all) {
-      $content['entity_table'] = array(
-        '#theme' => 'table',
-        '#rows' => $rows,
-        '#header' => array(
-          t('User'),
-          t('Exchange'),
-          t('Created'),
-          t('Subject'),
-          t('Type'),
-        ),
-      );
-    }
-    else {
-      $content['entity_table'] = array(
-        '#theme' => 'table',
-        '#rows' => $rows,
-        '#header' => array(
-          t('Exchange'),
-          t('Created'),
-          t('Subject'),
-          t('Type'),
-        ),
-      );
-    }
-  }
-  else {
-    // There were no entities. Tell the user.
-    $content[] = array(
-      '#type' => 'item',
-      '#markup' => t('No ces_message entities currently exist.'),
-    );
-  }
-  return $content;
-}
-
 /**
  * Callback for a page title when this entity is displayed.
  */
@@ -397,7 +285,95 @@ class CesMessageEntityController
     }
   }
 }
+/**
+ * Build the pager query.
+ *
+ * Uses the date_formats table since it is installed with ~35 rows
+ * in it and we don't have to create fake data in order to show
+ * this example.
+ *
+ * @return array
+ *   A render array completely set up with a pager.
+ */
+function ces_message_list_page($all = FALSE) {
 
+  if ($all) {
+    $header = array(
+      array('data' => t('Created'), 'field' => 'c.created'),
+      array('data' => t('User'), 'field' => 'u.name'),
+      array('data' => t('Exc.'), 'field' => 'c.exchange'),
+      array('data' => t('Subject')),
+      array('data' => t('Type')),
+    );
+  }
+  else {
+    $header = array(
+      array('data' => t('Created'),  'field' => 'c.created'),
+      array('data' => t('Exc.'), 'field' => 'c.exchange'),
+      array('data' => t('Subject')),
+      array('data' => t('Type'),  'field' => 'c.type'),
+    );
+  }
+
+  // We are extending the PagerDefault class here.
+  // It has a default of 10 rows per page.
+  // The extend('PagerDefault') part here does all the magic.
+  $query = db_select('ces_message', 'c')
+    ->extend('TableSort')
+    ->extend('PagerDefault');
+
+  $query->join('users', 'u', 'c.user = u.uid');
+  $query->fields('c', array('mid',
+    'user',
+    'exchange',
+    'created',
+    'subject',
+    'type_message'))
+  ->fields('u', array('name'));
+
+  // Change the number of rows with the limit() call.
+  $result = $query
+    ->limit(10)
+    ->orderByHeader($header)
+    ->execute();
+
+  $rows = array();
+  foreach ($result as $data) {
+    $exchange = ($data->exchange) ? ces_bank_get_exchange($data->exchange) : FALSE;
+    if ($all) {
+      $rows[] = array(
+        'data' => array(
+          'created' => format_date($data->created, 'custom', 'd \d\e F \d\e\l Y | G:i'),
+          'user' => $data->name,
+          'exchange' => $exchange['shortname'],
+          'subject' => l($data->subject, 'ces/bank/account/message/' . $data->mid . '/view'),
+          'type_message' => $data->type_message,
+        ),
+      );
+    }
+    else {
+      $rows[] = array(
+        'data' => array(
+          'created' => format_date($data->created, 'custom', 'd \d\e F \d\e\l Y | G:i'),
+          'exchange' => $exchange['shortname'],
+          'subject' => l($data->subject, 'ces/bank/account/message/' . $data->mid . '/view'),
+          'type_message' => $data->type_message,
+        ),
+      );
+    }
+  }
+
+  $build['pager_table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('There are no date formats found in the db'),
+  );
+
+  $build['pager_pager'] = array('#theme' => 'pager');
+
+  return $build;
+}
 /**
  * @} End of "defgroup ces_message".
  */

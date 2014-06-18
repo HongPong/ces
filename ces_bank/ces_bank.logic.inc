@@ -2749,7 +2749,9 @@ class CesBankLevyedTransaction extends CesBankDecoratedTransaction {
    */
   public $levy;
   /**
-   * TODO: document.
+   * Apply.
+   *
+   * @todo Document and finish this!
    */
   public function apply() {
     // TODO.

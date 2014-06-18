@@ -186,6 +186,7 @@ function ces_offerwant_load_multiple($ids = array(), $conditions = array(), $res
 function ces_offerwant_delete($id) {
   $controller = entity_get_controller('ces_offerwant');
   return $controller->delete($id);
+  
 }
 /**
  * Implements hook_load().
@@ -766,6 +767,17 @@ function ces_offerwant_delete_form_submit($form, &$form_state) {
   ces_offerwant_delete($form_state['values']['offerwant']);
   if ($form_state['values']['offerwant_type'] == 'offer') {
     $message = t('Offer %offer has been deleted.', array('%offer' => $form_state['values']['offerwant_title']));
+    $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'ces_offercomment');
+      $query->propertyCondition('oid', $form_state['values']['offerwant']);
+      $result = $query->execute();
+      if (isset($result['ces_offercomment']) && count($result['ces_offercomment']) > 0) {
+        $offercommentids = array_keys($result['ces_offercomment']);
+        foreach ($offercommentids as $ofcoid) {
+          ces_offercomment_delete($ofcoid);
+        }
+        $message = $message . t('- All offer comments have been deleted too.');
+      }
   }
   else {
     $message = t('Want %want has been deleted.', array('%want' => $form_state['values']['offerwant_title']));

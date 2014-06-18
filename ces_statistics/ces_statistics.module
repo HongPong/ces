@@ -16,25 +16,24 @@
  * For defining external libraries.
  */
 function ces_statistics_libraries_info() {
-  $libraries['jqplot'] = array(
-    'name' => 'jqplot library',
+  $libraries['jquery.jqplot'] = array(
+    'name' => 'jquery.jqplot library',
     'vendor url' => 'https://bitbucket.org/cleonello/jqplot/downloads/',
-    'download url' => 'http://bitbucket.org/cleonello/jqplot/get/1.0.8.zip',
+    'download url' => 'https://bitbucket.org/cleonello/jqplot/downloads/jquery.jqplot.1.0.8r1250.zip',
     'version' => '1.0.8',
     'files' => array(
       'js' => array(
-        'src/jquery.jqplot.js',
-        'src/plugins/jqplot.dateAxisRenderer.js',
-        'src/plugins/jqplot.barRenderer.js',
-        'src/plugins/jqplot.canvasTextRenderer.js',
-        'src/plugins/jqplot.canvasAxisLabelRenderer.js',
-        'src/plugins/jqplot.canvasAxisTickRenderer.js',
-        'src/plugins/jqplot.categoryAxisRenderer.js',
-        'src/plugins/jqplot.pointLabels.js',
-        'src/plugins/jqplot.pieRenderer.js',
+        'jquery.jqplot.min.js',
+        'plugins/jqplot.dateAxisRenderer.min.js',
+        'plugins/jqplot.barRenderer.min.js',
+        'plugins/jqplot.canvasTextRenderer.min.js',
+        'plugins/jqplot.canvasAxisTickRenderer.min.js',
+        'plugins/jqplot.categoryAxisRenderer.min.js',
+        'plugins/jqplot.pointLabels.min.js',
+        'plugins/jqplot.pieRenderer.min.js',
       ),
       'css' => array(
-        'src/jquery.jqplot.css',
+        'jquery.jqplot.min.css',
       ),
     ),
   );
@@ -121,13 +120,12 @@ function ces_statistics_page() {
     $exchange = ces_bank_get_current_exchange();
 
     // Js and css files.
-    if (($library = libraries_load('jqplot')) && !empty($library['loaded'])) {
+    if (($library = libraries_load('jquery.jqplot')) && !empty($library['loaded'])) {
       drupal_add_js(drupal_get_path('module', 'ces_statistics') . '/js/chart.js');
     }
     else {
-      $error = $library['error'];
       $error_message = $library['error message'] . ' ' . l(t('Help'), 'admin/help/ces_statistics');
-      drupal_set_message($error_message);
+      drupal_set_message(filter_xss($error_message));
     }
 
     // Extract and format users data.
@@ -148,7 +146,7 @@ function ces_statistics_page() {
       $totalusers += $record->usersnumber;
       $staticsusers[] = array(
         'usersdate' => $record->usersdate,
-        'usersnumber' => $totalusers,
+        'usersnumber' => (int) $totalusers,
       );
     };
 
@@ -158,12 +156,23 @@ function ces_statistics_page() {
     if ($staticsusers[$longarray - 1]['usersdate'] != $todaymonth) {
       $staticsusers[] = array(
         'usersdate' => $todaymonth,
-        'usersnumber' => $totalusers,
+        'usersnumber' => (int) $totalusers,
       );
     }
-    // Extract and format user's last year activity data.
+
     // Unix time stamp last year ago.
     $lastyear = time() - 31536000;
+
+    // Min lenght array $staticsusers: 1 year long.
+    while (strtotime($staticsusers[0]['usersdate']) > $lastyear) {
+      $monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticsusers[0]['usersdate'])));
+      array_unshift($staticsusers, array(
+        'usersdate' => $monthbefore,
+        'usersnumber' => (int) 0,
+      ));
+    }
+
+    // Extract and format user's last year activity data.
     $resultactivity = db_query("
       SELECT COUNT(t.id) AS activitynumber,
       a.id AS activityaccount
@@ -181,8 +190,8 @@ function ces_statistics_page() {
         ':lastyear' => $lastyear,
         ':state' => 3,
       ));
-    $labels = array('Total inactivity', '1-3 transactions', '4-6 transactions',
-      '6-12 transactions', '+12 transactions');
+    $labels = array(t('Total inactivity'), t('1-3 transactions'), t('4-6 transactions'),
+      t('6-12 transactions'), t('+12 transactions'));
     $staticsactivity = array();
     // 0 to 4 levels of activity.
     for ($i = 0; $i <= 4; $i++) {
@@ -244,6 +253,25 @@ function ces_statistics_page() {
       );
     };
 
+    // Protect no transaction results.
+    if (count($staticstrans) == 0) {
+      $staticstrans[] = array(
+        'transdate' => date("Y-m", time()),
+        'transamount' => 0,
+        'transnumber' => (int) 0,
+      );
+    }
+
+    // Min lenght array $staticstrans: 1 year long.
+    while (strtotime($staticstrans[0]['transdate']) > $lastyear) {
+      $monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticstrans[0]['transdate'])));
+      array_unshift($staticstrans, array(
+        'transdate' => $monthbefore,
+        'transamount' => 0,
+        'transnumber' => 0,
+      ));
+    }
+
     // Pass data to js:
     // -> Drupal.settings.ces_statistics.staticsusers
     // -> Drupal.settings.ces_statistics.staticstrans
@@ -254,16 +282,26 @@ function ces_statistics_page() {
       'staticstrans' => $staticstrans,
     );
     drupal_add_js(array('ces_statistics' => $charts), 'setting');
+
+    // Protect warning division by zero.
+    $averagetrans = 0;
+    if ($totalnumber > 0) {
+      $averagetrans = $totalamount / $totalnumber;
+    }
     $markup = '<ul>
       <li>' . t('Number of accounts:') . ' ' . $totalusers . '</li>
       <li>' . t('Number of transactions:') . ' ' . $totalnumber . '</li>
       <li>' . t('Amount of transactions:') . ' ' . $totalamount . '</li>
-      <li>' . t('Average transaction:') . ' ' . $totalamount / $totalnumber
-      . '</li>
+      <li>' . t('Average transaction:') . ' ' . $averagetrans . '</li>
       </ul>
+      <h3 style="text-align:center;margin-bottom:0;">' . t('Number of accounts') . '</h3>
       <div id="chartdiv1"></div><br/><br/>
+      <h3 style="text-align:center;margin-bottom:0;">' . t('Last year accounts activity') . '</h3>
       <div id="chartdiv2"></div><br/><br/>
-      <div id="chartdiv3"></div><br/><br/><br/><br/>';
+      <h3 style="text-align:center;margin-bottom:0;">' . t('Number of transactions') . '</h3>
+      <div id="chartdiv3"></div><br/><br/>
+      <h3 style="text-align:center;margin-bottom:0;">' . t('Amount of transactions in') . ' ' . $exchange['currenciesname'] . ' (' . $exchange['currencysymbol'] . ')</h3>
+      <div id="chartdiv4"></div><br/><br/><br/><br/>';
     return array('#markup' => $markup);
   }
   else {

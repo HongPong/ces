@@ -177,19 +177,37 @@ function ces_message_menu() {
   $current_exchange_id = $current_exchange['id'];
 
   $items['ces/bank/account/message'] = array(
-    'title' => 'Ces Message',
-    'page callback' => 'ces_message_info_page',
+    'title' => 'Messages',
+    'decription' => 'Ces Messages',
+    'page callback' => 'ces_message_list_page',
     'file' => 'includes/ces_message.message.inc',
     'file path' => drupal_get_path('module', 'ces_message'),
     'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
   );
-  $items['ces/bank/account/message/%ces_message'] = array(
+  $items['ces/bank/account/message/list'] = array(
+    'title' => 'List messages',
+    'decription' => 'List Ces Messages',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['ces/bank/account/message/%ces_message/view'] = array(
     'title callback' => 'ces_message_title',
     'title arguments' => array(4),
     'page callback' => 'ces_message_view',
     'page arguments' => array(4),
     'access callback' => 'ces_message_access',
     'access arguments' => array('view', 4),
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['ces/bank/account/message/all'] = array(
+    'title' => 'All Messages',
+    'page callback' => 'ces_message_list_page',
+    'page arguments' => array('all'),
+    'file' => 'includes/ces_message.message.inc',
+    'file path' => drupal_get_path('module', 'ces_message'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', $current_exchange_id),
+    'type' => MENU_LOCAL_TASK,
   );
   $items['ces/admin/message'] = array(
     'title' => 'Message templates',
@@ -203,29 +221,19 @@ function ces_message_menu() {
     'access callback' => 'ces_bank_access',
     'access arguments' => array('admin', 'exchange', $current_exchange_id),
   );
-  $items['ces/admin/message/templates'] = array(
+  $items['ces/admin/message/list'] = array(
     'title' => 'List',
     'description' => 'Administer ces message templates',
     'page callback' => 'ces_message_template_info_page',
     'access callback' => 'ces_bank_access',
     'access arguments' => array('admin', 'exchange', $current_exchange_id),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   // Add example entities.
   $items['ces/admin/message/add'] = array(
     'title' => 'Add',
     'description' => 'Add ces message templates',
     'page callback' => 'ces_message_template_add',
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
-    'type' => MENU_LOCAL_TASK,
-  );
-  $items['ces/bank/account/message/all'] = array(
-    'title' => 'View Messages',
-    'page callback' => 'ces_message_info_page',
-    'page arguments' => array('all'),
-    'file' => 'includes/ces_message.message.inc',
-    'file path' => drupal_get_path('module', 'ces_message'),
     'access callback' => 'ces_bank_access',
     'access arguments' => array('admin', 'exchange', $current_exchange_id),
     'type' => MENU_LOCAL_TASK,
@@ -241,23 +249,24 @@ function ces_message_menu() {
   // The page to view our entities - needs to follow what
   // is defined in template_uri and will use load_template to retrieve
   // the necessary entity info.
-  $items['ces/admin/message/%ces_message_template'] = array(
+  $items['ces/admin/message/%ces_message_template/view'] = array(
     'title callback' => 'ces_message_template_title',
     'title arguments' => array(3),
     'page callback' => 'ces_message_template_view',
     'page arguments' => array(3),
     'access callback' => 'ces_bank_access',
     'access arguments' => array('admin', 'exchange', $current_exchange_id),
+    'type' => MENU_LOCAL_TASK,
   );
 
   // 'View' tab for an individual entity page.
-  $items['ces/admin/message/%ces_message_template/view'] = array(
-    'title' => 'View',
-    'weight' => -10,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
-    'type' => MENU_LOCAL_TASK,
-  );
+  // $items['ces/admin/message/%ces_message_template/view'] = array(
+  //   'title' => 'View',
+  //   'weight' => -10,
+  //   'access callback' => 'ces_bank_access',
+  //   'access arguments' => array('admin', 'exchange', $current_exchange_id),
+  //   'type' => MENU_LOCAL_TASK,
+  // );
 
   // 'Edit' tab for an individual entity page.
   $items['ces/admin/message/%ces_message_template/edit'] = array(
