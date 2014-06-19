@@ -41,7 +41,7 @@ function ces_interop_opentransact($exchange_name) {
     $_ces_interop_authorization_code = $_POST['code'];
     // Delegate the authorization to the oauth2_server module.
     require_once drupal_get_path('module', 'oauth2_server') . '/oauth2_server.pages.inc';
-    return oauth2_server_token();
+    return oauth2_server_token_page();
   }
 
   $exchange = ces_bank_get_exchange_by_name($exchange_name);
@@ -69,7 +69,7 @@ function ces_interop_opentransact($exchange_name) {
   else {
     // Transfer Authorization.
     require_once drupal_get_path('module', 'oauth2_server') . '/oauth2_server.pages.inc';
-    return oauth2_server_authorize();
+    return oauth2_server_authorize_page();
   }
 }
 
