@@ -17,7 +17,7 @@
  * Implements hook_help().
  */
 function ices_help($path, $arg) {
-  if ($path == 'admin/help#ces') {
+  if ($path == 'admin/help#ices') {
     $output = '';
     $output .= '<h3>' . t('About') . '</h3>';
     $output .= '<p>' . t('Integral CES is a suite of Drupal modules featuring social currencies management for communities. See <a href="@integralces">integralces.net</a> for more documentation and <a href="@demo">demo.integralces.net</a> for a demonstration site.', array('@integralces' => 'http://www.integralces.net', '@demo' => url('http://demo.integralces.net'))) . '</p>';
@@ -51,7 +51,7 @@ function ices_preprocess_page(&$variables, $hook) {
   if ($variables['account'] !== FALSE) {
     $exchange = ces_bank_get_current_exchange();
     $variables['site_name'] = $exchange['name'];
-    $variables['site_slogan'] = 'Integral Community Exchange System';
+    $variables['site_slogan'] = t('Integral Community Exchange System');
     $items = field_get_items('user', $user, 'ces_firstname');
     $userfullname = '';
     if (!empty($items)) {
