@@ -853,7 +853,7 @@ function ces_bank_get_current_account($account = NULL) {
     global $user;
     $account = user_load($user->uid);
   }
-  include_once(dirname(__FILE__) . '/ces_bank.logic.inc');
+  include_once dirname(__FILE__) . '/ces_bank.logic.inc';
   $bank = new CesBank();
   if (isset($account->data['ces_current_account'])) {
     try {
@@ -1045,7 +1045,7 @@ function ces_bank_form_user_profile_validate($form, &$form_state) {
       $whitelist = explode("\n", $whitelist);
       foreach ($whitelist as $name) {
         $name = trim($name);
-        if (empty($bank->getAccountByName($name))) {
+        if (!$bank->getAccountByName($name)) {
           form_set_error('ces_account[' . $id . '][whitelist]',
             t('Could not find account @account.', array('@account' => $name)));
         }
