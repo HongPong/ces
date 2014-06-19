@@ -890,6 +890,23 @@ class CesBank {
     }
   }
   /**
+   * Reject a transaction.
+   */
+  public function rejectTransaction($transaction_id) {
+    $t = IcesSerializer::DBTransaction();
+    try {
+      $transaction = $this->getObject('CesBankBasicTransaction', $transaction_id);
+      $transaction->setState(CesBankTransactionInterface::STATE_REJECTED);
+      $s = new IcesSerializer('CesBankBasicTransaction');
+      $s->save($transaction);
+      return ($transaction->getState() == CesBankTransactionInterface::STATE_REJECTED);
+    }
+    catch (Exception $e) {
+      $t->rollback();
+      throw $e;
+    }
+  }
+  /**
    * Get names of classes implementing CesBankDecoratedTransaction interface.
    *
    * @return array
@@ -1817,7 +1834,7 @@ class CesBankLimitChain extends IcesDBObject {
   }
   /**
    * Check whether the transaction can be applied.
-   * 
+   *
    * @return bool|array
    *   TRUE if transaction is accepted, or an array of messages why the
    *   transaction has not been accepted.

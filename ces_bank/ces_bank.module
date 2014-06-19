@@ -215,24 +215,6 @@ function ces_bank_menu() {
       CES_BANK_CURRENT_ACCOUNT),
     'weight' => 130,
   );
-  $menu['ces/bank/account/invoice'] = array(
-    'title' => 'Send invoice',
-    'description' => 'Send an invoice to a client by email.',
-    'page callback' => 'ces_bank_not_yet_implemented',
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'account seller',
-      CES_BANK_CURRENT_ACCOUNT),
-    'weight' => 160,
-  );
-  $menu['ces/bank/account/order'] = array(
-    'title' => 'Send order',
-    'description' => 'Send an order to a provider by email.',
-    'page callback' => 'ces_bank_not_yet_implemented',
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'account details',
-      CES_BANK_CURRENT_ACCOUNT),
-    'weight' => 150,
-  );
   $menu['ces/bank/account'] = array(
     'title' => 'My account',
     'description' => 'View account details.',

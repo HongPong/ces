@@ -573,6 +573,8 @@ function ces_bank_transaction_view($transaction) {
     '#theme' => 'ces_bank_transaction_view',
   );
   $page['transaction'] = $transaction;
+  $states = _ces_bank_get_transaction_states();
+  $page['transaction']['state'] = $states[$transaction['state']];
   $page['transaction']['amount'] = $bank->formatAmount($transaction['amount'], ces_bank_get_current_exchange(), TRUE);
   $page['fromaccount'] = $fromaccount;
   $page['toaccount'] = $toaccount;

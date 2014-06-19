@@ -68,14 +68,7 @@ function theme_ces_bank_transaction_view($variables) {
   $tex = $variables['element']['toexchange'];
 
   $out = '<dl>';
-  $out .= '<dt>' . t('Date') . '</dt>';
-  $out .= '<dd>' . format_date($tran['created']) . '</dd>';
-  if ($tran['created'] != $tran['modified']) {
-    $out .= '<dt>' . t('Modified') . '</dt>';
-    $out .= '<dd>' . format_date($tran['modified']) . '</dd>';
-  }
-  $out .= '<dt>' . t('Entered by') . '</dt>';
-  $out .= '<dd>' . l(ces_user_get_name(user_load($tran['user'])), 'user/' . $tran['user']) . '</dd>';
+
   if ($fex['id'] == $tex['id']) {
     $out .= '<dt>' . t('Exchange') . '</dt>';
     $out .= '<dd>' . $fex['name'] . '</dd>';
@@ -84,30 +77,47 @@ function theme_ces_bank_transaction_view($variables) {
     $out .= '<dt>' . t("Buyer's exchange") . '</dt>';
     $out .= '<dd>' . $fex['name'] . '</dd>';
   }
-  $out .= '<dt>' . t("Buyer's account") . '</dt>';
-  $out .= '<dd>' . $from['name'] . '</dd>';
-
-  $out .= '<dt>' . t("Buyer's account user") . '</dt>';
+  $out .= '<dt>' . t('Buyer') . '</dt>';
+  $out .= '<dd>' . $from['name'] . ' - ';
+  $i = 0;
   foreach ($from['users'] as $accuser) {
-    $out .= '<dd>' . l(ces_user_get_name(user_load($accuser['user'])), 'user/' . $accuser['user']) . '</dd>';
+    if ($i > 0) {
+      $out .= ', ';
+    }
+    $out .= l(ces_user_get_name(user_load($accuser['user'])), 'user/' . $accuser['user']);
+    $i++;
   }
+  $out .= '</dd>';
   if ($fex['id'] != $tex['id']) {
     $out .= '<dt>' . t("Seller's exchange") . '</dt>';
     $out .= '<dd>' . $tex['name'] . '</dd>';
   }
-  $out .= '<dt>' . t("Seller's account") . '</dt>';
-  $out .= '<dd>' . ($to['name']) . '</dd>';
-
-  $out .= '<dt>' . t("Seller's account user") . '</dt>';
+  $out .= '<dt>' . t('Seller') . '</dt>';
+  $out .= '<dd>' . ($to['name']) . ' - ';
+  $i = 0;
   foreach ($to['users'] as $accuser) {
-    $out .= '<dd>' . l(ces_user_get_name(user_load($accuser['user'])), 'user/' . $accuser['user']) . '</dd>';
+    if ($i > 0) {
+      $out .= ', ';
+    }
+    $out .= l(ces_user_get_name(user_load($accuser['user'])), 'user/' . $accuser['user']);
+    $i++;
   }
+  $out .= '</dd>';
   $out .= '<dt>' . t('Description') . '</dt>';
   $out .= '<dd>' . check_plain($tran['concept']) . '</dd>';
 
   $out .= '<dt>' . t('Amount') . '</dt>';
-  $out .= '<dd>' . $tran['amount'] . '</dd>';
-
+  $out .= '<dd><strong>' . $tran['amount'] . '</strong></dd>';
+  $out .= '<dt>' . t('State') . '</dt>';
+  $out .= '<dd>' . $tran['state'] . '</dd>';
+  $out .= '<dt>' . t('Date') . '</dt>';
+  $out .= '<dd>' . format_date($tran['created']) . '</dd>';
+  if ($tran['created'] != $tran['modified']) {
+    $out .= '<dt>' . t('Modified') . '</dt>';
+    $out .= '<dd>' . format_date($tran['modified']) . '</dd>';
+  }
+  $out .= '<dt>' . t('Entered by') . '</dt>';
+  $out .= '<dd>' . l(ces_user_get_name(user_load($tran['user'])), 'user/' . $tran['user']) . '</dd>';
   $out .= '</dl>';
   return $out;
 }

@@ -53,7 +53,7 @@ function ces_user_get_name($account = NULL) {
   if (empty($userfullname)) {
     $userfullname = $account->name;
   }
-  return $userfullname;
+  return trim($userfullname);
 }
 /**
  * Returns the address for given account, or the current one if NULL.

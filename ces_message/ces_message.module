@@ -259,15 +259,6 @@ function ces_message_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  // 'View' tab for an individual entity page.
-  // $items['ces/admin/message/%ces_message_template/view'] = array(
-  //   'title' => 'View',
-  //   'weight' => -10,
-  //   'access callback' => 'ces_bank_access',
-  //   'access arguments' => array('admin', 'exchange', $current_exchange_id),
-  //   'type' => MENU_LOCAL_TASK,
-  // );
-
   // 'Edit' tab for an individual entity page.
   $items['ces/admin/message/%ces_message_template/edit'] = array(
     'title' => 'Edit',

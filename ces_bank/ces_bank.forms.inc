@@ -1073,6 +1073,12 @@ function ces_bank_transaction_accept_form($form, &$form_state, $transaction) {
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Accept'),
+    '#submit' => array('ces_bank_transction_authorize_form_submit'),
+  );
+  $form['actions']['reject'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reject'),
+    '#submit' => array('ces_bank_transction_reject_form_submit'),
   );
   $form['actions']['cancel'] = array(
     '#type' => 'link',
@@ -1084,13 +1090,24 @@ function ces_bank_transaction_accept_form($form, &$form_state, $transaction) {
 /**
  * Submit function for ces_bank_accept_transaction_form.
  */
-function ces_bank_transaction_accept_form_submit($form, &$form_state) {
+function ces_bank_transction_authorize_form_submit($form, &$form_state) {
   $transaction_id = $form_state['values']['transaction'];
   $account_id = $form_state['values']['account'];
   $bank = new CesBank();
   $res = $bank->acceptTransaction($transaction_id, $account_id);
   $record = $bank->getTransaction($transaction_id);
   _ces_bank_set_transaction_message($res, $record);
+  $form_state['redirect'] = 'ces/bank/account/transaction/' . $transaction_id . '/view';
+}
+/**
+ * Subit function for reject button of ces_bank_accept_transaction_form.
+ */
+function ces_bank_transction_reject_form_submit($form, &$form_state) {
+  $transaction_id = $form_state['values']['transaction'];
+  $bank = new CesBank();
+  $res = $bank->rejectTransaction($transaction_id);
+  $record = $bank->getTransaction($transaction_id);
+  _ces_bank_set_transaction_message($res, $record, 'reject');
   $form_state['redirect'] = 'ces/bank/account/transaction/' . $transaction_id . '/view';
 }
 /**
@@ -1313,6 +1330,10 @@ function _ces_bank_set_transaction_message($result, $record, $op = 'trigger') {
 
       case 'edit':
         drupal_set_message(t('Transaction successfully updated.'));
+        break;
+
+      case 'reject':
+        drupal_set_message(t('Transaction has been rejected and will NOT be applied.'));
         break;
 
     }
