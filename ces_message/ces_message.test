@@ -1,73 +1,96 @@
 <?php
-
 /**
  * @file
- * Tests for ces_message module.
- *
- * Verify example module functionality.
+ * Tests from Ces Message
  */
 
 /**
- * Functionality tests for enitity example module.
- *
+ * @defgroup ces_message_tests Tests from ces_message
  * @ingroup ces_message
+ * @{
+ * Tests the functionality Ces Message module.
+ */
+
+/**
+ * Implements DrupalWebTestCase.
  */
 class CesMessageTestCase extends DrupalWebTestCase {
 
   /**
-   * {@inheritdoc}
+   * @var user
+   * The global administrator.
+   */
+  protected $globalAdminUser;
+
+  /**
+   * Implementation of getInfo().
    */
   public static function getInfo() {
     return array(
       'name' => 'ICES Message',
-      'description' => 'Test ICES Message main features.',
+      'description' => 'Test ICES Message.',
       'group' => 'ICES',
     );
   }
 
   /**
-   * {@inheritdoc}
+   * Setup CES modules, the admin user, configures blocks and user preferences.
    */
   public function setUp() {
-    // Enable the module.
-    parent::setUp('ces_message');
-
+    // Enable any modules required for the test.
+    parent::setUp(array(
+      'ces_bank',
+      'ces_blog',
+      'ces_message',
+      'ces_offerswants',
+      'ces_summaryblock',
+      'ces_develop',
+      'ces_user',
+    ));
+    include dirname(__FILE__) . '/../ces_develop/demo.php';
     $bank = new CesBank();
-
-    // Create global bank administrator.
-    $permissions = array(
+    $this->globalAdminUser = $this->drupalCreateUser(array(
       'administer blocks',
       'access administration pages',
       'administer users',
-      'access content',
-      'administer site configuration',
-    );
-    $account = $this->drupalCreateUser($permissions);
-    $this->drupalLogin($account);
+    ));
+    $this->drupalLogin($this->globalAdminUser);
+    $edit = array();
+    $edit['user_email_verification'] = FALSE;
+    $this->drupalPost('admin/config/people/accounts', $edit,
+      t('Save configuration'));
     $permission = array(
       'permission' => CesBankPermission::PERMISSION_ADMIN,
       'object' => 'global',
       'objectid' => 0,
       'scope' => 'user',
-      'scopeid' => $account->uid,
+      'scopeid' => $this->globalAdminUser->uid,
     );
     $bank->createPermission($permission);
-
-    // Attach a field.
-    $field = array(
-      'field_name' => 'ces_message_test_text' ,
-      'type' => 'text',
-    );
-    field_create_field($field);
-    $instance = array(
-      'label' => 'Example Field',
-      'field_name' => 'ces_message_test_text',
-      'entity_type' => 'ces_message_template',
-      'bundle' => 'ces_message_bundle',
-    );
-    field_create_instance($instance);
+    $this->drupalLogout();
   }
-
+  /**
+   * Ces Message.
+   */
+  protected function testCesMessage() {
+    $actions = array(
+      'new_exchange' => 'New exchange',
+      'exchange_activated' => 'Exchange activated',
+      'new_account' => 'New account',
+      'account_activated' => 'Account activated',
+      'account_debited' => 'Account debited',
+      'account_credited' => 'Account credited',
+      // @todo 'send_offerwant_notify' => 'Send offer or want notify',
+      // @todo 'account_credit_pending' => 'Account credit pending',
+      // @todo 'account_debit_pending' => 'Account debit pending',
+      'account_debit_rejected' => 'Account debit rejected',
+      'account_credit_rejected' => 'Account credit rejected',
+    );
+    $this->drupalGet('ces/bank/account/message');
+    foreach ($actions as $action => $tit_action) {
+      $this->assertRaw(t($tit_action));
+    }
+  }
   /**
    * Test Ces Message features.
    *
@@ -78,13 +101,13 @@ class CesMessageTestCase extends DrupalWebTestCase {
    * - Display management
    */
   public function testCesMessageTemplate() {
+    $this->drupalLogin($this->globalAdminUser);
     // Create 5 templates.
     for ($i = 1; $i <= 5; $i++) {
       $edit[$i]['subject'] = $this->randomName();
       $edit[$i]['body'] = 'Body ' . $this->randomName();
       $edit[$i]['ces_action'] = $i;
       $edit[$i]['language'] = 'xx';
-      $edit[$i]['ces_message_test_text[und][0][value]'] = $this->randomName(32);
 
       $this->drupalPost('ces/admin/message/add', $edit[$i], 'Save');
 
@@ -140,7 +163,9 @@ class CesMessageTestCase extends DrupalWebTestCase {
     // $this->assertResponse(200);
     // $this->assertText($edit[10]['field_new_junk_field[und][0][value]'],
     // 'Custom field updated successfully');
-    //
+
+    $this->drupalLogout();
+
     // Create and login user without view access.
     $account = $this->drupalCreateUser(array('access content'));
     $this->drupalLogin($account);
@@ -149,4 +174,6 @@ class CesMessageTestCase extends DrupalWebTestCase {
     $this->drupalGet('ces/admin/message/2');
     $this->assertResponse(403, 'User does not have permission to view entity');
   }
+
 }
+/** @} */

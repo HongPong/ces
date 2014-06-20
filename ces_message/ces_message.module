@@ -359,17 +359,20 @@ function ces_message_send_notify($action, $params, $recipient = array(), $sender
     if (isset($params['account'])) {
       $params['exchange'] = ces_bank_get_exchange($params['account']['exchange']);
     }
+    elseif (isset($params['transaction']['fromaccount'])) {
+      $params['exchange'] = ces_bank_get_exchange_by_name(substr($params['transaction']['fromaccount'], 0, 4));
+    }
     else {
       $params['exchange'] = ces_bank_get_current_exchange();
     }
   }
 
-  if (isset($params['exchange'])) {
+  if (isset($params['exchange']) && !empty($params['exchange'])) {
     $exchange_id = $params['exchange']['id'];
   }
   else {
-    $exchange_actual = ces_bank_get_current_exchange();
-    $exchange_id = $exchange_actual['id'];
+    trigger_error(t('The exchange must come defined.'), E_USER_ERROR);
+    return FALSE;
   }
 
   foreach ($recipient as $user_recipient_id) {

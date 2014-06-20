@@ -333,7 +333,7 @@ function ces_message_list_page($all = FALSE) {
 
   // Change the number of rows with the limit() call.
   $result = $query
-    ->limit(10)
+    ->limit(50)
     ->orderByHeader($header)
     ->execute();
 
