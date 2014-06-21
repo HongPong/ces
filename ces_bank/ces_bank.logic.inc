@@ -2400,9 +2400,6 @@ class CesBankBasicTransaction extends IcesDBObject implements CesBankTransaction
       $account_to->applyTransaction($this);
       $account_from->applyTransaction($this);
       $this->setState(CesBankTransactionInterface::STATE_COMMITTED);
-      // @todo Da error por falta de estado, mirar de solucionarlo
-      // $bank = new CesBank();
-      // $this->notifyTransaction($this);
       return TRUE;
     }
     catch (Exception $e) {

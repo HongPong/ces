@@ -41,6 +41,7 @@ $net1 = array(
 );
 $bank->createExchange($net1);
 $bank->activateExchange($net1);
+$exchanges_demo[] = $net1;
 $net2 = array(
   'code' => 'NET2',
   'shortname' => 'Net 2',
@@ -63,6 +64,7 @@ $net2 = array(
 );
 $bank->createExchange($net2);
 $bank->activateExchange($net2);
+$exchanges_demo[] = $net2;
 // Create accounts.
 $accounts = array();
 for ($i = 0; $i < 3; $i++) {
@@ -216,6 +218,7 @@ foreach ($offers as $offer) {
   $o->ces_offer_rate = array(LANGUAGE_NONE => array(array('value' => $offer['rate'])));
   unset($o->rate);
   ces_offerwant_save($o);
+  $offers_demo[] = $o;
 }
 // Blog posts.
 ces_develop_post_blog('Demo post', 'This is a demonstration blog post.

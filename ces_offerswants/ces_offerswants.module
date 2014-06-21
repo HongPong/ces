@@ -125,7 +125,7 @@ function ces_offerswants_entity_info() {
 
   $info['ces_offercomment'] = array(
     'label' => t('Offer comment'),
-    'controller class' => 'OfferCommentEntityController',    
+    'controller class' => 'OfferCommentEntityController',
     'base table' => 'ces_offercomment',
     'fieldable' => FALSE,
     'entity keys' => array(
@@ -140,11 +140,11 @@ function ces_offerswants_entity_info() {
     'view modes' => array(
       'full' => array(
         'label' => t('Full OfferComment'),
-        'custom settings' =>  FALSE,
+        'custom settings' => FALSE,
       ),
-    )
+    ),
   );
-  
+
   return $info;
 }
 
@@ -186,7 +186,7 @@ function ces_offerwant_load_multiple($ids = array(), $conditions = array(), $res
 function ces_offerwant_delete($id) {
   $controller = entity_get_controller('ces_offerwant');
   return $controller->delete($id);
-  
+
 }
 /**
  * Implements hook_load().
@@ -390,15 +390,15 @@ function ces_offerswants_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 300,
   );
-    $menu['ces/bank/exchange/offercomment/%/view'] = array(
+  $menu['ces/bank/exchange/offercomment/%/view'] = array(
     'title' => 'Offer comments and ratings',
     'description' => 'View offer with comments and ratings',
     'page callback' => 'ces_offercomment_page',
     'page arguments' => array(4),
     'access callback' => TRUE,
-//    'access callback' => 'ces_offerwant_access',
-//    'access arguments' => array('edit', 4),
-  ); 
+    // 'access callback' => 'ces_offerwant_access',
+    // 'access arguments' => array('edit', 4),
+  );
   return $menu;
 }
 /**

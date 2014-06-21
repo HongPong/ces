@@ -22,6 +22,15 @@ class CesMessageTestCase extends DrupalWebTestCase {
    */
   protected $globalAdminUser;
 
+  /** Exchanges demo. */
+
+  protected $exchangesDemo;
+  /**
+   * Offers demo.
+   */
+
+  protected $offersDemo;
+
   /**
    * Implementation of getInfo().
    */
@@ -48,6 +57,8 @@ class CesMessageTestCase extends DrupalWebTestCase {
       'ces_user',
     ));
     include dirname(__FILE__) . '/../ces_develop/demo.php';
+    $this->offersDemo = $offers_demo;
+    $this->exchangesDemo = $exchanges_demo;
     $bank = new CesBank();
     $this->globalAdminUser = $this->drupalCreateUser(array(
       'administer blocks',
@@ -80,12 +91,25 @@ class CesMessageTestCase extends DrupalWebTestCase {
       'account_activated' => 'Account activated',
       'account_debited' => 'Account debited',
       'account_credited' => 'Account credited',
-      // @todo 'send_offerwant_notify' => 'Send offer or want notify',
+      'send_offerwant_notify' => 'Send offer or want notify',
       // @todo 'account_credit_pending' => 'Account credit pending',
       // @todo 'account_debit_pending' => 'Account debit pending',
       'account_debit_rejected' => 'Account debit rejected',
       'account_credit_rejected' => 'Account credit rejected',
     );
+    // Send message to author of offer.
+    $notify = array('body' => 'Test body notification', 'user' => 2);
+    ces_message_send_notify(
+      'send_offerwant_notify',
+      array(
+        'exchange' => $this->exchangesDemo[0],
+        'offer' => $this->offersDemo[0],
+        'notify' => $notify,
+      ),
+      array(2),
+      1
+    );
+
     $this->drupalGet('ces/bank/account/message');
     foreach ($actions as $action => $tit_action) {
       $this->assertRaw(t($tit_action));
