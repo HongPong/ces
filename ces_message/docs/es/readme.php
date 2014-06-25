@@ -79,23 +79,12 @@
  *       la base de datos para que el administrador del exchange pueda tener 
  *       una referencia de la actividad.
  * 
- * @todo Mirar de enviar mensaje al hacer una transacción desde 
- *       ces_bank.logic.inc:2234
- * 
  * @todo Crear ces_message_send_account() para enviar el mensaje a todos los
  *       usuarios de una cuenta.
- * 
- * @todo Ampliar simpletest a las entidades ces_message.
  * 
  * @todo Estudiar la forma de evitar el exceso de acumulación de mensajes. Por
  *       ejemplo poniendo un limite a los mensajes guardados de cada usuario y
  *       en el caso de sobrepasarlo borrar una cantidad de los más antiguos.
  *       Se debería de estudiar la mejor estrategia.
- * 
- * @todo Documentar para doxygen, sobretodo la parte de implementar una acción
- *       nueva.
- * 
- * @todo Paginar listado de mensajes de usuario.
- * 
  * @}
  */
