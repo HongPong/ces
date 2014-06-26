@@ -66,18 +66,7 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
       'pub' => CesBankLocalAccount::TYPE_PUBLIC,
       'vir' => CesBankLocalAccount::TYPE_VIRTUAL,
     );
-
-    /*
-    Lang: idioma en tres lletres. No segueix l'estàndard ISO. eng per anglès,
-    cat per català, spa per castellà.
-    */
-
-    $langs = array(
-      'eng' => 'en',
-      'cat' => 'ca',
-      'spa' => 'es',
-      'default' => language_default()->language,
-    );
+    $language = _ces_import4ces_get_language($data['Lang']);
 
     // Set up the user fields.
     $fields = array(
@@ -87,7 +76,7 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
       'status' => ($data['Locked'] == 0) ? 1 : 0,
       // 'init' => ( $GLOBALS['anonymous'] ) ? 'test-'.$data['UID'].'@test.com'
       // : $data['Email'],
-      'language' => (isset($langs[$data['Lang']])) ? $langs[$data['Lang']] : $langs['default'],
+      'language' => $language,
       'roles' => array(
         DRUPAL_AUTHENTICATED_RID => 'authenticated user',
       ),

@@ -559,7 +559,7 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
 
 /**
  * Row fail batch operation.
- * 
+ *
  * To be called from the batch process to stop it and let the user the
  * opportunity to change the row data manually.
  */
@@ -648,7 +648,7 @@ function ces_import4ces_import_delete_form($form, &$form_state, $import_id) {
 
 /**
  * Delete all import data.
- * 
+ *
  * This function may need so many time to be cmpletely executed in some servers!
  */
 function ces_import4ces_import_delete_form_submit($form, &$form_state) {
@@ -810,15 +810,62 @@ function ces_import4ces_get_category($title, $import) {
 
     return $category_id;
   }
+}
 
-  /**
-   * Implements hook_mail_alter().
-   */
-  function ces_import4ces_mail_alter(&$message) {
-    if (!CES_IMPORT4CES_SEND_MAILS) {
-      $message['send'] = FALSE;
+/**
+ * Implements hook_mail_alter().
+ */
+function ces_import4ces_mail_alter(&$message) {
+  if (!CES_IMPORT4CES_SEND_MAILS) {
+    $message['send'] = FALSE;
+  }
+}
+
+
+/**
+ * Get language code translation CES => ISO.
+ */
+function _ces_import4ces_get_language($ceslang) {
+  $codes = array(
+    'rus' => 'ru',
+    'ukr' => 'uk',
+    'bul' => 'bg',
+    'cez' => 'cs',
+    'amh' => 'am',
+    'ell' => 'el',
+    'afr' => 'af',
+    'ara' => 'ar',
+    'cat' => 'ca',
+    'deu' => 'de',
+    'est' => 'et',
+    'eng' => 'en',
+    'spa' => 'es',
+    'fra' => 'fr',
+    'ita' => 'it',
+    'lav' => 'lv',
+    'lit' => 'lt',
+    'mol' => 'ro',
+    'ron' => 'ro',
+    'hun' => 'hu',
+    'nld' => 'nl',
+    'nor' => 'no',
+    'pol' => 'pl',
+    'por' => 'pt',
+    'slv' => 'sl',
+    'srp' => 'sr',
+    'fin' => 'fi',
+    'swe' => 'sv',
+    'tur' => 'tr',
+  );
+  $language = language_default()->language;
+  if (isset($codes[$ceslang])) {
+    $isolang = $codes[$ceslang];
+    $langs = language_list();
+    if (isset($langs[$isolang])) {
+      $language = $isolang;
     }
   }
-
+  return $language;
 }
+
 /** @} */

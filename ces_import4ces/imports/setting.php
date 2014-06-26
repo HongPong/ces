@@ -53,7 +53,6 @@ function ces_import4ces_parse_setting($import_id, $setting, $row, &$context) {
         $value = $currvalues[$setting['ConCurName']];
       }
     }
-
     // Create exchange.
     $exchange = array(
       'code' => $setting['ExchangeID'],
@@ -73,6 +72,7 @@ function ces_import4ces_parse_setting($import_id, $setting, $row, &$context) {
       'data' => array(
         'registration_offers' => 1,
         'registration_wants' => 0,
+        'default_lang' => _ces_import4ces_get_language($setting['Language']),
       ),
     );
 

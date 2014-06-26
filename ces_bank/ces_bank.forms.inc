@@ -175,13 +175,28 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#required' => FALSE,
     '#maxlength' => 200,
   );
-
+  $languages = language_list('enabled');
+  $lang_options = array();
+  foreach ($languages[1] as $lang) {
+    $lang_options[$lang->language] = $lang->native;
+  }
+  asort($lang_options);
+  if (!isset($exchange['data']['default_lang'])) {
+    global $language;
+    $exchange['data']['default_lang'] = $language->language;
+  }
+  $form['exchange']['location']['default_lang'] = array(
+    '#type' => 'select',
+    '#description' => t('Choose the language that will have the new users registered to this exchange. They will be able to change their preferred language once logged in.'),
+    '#title' => t('Default language'),
+    '#options' => $lang_options,
+    '#default_value' => $exchange['data']['default_lang'],
+  );
   $form['exchange']['currency'] = array(
     '#type' => 'fieldset',
     '#title' => t('Currency'),
     '#description' => t('Currency settings for this exchange.'),
   );
-
   $form['exchange']['currency']['currencysymbol'] = array(
     '#type' => 'textfield',
     '#description' => t('Symbol for the currency of this exchange. It can be any 3 unicode characters.'),
@@ -324,6 +339,10 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
       $form_state['values']['admin'] = $form_state['values']['uid'];
     }
     $form_state['values']['name'] = $form_state['values']['fullname'];
+    if (!isset($form_state['values']['data'])) {
+      $form_state['values']['data'] = array();
+    }
+    $form_state['values']['data']['default_lang'] = $form_state['values']['default_lang'];
     if ($op == 'new') {
       $bank->createExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully created. You must wait for the system administrator to set up the exchange before it is operative. You will receive an e-mail notification within the next few days.', array('%code' => $form_state['values']['code'])));
