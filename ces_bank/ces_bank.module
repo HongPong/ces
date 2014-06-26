@@ -1095,6 +1095,12 @@ function ces_bank_form_alter(&$form, &$form_state, $form_id) {
         '#weight' => 1000,
       );
       $form['actions']['submit']['#access'] = FALSE;
+      // Add default exchange language for the new user.
+      $exchange = ces_bank_get_current_exchange();
+      $form['language'] = array(
+        '#type' => 'value',
+        '#value' => $exchange['data']['default_lang'],
+      );
     }
     elseif ($form_state['page'] == 'bankaccount') {
       $name = arg(2);
