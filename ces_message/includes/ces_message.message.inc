@@ -333,9 +333,9 @@ function ces_message_list_page($all = FALSE) {
     'type_message'))
   ->fields('u', array('name'));
 
-  // Condition
+  // Condition.
   if (!$all || !ces_bank_access('admin', 'global', 0)) {
-    $query->condition('u.uid', $user->uid,'=');
+    $query->condition('u.uid', $user->uid, '=');
   }
 
   // Change the number of rows with the limit() call.

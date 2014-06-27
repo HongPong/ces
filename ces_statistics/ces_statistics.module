@@ -163,7 +163,7 @@ function ces_statistics_page() {
     // Unix time stamp last year ago.
     $lastyear = time() - 31536000;
 
-    // Min lenght array $staticsusers: 1 year long.
+    // Min length array $staticsusers: 1 year long.
     while (strtotime($staticsusers[0]['usersdate']) > $lastyear) {
       $monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticsusers[0]['usersdate'])));
       array_unshift($staticsusers, array(
@@ -262,7 +262,7 @@ function ces_statistics_page() {
       );
     }
 
-    // Min lenght array $staticstrans: 1 year long.
+    // Min length array $staticstrans: 1 year long.
     while (strtotime($staticstrans[0]['transdate']) > $lastyear) {
       $monthbefore = date("Y-m", strtotime("-1 month", strtotime($staticstrans[0]['transdate'])));
       array_unshift($staticstrans, array(

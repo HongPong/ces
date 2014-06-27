@@ -375,7 +375,7 @@ msgstr "El %code no és vàlid. Els caràcters del codi han d'estar en majúscul
 msgid ""
 "The url %url is invalid. Please enter a fully qualified URL like "
 "http://www.example.org/something or leave the field blank."
-msgstr "La url %url no és vàlida. Si us plau, introdueix una URL completa tipus http://www.exemple.org/algunacosa o deixa el camp buit."
+msgstr "La url %url no és vàlida. Si us plau, introdueix una URL completa tipus http://www.example.org/algunacosa o deixa el camp buit."
 
 #: ces_bank/ces_bank.forms.inc:302
 msgid ""
@@ -2179,7 +2179,7 @@ msgstr "Marca-ho si no vols publicar l'anunci."
 
 #: ces_offerswants/ces_offerswants.module:673
 msgid "Eg: '2.5' or '5.00%symbol and transport' or 'Contact me' or 'Free'."
-msgstr "Exemple: '2.5' o '5.00%symbol i transport' o 'Contacta' o 'Gratuït'"
+msgstr "Example: '2.5' o '5.00%symbol i transport' o 'Contacta' o 'Gratuït'"
 
 #: ces_offerswants/ces_offerswants.module:683
 msgid "Expire date must be in the future."

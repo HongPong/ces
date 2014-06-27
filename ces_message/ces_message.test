@@ -17,20 +17,21 @@
 class CesMessageTestCase extends DrupalWebTestCase {
 
   /**
-   * @var user
+   * Bank.
+   */
+  protected $bank;
+  /**
    * The global administrator.
    */
   protected $globalAdminUser;
-
-  /** Exchanges demo. */
-
+  /** 
+   * Exchanges demo. 
+   */
   protected $exchangesDemo;
   /**
    * Offers demo.
    */
-
   protected $offersDemo;
-
   /**
    * Implementation of getInfo().
    */
@@ -84,6 +85,12 @@ class CesMessageTestCase extends DrupalWebTestCase {
    * Ces Message.
    */
   protected function testCesMessage() {
+    $this->drupalLogin($this->globalAdminUser);
+    // $edit = array(
+    //   'name' => 'Riemann',
+    //   'pass' => 'integralces',
+    // );
+    // $this->drupalPost('user/', $edit, 'Log in');
     $actions = array(
       'new_exchange' => 'New exchange',
       'exchange_activated' => 'Exchange activated',
@@ -110,10 +117,11 @@ class CesMessageTestCase extends DrupalWebTestCase {
       1
     );
 
-    $this->drupalGet('ces/bank/account/message');
+    $this->drupalGet('ces/bank/account/message/all');
     foreach ($actions as $action => $tit_action) {
       $this->assertRaw(t($tit_action));
     }
+    $this->drupalLogout();
   }
   /**
    * Test Ces Message features.

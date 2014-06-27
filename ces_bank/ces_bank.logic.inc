@@ -866,7 +866,7 @@ class CesBank {
    *   administrative users.
    *
    * @return bool
-   *   TRUE if the transaction has been sucessfully applied, FALSE otherwise.
+   *   TRUE if the transaction has been successfully applied, FALSE otherwise.
    */
   public function acceptTransaction($transaction_id, $account_id, $force = FALSE) {
     $t = IcesSerializer::DBTransaction();
@@ -1696,7 +1696,7 @@ class CesBankLocalAccount extends IcesDBObject implements CesBankAccountInterfac
    *
    * @return bool
    *   TRUE if the transaction is manually accepted by this account and hence
-   *   may be immediatelly applied, FALSE if the transaction has to be manually
+   *   may be immediately applied, FALSE if the transaction has to be manually
    *   accepted.
    */
   public function manualCheck($transaction) {
