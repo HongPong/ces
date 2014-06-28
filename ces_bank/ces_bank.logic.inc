@@ -2908,10 +2908,10 @@ class CesBankUserPermission {
   protected function belongs($object1, $objectid1, $object2, $objectid2) {
     // Case permission. Permission belongs to A if the object of that permission
     // belongs to A.
-    if ($objectid1 == 'permission') {
+    if ($object1 == 'permission') {
       $s = new IcesSerializer('CesBankPermission');
       $perm = $s->load($objectid1);
-      return belongs($perm->object, $perm->objectid, $object2, $objectid2);
+      return $this->belongs($perm->object, $perm->objectid, $object2, $objectid2);
     }
     // Case same scope. Compare identifiers.
     if (substr($object1, 0, strlen($object2)) == $object2) {

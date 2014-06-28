@@ -877,8 +877,13 @@ function ces_bank_get_current_exchange($account = NULL) {
  */
 function ces_bank_get_exchange($id) {
   $bank = new CesBank();
-  $exchange = $bank->getExchange($id);
-  return $exchange;
+  try {
+    $exchange = $bank->getExchange($id);
+    return $exchange;
+  }
+  catch (Exception $e) {
+    return FALSE;
+  }
 }
 /**
  * Returns exchange given its name.
