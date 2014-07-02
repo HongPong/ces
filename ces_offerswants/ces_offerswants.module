@@ -1122,7 +1122,7 @@ function _ces_offerswants_get_all_exchanges_options() {
   $options = array();
   $exchanges = ces_offerswants_get_all_exchanges();
   foreach ($exchanges as $exchange) {
-    $options[$exchange['id']] = $exchange['shortname'];
+    $options[$exchange['id']] = $exchange['code'];
   }
   asort($options);
   return $options;
@@ -1408,7 +1408,7 @@ function ces_offerswants_block_view($delta = '') {
 function ces_offerswants_block_form($form, &$form_state, $offerwant_type = 'offer', $action = 'filter', $exchange = NULL, $category = NULL, $orderby = NULL) {
   $values = isset($form_state['values']) ? $form_state['values'] : array();
   if ($exchange == NULL) {
-    $exchange = 'all';
+    $exchange = ces_offerswants_get_current_exchage_id();
   }
   if ($orderby == NULL) {
     $orderby = 'modified';
@@ -1445,9 +1445,17 @@ function ces_offerswants_block_form($form, &$form_state, $offerwant_type = 'offe
     '#value' => t('Filter'),
     '#attributes' => array('style' => array('display: none;')),
   );
-
+  // Exchange.
+  $exchanges = _ces_offerswants_get_all_exchanges_options();
+  $form['basic']['exchange'] = array(
+    '#type' => 'select',
+    '#title' => t('Exchange'),
+    '#options' => $exchanges,
+    '#default_value' => $exchange,
+    '#attributes' => array('onChange' => array('this.form.submit();')),
+  );
   // Category.
-  $categories = _ces_offerswants_get_categories_options($offerwant_type);
+  $categories = _ces_offerswants_get_categories_options($offerwant_type, $exchange);
   if (count($categories) > 1) {
     $categories = array('all' => t('All')) + $categories;
     $form['basic']['category'] = array(
@@ -1501,18 +1509,6 @@ function ces_offerswants_block_form($form, &$form_state, $offerwant_type = 'offe
       'class' => array('advanced'),
     ),
   );
-  // Exchange.
-  $current_exchange = ces_offerswants_get_current_exchage_id();
-  $exchanges = _ces_offerswants_get_all_exchanges_options();
-  $form['advanced']['exchange'] = array(
-    '#type' => 'select',
-    '#title' => t('Exchange'),
-    '#options' => $exchanges,
-    '#default_value' => isset($values['exchange']) ? $values['exchange'] : $current_exchange,
-    '#attributes' => array('onChange' => array('this.form.submit();')),
-  );
-  // Search box
-  // @TODO
   return $form;
 }
 /**
