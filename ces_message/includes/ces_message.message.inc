@@ -305,7 +305,7 @@ function ces_message_list_page($all = FALSE) {
       array('data' => t('User'), 'field' => 'u.name'),
       array('data' => t('Exc.'), 'field' => 'c.exchange'),
       array('data' => t('Subject')),
-      array('data' => t('Type')),
+      array('data' => t('Type'),  'field' => 'c.type_message'),
     );
   }
   else {
@@ -313,7 +313,7 @@ function ces_message_list_page($all = FALSE) {
       array('data' => t('Created'),  'field' => 'c.created'),
       array('data' => t('Exc.'), 'field' => 'c.exchange'),
       array('data' => t('Subject')),
-      array('data' => t('Type'),  'field' => 'c.type'),
+      array('data' => t('Type'),  'field' => 'c.type_message'),
     );
   }
 
