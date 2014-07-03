@@ -23,7 +23,7 @@ define('CES_IMPORT4CES_RESET_PASSWORD', 0);
 /**
  * Send welcome mails to all users.
  */
-define('CES_IMPORT4CES_SEND_MAILS', 0);
+define('CES_IMPORT4CES_SEND_MAILS', 1);
 /**
  * Where to save import CSV files.
  */
