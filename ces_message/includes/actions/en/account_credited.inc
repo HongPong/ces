@@ -9,21 +9,21 @@
 
 $subject = '[[exchange:shortname]] Your account [transaction:toaccount:name] has been credited';
 
-$body = '[transaction:toaccount:exchange:currencyname]:Your account [transaction:toaccount:name] has been credited.
+$body = 'Your account [transaction:toaccount:name] has been credited.
 
 Transaction details:
 
-Seller account: [transaction:toaccount:name]
-Seller name: [transaction:toaccount:user:fullname]
-
-Buyer account: [transaction:fromaccount:name]
-Buyer name: [transaction:fromaccount:user:fullname]
-
+Seller: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
+Buyer: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
 Description: [transaction:concept]
-Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
+Amount: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Ordered by: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-Ordered by: [transaction:fromaccount:user:fullname] < [transaction:fromaccount:user:mail] >
+View your current <a href="[site:url]/ces/bank/account/transaction">statement of account</a>. If this credit is incorrect click on the sale description and edit the transaction to update it.
 
-If this credit is incorrect contact the seller or the exchange administrator
-within 10 days to have it corrected.
+--
+[exchange:shortname] administrator:
+[exchange:admin:fullname]
+[exchange:admin:mail]
+[exchange:admin:mainphone]
 ';

@@ -7,30 +7,29 @@
  * @ingroup ces_message_template
  */
 
-$subject = '[[exchange:shortname]] Your account [transaction:fromaccount:name] has been debited';
+$subject = '[[exchange:shortname]] El teu compte [transaction:fromaccount:name] ha estat carregat';
 
-$body = '[transaction:fromaccount:exchange:shortname]: Your account [transaction:fromaccount:name]
-has been debited.
+$body = 'Estimat/da [transaction:toaccount:user:fullname]
 
-Transaction details:
+El teu compte [transaction:fromaccount:name] ha estat carregat.
 
-Seller account: [transaction:toaccount:name]
-Seller name: [transaction:toaccount:user:fullname]
+Detalls de la transacció:
 
-Buyer account: [transaction:fromaccount:name]
-Buyer name: [transaction:fromaccount:user:fullname]
+Venedor/a: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
+Comprador/a: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Descripció: [transaction:concept]
+Quantitat: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Entrada per: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-Description: [transaction:concept]
-Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
+Mira el teu <a href="[site:url]/ces/bank/account/transaction">Estat del compte</a>. Si la transacció és errònia, contacta immediatament amb el/la venedor/a o si és necessari amb l\'administrador/a de la xarxa d\'intercanvi per a resoldre-ho.
 
-Ordered by: [current-user:fullname] <[current-user:mail]>
+Venedor/a: [transaction:toaccount:user:fullname]
+Email: [transaction:toaccount:user:mail]
+Telèfon: [transaction:toaccount:user:mainphone]
 
-View your current <a href="[site:url]/ces/bank/account/transaction">statement of account</a>.
-
-If this debit is incorrect contact the seller or the exchange administrator
-within 10 days to have it corrected.
-
-Seller contact: [transaction:toaccount:user:fullname]
-mail: [transaction:toaccount:user:mail]
-phone: [transaction:toaccount:user:mainphone]
+--
+Administrador/a de [exchange:shortname]:
+[exchange:admin:fullname]
+[exchange:admin:mail]
+[exchange:admin:mainphone]
 ';

@@ -117,7 +117,7 @@ function ces_message_template_list_entities() {
       '#theme' => 'table',
       '#rows' => $rows,
       '#header' => array(
-        t('Ces Action'),
+        t('Action'),
         t('Languages'),
         t('Subject'),
         t('Exchange'),
@@ -179,7 +179,7 @@ function ces_message_template_view($entity, $view_mode = 'tweaky') {
   );
   $entity->content['ces_action'] = array(
     '#type' => 'item',
-    '#title' => t('Ces Action'),
+    '#title' => t('Action'),
     '#markup' => t(ces_message_action_load($entity->ces_action_id)->description),
   );
   $entity->content['language'] = array(
@@ -225,8 +225,8 @@ function ces_message_template_view($entity, $view_mode = 'tweaky') {
  */
 function ces_message_field_extra_fields() {
   $form_elements['ces_action'] = array(
-    'label' => t('Ces Action'),
-    'description' => t('Ces action'),
+    'label' => t('Action'),
+    'description' => t('Action'),
     'weight' => 0,
   );
   $form_elements['language'] = array(
@@ -250,8 +250,8 @@ function ces_message_field_extra_fields() {
     'weight' => 9,
   );
   $display_elements['ces_action'] = array(
-    'label' => t('Ces Action'),
-    'description' => t('Ces action'),
+    'label' => t('Action'),
+    'description' => t('Action'),
     'weight' => 0,
   );
   $display_elements['language'] = array(
@@ -339,7 +339,7 @@ function ces_message_template_form($form, &$form_state, $entity) {
   $options = array('' => t('Select a action...')) + $options;
   $form['ces_action'] = array(
     '#type' => 'select',
-    '#title' => t('Ces Action'),
+    '#title' => t('Action'),
     '#description' => t('Select the ces action.'),
     '#required' => TRUE,
     '#options' => $options,
@@ -348,7 +348,7 @@ function ces_message_template_form($form, &$form_state, $entity) {
   );
   // $form['ces_action'] = array(
   // '#type' => 'textfield',
-  // '#title' => t('Ces Action'),
+  // '#title' => t('Action'),
   // '#required' => TRUE,
   // '#default_value' => $entity->ces_action,
   // '#weight' => 0,

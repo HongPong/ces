@@ -228,6 +228,12 @@ function ces_message_update_7100() {
   ces_message_install_action('account_credit_rejected', 'Account credit rejected');
 }
 /**
+ * Second update 3/07/2014
+ */
+function ces_message_update_7101() {
+  ces_message_install_default_templates();
+}
+/**
  * Implements hook_uninstall().
  *
  * At uninstall time we'll notify field.module that the entity was deleted

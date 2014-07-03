@@ -6,25 +6,25 @@
  * @ingroup ces_message_template
  */
 
-$subject = '[[exchange:shortname]] Transaction rejected';
+$subject = '[[exchange:shortname]] Transacció rebutjada';
 
-$body = 'Dear [transaction:toaccount:user:fullname],
+$body = 'Estimat/da [transaction:toaccount:user:fullname],
   
-A transaction to your account has been <strong>rejected</strong> so your account
-will NOT be credited.
+Una transacció cap al teu compte ha estat <strong>rebutjada</strong> i per tant NO rebràs l\'import al teu compte.
 
-Transaction details:
+Detalls de la transacció:
 
-Seller: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
+Venedor/a: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
+Comprador/a: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Descripció: [transaction:concept]
+Quantitat: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Entrada per: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-Buyer: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Si aquesta transacció hauria d\'haver estat acceptada, contacta amb el/la comprador/a [transaction:toaccount:user:fullname] <[transaction:fromaccount:user:mail]> per a que accepti la transacció, o contacta l\'administrador/a si hi ha cap problema.
 
-Description: [transaction:concept]
-Amount: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
-
-Ordered by: [transaction:fromaccount:user:fullname] <[transaction:fromaccount:user:mail]>
-
-If this transaction should be accepted, contact the buyer [transaction:toaccount:user:fullname]
-<[transaction:fromaccount:user:mail]> so she/he accept the transaction or contact
-the exchange admnistrator if necessary.
+--
+Administrador/a de [exchange:shortname]:
+[exchange:admin:fullname]
+[exchange:admin:mail]
+[exchange:admin:mainphone]
 ';

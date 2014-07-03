@@ -9,7 +9,7 @@
 
 $subject = '[[exchange:shortname]] New account request [account:name]';
 
-$body = 'Another account request for [exchange:name]. Go to the administrative interface at [site:url]/ces/bank/exchange/admin to activate or discard it.
+$body = 'Another account request for [exchange:name]. Go to the administrative interface at [site:url]/ces/admin/account to activate or discard it.
 
 See registration details below:
 
@@ -18,5 +18,7 @@ Account name: [account:name]
 Account type: [account:kind]
 User: [account:user:fullname]
 
-Integral CES
+--
+IntegralCES
+[site:mail]
 ';

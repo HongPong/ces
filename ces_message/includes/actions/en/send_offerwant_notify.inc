@@ -7,9 +7,9 @@
  * @ingroup ces_message_template
  */
 
-$subject = '[Integral CES - [exchange:code]] New notify in [offer:title]';
+$subject = '[[exchange:shortname]] New message in [offer:title]';
 
 $body = '[notify:body]
 
-User: [notify:user:name] < [notify:user:mail] >
+User: [notify:user:fullname] < [notify:user:mail] >
 ';

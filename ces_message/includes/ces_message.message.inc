@@ -53,7 +53,7 @@ function ces_message_uri($message) {
  * Callback for a page title when this entity is displayed.
  */
 function ces_message_title($entity) {
-  return t('Ces Messages');
+  return t('Message');
 }
 
 /**

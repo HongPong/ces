@@ -667,6 +667,10 @@ function ces_bank_token_info() {
         ),
       ),
       'transaction' => array(
+        'id' => array(
+          'name' => t('Identifier'),
+          'description' => t('Transaction identifier'),
+        ),
         'fromaccount' => array(
           'name' => t('Buyer account'),
           'description' => t('The buyer account object.'),
@@ -684,6 +688,11 @@ function ces_bank_token_info() {
         'concept' => array(
           'name' => t('Description'),
           'description' => t('The concept of the transaction.'),
+        ),
+        'orderedby' => array(
+          'name' => t('Ordered by'),
+          'description' => t('The user who created the transaction.'),
+          'type' => 'user',
         ),
       ),
     ),
@@ -787,6 +796,11 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
         case 'concept':
           $replacements[$original] = $sanitize ? check_plain($transaction['concept']) : $transaction['concept'];
           break;
+        
+        case 'id':
+          $replacements[$original] = $transaction['id'];
+          break;
+      
       }
       if ($fromaccount_tokens = token_find_with_prefix($tokens, 'fromaccount')) {
         $bank = new CesBank();
@@ -795,6 +809,9 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
       if ($toaccount_tokens = token_find_with_prefix($tokens, 'toaccount')) {
         $bank = new CesBank();
         $replacements += token_generate('account', $toaccount_tokens, array('account' => $bank->getAccountByName($transaction['toaccount'])), $options);
+      }
+      if ($orderedby_tokens = token_find_with_prefix($tokens, 'orderedby')) {
+        $replacements += token_generate('user', $orderedby_tokens, array('user' => user_load($transaction['user'])), $options);
       }
     }
   }

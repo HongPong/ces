@@ -6,24 +6,29 @@
  * @ingroup ces_message_template
  */
 
-$subject = '[[exchange:shortname]] Accept transaction';
+$subject = '[[exchange:shortname]] Autoritzar transacció';
 
-$body = 'A new transaction to [transaction:toaccount:name]([transaction:toaccount:user:fullname]) has been created and is awaiting 
-<strong>your authorization</strong> to be applied. 
+$body = 'Estimat/da [transaction:toaccount:user:fullname],
 
-Please accept (or reject) this transaction following this link:
+S\'ha creat una transacció cap a [transaction:toaccount:name] ([transaction:toaccount:user:fullname]) que espera <strong>la teva autorització</strong> per a poder ser aplicada. 
 
-      <h3><strong><a href="[base_url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept">Authorize transaction</a></strong></h3>
+Si us plau accepta (o rebutja) aquesta transacció seguint l\'enllaç:
 
-Transaction details:
+      <h3><strong><a href="[site:url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept">Autoritza transacció</a></strong></h3>
 
-Seller: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
+És molt important que autoritzis els teus pagaments pendents immediatament pel bon funcionament del sistema de moneda social. També pots afegir aquest compte a la llista blanca de comptes de confiança que no requereixen autorització.
 
-Buyer: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Detalls de la transacció:
 
-Description: [transaction:concept]
-Amount: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Venedor/a: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
+Comprador/a: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Descripció: [transaction:concept]
+Quantitat: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Entrada per: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-Ordered by: [transaction:fromaccount:user:fullname] < [transaction:fromaccount:user:mail] >
-
+--
+Administrador/a de [exchange:shortname]:
+[exchange:admin:fullname]
+[exchange:admin:mail]
+[exchange:admin:mainphone]
 ';

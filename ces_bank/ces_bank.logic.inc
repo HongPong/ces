@@ -1129,31 +1129,32 @@ class CesBank {
   protected function notifyTransaction(CesBankTransactionInterface $transaction) {
     $account_from_name = $transaction->getFromAccountName();
     $account_to_name = $transaction->getToAccountName();
-    $transaction_user = $transaction->getUser();
     $details = $transaction->getLog($transaction->getState());
     $params = array(
       'transaction' => array(
+        'id' => $transaction->getId(),
         'amount' => $transaction->getAmount(),
         'concept' => $transaction->getConcept(),
         'fromaccount' => $account_from_name,
         'toaccount' => $account_to_name,
         'details' => $details,
+        'user' => $transaction->getUser(),
       ),
     );
     switch ($transaction->getState()) {
       case CesBankTransactionInterface::STATE_COMMITTED:
-        $this->notifyTransactionAccount('account_debited', $account_from_name, $transaction_user, $params);
-        $this->notifyTransactionAccount('account_credited', $account_to_name, $transaction_user, $params);
+        $this->notifyTransactionAccount('account_debited', $account_from_name, $params);
+        $this->notifyTransactionAccount('account_credited', $account_to_name, $params);
         break;
 
       case CesBankTransactionInterface::STATE_REJECTED:
-        $this->notifyTransactionAccount('account_debit_rejected', $account_from_name, $transaction_user, $params);
-        $this->notifyTransactionAccount('account_credit_rejected', $account_to_name, $transaction_user, $params);
+        $this->notifyTransactionAccount('account_debit_rejected', $account_from_name, $params);
+        $this->notifyTransactionAccount('account_credit_rejected', $account_to_name, $params);
         break;
 
       case CesBankTransactionInterface::STATE_TRIGGERED:
-        $this->notifyTransactionAccount('account_debit_pending', $account_from_name, $transaction_user, $params);
-        $this->notifyTransactionAccount('account_credit_pending', $account_to_name, $transaction_user, $params);
+        $this->notifyTransactionAccount('account_debit_pending', $account_from_name, $params);
+        $this->notifyTransactionAccount('account_credit_pending', $account_to_name, $params);
         break;
     }
   }
@@ -1161,14 +1162,15 @@ class CesBank {
   /**
    * Triggers notification for transaction account.
    */
-  protected function notifyTransactionAccount($message_key, $account_name, $transaction_user, $params) {
+  protected function notifyTransactionAccount($message_key, $account_name, $params) {
     $s = new IcesSerializer('CesBankLocalAccount');
     $account = $s->loadFromUniqueKey('name', $account_name);
     $account_users = $account->getUsers();
+    global $user;
     foreach ($account_users as $account_user) {
-      // Don't send mail if the user is the same.
-      $send_mail = ($transaction_user != $account_user->user) ? TRUE : FALSE;
-      ces_message_send_notify($message_key, $params, array($account_user->user), $transaction_user, $send_mail);
+      // Don't send mail if the user is the current one.
+      $send_mail = ($user->uid != $account_user->user) ? TRUE : FALSE;
+      ces_message_send_notify($message_key, $params, array($account_user->user), $user->uid, $send_mail);
     }
   }
 }

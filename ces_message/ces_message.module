@@ -178,7 +178,7 @@ function ces_message_menu() {
 
   $items['ces/bank/account/message'] = array(
     'title' => 'Messages',
-    'decription' => 'Ces Messages',
+    'decription' => 'Messages',
     'page callback' => 'ces_message_list_page',
     'file' => 'includes/ces_message.message.inc',
     'file path' => drupal_get_path('module', 'ces_message'),

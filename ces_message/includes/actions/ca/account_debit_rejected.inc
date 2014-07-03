@@ -8,22 +8,23 @@
 
 $subject = '[[exchange:shortname]] Transaction rejected';
 
-$body = 'Dear [transaction:toaccount:user:fullname],
+$body = 'Estimat/da [transaction:toaccount:user:fullname],
   
-A transaction from your account has been <strong>rejected</strong> so your account
-will NOT be debited.
+Una transacció des el teu compte ha estat <strong>rebutjada</strong> i per tant el teu compte NO serà carregat.
 
-Transaction details:
+Detalls de la transacció:
 
-Seller: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
+Venedor/a: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
+Comprador/a: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Descripció: [transaction:concept]
+Quantitat: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Entrada per: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-Buyer: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Si aquest rebuig és un error, entra al teu compte i accepta la transacció seguint aquest enllaç: <a href="[site:url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept">Autoritza transacció</a>.
 
-Description: [transaction:concept]
-Amount: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
-
-Ordered by: [transaction:fromaccount:user:fullname] <[transaction:fromaccount:user:mail]>
-
-If this rejection is an error please log in to your account and accept the transaction
-following this link: <a href="[base_url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept">Authorize transaction</a>.
+--
+Administrador/a de [exchange:shortname]:
+[exchange:admin:fullname]
+[exchange:admin:mail]
+[exchange:admin:mainphone]
 ';

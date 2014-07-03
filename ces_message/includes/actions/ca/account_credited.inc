@@ -7,23 +7,25 @@
  * @ingroup ces_message_template
  */
 
-$subject = '[[exchange:shortname]] Your account [transaction:toaccount:name] has been credited';
+$subject = '[[exchange:shortname]] El teu compte [transaction:toaccount:name] ha estat abonat';
 
-$body = '[transaction:toaccount:exchange:currencyname]:Your account [transaction:toaccount:name] has been credited.
+$body = 'Estimat/da [transaction:toaccount:user:fullname],
 
-Transaction details:
+El teu compte [transaction:toaccount:name] ha estat abonat.
 
-Seller account: [transaction:toaccount:name]
-Seller name: [transaction:toaccount:user:fullname]
+Detalls de la transacció:
 
-Buyer account: [transaction:fromaccount:name]
-Buyer name: [transaction:fromaccount:user:fullname]
+Venedor/a: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
+Comprador/a: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Descripció: [transaction:concept]
+Quantitat: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Entrada per: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-Description: [transaction:concept]
-Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
+Mira el teu <a href="[site:url]/ces/bank/account/transaction">Estat del compte</a>. Si aquest abonament és incorrecte, clica a la descripció de la venda i edita la transacció per solucionar-ho.
 
-Ordered by: [transaction:fromaccount:user:fullname] < [transaction:fromaccount:user:mail] >
-
-If this credit is incorrect contact the seller or the exchange administrator
-within 10 days to have it corrected.
+--
+Administrador/a de [exchange:shortname]:
+[exchange:admin:fullname]
+[exchange:admin:mail]
+[exchange:admin:mainphone]
 ';

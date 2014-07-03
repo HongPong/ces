@@ -2,51 +2,40 @@
 
 /**
  * @file
- * Catalan Account activated template.
+ * English Account activated template.
  *
  * @ingroup ces_message_template
  */
 
-$subject = '[[exchange:shortname]] conpte activada';
+$subject = '[[exchange:shortname]] Compte activat';
 
-$body = 'Benvingut [account:user:name],
- 
-Benvingut [exchange:name], your local exchange of the global Integral
-Community Exchange System platform.
+$body = 'Estimat/da [account:user:fullname],
 
-A continuació es presenten els detalls que necessita per accedir al seu compte 
-en el [exchange:code] xarxa. 
+Benvingut/da a <strong>[exchange:name]</strong> ([exchange:code]), la teva xarxa local d\'intercanvis dins la plataforma Integral Community Exchange System.
 
-Per arribar a la pàgina web vagi a [site:login-url]. Això el portarà a la
-pàgina d\'inici de sessió.
+A continuació hi ha els detalls per accedir al teu compte a la xarxa [exchange:code].
 
-Introduïu les dades següents:
+Per anar al lloc web segueix l\'enllaç [site:url]. Et portarà a la pàgina d\'entrada.
 
-Número de compte: [account:name]
-Contrasenya: *
+Entra el teu nom d\'usuari i password:
 
-La interfície web està disponible en diversos idiomes . Si voleu seleccionar
-un altre idioma , feu clic al seu nom a la cantonada superior dreta. en el seu
-perfil personal només ha de seleccionar l\'idioma de la seva preferència.
+Nom d\'usuari: [account:name]
+Password: *
 
-Llegiu la <a href="http://www.integralces.net/doc/user">Guia de l\'usuari</a> per
-esbrinar com funciona el lloc.
+La interfície de la web està traduïda a varis idiomes. Si vols seleccionar un altre idioma, clica el teu nom a la cantonada de dalt a la dreta. En el teu perfil personal, selecciona el teu idioma preferit. Assegura\'t també de que les teves dades personals són correctes i completes.
 
-Després introduïu ofertes i interessos, vostè pot afegir tantes ofertes i interessos
-addicionals com vulgui.
+Després de fer una ullada per programa, entra les teves ofertes i demandes clicant als enllaços Les meves ofertes i Les meves demandes del menú de l\'esquerra. Si ja n\'has entrat durant el registre, pots modificar-les i afegir-ne tantes com desitgis.
 
-També pots pujar una fotografia de tu mateix perquè altres usuaris puguin veure\'t.
+També pots pujar una fotografia teva per a que la resta poguem veure qui ets.
 
-No dubti en posar-se en contacte amb qualsevol anunciant a \'Ofertes\' llista per a 
-la compra de qualsevol bé i serveis oferts. 
+No dubtis en contactar els anunciants de la llista d\'ofertes per adquirir productes i serveis. No necessites esperar que et comprin a tu per a poder utilitzar el sistema. Tenir el compte en negatiu és habitual i part del sistema i simplement significa el teu compromís amb la comunitat.
 
-Si us plau, no esperi que algú li compri a vostè abans que vostè utilitzi el sistema. 
-Vostè no necessita tindrà crèdit abans de fer una compra, tindrà dèbit és part del 
-sistema i simplement representa el seu compromís amb la comunitat.
+Si necessites ajuda contacta l\'administrador/a de la xarxa.
 
-feliç intercanvi!
+Feliç intercanvi!
 
-[exchange:shortname] administrator:
+--
+Administrador/a de [exchange:shortname]:
 [exchange:admin:fullname]
 [exchange:admin:mail]
 [exchange:admin:mainphone]
