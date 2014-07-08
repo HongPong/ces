@@ -173,9 +173,6 @@ function ces_message_access($permission, $message) {
  * Implements hook_menu().
  */
 function ces_message_menu() {
-  $current_exchange = ces_bank_get_current_exchange();
-  $current_exchange_id = $current_exchange['id'];
-
   $items['ces/bank/account/message'] = array(
     'title' => 'Messages',
     'decription' => 'Messages',
@@ -206,7 +203,7 @@ function ces_message_menu() {
     'file' => 'includes/ces_message.message.inc',
     'file path' => drupal_get_path('module', 'ces_message'),
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
     'type' => MENU_LOCAL_TASK,
   );
   $items['ces/admin/message'] = array(
@@ -219,14 +216,14 @@ function ces_message_menu() {
     'file' => 'includes/ces_message.templates.inc',
     'file path' => drupal_get_path('module', 'ces_message'),
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
   );
   $items['ces/admin/message/list'] = array(
     'title' => 'List',
     'description' => 'Administer ces message templates',
     'page callback' => 'ces_message_template_info_page',
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   // Add example entities.
@@ -235,7 +232,7 @@ function ces_message_menu() {
     'description' => 'Add ces message templates',
     'page callback' => 'ces_message_template_add',
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
     'type' => MENU_LOCAL_TASK,
   );
   // Add example entities.
@@ -243,7 +240,7 @@ function ces_message_menu() {
     'title' => 'Test',
     'page callback' => 'ces_message_template_test',
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
     'type' => MENU_LOCAL_TASK,
   );
   // The page to view our entities - needs to follow what
@@ -255,7 +252,7 @@ function ces_message_menu() {
     'page callback' => 'ces_message_template_view',
     'page arguments' => array(3),
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
     'type' => MENU_LOCAL_TASK,
   );
 
@@ -265,7 +262,7 @@ function ces_message_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_message_template_form', 3),
     'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', $current_exchange_id),
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
     'type' => MENU_LOCAL_TASK,
   );
 
