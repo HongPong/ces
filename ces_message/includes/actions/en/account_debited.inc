@@ -13,13 +13,13 @@ $body = 'Your account [transaction:fromaccount:name] has been debited.
 
 Transaction details:
 
-Seller: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
-Buyer: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Seller: [transaction:toaccount:name] ([transaction:toaccount:user:fullname])
+Buyer: [transaction:fromaccount:name] ([transaction:fromaccount:user:fullname])
 Description: [transaction:concept]
-Amount: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
 Ordered by: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-View your current <a href="[site:url]/ces/bank/account/transaction">statement of account</a>. If this debit is incorrect contact the seller or the exchange administrator immediately to have it corrected.
+View your current statement of account ([site:url]/ces/bank/account/transaction). If this debit is incorrect contact the seller or the exchange administrator immediately to have it corrected.
 
 Seller contact: [transaction:toaccount:user:fullname]
 mail: [transaction:toaccount:user:mail]

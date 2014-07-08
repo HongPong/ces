@@ -13,13 +13,13 @@ $body = 'Your account [transaction:toaccount:name] has been credited.
 
 Transaction details:
 
-Seller: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
-Buyer: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Seller: [transaction:toaccount:name] ([transaction:toaccount:user:fullname])
+Buyer: [transaction:fromaccount:name] ([transaction:fromaccount:user:fullname])
 Description: [transaction:concept]
-Amount: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
 Ordered by: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-View your current <a href="[site:url]/ces/bank/account/transaction">statement of account</a>. If this credit is incorrect click on the sale description and edit the transaction to update it.
+View your current statement of account ([site:url]/ces/bank/account/transaction). If this credit is incorrect click on the sale description and edit the transaction to update it.
 
 --
 [exchange:shortname] administrator:

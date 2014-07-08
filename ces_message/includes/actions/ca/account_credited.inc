@@ -15,13 +15,13 @@ El teu compte [transaction:toaccount:name] ha estat abonat.
 
 Detalls de la transacció:
 
-Venedor/a: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
-Comprador/a: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Venedor/a: [transaction:toaccount:name] ([transaction:toaccount:user:fullname])
+Comprador/a: [transaction:fromaccount:name] ([transaction:fromaccount:user:fullname])
 Descripció: [transaction:concept]
-Quantitat: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Quantitat: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
 Entrada per: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-Mira el teu <a href="[site:url]/ces/bank/account/transaction">Estat del compte</a>. Si aquest abonament és incorrecte, clica a la descripció de la venda i edita la transacció per solucionar-ho.
+Mira el teu Estat del compte ([site:url]/ces/bank/account/transaction). Si aquest abonament és incorrecte, clica a la descripció de la venda i edita la transacció per solucionar-ho.
 
 --
 Administrador/a de [exchange:shortname]:

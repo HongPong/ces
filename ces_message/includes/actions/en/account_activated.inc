@@ -11,7 +11,7 @@ $subject = '[[exchange:shortname]] Account activated';
 
 $body = 'Dear [account:user:fullname],
 
-Welcome to <strong>[exchange:name]</strong> ([exchange:code]), your local exchange of the Integral Community Exchange System platform.
+Welcome to [exchange:name] ([exchange:code]), your local exchange of the Integral Community Exchange System platform.
 
 Below are the details you need to access your account on the [exchange:code] network.
 

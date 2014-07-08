@@ -11,7 +11,7 @@ $subject = '[[exchange:shortname]] Compte activat';
 
 $body = 'Estimat/da [account:user:fullname],
 
-Benvingut/da a <strong>[exchange:name]</strong> ([exchange:code]), la teva xarxa local d\'intercanvis dins la plataforma Integral Community Exchange System.
+Benvingut/da a [exchange:name] ([exchange:code]), la teva xarxa local d\'intercanvis dins la plataforma Integral Community Exchange System.
 
 A continuació hi ha els detalls per accedir al teu compte a la xarxa [exchange:code].
 

@@ -15,13 +15,13 @@ Tu cuenta [transaction:fromaccount:name] ha sido cargada.
 
 Detalles de la transacción:
 
-Vendedor/a: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
-Comprador/a: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Vendedor/a: [transaction:toaccount:name] ([transaction:toaccount:user:fullname])
+Comprador/a: [transaction:fromaccount:name] ([transaction:fromaccount:user:fullname])
 Descripción: [transaction:concept]
-Cantidad: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Cantidad: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
 Entrada por: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
-Mira tu <a href="[site:url]/ces/bank/account/transaction">Estado de la cuenta</a>. Si la transacción errónea, contacta inmediatamente con el/la venedor/a o si es necessario con el/la administrador/a de la red de intercambio para solucionarlo.
+Mira tu Estado de la cuenta ([site:url]/ces/bank/account/transaction). Si la transacción errónea, contacta inmediatamente con el/la venedor/a o si es necessario con el/la administrador/a de la red de intercambio para solucionarlo.
 
 Vendedor/a: [transaction:toaccount:user:fullname]
 Email: [transaction:toaccount:user:mail]

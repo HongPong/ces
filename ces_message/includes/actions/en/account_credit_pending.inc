@@ -10,14 +10,14 @@ $subject = '[[exchange:shortname]] Transaction waiting authoriztion';
 
 $body = 'Dear [transaction:toaccount:user:fullname],
   
-A <strong>new transaction</strong> has been created and is waiting to be <strong>manually authorized</strong> by <strong>[transaction:fromaccount:user:fullname]</strong>.
+A new transaction has been created and is waiting to be manually authorized by [transaction:fromaccount:user:fullname].
 
 Transaction details:
 
-Seller: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
-Buyer: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Seller: [transaction:toaccount:name] ([transaction:toaccount:user:fullname])
+Buyer: [transaction:fromaccount:name] ([transaction:fromaccount:user:fullname])
 Description: [transaction:concept]
-Amount: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Amount: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
 Ordered by: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
 --

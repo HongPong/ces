@@ -20,7 +20,7 @@ Country: [exchange:country]
 Location: [exchange:town] ([exchange:region])
 Web site: [exchange:website]
 Currency: [exchange:currencysymbol] ( [exchange:currencyname] ), value [exchange:currencyvalue]
-User: [exchange:admin:name] <[exchange:admin:mail]>
+User: [exchange:admin:name] < [exchange:admin:mail] >
 
 IntegralCES
 [site:mail]

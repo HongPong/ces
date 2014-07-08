@@ -10,20 +10,20 @@ $subject = '[[exchange:shortname]] Autoritzar transacció';
 
 $body = 'Estimat/da [transaction:toaccount:user:fullname],
 
-S\'ha creat una transacció cap a [transaction:toaccount:name] ([transaction:toaccount:user:fullname]) que espera <strong>la teva autorització</strong> per a poder ser aplicada. 
+S\'ha creat una transacció cap a [transaction:toaccount:name] ([transaction:toaccount:user:fullname]) que espera la teva autorització per a poder ser aplicada. 
 
 Si us plau accepta (o rebutja) aquesta transacció seguint l\'enllaç:
 
-      <h3><strong><a href="[site:url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept">Autoritza transacció</a></strong></h3>
+[site:url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept
 
 És molt important que autoritzis els teus pagaments pendents immediatament pel bon funcionament del sistema de moneda social. També pots afegir aquest compte a la llista blanca de comptes de confiança que no requereixen autorització.
 
 Detalls de la transacció:
 
-Venedor/a: <strong>[transaction:toaccount:name]</strong> ([transaction:toaccount:user:fullname])
-Comprador/a: <strong>[transaction:fromaccount:name]</strong> ([transaction:fromaccount:user:fullname])
+Venedor/a: [transaction:toaccount:name] ([transaction:toaccount:user:fullname])
+Comprador/a: [transaction:fromaccount:name] ([transaction:fromaccount:user:fullname])
 Descripció: [transaction:concept]
-Quantitat: <strong>[transaction:amount][transaction:fromaccount:exchange:currencysymbol]</strong>
+Quantitat: [transaction:amount][transaction:fromaccount:exchange:currencysymbol]
 Entrada per: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
 --

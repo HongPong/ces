@@ -11,7 +11,7 @@ $subject = '[[exchange:shortname]] Cuenta activada';
 
 $body = 'Estimado/a [account:user:fullname],
 
-Bienvenido/a a <strong>[exchange:name]</strong> ([exchange:code]), tu red local de intercambios dentro de la plataforma Integral Community Exchange System.
+Bienvenido/a a [exchange:name] ([exchange:code]), tu red local de intercambios dentro de la plataforma Integral Community Exchange System.
 
 A continuación encontrarás los detalles para acceder a tu cuenta en la red [exchange:code].
 
