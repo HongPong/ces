@@ -228,9 +228,15 @@ function ces_message_update_7100() {
   ces_message_install_action('account_credit_rejected', 'Account credit rejected');
 }
 /**
- * Second update 3/07/2014
+ * Second update 3/07/2014.
  */
 function ces_message_update_7101() {
+  ces_message_install_default_templates();
+}
+/**
+ * Third update 8/07/2014.
+ */
+function ces_message_update_7102() {
   ces_message_install_default_templates();
 }
 /**
