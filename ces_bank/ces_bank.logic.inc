@@ -2716,6 +2716,15 @@ class CesBankInterExchangeTransaction extends CesBankDecoratedTransaction {
     return $this->getVirtualTransactionFrom()->getFromAccountName();
   }
   /**
+   * Implements getState().
+   */
+  public function getState() {
+    $state1 = $this->getParent()->getState();
+    $state2 = $this->getPair()->getParent()->getState();
+    // TODO: Check if this formula is actually the good AND of these two states.
+    return min($state1, $state2);
+  }
+  /**
    * The virtual transaction in buyer's exchange.
    */
   protected function getVirtualTransactionFrom() {
