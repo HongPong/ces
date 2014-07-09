@@ -860,7 +860,7 @@ function template_preprocess_ces_offerwant(&$variables) {
     $countcomments = db_query("SELECT cid FROM {ces_offercomment} WHERE oid = :oid",
     array(':oid' => $offerwant->id));
     $numcomm = 0;
-    foreach ($countcomments as $coucom) { 
+    foreach ($countcomments as $coucom) {
       $numcomm++;
     }
     $actions[] = l(t('Comments(') . $numcomm . ')', 'ces/bank/exchange/offercomment/' . $offerwant->id . '/view');
@@ -1954,6 +1954,9 @@ function ces_offerswants_user_register_save_values($form, &$form_state) {
  * Submit user regiser form.
  */
 function ces_offerswants_user_register_submit($form, &$form_state) {
+  // Submit functions below override redirect but in register function we want
+  // to keep the original one.
+  $redirect = $form_state['redirect'];
   // Submit offers.
   if (!empty($form_state['page_values']['offers'])) {
     foreach ($form_state['page_values']['offers'] as $offer) {
@@ -1970,7 +1973,7 @@ function ces_offerswants_user_register_submit($form, &$form_state) {
       ces_offerwant_form_submit($form, $form_state);
     }
   }
-  $form_state['redirect'] = 'ces';
+  $form_state['redirect'] = $redirect;
 }
 function ces_offercomment_page($offerid) {
   drupal_add_css(drupal_get_path('module', 'ces_offerswants') . '/css/ces_offerswants.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
@@ -2013,13 +2016,13 @@ function ces_offercomment_page($offerid) {
             '#markup' => '<div class="offercomment-body">' . $ofco->body . '</div>' .
             '<div class="offercomment-rated-author">Rated <strong>' . $ofco->rating . '/5</strong> by ' .
             l($userauthor->name, 'user/' . $userauthor->uid) . ' - ' . format_date($ofco->created, 'custom', 'd/m/y') . '</div>',
-          ),   
+          ),
         );
         $page[] = $buildoutput;
       }
     }
     $page[] = drupal_get_form('ces_offercomment_add_form', $offerid);
-  }  
+  }
   else {
     $text = array(
       '#markup' => t('There is no offer with ' . $offerid . ' id number.'),
@@ -2033,14 +2036,14 @@ function ces_offercomment_add_form($form, &$form_state, $offerid) {
     '#type' => 'fieldset',
     '#title' => t('Add a new comment and rating to this offer.'),
   );
-  
+
   $form['offercomment']['body'] = array(
     '#type' => 'textarea',
     '#title' => t('Comment'),
     '#rows' => 3,
     '#required' => TRUE,
   );
-  
+
   $form['offercomment']['rating'] = array(
     '#type' => 'select',
     '#title' => t('Rating from 0 to 5'),
@@ -2054,12 +2057,12 @@ function ces_offercomment_add_form($form, &$form_state, $offerid) {
     ),
     '#required' => TRUE,
   );
-  
+
   $form['oid'] = array(
     '#type' => 'hidden',
     '#value' => $offerid,
   );
-  
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save comment'),

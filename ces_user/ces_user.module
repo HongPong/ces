@@ -22,6 +22,13 @@ function ces_user_menu() {
     'page callback' => 'ces_user_main_page',
     'type' => MENU_CALLBACK,
   );
+  $menu['ces/user/registered/%'] = array(
+    'title' => 'Successfuly registered to Integral CES',
+    'access callback' => TRUE,
+    'page callback' => 'ces_user_registered',
+    'page arguments' => array(3),
+    'type' => MENU_CALLBACK,
+  );
   return $menu;
 }
 /**
@@ -142,6 +149,7 @@ function ces_user_register_submit($form, &$form_state) {
   $form_state['values'] = $form_state['page_values']['account'];
   $form = user_register_form($form, $form_state);
   user_register_submit($form, $form_state);
+  $form_state['redirect'] = 'ces/user/registered/' . $form_state['page_values']['bankaccount']['exchange'];
 }
 /**
  * Implements hook_form_alter().
@@ -405,5 +413,31 @@ function ces_user_tokens($type, $tokens, array $data = array(), array $options =
     }
   }
   return $replacements;
+}
+/**
+ * End of registration page callback.
+ */
+function ces_user_registered($exchange_id) {
+  $exchange = ces_bank_get_exchange($exchange_id);
+  $admin = user_load($exchange['admin']);
+  return array(
+    'success' => array(
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => t('You have successfully registered to the exchange %name in the Integral Community Exchange System.',
+        array('%name' => $exchange['name'])),
+    ),
+    'message' => array(
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => t('Before you can start using the system, the administration of your exchange must authorize your account. You will receive an email when your account is activated with further instructions. If you have no news in these comming days, contact your exchange administration at %mail.',
+        array('%mail' => $admin->mail)),
+    ),
+    'message2' => array(
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => t('See you soon!'),
+    ),
+  );
 }
 /** @} */

@@ -518,6 +518,7 @@ class CesBankTestCase extends DrupalWebTestCase {
         $edit = FALSE;
       }
     }
+    $this->assertText(t('See you soon!'));
   }
   /**
    * Activate a requested account.
