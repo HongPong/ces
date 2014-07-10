@@ -811,12 +811,11 @@ function ces_import4ces_get_category($title, $import) {
     return $category_id;
   }
 }
-
 /**
  * Implements hook_mail_alter().
  */
 function ces_import4ces_mail_alter(&$message) {
-  if (!CES_IMPORT4CES_SEND_MAILS) {
+  if (!variable_get('ces_import4ces_mail', CES_IMPORT4CES_SEND_MAILS)) {
     $message['send'] = FALSE;
   }
 }

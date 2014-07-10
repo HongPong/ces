@@ -56,9 +56,10 @@ function ces_import4ces_parse_trades($import_id, $data, $row, &$context) {
       'created' => strtotime($data['DateEntered']),
       'modified' => strtotime($data['DateEntered']),
     );
-
+    variable_set('ces_import4ces_mail', FALSE);
     $bank->createTransaction($trans);
     $bank->applyTransaction($trans['id']);
+    variable_set('ces_import4ces_mail', CES_IMPORT4CES_SEND_MAILS);
 
     db_insert('ces_import4ces_objects')
       ->fields(array(
