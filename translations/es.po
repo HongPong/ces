@@ -45,12 +45,13 @@
 # elleflane <elle_flane@riseup.net>, 2014
 # emwa goldwoman, 2014
 # Enri, 2014
+# Esteve Badia Orive <badia.orive@gmail.com>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: IntegralCES\n"
-"POT-Creation-Date: 2014-07-03 18:31+0000\n"
-"PO-Revision-Date: 2014-07-06 15:57+0000\n"
-"Last-Translator: emwa goldwoman\n"
+"POT-Creation-Date: 2014-07-09 17:13+0000\n"
+"PO-Revision-Date: 2014-07-10 10:23+0000\n"
+"Last-Translator: Esteve Badia Orive <badia.orive@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/integralces/language/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -67,7 +68,7 @@ msgstr "Atención: Tabla ICES @table no encontrada. Probablemente necesite insta
 msgid "Impossible to get the database lock %lock"
 msgstr "Imposible obtener la base de datos %lock"
 
-#: ices.module:22 ces_user/ces_user.module:287
+#: ices.module:22 ces_user/ces_user.module:295
 msgid "About"
 msgstr "Sobre"
 
@@ -853,7 +854,7 @@ msgid "Use"
 msgstr "Utiliza"
 
 #: ces_bank/ces_bank.forms.inc:1493 ces_bank/ces_bank.pages.inc129;321;413;473
-#: ces_bank/ces_bank.module170;332;431 ces_message/ces_message.module:264
+#: ces_bank/ces_bank.module170;332;431 ces_message/ces_message.module:261
 #: ces_offerswants/ces_offerswants.module856;1258
 msgid "Edit"
 msgstr "Edita"
@@ -989,23 +990,23 @@ msgstr "Error cargando cuenta del vendedor/ de la vendedora."
 msgid "Error loading buyer account."
 msgstr "Error cargando la cuenta del comprador/ de la compradora."
 
-#: ces_bank/ces_bank.logic.inc:1655
+#: ces_bank/ces_bank.logic.inc:1656
 msgid "User %user cannot accept transactions because it is not active."
 msgstr "El usuario %user no puede aceptar intercambios porque no es activo."
 
-#: ces_bank/ces_bank.logic.inc:1707
+#: ces_bank/ces_bank.logic.inc:1708
 msgid "The transaction must be manually authorized."
 msgstr "La transacción debe ser autorizada manualmente."
 
-#: ces_bank/ces_bank.logic.inc:1981
+#: ces_bank/ces_bank.logic.inc:1982
 msgid "Account %account exceeds the debit limit of %limit."
 msgstr "Estado no válido para este intercambio %trans. "
 
-#: ces_bank/ces_bank.logic.inc:2010
+#: ces_bank/ces_bank.logic.inc:2011
 msgid "Account %account exceeds the credit limit of %limit."
 msgstr "La cuenta %account exede el crédito límite %limit."
 
-#: ces_bank/ces_bank.logic.inc:2341
+#: ces_bank/ces_bank.logic.inc:2342
 msgid "Invalid state transition for transaction %trans."
 msgstr "Estado del intercambio no válido para %trans."
 
@@ -1346,11 +1347,11 @@ msgstr "Identificador de 4 letras mas 4 numeros en el código de la cuenta. "
 msgid "Account type."
 msgstr "Tipo de Cuenta"
 
-#: ces_bank/ces_bank.module:659 ces_offerswants/ces_offerswants.module:2112
+#: ces_bank/ces_bank.module:659 ces_offerswants/ces_offerswants.module:2115
 msgid "Account user"
 msgstr "Cuenta de usuario"
 
-#: ces_bank/ces_bank.module:660 ces_offerswants/ces_offerswants.module:2113
+#: ces_bank/ces_bank.module:660 ces_offerswants/ces_offerswants.module:2116
 msgid "Account user."
 msgstr "Cuenta de usuario"
 
@@ -1448,7 +1449,7 @@ msgstr "Administrador de CES bank"
 msgid "Top administer interface for CES Bank"
 msgstr "Interfaz del Administrador del CES bank"
 
-#: ces_bank/ces_bank.module104;380 ces_user/ces_user.module:283
+#: ces_bank/ces_bank.module104;380 ces_user/ces_user.module:291
 msgid "New exchange"
 msgstr "Nueva Red de Intercambio"
 
@@ -1465,7 +1466,7 @@ msgid "Administer accounts"
 msgstr "Cuentas de Administrador"
 
 #: ces_bank/ces_bank.module141;302 ces_import4ces/ces_import4ces.module:44
-#: ces_message/ces_message.module:225
+#: ces_message/ces_message.module:222
 msgid "List"
 msgstr "Lista"
 
@@ -1641,7 +1642,7 @@ msgstr "ICES blog de su Red de Intercambio"
 msgid "Individual blog for each exchange."
 msgstr "Blog individual para cada Red de Intercambio"
 
-#: ces_develop/ces_develop.module:111 ces_user/ces_user.module:122
+#: ces_develop/ces_develop.module:111 ces_user/ces_user.module:129
 msgid "Create new account"
 msgstr "Crear una nueva cuenta"
 
@@ -1888,67 +1889,67 @@ msgstr "Mensaje de plantilla CES"
 msgid "Full action"
 msgstr "Acción completa"
 
-#: ces_message/ces_message.module:332
+#: ces_message/ces_message.module:329
 msgid "Internal error"
 msgstr "Error Interno"
 
-#: ces_message/ces_message.module:332
+#: ces_message/ces_message.module:329
 msgid "No template was found"
 msgstr "La plantilla no fué encontrada"
 
-#: ces_message/ces_message.module:333
+#: ces_message/ces_message.module:330
 msgid "for action"
 msgstr "para acción"
 
-#: ces_message/ces_message.module:333
+#: ces_message/ces_message.module:330
 msgid "with language"
 msgstr "con lenguaje"
 
-#: ces_message/ces_message.module:374
+#: ces_message/ces_message.module:371
 msgid "The exchange must come defined."
 msgstr "Hace falta definir el codigo de la red de intercambio."
 
-#: ces_message/ces_message.module:386
+#: ces_message/ces_message.module:383
 msgid "Error: No template from action"
 msgstr "Error: sin plantilla de acción"
 
-#: ces_message/ces_message.module:427
+#: ces_message/ces_message.module:424
 msgid "Error processing template in ces_message"
 msgstr "Error procesando plantilla en ces_message"
 
-#: ces_message/ces_message.module:445
+#: ces_message/ces_message.module:442
 msgid "No accounts to test"
 msgstr "Sin cuentas para probar"
 
-#: ces_message/ces_message.module:180
+#: ces_message/ces_message.module:177
 msgid "Messages"
 msgstr "Mensajes"
 
-#: ces_message/ces_message.module:189
+#: ces_message/ces_message.module:186
 msgid "List messages"
 msgstr "Lista los mensajes"
 
-#: ces_message/ces_message.module:203
+#: ces_message/ces_message.module:200
 msgid "All Messages"
 msgstr "Todos los mensajes"
 
-#: ces_message/ces_message.module:213
+#: ces_message/ces_message.module:210
 msgid "Message templates"
 msgstr "Plantilla de mensajes"
 
-#: ces_message/ces_message.module214;226
+#: ces_message/ces_message.module211;223
 msgid "Administer ces message templates"
 msgstr "Administrar ces plantillas de mensaje"
 
-#: ces_message/ces_message.module:234
+#: ces_message/ces_message.module:231
 msgid "Add"
 msgstr "añadir"
 
-#: ces_message/ces_message.module:235
+#: ces_message/ces_message.module:232
 msgid "Add ces message templates"
 msgstr "Añadir ces mensajes plantillas"
 
-#: ces_message/ces_message.module:243
+#: ces_message/ces_message.module:240
 msgid "Test"
 msgstr "Test"
 
@@ -2128,7 +2129,7 @@ msgstr "Introduce los datos de la categoría."
 msgid "Offer or want"
 msgstr "Oferta o necesidad"
 
-#: ces_offerswants/ces_offerswants.module66;2087
+#: ces_offerswants/ces_offerswants.module66;2090
 msgid "Offer"
 msgstr "Oferta"
 
@@ -2192,7 +2193,7 @@ msgstr "Selecciona la categoría que mejor se ajusta a tu anuncio."
 msgid "Enter here a short but descriptive title."
 msgstr "Introduce aquí una descipción de título corta pero descriptiva."
 
-#: ces_offerswants/ces_offerswants.module618;933;1203;1480;2102
+#: ces_offerswants/ces_offerswants.module618;933;1203;1480;2105
 msgid "Title"
 msgstr "Título"
 
@@ -2447,55 +2448,55 @@ msgid ""
 "form."
 msgstr "El número mínimo de necesidades que un miembro debe rellenar en el formulario de solicitud."
 
-#: ces_offerswants/ces_offerswants.module:2034
+#: ces_offerswants/ces_offerswants.module:2037
 msgid "Add a new comment and rating to this offer."
 msgstr "Añadir un nuevo comentario y valoración a esta oferta."
 
-#: ces_offerswants/ces_offerswants.module:2039
+#: ces_offerswants/ces_offerswants.module:2042
 msgid "Comment"
 msgstr "Comentario"
 
-#: ces_offerswants/ces_offerswants.module:2046
+#: ces_offerswants/ces_offerswants.module:2049
 msgid "Rating from 0 to 5"
 msgstr "Rango del 0 al 5"
 
-#: ces_offerswants/ces_offerswants.module:2065
+#: ces_offerswants/ces_offerswants.module:2068
 msgid "Save comment"
 msgstr "Salvar comentario"
 
-#: ces_offerswants/ces_offerswants.module:2076
+#: ces_offerswants/ces_offerswants.module:2079
 msgid "Your comment has been successfully saved."
 msgstr "Su comentario ha sido guardado"
 
-#: ces_offerswants/ces_offerswants.module:2088
+#: ces_offerswants/ces_offerswants.module:2091
 msgid "Tokens for offer."
 msgstr "Tokens para oferta."
 
-#: ces_offerswants/ces_offerswants.module:2091
+#: ces_offerswants/ces_offerswants.module:2094
 msgid "Notify"
 msgstr "Noticias"
 
-#: ces_offerswants/ces_offerswants.module:2092
+#: ces_offerswants/ces_offerswants.module:2095
 msgid "Tokens for user notify."
 msgstr "Fichas para las notificaciones de usuarios"
 
-#: ces_offerswants/ces_offerswants.module:2098
+#: ces_offerswants/ces_offerswants.module:2101
 msgid "Id of offer"
 msgstr "Id de oferta"
 
-#: ces_offerswants/ces_offerswants.module:2099
+#: ces_offerswants/ces_offerswants.module:2102
 msgid "The id of offer."
 msgstr "El id de la oferta"
 
-#: ces_offerswants/ces_offerswants.module:2103
+#: ces_offerswants/ces_offerswants.module:2106
 msgid "Title of offer."
 msgstr "Título de la oferta"
 
-#: ces_offerswants/ces_offerswants.module:2108
+#: ces_offerswants/ces_offerswants.module:2111
 msgid "Bodu of User notify"
 msgstr "Notificación del usuario"
 
-#: ces_offerswants/ces_offerswants.module:2109
+#: ces_offerswants/ces_offerswants.module:2112
 msgid "Body of User notify."
 msgstr "Texto para la notificación del usuario"
 
@@ -2747,107 +2748,129 @@ msgstr "ICES resumen del bloque"
 msgid "Block with ICES bank account summary."
 msgstr "Bloque con ICES su resumen de cuentas bancarias"
 
-#: ces_user/ces_user.module:177
+#: ces_user/ces_user.module:185
 msgid "Forgot password?"
 msgstr "Olvidó su contraseña?"
 
-#: ces_user/ces_user.module:177
+#: ces_user/ces_user.module:185
 msgid "Request new password via e-mail."
 msgstr "Solicite un nuevo pasaporte por via email."
 
-#: ces_user/ces_user.module:237
+#: ces_user/ces_user.module:245
 msgid "Address"
 msgstr "Dirección"
 
-#: ces_user/ces_user.module:243
+#: ces_user/ces_user.module:251
 msgid "Email"
 msgstr "Email"
 
-#: ces_user/ces_user.module:254
+#: ces_user/ces_user.module:262
 msgid "CES register"
 msgstr "Registro CES"
 
-#: ces_user/ces_user.module:258
+#: ces_user/ces_user.module:266
 msgid "CES front links"
 msgstr "CES front links"
 
-#: ces_user/ces_user.module:284
+#: ces_user/ces_user.module:292
 msgid "Documentation"
 msgstr "Documentación"
 
-#: ces_user/ces_user.module:285
+#: ces_user/ces_user.module:293
 msgid "Developers"
 msgstr "Desarrolladores"
 
-#: ces_user/ces_user.module:286
+#: ces_user/ces_user.module:294
 msgid "Donate"
 msgstr "Donar"
 
-#: ces_user/ces_user.module:301
+#: ces_user/ces_user.module:309
 msgid "Select country..."
 msgstr "Seleccione un país"
 
-#: ces_user/ces_user.module:306
+#: ces_user/ces_user.module:314
 msgid "New to IntegralCES?"
 msgstr "Nuevo en el IntegralCES"
 
-#: ces_user/ces_user.module:311
+#: ces_user/ces_user.module:319
 msgid "Find an exchange near you and start using social money:"
 msgstr "Enuentre una red de Intercambio y empieze a usar moneda social"
 
-#: ces_user/ces_user.module:320
+#: ces_user/ces_user.module:328
 msgid "Register"
 msgstr "Regístrese"
 
-#: ces_user/ces_user.module:346
+#: ces_user/ces_user.module:354
 msgid "Welcome to <strong>Integral Community Exchange System</strong>,"
 msgstr "Bienvenido al<strong>Integral Community Exchange System</strong>,"
 
-#: ces_user/ces_user.module:351
+#: ces_user/ces_user.module:359
 msgid ""
 "an open source platform featuring social currencies management for "
 "communities."
 msgstr "una plataforma de código abierto que ofrece la gestión de las monedas sociales de las comunidades."
 
-#: ces_user/ces_user.module:356
+#: ces_user/ces_user.module:364
 msgid "Boost local economy, return it to human scale."
 msgstr "Fortaleciendo la economia local, retornándola a la escala humana"
 
-#: ces_user/ces_user.module:357
+#: ces_user/ces_user.module:365
 msgid "Help the environment, lower contamination."
 msgstr "Ayudar al medioambiente, bajar la contaminación"
 
-#: ces_user/ces_user.module:358
+#: ces_user/ces_user.module:366
 msgid "Gain the control over money, prevent speculation and abuse."
 msgstr "Obtener el control sobre el dinero, evitar la especulación y el abuso."
 
-#: ces_user/ces_user.module:359
+#: ces_user/ces_user.module:367
 msgid "Create a solid alternative to the current financial system."
 msgstr "Crear una alternativa sólida al sistema financiero"
 
-#: ces_user/ces_user.module:360
+#: ces_user/ces_user.module:368
 msgid "Empower your community. Have fun playing with social currency."
 msgstr "Empodere a su comunidad. Diviértete jugando con la moneda social."
 
-#: ces_user/ces_user.module:374
+#: ces_user/ces_user.module:382
 msgid "Full user name"
 msgstr "Nombre completo del usuario"
 
-#: ces_user/ces_user.module:375
+#: ces_user/ces_user.module:383
 msgid "The full real user name"
 msgstr "Nombre real del usuario completo"
 
-#: ces_user/ces_user.module:378
+#: ces_user/ces_user.module:386
 msgid "Main user telephone"
 msgstr "Teléfono"
 
-#: ces_user/ces_user.module:379
+#: ces_user/ces_user.module:387
 msgid "The main user telephone"
 msgstr "Teléfono del principal usuario"
+
+#: ces_user/ces_user.module:427
+msgid ""
+"You have successfully registered to the exchange %name in the Integral "
+"Community Exchange System."
+msgstr "Te has registrado con éxito en la red de intercambio %name dentro del Integral Community Exchange System."
+
+#: ces_user/ces_user.module:433
+msgid ""
+"Before you can start using the system, the administration of your exchange "
+"must authorize your account. You will receive an email when your account is "
+"activated with further instructions. If you have no news in these comming "
+"days, contact your exchange administration at %mail."
+msgstr "Antes de que puedas usar el sistema, la administración de tu red de intercambio debe autorizar tu cuenta. Cuando tu cuenta sea activada recibirás un correo electrónico con más instrucciones. Si no recibes noticias en los próximos días contacta con la administración de tu red a la dirección %mail."
+
+#: ces_user/ces_user.module:439
+msgid "See you soon!"
+msgstr "Hasta pronto!"
 
 #: ces_user/ces_user.module:20
 msgid "Welcome to Integral CES"
 msgstr "Bienvenido al IntegralCES"
+
+#: ces_user/ces_user.module:26
+msgid "Successfuly registered to Integral CES"
+msgstr "Registrado correctamente en Integral CES"
 
 #: (duplicate) ces_user/ces_user.install:21
 msgid "Error creating user fields."

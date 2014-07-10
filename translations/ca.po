@@ -50,8 +50,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: IntegralCES\n"
-"POT-Creation-Date: 2014-07-03 18:31+0000\n"
-"PO-Revision-Date: 2014-07-08 15:10+0000\n"
+"POT-Creation-Date: 2014-07-09 17:13+0000\n"
+"PO-Revision-Date: 2014-07-10 10:26+0000\n"
 "Last-Translator: Esteve Badia Orive <badia.orive@gmail.com>\n"
 "Language-Team: Catalan (http://www.transifex.com/projects/p/integralces/language/ca/)\n"
 "MIME-Version: 1.0\n"
@@ -69,7 +69,7 @@ msgstr "ATENCIÓ: La taula @table no existeix. Probablement necessites reinstal�
 msgid "Impossible to get the database lock %lock"
 msgstr "Impossible obtenir el lock %lock de la base de dades."
 
-#: ices.module:22 ces_user/ces_user.module:287
+#: ices.module:22 ces_user/ces_user.module:295
 msgid "About"
 msgstr "Sobre"
 
@@ -855,7 +855,7 @@ msgid "Use"
 msgstr "Empra"
 
 #: ces_bank/ces_bank.forms.inc:1493 ces_bank/ces_bank.pages.inc129;321;413;473
-#: ces_bank/ces_bank.module170;332;431 ces_message/ces_message.module:264
+#: ces_bank/ces_bank.module170;332;431 ces_message/ces_message.module:261
 #: ces_offerswants/ces_offerswants.module856;1258
 msgid "Edit"
 msgstr "Edita"
@@ -991,23 +991,23 @@ msgstr "Error carregant el compte del venedor."
 msgid "Error loading buyer account."
 msgstr "Error carregant el compte del comprador."
 
-#: ces_bank/ces_bank.logic.inc:1655
+#: ces_bank/ces_bank.logic.inc:1656
 msgid "User %user cannot accept transactions because it is not active."
 msgstr "L'usuari %user no pot acceptar transaccions perquè no està actiu."
 
-#: ces_bank/ces_bank.logic.inc:1707
+#: ces_bank/ces_bank.logic.inc:1708
 msgid "The transaction must be manually authorized."
 msgstr "La transacció ha de ser autoritzada manualment."
 
-#: ces_bank/ces_bank.logic.inc:1981
+#: ces_bank/ces_bank.logic.inc:1982
 msgid "Account %account exceeds the debit limit of %limit."
 msgstr "El compte %account excedeix el limit de dèbit de %limit."
 
-#: ces_bank/ces_bank.logic.inc:2010
+#: ces_bank/ces_bank.logic.inc:2011
 msgid "Account %account exceeds the credit limit of %limit."
 msgstr "El compte %account excedeix el límit de cedit de %limit."
 
-#: ces_bank/ces_bank.logic.inc:2341
+#: ces_bank/ces_bank.logic.inc:2342
 msgid "Invalid state transition for transaction %trans."
 msgstr "Transició d'estat invàlida per transacció %trans."
 
@@ -1348,11 +1348,11 @@ msgstr "Identificador de 4 lletres de la xarxa d'intercanvi més 4 números del 
 msgid "Account type."
 msgstr "Tipus de compte."
 
-#: ces_bank/ces_bank.module:659 ces_offerswants/ces_offerswants.module:2112
+#: ces_bank/ces_bank.module:659 ces_offerswants/ces_offerswants.module:2115
 msgid "Account user"
 msgstr "Compte de l'usuari"
 
-#: ces_bank/ces_bank.module:660 ces_offerswants/ces_offerswants.module:2113
+#: ces_bank/ces_bank.module:660 ces_offerswants/ces_offerswants.module:2116
 msgid "Account user."
 msgstr "Compte de l'usuari."
 
@@ -1450,7 +1450,7 @@ msgstr "Administra el banc ICES"
 msgid "Top administer interface for CES Bank"
 msgstr "Interfìcie principal d'administració pel Banc ICES"
 
-#: ces_bank/ces_bank.module104;380 ces_user/ces_user.module:283
+#: ces_bank/ces_bank.module104;380 ces_user/ces_user.module:291
 msgid "New exchange"
 msgstr "Nova xarxa d'intercanvi"
 
@@ -1467,7 +1467,7 @@ msgid "Administer accounts"
 msgstr "Administrar comptes"
 
 #: ces_bank/ces_bank.module141;302 ces_import4ces/ces_import4ces.module:44
-#: ces_message/ces_message.module:225
+#: ces_message/ces_message.module:222
 msgid "List"
 msgstr "Llista"
 
@@ -1643,7 +1643,7 @@ msgstr "Bloc de la xarxa d'intercanvi del ICES"
 msgid "Individual blog for each exchange."
 msgstr "Bloc individual per cada xarxa d'intercanvi."
 
-#: ces_develop/ces_develop.module:111 ces_user/ces_user.module:122
+#: ces_develop/ces_develop.module:111 ces_user/ces_user.module:129
 msgid "Create new account"
 msgstr "Crear un nou compte"
 
@@ -1890,67 +1890,67 @@ msgstr "Missatge de plantilla CES"
 msgid "Full action"
 msgstr "Acció completa"
 
-#: ces_message/ces_message.module:332
+#: ces_message/ces_message.module:329
 msgid "Internal error"
 msgstr "Error intern"
 
-#: ces_message/ces_message.module:332
+#: ces_message/ces_message.module:329
 msgid "No template was found"
 msgstr "No s'ha trobat una plantilla"
 
-#: ces_message/ces_message.module:333
+#: ces_message/ces_message.module:330
 msgid "for action"
 msgstr "Per a acció"
 
-#: ces_message/ces_message.module:333
+#: ces_message/ces_message.module:330
 msgid "with language"
 msgstr "Amb idioma"
 
-#: ces_message/ces_message.module:374
+#: ces_message/ces_message.module:371
 msgid "The exchange must come defined."
 msgstr "Cal definir un codi per la xarxa d'intercanvi."
 
-#: ces_message/ces_message.module:386
+#: ces_message/ces_message.module:383
 msgid "Error: No template from action"
 msgstr "Error: no hi ha plantilla per a aquesta acció"
 
-#: ces_message/ces_message.module:427
+#: ces_message/ces_message.module:424
 msgid "Error processing template in ces_message"
 msgstr "Errada processant plantilla a missatge-ces"
 
-#: ces_message/ces_message.module:445
+#: ces_message/ces_message.module:442
 msgid "No accounts to test"
 msgstr "No hi ha comptes per a provar"
 
-#: ces_message/ces_message.module:180
+#: ces_message/ces_message.module:177
 msgid "Messages"
 msgstr "Missatges"
 
-#: ces_message/ces_message.module:189
+#: ces_message/ces_message.module:186
 msgid "List messages"
 msgstr "Llista"
 
-#: ces_message/ces_message.module:203
+#: ces_message/ces_message.module:200
 msgid "All Messages"
 msgstr "Tots"
 
-#: ces_message/ces_message.module:213
+#: ces_message/ces_message.module:210
 msgid "Message templates"
 msgstr "Plantilles de missatge"
 
-#: ces_message/ces_message.module214;226
+#: ces_message/ces_message.module211;223
 msgid "Administer ces message templates"
 msgstr "Administra plantilles de missatges"
 
-#: ces_message/ces_message.module:234
+#: ces_message/ces_message.module:231
 msgid "Add"
 msgstr "Afegir"
 
-#: ces_message/ces_message.module:235
+#: ces_message/ces_message.module:232
 msgid "Add ces message templates"
 msgstr "Agrega plantilles de missatge CES"
 
-#: ces_message/ces_message.module:243
+#: ces_message/ces_message.module:240
 msgid "Test"
 msgstr "Prova"
 
@@ -2130,7 +2130,7 @@ msgstr "Introdueix detalls de la categoria."
 msgid "Offer or want"
 msgstr "Oferta o necessitat"
 
-#: ces_offerswants/ces_offerswants.module66;2087
+#: ces_offerswants/ces_offerswants.module66;2090
 msgid "Offer"
 msgstr "Oferta"
 
@@ -2194,7 +2194,7 @@ msgstr "Selecciona la categoria que millor s'adapta al teu annunci"
 msgid "Enter here a short but descriptive title."
 msgstr "Introduïx ací un títol curt però descriptiu."
 
-#: ces_offerswants/ces_offerswants.module618;933;1203;1480;2102
+#: ces_offerswants/ces_offerswants.module618;933;1203;1480;2105
 msgid "Title"
 msgstr "Títol"
 
@@ -2449,55 +2449,55 @@ msgid ""
 "form."
 msgstr "El nombre mínim de necessitats que un/a membre deu omplir al formulari de registre"
 
-#: ces_offerswants/ces_offerswants.module:2034
+#: ces_offerswants/ces_offerswants.module:2037
 msgid "Add a new comment and rating to this offer."
 msgstr "Afegir un comentari nou i valoració a aquesta oferta."
 
-#: ces_offerswants/ces_offerswants.module:2039
+#: ces_offerswants/ces_offerswants.module:2042
 msgid "Comment"
 msgstr "Comenta"
 
-#: ces_offerswants/ces_offerswants.module:2046
+#: ces_offerswants/ces_offerswants.module:2049
 msgid "Rating from 0 to 5"
 msgstr "Valoració de 0 a 5"
 
-#: ces_offerswants/ces_offerswants.module:2065
+#: ces_offerswants/ces_offerswants.module:2068
 msgid "Save comment"
 msgstr "Guarda el comentari"
 
-#: ces_offerswants/ces_offerswants.module:2076
+#: ces_offerswants/ces_offerswants.module:2079
 msgid "Your comment has been successfully saved."
 msgstr "El teu comentari ha sigut guardat satisfactòriament."
 
-#: ces_offerswants/ces_offerswants.module:2088
+#: ces_offerswants/ces_offerswants.module:2091
 msgid "Tokens for offer."
 msgstr "Tokens per oferta."
 
-#: ces_offerswants/ces_offerswants.module:2091
+#: ces_offerswants/ces_offerswants.module:2094
 msgid "Notify"
 msgstr "Notificar"
 
-#: ces_offerswants/ces_offerswants.module:2092
+#: ces_offerswants/ces_offerswants.module:2095
 msgid "Tokens for user notify."
 msgstr "Tokens per notificacions d'usuari."
 
-#: ces_offerswants/ces_offerswants.module:2098
+#: ces_offerswants/ces_offerswants.module:2101
 msgid "Id of offer"
 msgstr "Id de l'oferta"
 
-#: ces_offerswants/ces_offerswants.module:2099
+#: ces_offerswants/ces_offerswants.module:2102
 msgid "The id of offer."
 msgstr "Id de l'oferta."
 
-#: ces_offerswants/ces_offerswants.module:2103
+#: ces_offerswants/ces_offerswants.module:2106
 msgid "Title of offer."
 msgstr "Títol de l'oferta"
 
-#: ces_offerswants/ces_offerswants.module:2108
+#: ces_offerswants/ces_offerswants.module:2111
 msgid "Bodu of User notify"
 msgstr "Cos de la notificació a l'usuari"
 
-#: ces_offerswants/ces_offerswants.module:2109
+#: ces_offerswants/ces_offerswants.module:2112
 msgid "Body of User notify."
 msgstr "Cos de la notificació a l'usuari."
 
@@ -2749,107 +2749,129 @@ msgstr "Bloqueid del resum ICES"
 msgid "Block with ICES bank account summary."
 msgstr "Bloqueig amb el resum de compte bancari del ICES"
 
-#: ces_user/ces_user.module:177
+#: ces_user/ces_user.module:185
 msgid "Forgot password?"
 msgstr "Clau d'accés oblidada?"
 
-#: ces_user/ces_user.module:177
+#: ces_user/ces_user.module:185
 msgid "Request new password via e-mail."
 msgstr "Demana una nova clau d'accés via correu electrònic"
 
-#: ces_user/ces_user.module:237
+#: ces_user/ces_user.module:245
 msgid "Address"
 msgstr "Adreça"
 
-#: ces_user/ces_user.module:243
+#: ces_user/ces_user.module:251
 msgid "Email"
 msgstr "Adreça de correu electrònic"
 
-#: ces_user/ces_user.module:254
+#: ces_user/ces_user.module:262
 msgid "CES register"
 msgstr "Registre CES"
 
-#: ces_user/ces_user.module:258
+#: ces_user/ces_user.module:266
 msgid "CES front links"
 msgstr "Enllaços frontals CES"
 
-#: ces_user/ces_user.module:284
+#: ces_user/ces_user.module:292
 msgid "Documentation"
 msgstr "Documentació"
 
-#: ces_user/ces_user.module:285
+#: ces_user/ces_user.module:293
 msgid "Developers"
 msgstr "Desenvolupadors/ es"
 
-#: ces_user/ces_user.module:286
+#: ces_user/ces_user.module:294
 msgid "Donate"
 msgstr "Dona"
 
-#: ces_user/ces_user.module:301
+#: ces_user/ces_user.module:309
 msgid "Select country..."
 msgstr "Selecciona païs"
 
-#: ces_user/ces_user.module:306
+#: ces_user/ces_user.module:314
 msgid "New to IntegralCES?"
 msgstr "Nou/ nova a Integral CES?"
 
-#: ces_user/ces_user.module:311
+#: ces_user/ces_user.module:319
 msgid "Find an exchange near you and start using social money:"
 msgstr "Troba una xarxa d'intercanvi prop de tu i comença a utilitzar moneda social:"
 
-#: ces_user/ces_user.module:320
+#: ces_user/ces_user.module:328
 msgid "Register"
 msgstr "Registrar"
 
-#: ces_user/ces_user.module:346
+#: ces_user/ces_user.module:354
 msgid "Welcome to <strong>Integral Community Exchange System</strong>,"
 msgstr "Benvingut/ da al <strong>Sistema Integral d'Intercanvi Comunitari</strong>,"
 
-#: ces_user/ces_user.module:351
+#: ces_user/ces_user.module:359
 msgid ""
 "an open source platform featuring social currencies management for "
 "communities."
 msgstr "una plataforma de codi obert presentant gestió de monedes socials per comunitats."
 
-#: ces_user/ces_user.module:356
+#: ces_user/ces_user.module:364
 msgid "Boost local economy, return it to human scale."
 msgstr "Impulsa l'economia local, torna-la a escala humana"
 
-#: ces_user/ces_user.module:357
+#: ces_user/ces_user.module:365
 msgid "Help the environment, lower contamination."
 msgstr "Ajuda el medi ambient, baixa la contaminació"
 
-#: ces_user/ces_user.module:358
+#: ces_user/ces_user.module:366
 msgid "Gain the control over money, prevent speculation and abuse."
 msgstr "Guanya el control sobre els diners, evita l'especulació i l'abús"
 
-#: ces_user/ces_user.module:359
+#: ces_user/ces_user.module:367
 msgid "Create a solid alternative to the current financial system."
 msgstr "Crea una alternativa sòlida al sistema financer actual."
 
-#: ces_user/ces_user.module:360
+#: ces_user/ces_user.module:368
 msgid "Empower your community. Have fun playing with social currency."
 msgstr "Empodera la teua comunitat. Passa-ho bé jugant amb la moneda social."
 
-#: ces_user/ces_user.module:374
+#: ces_user/ces_user.module:382
 msgid "Full user name"
 msgstr "Nom d'usuari complet"
 
-#: ces_user/ces_user.module:375
+#: ces_user/ces_user.module:383
 msgid "The full real user name"
 msgstr "El nom d'usuari complet"
 
-#: ces_user/ces_user.module:378
+#: ces_user/ces_user.module:386
 msgid "Main user telephone"
 msgstr "Telèfon principal de l'usuari"
 
-#: ces_user/ces_user.module:379
+#: ces_user/ces_user.module:387
 msgid "The main user telephone"
 msgstr "El telèfon principal de l'usuari"
+
+#: ces_user/ces_user.module:427
+msgid ""
+"You have successfully registered to the exchange %name in the Integral "
+"Community Exchange System."
+msgstr "T'has registrat amb èxit a la xarxa d'intercanvi %name dins del Integral Community Exchange System."
+
+#: ces_user/ces_user.module:433
+msgid ""
+"Before you can start using the system, the administration of your exchange "
+"must authorize your account. You will receive an email when your account is "
+"activated with further instructions. If you have no news in these comming "
+"days, contact your exchange administration at %mail."
+msgstr "Abans de poder començar a usar el sistema, l'administració de la teva xarxa d'intercanvi ha d'autoritzar el teu compte. Quan s'accepti el teu compte, rebràs un correu electrònic amb més instruccions. Si no rebs notícies nostres en aquests propers dies, contacta amb l'administració de la teva xarxa d'intercanvi a l'adreça %mail."
+
+#: ces_user/ces_user.module:439
+msgid "See you soon!"
+msgstr "Fins aviat!"
 
 #: ces_user/ces_user.module:20
 msgid "Welcome to Integral CES"
 msgstr "Benvingut a l'Integral CES"
+
+#: ces_user/ces_user.module:26
+msgid "Successfuly registered to Integral CES"
+msgstr "Registrat correctament a Integral CES"
 
 #: (duplicate) ces_user/ces_user.install:21
 msgid "Error creating user fields."
