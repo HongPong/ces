@@ -6,7 +6,7 @@
  */
 
 /**
- * @ingroup ces.common.db
+ * @defgroup ces_common_db
  * @{
  */
 
@@ -450,5 +450,5 @@ interface IcesDBTransactionInterface {
 }
 
 /**
- * @} End of "ingroup ces.common.db".
+ * @} End of "group ces.common.db".
  */

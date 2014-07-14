@@ -10,7 +10,7 @@
  * IntegralCES. Ésta es una documentación permanentemente en construcción que
  * vamos completando a medida que nos es necesario.
  *
- * ## Dar de alta nuevo exchange
+ * Dar de alta nuevo exchange
  *
  * La forma que hay ahora para dar de alta un grupo de intercambio y su
  * administrador es: Visitar el link 'New exchange'. Rellenar el formulario
@@ -25,17 +25,14 @@
  * peticiones de usuarios ya tendrían que llegar al administrador, Se activan
  * y listo!  
  *
- * ## Algunos componentes de IntegralCES:
- *
- * .
+ * Algunos componentes de IntegralCES:
  * - @link ces_dev_install.html Entorno de desarrollo @endlink
  *   - @link ces_dev_flow.html Flujo de desarrollo @endlink
- * - @link ces Módulo raíz @endlink
- *   - @link ces_database Base de datos @endlink
+ * - @link ices Módulo raíz @endlink
+ *   - @link ces_common_db Base de datos @endlink
  * - @link ces_bank Módulo bancario @endlink
- *   - @link ces_bank_transactons Transacciones @endlink
- *   - @link ces_bank_interexchange_transactions Transacciones entre grupos 
- * @endlink
+ *   - @link ces_bank_transactions Transacciones @endlink
+ *   - @link ces_bank_interexchange_transactions Transacciones entre grupos @endlink
  * - @link ces_import4ces_doc Módulo de importación @endlink
  *   - @link ces_migration_data Datos de importación del CES @endlink
  * - @link ces_message_doc Módulo de notificación @endlink
