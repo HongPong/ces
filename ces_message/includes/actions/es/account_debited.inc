@@ -9,7 +9,7 @@
 
 $subject = '[[exchange:shortname]] Tu cuenta [transaction:fromaccount:name] ha sido cargada';
 
-$body = 'Estimado/a [transaction:toaccount:user:fullname]
+$body = 'Estimado/a [transaction:fromaccount:user:fullname]
 
 Tu cuenta [transaction:fromaccount:name] ha sido cargada.
 
