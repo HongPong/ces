@@ -922,8 +922,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
       '#options' => $exoptions,
       '#default_value' => $toexchangeid,
       '#ajax' => array(
-        'callback' => 'ces_bank_toaccountname_dropdown_callback',
-        'wrapper' => 'dropdown-toaccountname-replace',
+        'callback' => 'ces_bank_toexchange_dropdown_callback',
       ),
       '#weight' => 30,
     );
@@ -1045,6 +1044,8 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
     '#default_value' => !empty($form_state['values']['amount']) ? $form_state['values']['amount'] : '',
     '#weight' => 60,
     '#field_suffix' => $toexchange['currencysymbol'],
+    '#prefix' => '<div id="textfield-amount-replace">',
+    '#suffix' => '</div>',
   );
   $form['user'] = array(
     '#type' => 'value',
@@ -1132,8 +1133,12 @@ function ces_bank_transction_reject_form_submit($form, &$form_state) {
 /**
  * AJAX callback for transaction form.
  */
-function ces_bank_toaccountname_dropdown_callback($form, $form_state) {
-  return $form['toaccountname'];
+function ces_bank_toexchange_dropdown_callback($form, $form_state) {
+  // Using ajax cmmands since we need to replace two form elements.
+  $commands = array();
+  $commands[] = ajax_command_replace('#dropdown-toaccountname-replace', drupal_render($form['toaccountname']));
+  $commands[] = ajax_command_replace('#textfield-amount-replace', drupal_render($form['amount']));
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 /**
  * AJAX callback for transaction form.
@@ -1284,16 +1289,30 @@ function ces_bank_transaction_form_validate($form, &$form_state) {
       form_set_error('amount', t('The amount must be positive.'));
     }
   }
-  $account1 = $record['toaccountname'];
-  if ($bank->getAccountByName($account1) === FALSE) {
+  $account1 = $bank->getAccountByName($record['toaccountname']);
+  if ($account1 === FALSE) {
     form_set_error('toaccountname', t('Seller account %acc is incorrect.', array('%acc' => $account1)));
   }
-  $account2 = $record['fromaccountname'];
-  if ($bank->getAccountByName($account2) === FALSE) {
+  $account2 = $bank->getAccountByName($record['fromaccountname']);
+  if ($account2 === FALSE) {
     form_set_error('fromaccountname', t('Buyer account %acc is incorrect.', array('%acc' => $account2)));
   }
-  if ($account1 == $account2) {
+  if ($account1['id'] == $account2['id']) {
     form_set_error('fromaccountname', t('Buyer account cannot be the same as seller account.'));
+  }
+  $concept = trim($form_state['values']['concept']);
+  if (empty($concept)) {
+    form_set_error('concept', t('You must specify the concept of this transaction.'));
+  }
+  $transaction = array(
+    'toaccount' => $account1['id'],
+    'fromaccount' => $account2['id'],
+    'amount' => $amount,
+    'concept' => $concept,
+    'user' => $form_state['values']['user'],
+  );
+  if (!ces_transaction_access('use', $transaction)) {
+    form_set_error('toaccountname', t("You don't have permission to apply this transaction."));
   }
 }
 /**

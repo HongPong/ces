@@ -202,6 +202,26 @@ function ces_bank_menu() {
     'weight' => 910,
     'expanded' => TRUE,
   );
+  $menu['ces/admin/transaction/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $menu['ces/admin/transaction/new'] = array(
+    'title' => 'New',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 0,
+    'description' => 'Do a transaction between two accounts.',
+    'page callback' => '_ces_bank_get_form',
+    'page arguments' => array('ces_bank_transaction_form', 'new',
+      CES_BANK_CURRENT_EXCHANGE, NULL, NULL),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('use', 'exchange accounts',
+      CES_BANK_CURRENT_EXCHANGE),
+    'weight' => 10,
+  );
   $menu['ces/bank/account/sell'] = array(
     'title' => 'Enter transaction',
     'description' => 'Charge a sale to an account.',

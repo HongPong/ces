@@ -138,6 +138,7 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->checkLimits();
     // Balance: HORA0001: 19.5, HORA0002: -19.5
     $this->checkManualAuthorization();
+    // Balance: HORA0001: 10.25, HORA0002: -10.25
     $this->doTransactionsInterexchange();
   }
   /**
@@ -388,7 +389,7 @@ class CesBankTestCase extends DrupalWebTestCase {
       'amount' => '0.5',
     );
     $this->doTransaction($user1, $record);
-    $this->assertBalance($user1, '1.5');
+    $this->assertBalance($user1, '10.75');
     $this->assertBalance($user2, '-5');
   }
   /**
@@ -638,8 +639,9 @@ class CesBankTestCase extends DrupalWebTestCase {
    */
   public function assertBalance($user, $amount) {
     $this->drupalLogin($user);
-    $this->clickLink('My account');
-    $this->clickLink('Account statement');
+    $xpath = $this->xpath("//div[contains(@class, 'ces_summaryblock_number')]/div[contains(text(), 'Balance')]/../div[contains(@class, 'ces_summaryblock_value')]/text()");
+    $balance = (string) ($xpath[0]);
+    $this->assert(strpos($balance, $amount)!== FALSE, 'The amount balance is correct.');
     $this->assertText($amount);
     $this->drupalLogout();
   }
