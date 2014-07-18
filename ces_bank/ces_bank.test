@@ -140,6 +140,9 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->checkManualAuthorization();
     // Balance: HORA0001: 10.25, HORA0002: -10.25
     $this->doTransactionsInterexchange();
+    // Balance: HORA0001: 10.75, BCNA0001: -5
+    $this->doAdminTransaction();
+    // Balance: HORA0001: 11.25, HORA0002: -10.75
   }
   /**
    * Creates two exchanges.
@@ -403,6 +406,26 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->assertText('Third test transaction.');
   }
   /**
+   * Do transactions as admin.
+   */
+  protected function doAdminTransaction() {
+    $this->drupalLogin($this->admin1);
+    $this->drupalGet('ces/admin/transaction/new');
+    $edit = array(
+      'fromaccountname' => 'HORA0002',
+      'toaccountname' => 'HORA0001',
+      'concept' => 'Transaction from admin',
+      'amount' => '0.5',
+    );
+    $this->drupalPost(NULL, $edit, t('Create transaction'));
+    $this->drupalPost(NULL, array(), t('Confirm transaction'));
+    $this->assertText('Transaction successfully applied.');
+    $user1 = $this->accountUser($this->account11);
+    $this->assertBalance($user1, '11.25');
+    $user2 = $this->accountUser($this->account12);
+    $this->assertBalance($user2, '-10.75');
+  }
+  /**
    * Helper function.
    * @return object
    *   A user object suitable for drupalLogin() function.
@@ -597,7 +620,6 @@ class CesBankTestCase extends DrupalWebTestCase {
       'amount' => $record['amount'],
     );
     if (!empty($record['seller'])) {
-      // $edit['toaccountname'] = $record['seller'];
       if (drupal_substr($record['seller'], 0, 4) != drupal_substr($record['buyer'], 0, 4)) {
         // Interexchange transaction.
         $name = drupal_substr($record['buyer'], 0, 4);
