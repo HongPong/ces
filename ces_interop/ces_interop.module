@@ -24,6 +24,14 @@ function ces_interop_menu() {
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
+  $items['admin/config/services/ces_interop'] = array(
+    'title' => 'ICES interop settings',
+    'description' => 'Change global settings related to IntegralCES interoperability.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_interop_admin'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+   );
   return $items;
 }
 
@@ -508,4 +516,142 @@ function _ces_interop_transaction_retrieve($id) {
   $transaction_return['created'] = $transaction['created'];
   $transaction_return['modified'] = $transaction['modified'];
   return $transaction_return;
+}
+/**
+ * Implements hook_admin().
+ */
+function ces_interop_admin() {
+  $form = array();
+  $form['ces_interop_cen_clearing_central_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('CEN Clearing Central URL'),
+    '#default_value' => variable_get('ces_interop_cen_clearing_central_url', 'http://clearingcentral.net'),
+    '#description' => t('The URL of the Community Exchange Network Clearing Central server.'),
+  );
+  return system_settings_form($form);
+}
+/**
+ * Implements hook_form_FORM_ID_alter().
+ * 
+ * Add fields to exchange administer form to setup the Community Exchange
+ * Network Intertrading Protocol for this exchange.
+ */
+function ces_interop_form_ces_bank_exchange_form_alter(&$form, &$form_state) {
+  $form['exchange']['users']['cenip'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow remote transactions'),
+    '#description' => t('Allow transactions with remote servers from the Community Exchange Network.'),
+    '#default_value' => isset($form_state['values']['data']['cenip']) ? $form_state['values']['data']['cenip'] : FALSE,
+    '#weight' => 100,
+    '#ajax' => array(
+      'callback' => 'ces_interop_cenip_more_callback',
+      'wrapper' => 'ces_interop_cenip_more',
+    )
+  );
+  $form['exchange']['users']['cenip_more'] = array(
+    '#prefix' => '<div id="ces_interop_cenip_more">',
+    '#suffix' => '</div>',
+    '#weight' => 110,
+  );
+  if (!empty($form_state['values']['data']['cenip']) || !empty($form_state['values']['cenip'])) {
+    $form['exchange']['users']['cenip_more']['cenip_user'] = array(
+      '#type' => 'textfield',
+      '#title' => t('NID'),
+      '#description' => t('Network Identifier in the Community Exchange Network. For example: cen0123. You can check your account at !link.', array('!link' => l('clearingcentral.net', 'http://clearingcentral.net/'))),
+      '#size' => 15,
+      '#maxlength' => 7,
+      '#default_value' => isset($form_state['values']['data']['cenip_user']) ? $form_state['values']['data']['cenip_user'] : '',
+    );
+    $form['exchange']['users']['cenip_more']['cenip_pass'] = array(
+      '#title' => t('Password'),
+      '#type' => 'password',
+      '#description' => t('Password of the Community Exchange Network account for this exchange. Leave blank to keep the stored password.'),
+      '#size' => 15
+    );
+  }
+  array_unshift($form['#submit'], 'ces_interop_exchange_form_submit');
+  array_unshift($form['#validate'], 'ces_interop_exchange_form_validate');
+}
+/**
+ * AJAX callbac for ces_interop_form_ces_bank_exchange_form_alter().
+ */
+function ces_interop_cenip_more_callback($form, &$form_state) {
+  return $form['exchange']['users']['cenip_more'];
+}
+/**
+ * Implements hook_form_validate().
+ */
+function ces_interop_exchange_form_validate($form, &$form_state) {
+  if ($form_state['values']['cenip']) {
+    // Check user field.
+    if (empty($form_state['values']['cenip_user'])) {
+      form_set_error('cenip_user', t('Specify the NID (Network Identifier) to be able to trade with remote echanges within the Community Echange Network.'));
+    }
+    // Get old name/pass values.
+    if (!empty($form_state['values']['id'])){
+      $exchange = ces_bank_get_exchange($form_state['values']['id']);
+      $cenip_user = isset($exchange['data']['cenip_user']) ? $exchange['data']['cenip_user'] : '';
+      $cenip_pass = isset($exchange['data']['cenip_pass']) ? $exchange['data']['cenip_pass'] : '';
+    }
+    else {
+      $cenip_user = '';
+      $cenip_pass = '';
+    }
+    // Fill password field if it was ommited with old value.
+    if (empty($form_state['values']['cenip_pass'])) {
+      $form_state['values']['cenip_pass'] = $cenip_pass;
+    }
+    // Check password field.
+    if (empty($form_state['values']['cenip_pass'])) {
+      form_set_error('cenip_pass', t('Specify the password for this Community Exchange Network.'));
+    }
+    // Check whether the user and password are correct. Simulate a login to the
+    // clearing central web page and check the redirect URL. Check it only when 
+    // it is changed.
+    if ($cenip_user != $form_state['values']['cenip_user']
+      || $cenip_pass != $form_state['values']['cenip_pass']) {
+      $url = variable_get('ces_interop_cen_clearing_central_url', 'http://clearingcentral.net');
+      $options = array(
+        'method' => 'POST',
+        'data' => drupal_http_build_query(array(
+          'nid' => $form_state['values']['cenip_user'],
+          'password' => !empty($form_state['values']['cenip_pass']) ? $form_state['values']['cenip_pass'] : $cenip_pass,
+        )),
+        'headers' => array(
+          'Content-Type' => 'application/x-www-form-urlencoded',
+        ),
+        'max_redirects' => 0,
+      );
+      $response = drupal_http_request($url . '/logon.php', $options);
+      if (strpos($response->redirect_url, 'index.php') !== FALSE) {
+        // We are being redirected to index, so the password is incorrect.
+        form_set_error('cenip_user', t('The pair NID/password is incorrect.'));
+      }
+    }
+  }
+}
+/**
+ * Implements hook_form_submit().
+ * 
+ * Save exchange CEN user and password.
+ */
+function ces_interop_exchange_form_submit($form, &$form_state) {
+  if (!isset($form_state['values']['data'])) {
+    $form_state['values']['data'] = array();
+  }
+  $form_state['values']['data']['cenip'] = $form_state['values']['cenip'];
+  if ($form_state['values']['data']['cenip']) {
+    $form_state['values']['data']['cenip_user'] = $form_state['values']['cenip_user'];
+    $form_state['values']['data']['cenip_pass'] = $form_state['values']['cenip_pass'];
+  }
+}
+
+/**
+ * Implements hook_form_FORMID_alter().
+ * 
+ * Add the feature of CEN remote exchange transaction into transaction form.
+ */
+function ces_interop_form_ces_bank_transaction_form_alter(&$form, &$form_state) {
+  $toexchange = $form_state['values']['toexchange'];
+  //..
 }
