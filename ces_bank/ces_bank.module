@@ -24,7 +24,11 @@ function ces_bank_help($path, $arg) {
       $msg .= t('Charge a sale. Select the payer account, enter a short decription and the amount of the transaction. This amount will be trasferred to your account.');
       $msg .= '</p>';
       return $msg;
-
+    case 'ces/bank/account/sell/multiple':
+      $msg  = '<p>';
+      $msg .= t('Charge sales to several accounts of your current exchange.');
+      $msg .= '</p>';
+      return $msg;
     case 'ces/bank/exchange/accounts':
       $msg  = '<p>';
       $msg .= t('All users and banking accounts of your exchange.');
@@ -234,6 +238,24 @@ function ces_bank_menu() {
     'access arguments' => array('use', 'account seller',
       CES_BANK_CURRENT_ACCOUNT),
     'weight' => 130,
+  );
+  $menu['ces/bank/account/sell/simple'] = array(
+    'title' => 'One transaction',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $menu['ces/bank/account/sell/multiple'] = array(
+    'title' => 'Multiple transactions',
+    'description' => 'Charge many sales to many accounts.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_multipletransactions_form'),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('use', 'account seller',
+      CES_BANK_CURRENT_ACCOUNT),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
   );
   $menu['ces/bank/account'] = array(
     'title' => 'My account',
