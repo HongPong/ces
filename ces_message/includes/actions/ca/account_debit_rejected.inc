@@ -22,7 +22,7 @@ Entrada per: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
 Si aquest rebuig és un error, entra al teu compte i accepta la transacció seguint aquest enllaç:
 
-[site:url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept
+[site:url]/user/login?destination=ces/bank/account/transaction/[transaction:id]/accept
 
 --
 Administrador/a de [exchange:shortname]:
