@@ -983,7 +983,6 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
       '#default_value' => $fromexchangeid,
       '#ajax' => array(
         'callback' => 'ces_bank_fromaccountname_dropdown_callback',
-        'wrapper' => 'dropdown-fromaccountname-replace',
       ),
       '#weight' => 10,
     );
@@ -1134,7 +1133,7 @@ function ces_bank_transction_reject_form_submit($form, &$form_state) {
  * AJAX callback for transaction form.
  */
 function ces_bank_toexchange_dropdown_callback($form, $form_state) {
-  // Using ajax cmmands since we need to replace two form elements.
+  // Using ajax commands since we need to replace two form elements.
   $commands = array();
   $commands[] = ajax_command_replace('#dropdown-toaccountname-replace', drupal_render($form['toaccountname']));
   $commands[] = ajax_command_replace('#textfield-amount-replace', drupal_render($form['amount']));
@@ -1143,8 +1142,11 @@ function ces_bank_toexchange_dropdown_callback($form, $form_state) {
 /**
  * AJAX callback for transaction form.
  */
-function ces_bank_fromaccountname_dropdown_callback($form, $form_state) {
-  return $form['fromaccountname'];
+function ces_bank_fromaccountname_dropdown_callback($form, &$form_state) {
+  // Using ajax commands since it is more easy to add other elements.
+  $commands = array();
+  $commands[] = ajax_command_replace('#dropdown-fromaccountname-replace', drupal_render($form['fromaccountname']));
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 /**
  * Submit transaction form.

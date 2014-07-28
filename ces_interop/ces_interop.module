@@ -10,6 +10,8 @@
 define('CES_INTEROP_OAUTH2_SERVER_NAME', 'interop');
 define('CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME', 'opentransact');
 define('CES_INTEROP_OAUTH2_RESOURCES_SCOPE_NAME', 'resources');
+define('CES_INTEROP_CEN_CLEARING_CENTRAL_URL', 'ces_interop_cen_clearing_central_url');
+define('CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT', 'http://clearingcentral.net');
 
 /**
  * Implements hook_menu().
@@ -522,10 +524,10 @@ function _ces_interop_transaction_retrieve($id) {
  */
 function ces_interop_admin() {
   $form = array();
-  $form['ces_interop_cen_clearing_central_url'] = array(
+  $form[CES_INTEROP_CEN_CLEARING_CENTRAL_URL] = array(
     '#type' => 'textfield',
     '#title' => t('CEN Clearing Central URL'),
-    '#default_value' => variable_get('ces_interop_cen_clearing_central_url', 'http://clearingcentral.net'),
+    '#default_value' => variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_URL, CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT),
     '#description' => t('The URL of the Community Exchange Network Clearing Central server.'),
   );
   return system_settings_form($form);
@@ -557,7 +559,8 @@ function ces_interop_form_ces_bank_exchange_form_alter(&$form, &$form_state) {
     $form['exchange']['users']['cenip_more']['cenip_user'] = array(
       '#type' => 'textfield',
       '#title' => t('NID'),
-      '#description' => t('Network Identifier in the Community Exchange Network. For example: cen0123. You can check your account at !link.', array('!link' => l('clearingcentral.net', 'http://clearingcentral.net/'))),
+      '#description' => t('Network Identifier in the Community Exchange Network. For example: cen0123. You can check your account at !link.',
+        array('!link' => l('Clearing Central', variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_URL, CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT)))),
       '#size' => 15,
       '#maxlength' => 7,
       '#default_value' => isset($form_state['values']['data']['cenip_user']) ? $form_state['values']['data']['cenip_user'] : '',
@@ -610,7 +613,7 @@ function ces_interop_exchange_form_validate($form, &$form_state) {
     // it is changed.
     if ($cenip_user != $form_state['values']['cenip_user']
       || $cenip_pass != $form_state['values']['cenip_pass']) {
-      $url = variable_get('ces_interop_cen_clearing_central_url', 'http://clearingcentral.net');
+      $url = variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_URL, CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT);
       $options = array(
         'method' => 'POST',
         'data' => drupal_http_build_query(array(
@@ -652,6 +655,81 @@ function ces_interop_exchange_form_submit($form, &$form_state) {
  * Add the feature of CEN remote exchange transaction into transaction form.
  */
 function ces_interop_form_ces_bank_transaction_form_alter(&$form, &$form_state) {
-  $toexchange = $form_state['values']['toexchange'];
-  //..
+  // Get the seller's exchange computed in the main form function.
+  $index = ($form['toexchange']['#type'] == 'value') ? '#value' : '#default_value';
+  $toexchange = ces_bank_get_exchange($form['toexchange'][$index]);
+  // Continue if the exchange is configured to do remote transactions.
+  if (empty($toexchange['data']['cenip'])) {
+    return;
+  }
+  // Continue if the buyer exchange field is a select (otherwise is fixed).
+  if ($form['fromexchange']['#type'] != 'select') {
+    return;
+  }
+  $form['fromexchange']['#options']['cenip'] = t('Extern network...');
+  $form['fromexchange']['#ajax']['callback'] = 'ces_interop_fromexchange_dropdown_callback';
+  
+  $form['fromcenexchange'] = array(
+    '#prefix' => '<div id="field-cenexchange-replace">',
+    '#suffix' => '</div>',
+    '#weight' => 11,
+  );
+  if (isset($form_state['values']) && isset($form_state['values']['fromexchange']) 
+    && $form_state['values']['fromexchange'] == 'cenip') {
+    $url = variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_URL, CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT);
+    $url .= '/nidsearch.php';
+    $form['fromcenexchange'] += array(
+      '#title' => t('Netork ID'),
+      '#description' => t('Enter the identifier of the remote network, for example "cen1234". Click "Search" to find the network identifier you are looking for.'),
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#maxlength' => 7,
+      '#field_suffix' => l(t('Search'), $url, array('attributes' => array('target' => '_blank'))),
+    );
+    $form['fromcenaccountname'] = array(
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#maxlength' => 8,
+      '#title' => $form['fromaccountname']['#title'],
+      '#description' => $form['fromaccountname']['#description'],
+      '#prefix' => $form['fromaccountname']['#prefix'],
+      '#suffix' => $form['fromaccountname']['#suffix'],
+    );
+  }
+  array_unshift($form['#validate'], 'ces_interop_transaction_form_validate');
+}
+/**
+ * AJAX callback for fromexchange field in transaction form.
+ */
+function ces_interop_fromexchange_dropdown_callback($form, &$form_state) {
+  $commands = array();
+  $commands[] = ajax_command_replace('#field-cenexchange-replace', drupal_render($form['fromcenexchange']));
+  if ($form_state['values']['fromexchange'] == 'cenip') {
+    $elem = $form['fromcenaccountname'];
+  }
+  else {
+    $elem = $form['fromaccountname'];
+  }
+  $commands[] = ajax_command_replace('#dropdown-fromaccountname-replace', drupal_render($elem));
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+/**
+ * Implements hook_validate().
+ */
+function ces_interop_transaction_form_validate($form, &$form_state) {
+  if ($form_state['values']['fromexchange'] == 'cenip') {
+    // Check the form of NID.
+    $nid = $form_state['values']['fromcenexchange'];
+    if(strlen($nid) != 7 || substr($nid, 0, 3) != 'cen' || !is_numeric(substr($nid, 3))) {
+      form_set_error('fromcenexchange', t('The Network Id must be the three leters "cen" plus four numbers.'));
+    }
+    // Set a virtual account as destination.
+    $bank = new CesInteropCENIPBank();
+    $toexchange = $bank->getExchange($form_state['values']['toexchange']);
+    $virtualaccountname = $toexchange['code'] + $nid;
+    
+    
+    $form_state['values']['fromaccountname'] = ;
+    
+  }
 }
