@@ -113,7 +113,21 @@ function ces_blog_field_widget_info() {
     ),
   );
 }
-
+/**
+ * Implements hook_form_after().
+ */
+function ces_blog_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'ces_blog_node_form') {
+    $form['title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Title'),
+      '#default_value' => t('Title'),
+      '#size' => 80,
+      '#maxlength' => 255,
+      '#required' => TRUE,
+    );
+  }
+}
 /**
  * Implements hook_field_widget_form().
  */
