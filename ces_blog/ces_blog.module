@@ -121,7 +121,7 @@ function ces_blog_form_alter(&$form, &$form_state, $form_id) {
     $form['title'] = array(
       '#type' => 'textfield',
       '#title' => t('Title'),
-      '#default_value' => t('Title'),
+      '#default_value' => (isset($form_state['node']->title)) ? $form_state['node']->title : t('Title'),
       '#size' => 80,
       '#maxlength' => 255,
       '#required' => TRUE,
