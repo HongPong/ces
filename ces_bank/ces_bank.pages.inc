@@ -124,7 +124,9 @@ function ces_bank_accounts_admin() {
       $kinds[$account['kind']],
       $states[$account['state']],
       $limits[$account['limitchain']],
-      $bank->formatAmount($account['balance'], $exchange, TRUE),
+      // Quitamos moneda de la cantidad para poder ser ordenado.
+      // $bank->formatAmount($account['balance'], $exchange, TRUE),
+      number_format($account['balance'], 2),
       l(t('View'), 'ces/admin/account/' . $account['id'] . '/view') . ' ' .
       l(t('Edit'), 'ces/admin/account/' . $account['id'] . '/edit') . ' ' .
       l(t('Delete'), 'ces/admin/account/' . $account['id'] . '/delete'),
@@ -627,7 +629,12 @@ function _ces_bank_sort_table_cmp($a, $b) {
   global $_ces_bank_sort_table_column;
   $ca = $a[$_ces_bank_sort_table_column];
   $cb = $b[$_ces_bank_sort_table_column];
-  return strcmp($ca, $cb);
+  if (is_numeric($ca) && is_numeric($cb)) {
+    return ($ca > $cb);
+  }
+  else {
+    return strcmp($ca, $cb);
+  }
 }
 
 /**
@@ -637,7 +644,12 @@ function _ces_bank_sort_table_cmpr($a, $b) {
   global $_ces_bank_sort_table_column;
   $ca = $a[$_ces_bank_sort_table_column];
   $cb = $b[$_ces_bank_sort_table_column];
-  return strcmp($cb, $ca);
+  if (is_numeric($ca) && is_numeric($cb)) {
+    return ($cb > $ca);
+  }
+  else {
+    return strcmp($cb, $ca);
+  }
 }
 /**
  * Lastest transactions admin page.
