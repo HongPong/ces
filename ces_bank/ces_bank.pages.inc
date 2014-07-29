@@ -831,6 +831,11 @@ function ces_bank_account_statement_page() {
     'createdsince' => $timefrom,
     'createduntil' => $timeto,
   ));
+
+  if (!$transactions) {
+    drupal_set_message(t('No Transaction'));
+  }
+
   $inibalance = $bank->getAccountHistoricBalance($account['id'], $timefrom);
   $dateformat = $format = variable_get('date_format_short', 'm/d/Y');
   $space = strpos($format, ' ');
