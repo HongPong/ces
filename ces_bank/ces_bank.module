@@ -922,7 +922,7 @@ function ces_bank_get_current_exchange($account = NULL) {
   $bankaccount = ces_bank_get_current_account($account);
   if ($bankaccount === FALSE) {
     $path = arg();
-    if ($path[0] == 'user' && $path[1] == 'register') {
+    if ($path[0] == 'user' && $path[1] == 'register' && isset($path[2]) && is_numeric($path[2])) {
       $exchange = ces_bank_get_exchange_by_name($path[2]);
     }
     else {
