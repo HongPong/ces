@@ -357,6 +357,44 @@ function ces_bank_admin_page() {
       '#title' => t('No requests for new exchanges.'),
     );
   }
+  $page['edit_exchanges'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Active exchanges'),
+  );  
+  $page['edit_exchanges']['table'] = array(
+    '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
+    ),  
+    '#header' => array(
+      array(
+        'data' => t('Exchange'),
+        'sort' => 'asc',
+        'field' => 'name',
+      ),  
+      array(
+        'data' => t('Actions'),
+      ),  
+    ),  
+    '#rows' => array(),
+  );  
+  $exchanges = $bank->getAllExchanges(array('state' => 1));
+  if (!empty($exchanges)) {
+    $rows = array();
+    foreach ($exchanges as $exchange) {
+      $row = array(
+        $exchange['code'] . ' - ' . $exchange['name'],
+        l(t('Edit'), 'ces/admin/ces/' . $exchange['id'] . '/edit') . ' ' .
+        l(t('Delete'), 'ces/admin/ces/' . $exchange['id'] . '/delete'),
+      );  
+      $rows[] = $row;
+    }
+    _ces_bank_sort_table($page['edit_exchanges']['table']['#header'], $rows);
+    $page['edit_exchanges']['table']['#rows'] = $rows;
+  }
+  else {
+    $page['edit_exchanges']['table']['#rows'] = array(array(t('No exchanges activated yet.'),'')); 
+  }
   return $page;
 }
 /**

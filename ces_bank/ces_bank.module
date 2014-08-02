@@ -106,6 +106,28 @@ function ces_bank_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => 990,
   );
+  $menu['ces/admin/ces/%/edit'] = array(
+    'title' => 'Edit exchange',
+    'description' => 'Top administer interface for CES Bank - Edit exchange',
+    'page callback' => '_ces_bank_get_form',
+    'page arguments' => array('ces_bank_exchange_form', 'edit', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'global', 0),
+    'type' => MENU_CALLBACK,
+  );
+  $menu['ces/admin/ces/%/delete'] = array(
+    'title' => 'Delete exchange',
+    'description' => 'Top administer interface for CES Bank - Delete exchange',
+    'page callback' => '_ces_bank_get_form',
+    'page arguments' => array('ces_bank_exchange_delete_form', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'global', 0),
+    'type' => MENU_CALLBACK,
+  );
   // Superglobal menu (before login). Creating new exchange.
   $menu['ces/bank/exchange/new'] = array(
     'title' => 'New exchange',
@@ -922,7 +944,7 @@ function ces_bank_get_current_exchange($account = NULL) {
   $bankaccount = ces_bank_get_current_account($account);
   if ($bankaccount === FALSE) {
     $path = arg();
-    if ($path[0] == 'user' && $path[1] == 'register' && isset($path[2]) && is_numeric($path[2])) {
+    if ($path[0] == 'user' && $path[1] == 'register' && isset($path[2])) {
       $exchange = ces_bank_get_exchange_by_name($path[2]);
     }
     else {
