@@ -564,14 +564,16 @@ function ces_bank_exchange_view() {
 /**
  * TODO: document.
  */
-function ces_bank_account_view() {
-  $account = ces_bank_get_current_account();
+function ces_bank_account_view($account) {
+  if ($account == FALSE) {
+    $account = ces_bank_get_current_account();
+  }
   $page = array(
     'account' => $account,
     '#theme' => 'ces_bank_account_view',
   );
-  $bank = new CesBank();
   // Add and override some items.
+  $bank = new CesBank();
   $exchange = $bank->getExchange($account['exchange']);
   $page['account']['exchange'] = $exchange['name'];
   $users = reset($account['users']);
