@@ -478,7 +478,7 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
     }
     else {
       $textoutput2 = t('These users') . ' (<b>' . $numnonusers . '</b>) ' .
-      t(' has account/s in other exchange/s in the system, so they CANNOT be erased:') . ' <br /><i>';
+      t('has account/s in other exchange/s in the system, so they CANNOT be erased:') . ' <br /><i>';
       foreach ($userswithaccounts as $usernonerase) {
         $user1 = user_load($usernonerase);
         $textoutput2 .= l($user1->name, 'user/' . $user1->uid) . ' ';
@@ -525,7 +525,7 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
       foreach ($querytrans2 as $record2) {
         $textoutput3 .= $record2->id . ' ';
         $numnontrans++;
-      }      
+      }
       $totaltrans++;
     };
     $textoutput4 = '';
@@ -534,7 +534,7 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
     }
     else {
       $textoutput4 = t('These transactions') . ' (<b>' . $numnontrans . '</b>) ' .
-      t(' are made from or to an account that belongs to other exchange/s in the system, so they CANNOT be erased:') .
+      t('are made from or to an account that belongs to other exchange/s in the system, so they CANNOT be erased:') .
       ' <br /><i>' . $textoutput3 . '</i><br />' .
       t('These transactions must be deleted before to proceed deleting the exchange.');
     }
@@ -565,6 +565,9 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
     return $form;
   }
 }
+/**
+ * Validate form for deleting exchange.
+ */
 function ces_bank_exchange_delete_form_validate($form, &$form_state) {
   form_set_error('accounts_fieldset', t('Delete exchange submit is not implemented yet, sorry.'));
   form_set_error('users_fieldset', t('Delete exchange submit is not implemented yet, sorry.'));
