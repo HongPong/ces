@@ -401,7 +401,6 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
     $totalnumberacc = 0;
     $numnonacc = 0;
     $nonacc = array();
-    $textoutput = '';
     foreach ($accounts as $account) {
       if (!is_numeric(substr($account['name'], 4, 4))) {
         $numnonacc++;
@@ -409,17 +408,17 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
       }
       $totalnumberacc++;
     }
+    $textoutput1 = '';
     if ($numnonacc == 0) {
-      $textoutput .= t('All accounts can be erased.');
+      $textoutput1 = t('No accounts depend on other exchanges, so they can be erased.');
     }
     else {
-      $textoutput2 = '';
+      $textoutput1 = t('These accounts') . ' (<b>' . $numnonacc . '</b>) ' .
+      t('depends on other exchange/s in the system, so they CANNOT be erased:<br /><i>');
       foreach ($nonacc as $noner) {
-        $textoutput2 .= $noner . ' ';
+        $textoutput1 .= $noner . ' ';
       }
-      $textoutput .= t('These accounts') . ' (<b>' . $numnonacc . '</b>) ' .
-      t('depends on other exchange/s in the system, so they CANNOT be erased:<br /><i>') .
-      $textoutput2 . '</i><br />These accounts must be deleted before to proceed deleting the exchange.';
+      $textoutput1 .= '</i><br />These accounts must be deleted before to proceed deleting the exchange.';
     }
     $form['accounts_fieldset'] = array(
       '#type' => 'fieldset',
@@ -427,8 +426,7 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
     );
     $form['accounts_fieldset']['data-accounts'] = array(
       '#type' => 'item',
-      '#markup' => t('Number of accounts:') . ' <b>' . $totalnumberacc . '</b><br />' .
-      $textoutput,
+      '#markup' => t('Number of accounts:') . ' <b>' . $totalnumberacc . '</b><br />' . $textoutput1,
     );
     // Users information.
     $queryusers = db_query("
@@ -467,22 +465,26 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
       }
     };
     $userswithaccounts = array();
+    $numnonusers = 0;
     foreach ($usersarray as $user0 => $useractual) {
       if (($useractual['accountsex'] != $useractual['accounttotal'])) {
         $userswithaccounts[] = $user0;
+        $numnonusers++;
       }
     }
-    $textoutput3 = '';
+    $textoutput2 = '';
     if (empty($userswithaccounts)) {
-      $textoutput3 = t('All users can be erased.');
+      $textoutput2 = t('All users have accounts that belongs only to the exchange, so can be erased.');
     }
     else {
-      $textoutput3 = t('These users has account/s in other exchange/s in the system, so they CANNOT be erased:') . ' <br /><i>';
+      $textoutput2 = t('These users') . ' (<b>' . $numnonusers . '</b>) ' .
+      t(' has account/s in other exchange/s in the system, so they CANNOT be erased:') . ' <br /><i>';
       foreach ($userswithaccounts as $usernonerase) {
         $user1 = user_load($usernonerase);
-        $textoutput3 .= l($user1->name, 'user/' . $user1->uid) . ' ';
+        $textoutput2 .= l($user1->name, 'user/' . $user1->uid) . ' ';
       }
-      $textoutput3 .= '</i><br />' . t('The accounts of these users in this exchange must be deleted before to proceed deleting the exchange.');
+      $textoutput2 .= '</i><br />' .
+      t('The accounts of these users in this exchange must be deleted before to proceed deleting the exchange.');
     }
     $form['users_fieldset'] = array(
       '#type' => 'fieldset',
@@ -490,48 +492,83 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
     );
     $form['users_fieldset']['data-users-1'] = array(
       '#type' => 'item',
-      '#markup' => t('Number of users:') . ' <b>' . $totalusers . '</b><br />' . $textoutput3,
+      '#markup' => t('Number of users:') . ' <b>' . $totalusers . '</b><br />' . $textoutput2,
     );
     // Transactions information.
     $querytrans = db_query("
-      SELECT t.id
+      SELECT t.id, t.fromaccount, t.toaccount
       FROM {ces_transaction} t
       INNER JOIN {ces_account} a
       ON a.id = t.fromaccount
       AND a.exchange = :exchange
       OR a.id = t.toaccount
-      AND a.exchange = :exchange2",
+      AND a.exchange = :exchange",
       array(
         ':exchange' => $exchange['id'],
-        ':exchange2' => $exchange['id'],
       ));
     $totaltrans = 0;
+    $textoutput3 = '';
+    $numnontrans = 0;
     foreach ($querytrans as $record) {
+      $querytrans2 = db_query("
+        SELECT a.id
+        FROM {ces_account} a
+        WHERE a.id = :fromaccount
+        AND a.exchange != :exchange
+        OR a.id = :toaccount
+        AND a.exchange != :exchange",
+        array(
+          ':fromaccount' => $record->fromaccount,
+          ':exchange' => $exchange['id'],
+          'toaccount' => $record->toaccount,
+        ));
+      foreach ($querytrans2 as $record2) {
+        $textoutput3 .= $record2->id . ' ';
+        $numnontrans++;
+      }      
       $totaltrans++;
     };
+    $textoutput4 = '';
+    if ($numnontrans == 0) {
+      $textoutput4 = t('All transactions are from and to an account that belongs to the exchange, so they can be erased.');
+    }
+    else {
+      $textoutput4 = t('These transactions') . ' (<b>' . $numnontrans . '</b>) ' .
+      t(' are made from or to an account that belongs to other exchange/s in the system, so they CANNOT be erased:') .
+      ' <br /><i>' . $textoutput3 . '</i><br />' .
+      t('These transactions must be deleted before to proceed deleting the exchange.');
+    }
+
     $form['trans_fieldset'] = array(
       '#type' => 'fieldset',
       '#title' => t('Transactions'),
     );
     $form['trans_fieldset']['data-users-1'] = array(
       '#type' => 'item',
-      '#markup' => t('Number of transactions:') . ' <b>' . $totaltrans . '</b>',
+      '#markup' => t('Number of transactions:') . ' <b>' . $totaltrans . '</b><br />' . $textoutput4,
     );
     // To submit or not to submit, that's the question.
-    if ($numnonacc != 0) {
+    if ($numnonacc != 0 || $numnonusers != 0 || $numnonusers != 0 || $numnontrans != 0) {
       $form['no-possible-erase'] = array(
         '#type' => 'item',
+        '#prefix' => '<br />',
         '#markup' => '<h3>' . t('Sorry, it is not possible to delete the exchange.') . '</h3>',
       );
     }
     else {
       $form['submit'] = array(
         '#type' => 'submit',
-        '#value' => t('Delete exchange is not implemented yet, sorry'),
+        '#prefix' => '<br />',
+        '#value' => t('Proceed to delete the exchange'),
       );
     }
     return $form;
   }
+}
+function ces_bank_exchange_delete_form_validate($form, &$form_state) {
+  form_set_error('accounts_fieldset', t('Delete exchange submit is not implemented yet, sorry.'));
+  form_set_error('users_fieldset', t('Delete exchange submit is not implemented yet, sorry.'));
+  form_set_error('trans_fieldset', t('Delete exchange submit is not implemented yet, sorry.'));
 }
 /**
  * Form for controlling limit chains.
