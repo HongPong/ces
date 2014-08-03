@@ -49,9 +49,14 @@ function ces_bank_exchange_admin() {
 /**
  * TODO: document.
  */
-function ces_bank_accounts_admin() {
+function ces_bank_accounts_admin($exchange_id) {
   $bank = new CesBank();
-  $exchange = ces_bank_get_current_exchange();
+  if (!isset($exchange_id) || empty($exchange_id) || $exchange_id == 'ces_current_exchange') {
+    $exchange = ces_bank_get_current_exchange();
+  }
+  else {
+    $exchange = $bank->getExchange($exchange_id);
+  }
   if ($exchange === FALSE) {
     return array(
       'message' => array(
@@ -385,7 +390,9 @@ function ces_bank_admin_page() {
       $row = array(
         $exchange['code'] . ' - ' . $exchange['name'],
         l(t('Edit'), 'ces/admin/ces/' . $exchange['id'] . '/edit') . ' ' .
-        l(t('Delete'), 'ces/admin/ces/' . $exchange['id'] . '/delete'),
+        l(t('Delete'), 'ces/admin/ces/' . $exchange['id'] . '/delete') . ' -- ' .
+        l(t('Accounts'), 'ces/admin/ces/' . $exchange['id'] . '/accounts') . ' ' .
+        l(t('Transactions'), 'ces/admin/ces/' . $exchange['id'] . '/transactions'),
       );
       $rows[] = $row;
     }
@@ -694,15 +701,20 @@ function _ces_bank_sort_table_cmpr($a, $b) {
 /**
  * Lastest transactions admin page.
  */
-function ces_bank_transactions_admin_page() {
+function ces_bank_transactions_admin_page($exchange_id) {
   $bank = new CesBank();
-  $exchange = ces_bank_get_current_exchange();
+  if (!isset($exchange_id) || empty($exchange_id) || $exchange_id == 'ces_current_exchange') {
+    $exchange = ces_bank_get_current_exchange();
+  }
+  else {
+    $exchange = $bank->getExchange($exchange_id);
+  }
   if ($exchange === FALSE) {
-    $page = array();
-    $page['message'] = array(
-      '#markup' => '<p>' . t("You don't administer any exchange yet.") . '<p>',
+    return array(
+      'message' => array(
+        '#markup' => '<p>' . t('Invalid exchange') . '</p>',
+      ),
     );
-    return $page;
   }
   // Use the account statement filter form.
   $form_state = array('method' => 'get');
