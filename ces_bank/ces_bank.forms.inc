@@ -1023,8 +1023,6 @@ function ces_bank_account_form_submit($form, &$form_state) {
 }
 /**
  * Form for deleting an account in an exchange.
- *
- * @todo Implement delete account
  */
 function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
   $bank = new CesBank();
@@ -1033,15 +1031,95 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
       $account = $bank->getAccount($account);
     }
   }
+  $textoutput = '';
+  $usersacc = array();
+  $usersacctext = '';
+  $numusers = 0;
+  foreach ($account['users'] as $u) {
+    $userloaded = user_load($u['user']);
+    $queryuser = db_query("
+      SELECT  u.account
+      FROM {ces_accountuser} u
+      WHERE u.user = :user
+      AND u.account != :account",
+      array(
+        ':user' => $userloaded->uid,
+        ':account' => $account['id'],
+      ));
+      foreach ($queryuser as $u2) {
+        if (array_key_exists($userloaded->name, $usersacc)) {
+          $usersacc[$userloaded->name][] = $u2->account;
+          $numusers++;
+        }
+        else {
+          $usersacc[$userloaded->name] = array($u2->account);
+        }
+      }
+    $usersacctext .= l($userloaded->name, 'mailto:' . $userloaded->mail) . ' ';
+  }
+  if (!empty($usersacc)) {
+    foreach($usersacc as $u => $usuari) {
+    $textoutput .= t('User') . ' <b>' . $u . '</b> ' . t('has other accounts and CANNOT be deleted:') . '<br />';
+      foreach($usuari as $acc) {
+        $acc2 = $bank->getAccount($acc);
+        $textoutput .= $acc2['name'] . ' ';
+      }
+      $textoutput .= '<br />';
+    }
+    $textoutput .= '<br />';
+  }
+  else {
+    $textoutput .= t('The user-s has no more accounts, so it can be deleted.') . '<br /><br />';
+  }
+  $querytrans = db_query("
+    SELECT t.id, t.concept
+    FROM {ces_transaction} t
+    WHERE t.fromaccount = :account
+    OR t.toaccount = :account
+    OR t.user = :account",
+    array(
+      ':account' => $account['id'],
+    ));
+  $textoutput2 = '';
+      $numtrans = 0;
+  foreach ($querytrans as $record) {
+    $textoutput2 .= l($record->concept,'ces/bank/account/transaction/' . $record->id .'/view') . ' -- ';
+    $numtrans++;
+  }
+  if ($numtrans != 0) {
+    $textoutput .= t('These transactions') . ' (<b>' . $numtrans . '</b>) ' .
+    t('refer to this account, so the account CANNOT be deleted:') . '<br />' . $textoutput2;
+  }
+  else {
+    $textoutput .= t('No transaction refers to this account, so the account can be deleted.');
+  }
   $form['bankaccount'] = array();
   $form['bankaccount']['title'] = array(
     '#type' => 'item',
-    '#title' => t('Delete Exchange Account'),
-    '#markup' => t('Deleting accounts is not implemented yet.'),
+    '#title' => t('Delete account') . ': ' . $account['name'],
+    '#markup' => t('The account belongs to user-s') . ': <b>' . $usersacctext . '</b><br />' . $textoutput,
   );
+  if ($numtrans == 0 && $numusers == 0) {
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#prefix' => '<br />',
+      '#value' => t('Delete account and user-s'),
+    );
+  }
+  else {
+    $form['non-possible-delete'] = array(
+      '#type' => 'item',
+      '#markup' => '<h3>' . t('Sorry, it is not possible to delete the account.') . '</h3>',
+    );
+  }
   return $form;
 }
-
+/**
+ * Validate form for deleting account.
+ */
+function ces_bank_account_delete_form_validate($form, &$form_state) {
+  form_set_error('bankaccount', t('Delete account submit is not implemented yet, sorry.'));
+}
 /**
  * Single transaction form.
  *
