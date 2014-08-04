@@ -1613,6 +1613,17 @@ class CesBankLocalAccount extends IcesDBObject implements CesBankAccountInterfac
     }
   }
   /**
+   * Delete user account.
+   */
+  public function deleteUserAccount($id) {
+    $s = new IcesSerializer('CesBankAccountUser');
+    foreach ($this->users as $accuser) {
+      if ($accuser->user == $id) {
+        $s->delete($accuser);
+      }
+    }
+  }
+  /**
    * Gets limit chain.
    * @return CesBankLimitChain
    *   The limit chain associated to this account.
@@ -1721,6 +1732,7 @@ class CesBankAccountUser extends IcesDBObject {
   public $id;
   public $user;
   public $account;
+  public $privilege;
   public $role;
   const ROLE_ACCOUNT_ADMINISTRATOR = 0;
 }

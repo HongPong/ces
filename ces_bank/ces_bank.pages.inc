@@ -594,6 +594,7 @@ function ces_bank_account_view($account) {
     2 => t('Organization'),
     3 => t('Company'),
     4 => t('Public'),
+    5 => t('Virtual'),
   );
   $states = array(
     0 => t('Hidden'),
