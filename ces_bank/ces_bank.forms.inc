@@ -1647,6 +1647,10 @@ function ces_bank_multipletransactions_form($form, &$form_state) {
     return FALSE;
   };
   $default = !empty($form_state['values']['howmany_transactions']) ? $form_state['values']['howmany_transactions'] : 10;
+  $form['howmany_transactions_real'] = array(
+    '#type' => 'hidden',
+    '#value' => $default,
+  );
   $form['howmany_transactions'] = array(
     '#attributes' => array('class' => array('container-inline')),
     '#type' => 'select',
@@ -1736,7 +1740,7 @@ function ces_bank_multipletransactions_form_validate($form, &$form_state) {
   if ($account1 === FALSE) {
     form_set_error('toaccountname', t('Seller account %acc is incorrect.', array('%acc' => $account1)));
   }
-  $numbertrans = $record['howmany_transactions'];
+  $numbertrans = $record['howmany_transactions_real'];
   for ($i = 1; $i <= $numbertrans; $i++) {
     $amount = $record['amount-' . $i];
     $account2 = $record['fromaccountname-' . $i];
