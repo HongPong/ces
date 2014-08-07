@@ -684,6 +684,85 @@ class CesBank {
     }
   }
   /**
+   * Check if it's possible to delete accounts.
+   *
+   * @param array $arrayaids
+   *   array of account identifiers.
+   * 
+   * @return array of accounts.
+   *   -'aid' = account id.
+   *   -'name' = account name.
+   *   -'account_action' = string, recommended action for the account.
+   *     'delete'(delete account), 'disable'(disable account), 'nothing'(do nothing).
+   *   -'is_interexchange' = TRUE if it's an interexchange account and refers to an existing exchange in the system.
+   *   -'num_transactions' = number of transactions that refers to the account (fromaccount or toaccount).
+   *   -'transactions' = array of transactions that refer to the account.
+   *   -'account_users' = array of account users.
+   *     'uid'(user id), 'accounts'(array of other accounts if any), 'user_action'(recomended action for this user)
+   */
+  public function deleteAccountsCheck($arrayaids) {
+    $exchanges = $this->getAllExchanges();
+    $arrayreturn = array();
+    foreach ($arrayaids as $singleaid) {
+      $account = $this->getAccount($singleaid);
+      $return = array(
+        'aid' => $account['id'],
+        'name' => $account['name'],
+        'account_action' => 'nothing',
+        'is_interexchange' => FALSE,
+        'num_transactions' => 0,
+        'transactions' => array(),
+        'account_users' => array(),
+      );
+      // checking if it's an interexchange account.
+    if (!is_numeric(substr($account['name'], 4, 4))) {
+      $fourfirstdigits = substr($account['name'], 0, 4);
+      foreach ($exchanges as $ex) {
+        if ($ex['code'] == $fourfirstdigits && $ex['id'] != $account['exchange']) {
+          $return['is_interexchange'] = TRUE;
+        }
+      }
+    }
+    // checking if the account has transactions.
+    $transactions = $this->getTransactions(array('account' => $account['id'])); 
+    foreach ($transactions as $trans) {
+      $return['transactions'][] = $trans;
+      $return['num_transactions']++;
+    }
+    // checking if users has any other accounts in the system.
+    foreach ($account['users'] as $u) {
+      $return['account_users'][$u['user']] = array(
+        'uid' => $u['user'],
+        'accounts' => array(),
+        'user_action' => ($return['num_transactions'] == 0) ? 'delete' : 'disable',
+      );
+      $useraccounts = $this->getUserAccounts($u['user']);
+      foreach ($useraccounts as $accs) {
+        if ($accs['id'] != $account['id']) {
+          $return['account_users'][$u['user']]['accounts'][] = array(
+            'aid' => $accs['id'],
+            'name' => $accs['name'],
+          );
+          $return['account_users'][$u['user']]['user_action'] = 'nothing';
+        }
+      }
+    }
+    if ($return['is_interexchange']) {
+      $return['account_action'] = 'nothing';
+    }
+    else {
+      if ($return['num_transactions'] == 0) {
+        $return['account_action'] = 'delete';
+      }
+      else {
+        $return['account_action'] = 'disable';
+      }
+    }
+    $arrayreturn[] = $return; 
+    }
+    return $arrayreturn; 
+  }
+  /**
    * Creates a limit chain object.
    */
   public function createLimitChain(array &$record) {

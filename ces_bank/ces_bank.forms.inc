@@ -396,7 +396,7 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
       '#type' => 'item',
       '#markup' => '<p>' . t('Exchange') . ': <b>' . $exchange['code'] . ' - ' . $exchange['name'] . '</b></p><br />',
     );
-    // Accouts information.
+    // Accounts information.
     $accounts = $bank->getAllAccounts(array('exchange' => $exchange_id));
     $totalnumberacc = 0;
     $numnonacc = 0;
@@ -1022,103 +1022,239 @@ function ces_bank_account_form_submit($form, &$form_state) {
   }
 }
 /**
- * Form for deleting an account in an exchange.
+ * Form for deleting an account.
  */
 function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
+  if (!empty($form_state['values']) && !empty($form_state['values']['page'])
+      && $form_state['values']['page'] == 'confirm') {
+    return ces_bank_account_delete_confirm_form($form, $form_state);
+  }
   $bank = new CesBank();
-  if ($account != NULL) {
-    if (!is_array($account)) {
-      $account = $bank->getAccount($account);
-    }
+  if ($account != NULL && !is_array($account)) {
+    $account = $bank->getAccount($account);
   }
-  $textoutput = '';
-  $usersacc = array();
-  $usersacctext = '';
-  $numusers = 0;
-  foreach ($account['users'] as $u) {
-    $userloaded = user_load($u['user']);
-    $queryuser = db_query("
-      SELECT  u.account
-      FROM {ces_accountuser} u
-      WHERE u.user = :user
-      AND u.account != :account",
-      array(
-        ':user' => $userloaded->uid,
-        ':account' => $account['id'],
-      ));
-      foreach ($queryuser as $u2) {
-        if (array_key_exists($userloaded->name, $usersacc)) {
-          $usersacc[$userloaded->name][] = $u2->account;
-          $numusers++;
-        }
-        else {
-          $usersacc[$userloaded->name] = array($u2->account);
-        }
-      }
-    $usersacctext .= l($userloaded->name, 'mailto:' . $userloaded->mail) . ' ';
+  if ($account == NULL || $account === FALSE) {
+    return array(
+      'message' => array(
+      '#markup' => '<p>' . t('Invalid account.') . '</p>',
+      ),);
   }
-  if (!empty($usersacc)) {
-    foreach($usersacc as $u => $usuari) {
-    $textoutput .= t('User') . ' <b>' . $u . '</b> ' . t('has other accounts and CANNOT be deleted:') . '<br />';
-      foreach($usuari as $acc) {
-        $acc2 = $bank->getAccount($acc);
-        $textoutput .= $acc2['name'] . ' ';
-      }
-      $textoutput .= '<br />';
-    }
-    $textoutput .= '<br />';
-  }
-  else {
-    $textoutput .= t('The user-s has no more accounts, so it can be deleted.') . '<br /><br />';
-  }
-  $querytrans = db_query("
-    SELECT t.id, t.concept
-    FROM {ces_transaction} t
-    WHERE t.fromaccount = :account
-    OR t.toaccount = :account
-    OR t.user = :account",
-    array(
-      ':account' => $account['id'],
-    ));
-  $textoutput2 = '';
-      $numtrans = 0;
-  foreach ($querytrans as $record) {
-    $textoutput2 .= l($record->concept,'ces/bank/account/transaction/' . $record->id .'/view') . ' -- ';
-    $numtrans++;
-  }
-  if ($numtrans != 0) {
-    $textoutput .= t('These transactions') . ' (<b>' . $numtrans . '</b>) ' .
-    t('refer to this account, so the account CANNOT be deleted:') . '<br />' . $textoutput2;
-  }
-  else {
-    $textoutput .= t('No transaction refers to this account, so the account can be deleted.');
-  }
-  $form['bankaccount'] = array();
-  $form['bankaccount']['title'] = array(
+  $check = $bank->deleteAccountsCheck(array($account['id']));
+  $checking = $check[0];
+  // display interexchange account information.
+  $textoutput = $checking['is_interexchange'] ?
+    t('This account depends on other exchanges in the system, so the account will not be deleted, nor disabled.') .
+    '<br /><br />' : '';
+  $form['data-account'] = array(
     '#type' => 'item',
-    '#title' => t('Delete account') . ': ' . $account['name'],
-    '#markup' => t('The account belongs to user-s') . ': <b>' . $usersacctext . '</b><br />' . $textoutput,
+    '#markup' => '<h3>' . t('Delete account') . ': <b>' . $checking['name'] . '</b></h3>' . $textoutput,
   );
-  if ($numtrans == 0 && $numusers == 0) {
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#prefix' => '<br />',
-      '#value' => t('Delete account and user-s'),
+  if (!$checking['is_interexchange']) {
+    // display transactions information.
+    $textoutput = '';
+    $texttrans = '';
+    if ($checking['num_transactions'] > 0) {
+      foreach ($checking['transactions'] as $trans) {
+        $texttrans .= l($trans['concept'], 'ces/bank/account/transaction/' . $trans['id'] .'/view') . ' -- ';
+      }
+      $textoutput .= t('These transactions') . ' (<b>' . $checking['num_transactions'] . '</b>) ' .
+      t('refer to this account, so the account can only be disabled.') . '<br />' . $texttrans;
+    }
+    else {
+      $textoutput .= t('No transaction refers to this account.');
+    }
+    $form['trans_fieldset'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Transactions'),
     );
-  }
-  else {
-    $form['non-possible-delete'] = array(
+    $form['trans_fieldset']['data-trans'] = array(
       '#type' => 'item',
-      '#markup' => '<h3>' . t('Sorry, it is not possible to delete the account.') . '</h3>',
+      '#markup' => $textoutput,
     );
+    // display users information.
+    $textoutput = '';
+    $textusers1 = '';
+    $textusers2 = '';
+    $numusers = 0;
+    $userswithacc = 0;
+    foreach ($checking['account_users'] as $accuser) {
+      $userloaded = user_load($accuser['uid']);
+      $checking['account_users'][$accuser['uid']]['name'] = $userloaded->name;
+      $textusers1 .= l($userloaded->name, 'user/' . $userloaded->uid) . ' ';
+      $numusers++;
+      if (!empty($accuser['accounts'])) {
+        $textusers2 .= '<br />' . t('User') . ' <b>' . $userloaded->name . '</b> ' .
+          t('has other accounts and cannot be deleted nor disabled:') . '<br />';
+        foreach ($accuser['accounts'] as $acc) {
+        $textusers2 .= l($acc['name'], 'ces/admin/account/' . $acc['aid'] . '/view') . ' ';
+        $userswithacc++;
+        }
+      }
+    }
+    if ($userswithacc == 0) {
+      $textusers2 .= ($numusers == 1) ? '<br />' . t("This user doesn't have more accounts.") :
+        '<br />' . t("These users doesn't have more accounts.");
+    }
+    $textoutput .= ($numusers == 1) ? t('The account belongs to a single user') . ': <b>' . $textusers1 . ' </b>' :
+                   t('The account belongs to') . ' ' . $numusers . ' ' . t('users') . ': <b>' . $textusers1 . ' </b>';
+    $textoutput .= $textusers2;
+    $form['users_fieldset'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Users'),
+    );
+    $form['users_fieldset']['data-users'] = array(
+      '#type' => 'item',
+      '#markup' => $textoutput,
+    );
+    // action options for users account.
+    foreach ($checking['account_users'] as $accuser) {
+      if ($accuser['user_action'] != 'nothing') {
+        $options = ($accuser['user_action'] == 'delete') ?
+          array('delete' => t('Delete user'), 'disable' => t('Disable user'), 'nothing' => t('Do nothing')) :
+          array('disable' => t('Disable user'), 'nothing' => t('Do nothing'));
+        $default_value = ($accuser['user_action'] == 'delete') ? 'delete' : 'disable';
+        $form['user-' . $accuser['uid']] = array(
+          '#title' => t('Action with user') . ' ' . $accuser['name'],
+          '#type' => 'radios',
+          '#prefix' => '<br />',
+          '#description' => t('Select the action you want to do with this user.'),
+          '#options' => $options,
+          '#default_value' => $default_value, 
+          '#required' => TRUE,
+        );      
+      }
+    }
+    // submit action account.
+    $submittext = '';
+    switch ($checking['account_action']) {
+      case 'delete':
+        $submittext = t('Delete account');
+        break;
+      case 'disable':
+        $submittext = t('Disable account');
+        break;
+      case 'nothing':
+        $submittext = t('It is NOT possible delete nor disable the account.');
+    }
+    if ($checking['account_action'] == 'nothing') {
+      $form['not-possible'] = array(
+        '#type' => 'item',
+        '#markup' => $submittext,
+      );
+    }
+    else {
+      $form['submit'] = array(
+        '#type' => 'submit',
+        '#prefix' => '<br />',
+        '#value' => $submittext,
+      );
+    }
   }
+  $form_state['check_account_data'] = $checking;
   return $form;
 }
 /**
  * Validate form for deleting account.
  */
 function ces_bank_account_delete_form_validate($form, &$form_state) {
-  form_set_error('bankaccount', t('Delete account submit is not implemented yet, sorry.'));
+  foreach ($form_state['check_account_data']['account_users'] as $user) {
+    if (isset($form_state['values']['user-' . $user['uid']])) {
+      $check = $form_state['check_account_data']['account_users'][$user['uid']]['user_action'];
+      $option = $form_state['values']['user-' . $user['uid']];
+      if (($check == 'disable' && $option == 'delete') ||
+        ($check == 'nothing' && ($option == 'delete' || $option == 'disable'))) {
+        form_set_error('user-' . $user['uid'], t("Hey! That's not a valid option!"));
+      }
+      else {
+        $form_state['check_account_data']['account_users'][$user['uid']]['user_action'] = $option;
+      }
+    }
+  }
+}
+function ces_bank_account_delete_form_submit($form, &$form_state) {
+  $form_state['values']['page'] = 'confirm';
+  $form_state['rebuild'] = TRUE;
+}
+function ces_bank_account_delete_confirm_form($form, &$form_state) {
+  $textoutput = '';
+  switch ($form_state['check_account_data']['account_action']) {
+    case 'delete':
+      $textoutput .= t('Delete account');
+      break;
+    case 'disable':
+      $textoutput .= t('Disable account');
+      break;
+    case 'nothing':
+      $textoutput .= t('Do nothing with account');
+      break;
+  }  
+  $textoutput .= ' <i>' . $form_state['check_account_data']['name'] . '</i><br />';
+  foreach ($form_state['check_account_data']['account_users'] as $user) {
+    switch ($user['user_action']) {
+      case 'delete':
+        $textoutput .= t('Delete user');
+        break;
+      case 'disable':
+        $textoutput .= t('Disable user');
+        break;
+      case 'nothing':
+        $textoutput .= t('Do nothing with user');
+        break;
+    }
+    $textoutput .= ' <i>' . $user['name'] . '</i><br />';  
+  }  
+  $form['confirm_fieldset'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Confirm actions for account') . ' <b>' . $form_state['check_account_data']['name'] . '</b>',
+  );
+  $form['confirm_fieldset']['data'] = array(
+    '#type' => 'item',
+    '#markup' => $textoutput,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#prefix' => '<br />',
+    '#value' => t('Confirm'),
+    '#submit' => array('ces_bank_account_delete_confirm_form_submit'),
+      );
+  return $form; 
+}
+function ces_bank_account_delete_confirm_form_submit($form, &$form_state) {
+  $bank = new CesBank();
+  $check = $form_state['check_account_data'];
+  switch ($check['account_action']) {
+    case 'delete':
+//      $action = $bank->deleteAccount($form_state['check_account_data']['aid']);
+      drupal_set_message(t('Delete account %account not possible. It is not implemented yet, sorry.',
+        array('%account' => $check['name'])), 'status');
+      break;
+    case 'disable':
+      drupal_set_message(t('Disable account %account not possible. It is not implemented yet, sorry.',
+        array('%account' => $check['name'])), 'status');
+      break;
+    case 'nothing':
+      drupal_set_message(t('Do nothing with account %account not possible. It is not implemented yet, sorry.',
+        array('%account' => $check['name'])), 'status');
+      break;
+  }  
+  foreach ($check['account_users'] as $user) {
+    switch ($user['user_action']) {
+      case 'delete':
+        drupal_set_message(t('Delete user %user not possible. It is not implemented yet, sorry.',
+          array('%user' => $user['name'])), 'status');
+        break;
+      case 'disable':
+        drupal_set_message(t('Disable user %user not possible. It is not implemented yet, sorry.',
+          array('%user' => $user['name'])), 'status');
+        break;
+      case 'nothing':
+        drupal_set_message(t('Do nothing with user %user not possible. It is not implemented yet, sorry.',
+
+          array('%user' => $user['name'])), 'status');
+        break;
+    }
+  }
+  $form_state['redirect'] = 'ces/admin/account';  
 }
 /**
  * Single transaction form.
