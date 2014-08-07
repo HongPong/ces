@@ -859,202 +859,206 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
  * @todo Make an easy system to find account names by exchange/username.
  */
 function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_id = NULL, $from_account_id = NULL) {
-  if (!empty($form_state['values']) && !empty($form_state['values']['page'])
-      && $form_state['values']['page'] == 'confirm') {
-    return ces_bank_transaction_confirm_form($form, $form_state, $form_state['values']['operation']);
-  }
-  global  $user;
-  $bank = new CesBank();
-  // Exchange options for selects.
-  $exchanges = $bank->getAllExchanges();
-  if (empty($exchanges)) {
-    return array(
-      'message' => array(
-        '#markup' => '<p>' . t('There are no exchanges yet.') . '</p>',
-      ),
-    );
-  }
-  $exoptions = array();
-  foreach ($exchanges as $exchange) {
-    $exoptions[$exchange['id']] = $exchange['code'];
-  }
-  if ($op == 'new') {
-    $exchangeid = $arg;
-    if (!isset($exchanges[$exchangeid])) {
+  if (!isset($form_state['values']) || !isset($form_state['values']['page'])
+      || $form_state['values']['page'] == 'edit') {
+    global  $user;
+    $bank = new CesBank();
+    // Exchange options for selects.
+    $exchanges = $bank->getAllExchanges();
+    if (empty($exchanges)) {
       return array(
         'message' => array(
-          '#markup' => '<p>' . t('Invalid exchange id.') . '</p>',
+          '#markup' => '<p>' . t('There are no exchanges yet.') . '</p>',
         ),
       );
     }
-  }
-  elseif ($op == 'edit') {
-    $from = $bank->getTransactionFromAccount($arg);
-    $to = $bank->getTransactionToAccount($arg);
-    $toexchange = $exchanges[$to['exchange']];
-    $form_state['values']['toexchange'] = $to['exchange'];
-    $form_state['values']['toaccountname'] = $to['name'];
-    $form_state['values']['fromexchange'] = $from['exchange'];
-    $form_state['values']['fromaccountname'] = $from['name'];
-    $form_state['values']['concept'] = $arg['concept'];
-    $form_state['values']['amount'] = $bank->formatAmount($bank->getTransactionAmount($arg, $toexchange), $toexchange, FALSE, FALSE);
-    $form_state['values']['id'] = $arg['id'];
-    $form_state['values']['user'] = $arg['user'];
-  }
-  $form['operation'] = array(
-    '#type' => 'value',
-    '#value' => $op,
-  );
-  if (isset($form_state['values']['id'])) {
-    $form['id'] = array(
-      '#type' => 'value',
-      '#value' => $form_state['values']['id'],
-    );
-  }
-  // Select seller's exchange.
-  $toexchangeid = isset($form_state['values']['toexchange']) ? $form_state['values']['toexchange'] : $exchangeid;
-  $toexchange = $exchanges[$toexchangeid];
-  if ($to_account_id == NULL) {
-    $form['toexchange'] = array(
-      '#title' => t('Seller exchange'),
-      '#description' => t("The seller's account exchange."),
-      '#type' => 'select',
-      '#options' => $exoptions,
-      '#default_value' => $toexchangeid,
-      '#ajax' => array(
-        'callback' => 'ces_bank_toexchange_dropdown_callback',
-      ),
-      '#weight' => 30,
-    );
-    // Select seller's account.
-    $accountconditions = array(
-      'exchange' => $toexchangeid,
-      'state' => 1,
-      'kind' => array(
-        CesBankLocalAccount::TYPE_INDIVIDUAL,
-        CesBankLocalAccount::TYPE_SHARED,
-        CesBankLocalAccount::TYPE_ORGANIZATION,
-        CesBankLocalAccount::TYPE_COMPANY,
-        CesBankLocalAccount::TYPE_PUBLIC,
-      ));
-    $accounts = $bank->getAllAccounts($accountconditions);
-    $tooptions = array();
-    foreach ($accounts as $account) {
-      $useracc = reset($account['users']);
-      $tooptions[$account['name']] = $account['name'] . ' - ' . ces_user_get_name(user_load($useracc['user']));
+    $exoptions = array();
+    foreach ($exchanges as $exchange) {
+      $exoptions[$exchange['id']] = $exchange['code'];
     }
-    $form['toaccountname'] = array(
-      '#title' => t('Seller account'),
-      '#description' => t('The recipient of the transaction. The Exchange four letters code plus four numbers.'),
-      '#type' => 'select',
-      '#options' => $tooptions,
-      '#prefix' => '<div id="dropdown-toaccountname-replace">',
-      '#suffix' => '</div>',
-      '#weight' => 40,
-    );
-    if (isset($form_state['values']['toaccountname'])) {
-      $form['toaccountname']['#default_value'] = $form_state['values']['toaccountname'];
-    }
-  }
-  else {
-    $toaccount = $bank->getAccount($to_account_id);
-    if (empty($toaccount)) {
-      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $to_account_id, '%ex' => $toexchange['code'])), 'error');
-      return FALSE;
-    };
-    $form['toexchange'] = array(
-      '#type' => 'value',
-      '#value' => $toexchangeid,
-    );
-    $form['toaccountname'] = array(
-      '#type' => 'value',
-      '#value' => $toaccount['name'],
-    );
-  }
-  $fromexchangeid = isset($form_state['values']['fromexchange']) ? $form_state['values']['fromexchange'] : $exchangeid;
-  $fromexchange = $exchanges[$fromexchangeid];
-  if ($from_account_id == NULL) {
-    // Select buyer's exchange.
-    $form['fromexchange'] = array(
-      '#title' => t('Buyer exchange'),
-      '#description' => t("The buyer's account exchange."),
-      '#type' => 'select',
-      '#options' => $exoptions,
-      '#default_value' => $fromexchangeid,
-      '#ajax' => array(
-        'callback' => 'ces_bank_fromaccountname_dropdown_callback',
-      ),
-      '#weight' => 10,
-    );
-    // Select buyer's account.
-    if ($fromexchangeid == $toexchangeid && !empty($tooptions)) {
-      $fromoptions = &$tooptions;
-    }
-    else {
-      $fromoptions = array();
-      $accountconditions['exchange'] = $fromexchangeid;
-      $accounts = $bank->getAllAccounts($accountconditions);
-      foreach ($accounts as $account) {
-        $useracc = reset($account['users']);
-        $fromoptions[$account['name']] = $account['name'] . ' - ' . ces_user_get_name(user_load($useracc['user']));
+    if ($op == 'new') {
+      $exchangeid = $arg;
+      if (!isset($exchanges[$exchangeid])) {
+        return array(
+          'message' => array(
+            '#markup' => '<p>' . t('Invalid exchange id.') . '</p>',
+          ),
+        );
       }
     }
-    $form['fromaccountname'] = array(
-      '#title' => t('Buyer account'),
-      '#description' => t('The payer of the transaction. The Exchange four letters code plus four numbers.'),
-      '#type' => 'select',
-      '#options' => $fromoptions,
-      '#prefix' => '<div id="dropdown-fromaccountname-replace">',
-      '#suffix' => '</div>',
-      '#weight' => 20,
+    elseif ($op == 'edit') {
+      $from = $bank->getTransactionFromAccount($arg);
+      $to = $bank->getTransactionToAccount($arg);
+      $toexchange = $exchanges[$to['exchange']];
+      $form_state['values']['toexchange'] = $to['exchange'];
+      $form_state['values']['toaccountname'] = $to['name'];
+      $form_state['values']['fromexchange'] = $from['exchange'];
+      $form_state['values']['fromaccountname'] = $from['name'];
+      $form_state['values']['concept'] = $arg['concept'];
+      $form_state['values']['amount'] = $bank->formatAmount($bank->getTransactionAmount($arg, $toexchange), $toexchange, FALSE, FALSE);
+      $form_state['values']['id'] = $arg['id'];
+      $form_state['values']['user'] = $arg['user'];
+    }
+    $form['operation'] = array(
+      '#type' => 'value',
+      '#value' => $op,
     );
-    if (isset($form_state['values']['fromaccountname'])) {
-      $form['fromaccountname']['#default_value'] = $form_state['values']['fromaccountname'];
+    if (isset($form_state['values']['id'])) {
+      $form['id'] = array(
+        '#type' => 'value',
+        '#value' => $form_state['values']['id'],
+      );
     }
-  }
-  else {
-    $fromaccount = $bank->getAccount($from_account_id);
-    if (empty($fromaccount)) {
-      drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $from_account_id, '%ex' => $fromexchange['code'])), 'error');
-      return FALSE;
+    // Select seller's exchange.
+    $toexchangeid = isset($form_state['values']['toexchange']) ? $form_state['values']['toexchange'] : $exchangeid;
+    $toexchange = $exchanges[$toexchangeid];
+    if ($to_account_id == NULL) {
+      $form['toexchange'] = array(
+        '#title' => t('Seller exchange'),
+        '#description' => t("The seller's account exchange."),
+        '#type' => 'select',
+        '#options' => $exoptions,
+        '#default_value' => $toexchangeid,
+        '#ajax' => array(
+          'callback' => 'ces_bank_toexchange_dropdown_callback',
+        ),
+        '#weight' => 30,
+      );
+      // Select seller's account.
+      $accountconditions = array(
+        'exchange' => $toexchangeid,
+        'state' => 1,
+        'kind' => array(
+          CesBankLocalAccount::TYPE_INDIVIDUAL,
+          CesBankLocalAccount::TYPE_SHARED,
+          CesBankLocalAccount::TYPE_ORGANIZATION,
+          CesBankLocalAccount::TYPE_COMPANY,
+          CesBankLocalAccount::TYPE_PUBLIC,
+        ));
+      $accounts = $bank->getAllAccounts($accountconditions);
+      $tooptions = array();
+      foreach ($accounts as $account) {
+        $useracc = reset($account['users']);
+        $tooptions[$account['name']] = $account['name'] . ' - ' . ces_user_get_name(user_load($useracc['user']));
+      }
+      $form['toaccountname'] = array(
+        '#title' => t('Seller account'),
+        '#description' => t('The recipient of the transaction. The Exchange four letters code plus four numbers.'),
+        '#type' => 'select',
+        '#options' => $tooptions,
+        '#prefix' => '<div id="dropdown-toaccountname-replace">',
+        '#suffix' => '</div>',
+        '#weight' => 40,
+      );
+      if (isset($form_state['values']['toaccountname'])) {
+        $form['toaccountname']['#default_value'] = $form_state['values']['toaccountname'];
+      }
     }
+    else {
+      $toaccount = $bank->getAccount($to_account_id);
+      if (empty($toaccount)) {
+        drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $to_account_id, '%ex' => $toexchange['code'])), 'error');
+        return FALSE;
+      };
+      $form['toexchange'] = array(
+        '#type' => 'value',
+        '#value' => $toexchangeid,
+      );
+      $form['toaccountname'] = array(
+        '#type' => 'value',
+        '#value' => $toaccount['name'],
+      );
+    }
+    $fromexchangeid = isset($form_state['values']['fromexchange']) ? $form_state['values']['fromexchange'] : $exchangeid;
+    if ($from_account_id == NULL) {
+      // Select buyer's exchange.
+      $form['fromexchange'] = array(
+        '#title' => t('Buyer exchange'),
+        '#description' => t("The buyer's account exchange."),
+        '#type' => 'select',
+        '#options' => $exoptions,
+        '#default_value' => $fromexchangeid,
+        '#ajax' => array(
+          'callback' => 'ces_bank_fromaccountname_dropdown_callback',
+        ),
+        '#weight' => 10,
+      );
+      // Select buyer's account.
+      if ($fromexchangeid == $toexchangeid && !empty($tooptions)) {
+        $fromoptions = &$tooptions;
+      }
+      else {
+        $fromoptions = array();
+        $accountconditions['exchange'] = $fromexchangeid;
+        $accounts = $bank->getAllAccounts($accountconditions);
+        foreach ($accounts as $account) {
+          $useracc = reset($account['users']);
+          $fromoptions[$account['name']] = $account['name'] . ' - ' . ces_user_get_name(user_load($useracc['user']));
+        }
+      }
+      $form['fromaccountname'] = array(
+        '#title' => t('Buyer account'),
+        '#description' => t('The payer of the transaction. The Exchange four letters code plus four numbers.'),
+        '#type' => 'select',
+        '#options' => $fromoptions,
+        '#prefix' => '<div id="dropdown-fromaccountname-replace">',
+        '#suffix' => '</div>',
+        '#weight' => 20,
+      );
+      if (isset($form_state['values']['fromaccountname'])) {
+        $form['fromaccountname']['#default_value'] = $form_state['values']['fromaccountname'];
+      }
+    }
+    else {
+      $fromaccount = $bank->getAccount($from_account_id);
+      $fromexchange = $exchanges[$fromexchangeid];
+      if (empty($fromaccount)) {
+        drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $from_account_id, '%ex' => $fromexchange['code'])), 'error');
+        return FALSE;
+      }
 
-    $form['fromexchange'] = array(
-      '#type' => 'value',
-      '#value' => $fromexchangeid,
+      $form['fromexchange'] = array(
+        '#type' => 'value',
+        '#value' => $fromexchangeid,
+      );
+      $form['fromaccountname'] = array(
+        '#type' => 'value',
+        '#value' => $fromaccount['name'],
+      );
+    }
+    $form['concept'] = array(
+      '#type'  => 'textfield',
+      '#title' => t('Description'),
+      '#description' => t('Enter the concept of the transference.'),
+      '#default_value' => !empty($form_state['values']['concept']) ? $form_state['values']['concept'] : '',
+      '#weight' => 50,
+      '#required' => TRUE,
     );
-    $form['fromaccountname'] = array(
+    $form['amount'] = array(
+      '#type' => 'textfield',
+      '#size' => '5',
+      '#title' => t('Amount in @currenciesname', array('@currenciesname' => $toexchange['currenciesname'])),
+      '#description' => t('The amount to be transferred.'),
+      '#default_value' => !empty($form_state['values']['amount']) ? $form_state['values']['amount'] : '',
+      '#weight' => 60,
+      '#field_suffix' => $toexchange['currencysymbol'],
+      '#prefix' => '<div id="textfield-amount-replace">',
+      '#suffix' => '</div>',
+      '#required' => TRUE,
+    );
+    $form['user'] = array(
       '#type' => 'value',
-      '#value' => $fromaccount['name'],
+      '#value' => isset($form_state['values']['user']) ? $form_state['values']['user'] : $user->uid,
+    );
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $op == 'new' ? t('Create transaction') : t('Update transaction'),
+      '#weight' => 100,
     );
   }
-  $form['concept'] = array(
-    '#type'  => 'textfield',
-    '#title' => t('Description'),
-    '#description' => t('Enter the concept of the transference.'),
-    '#default_value' => !empty($form_state['values']['concept']) ? $form_state['values']['concept'] : '',
-    '#weight' => 50,
-  );
-  $form['amount'] = array(
-    '#type' => 'textfield',
-    '#size' => '5',
-    '#title' => t('Amount in @currenciesname', array('@currenciesname' => $toexchange['currenciesname'])),
-    '#description' => t('The amount to be transferred.'),
-    '#default_value' => !empty($form_state['values']['amount']) ? $form_state['values']['amount'] : '',
-    '#weight' => 60,
-    '#field_suffix' => $toexchange['currencysymbol'],
-    '#prefix' => '<div id="textfield-amount-replace">',
-    '#suffix' => '</div>',
-  );
-  $form['user'] = array(
-    '#type' => 'value',
-    '#value' => isset($form_state['values']['user']) ? $form_state['values']['user'] : $user->uid,
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => $op == 'new' ? t('Create transaction') : t('Update transaction'),
-    '#weight' => 100,
-  );
+  else if ($form_state['values']['page'] == 'confirm') {
+    $form = ces_bank_transaction_confirm_form($form, $form_state, $form_state['values']['operation']);
+  }
   return $form;
 }
 /**
@@ -1261,7 +1265,7 @@ function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL)
   return $form;
 }
 /**
- * TODO: Document.
+ * Back button submit function for transaction confirm form.
  */
 function ces_bank_transaction_confirm_form_back($form, &$form_state) {
   if (isset($form_state['edit_page'])) {
@@ -1283,38 +1287,42 @@ function ces_bank_transaction_form_validate($form, &$form_state) {
 
   $bank = new CesBank();
   $record = $form_state['values'];
-
-  $amount = $record['amount'];
-  if (!is_numeric($amount)) {
-    form_set_error('amount', t('The amount entered is not a numeric value. Use the dot "." character for the decimal point and do not use any thousands separator.'));
-    if (!($amount > 0.0)) {
-      form_set_error('amount', t('The amount must be positive.'));
-    }
-  }
+  $error = FALSE;
   $account1 = $bank->getAccountByName($record['toaccountname']);
   if ($account1 === FALSE) {
     form_set_error('toaccountname', t('Seller account %acc is incorrect.', array('%acc' => $account1)));
+    $error = TRUE;
   }
   $account2 = $bank->getAccountByName($record['fromaccountname']);
   if ($account2 === FALSE) {
     form_set_error('fromaccountname', t('Buyer account %acc is incorrect.', array('%acc' => $account2)));
+    $error = TRUE;
   }
   if ($account1['id'] == $account2['id']) {
     form_set_error('fromaccountname', t('Buyer account cannot be the same as seller account.'));
+    $error = TRUE;
+  }
+  $amount = $record['amount'];
+  if (!is_numeric($amount)) {
+    form_set_error('amount', t('The amount entered is not a numeric value. Use the dot "." character for the decimal point and do not use any thousands separator.'));
+    $error = TRUE;
+  }
+  if (!($amount > 0.0)) {
+    form_set_error('amount', t('The amount must be positive.'));
+    $error = TRUE;
   }
   $concept = trim($form_state['values']['concept']);
-  if (empty($concept)) {
-    form_set_error('concept', t('You must specify the concept of this transaction.'));
-  }
-  $transaction = array(
-    'toaccount' => $account1['id'],
-    'fromaccount' => $account2['id'],
-    'amount' => $amount,
-    'concept' => $concept,
-    'user' => $form_state['values']['user'],
-  );
-  if (!ces_transaction_access('use', $transaction)) {
-    form_set_error('toaccountname', t("You don't have permission to apply this transaction."));
+  if (!$error) {
+    $transaction = array(
+      'toaccount' => $account1['id'],
+      'fromaccount' => $account2['id'],
+      'amount' => $amount,
+      'concept' => $concept,
+      'user' => $form_state['values']['user'],
+    );
+    if (!ces_transaction_access('use', $transaction)) {
+      form_set_error('toaccountname', t("You don't have permission to apply this transaction."));
+    }
   }
 }
 /**

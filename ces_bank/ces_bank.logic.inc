@@ -830,11 +830,13 @@ class CesBank {
         && $transaction->getState() != CesBankTransactionInterface::STATE_REJECTED
         && $transaction->getState() != CesBankTransactionInterface::STATE_TRIGGERED
         && $transaction->getState() != CesBankTransactionInterface::STATE_COMMITTED) {
-        // Here we could do some more elaborate logic to handle this exceptional
-        // case.
+        
         $errors = $transaction->getLog($transaction->getState());
-        $t->rollback();
-        throw new Exception(implode("\n", $errors));
+        $message = t('There has been an error applying the transaction.');
+        if (!empty($errors)) {
+          $message .= '<ul><li>' . implode('</li><li>', $errors) . '</li></ul>';
+        }
+        throw new Exception($message);
       }
 
       $s = new IcesSerializer('CesBankBasicTransaction');
@@ -1015,6 +1017,16 @@ class CesBank {
   }
   /**
    * Formats the amount for an exchange.
+   * 
+   * @param double $amount
+   *   The amount to be formatted.
+   * @param array $exchange
+   *   The exchange where this amount applies.
+   * @param bool $symbol
+   *   Include the currency symbol.
+   * @param bool $sign
+   *   Include the positive sign.
+   * 
    * @return string
    *   A string representation of $amount following $exchange preference
    *   and $format option.
@@ -1414,6 +1426,7 @@ class CesBankExchange extends IcesDBObject {
           ),
         ),
       );
+      // This dependence is a bit weird. Isn't it?
       $bank = new CesBank();
       $bank->createAccount($record);
       $virt_account = new CesBankLocalAccount($record);

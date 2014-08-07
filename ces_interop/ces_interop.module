@@ -12,6 +12,7 @@ define('CES_INTEROP_OAUTH2_OPENTRANSACT_SCOPE_NAME', 'opentransact');
 define('CES_INTEROP_OAUTH2_RESOURCES_SCOPE_NAME', 'resources');
 define('CES_INTEROP_CEN_CLEARING_CENTRAL_URL', 'ces_interop_cen_clearing_central_url');
 define('CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT', 'http://clearingcentral.net');
+define('CES_INTEROP_CEN_CLEARING_CENTRAL_TXINPUT', 'txinput.php');
 
 /**
  * Implements hook_menu().
@@ -655,48 +656,86 @@ function ces_interop_exchange_form_submit($form, &$form_state) {
  * Add the feature of CEN remote exchange transaction into transaction form.
  */
 function ces_interop_form_ces_bank_transaction_form_alter(&$form, &$form_state) {
-  // Get the seller's exchange computed in the main form function.
-  $index = ($form['toexchange']['#type'] == 'value') ? '#value' : '#default_value';
-  $toexchange = ces_bank_get_exchange($form['toexchange'][$index]);
-  // Continue if the exchange is configured to do remote transactions.
-  if (empty($toexchange['data']['cenip'])) {
-    return;
-  }
-  // Continue if the buyer exchange field is a select (otherwise is fixed).
-  if ($form['fromexchange']['#type'] != 'select') {
-    return;
-  }
-  $form['fromexchange']['#options']['cenip'] = t('Extern network...');
-  $form['fromexchange']['#ajax']['callback'] = 'ces_interop_fromexchange_dropdown_callback';
-  
-  $form['fromcenexchange'] = array(
-    '#prefix' => '<div id="field-cenexchange-replace">',
-    '#suffix' => '</div>',
-    '#weight' => 11,
-  );
-  if (isset($form_state['values']) && isset($form_state['values']['fromexchange']) 
-    && $form_state['values']['fromexchange'] == 'cenip') {
-    $url = variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_URL, CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT);
-    $url .= '/nidsearch.php';
-    $form['fromcenexchange'] += array(
-      '#title' => t('Netork ID'),
-      '#description' => t('Enter the identifier of the remote network, for example "cen1234". Click "Search" to find the network identifier you are looking for.'),
-      '#type' => 'textfield',
-      '#size' => 10,
-      '#maxlength' => 7,
-      '#field_suffix' => l(t('Search'), $url, array('attributes' => array('target' => '_blank'))),
+  if (!isset($form_state['values']) || !isset($form_state['values']['page'])
+    || $form_state['values']['page'] == 'edit') {
+
+    // Get the seller's exchange computed in the main form function.
+    $index = ($form['toexchange']['#type'] == 'value') ? '#value' : '#default_value';
+    $toexchange = ces_bank_get_exchange($form['toexchange'][$index]);
+    // Continue if the exchange is configured to do remote transactions.
+    if (empty($toexchange['data']['cenip'])) {
+      return;
+    }
+    // Continue if the buyer exchange field is a select (otherwise is fixed).
+    if ($form['fromexchange']['#type'] != 'select') {
+      return;
+    }
+    // Add the extern network option to the buyer's exchange select with ajax.
+    $form['fromexchange']['#options']['cenip'] = t('Extern network...');
+    $form['fromexchange']['#ajax']['callback'] = 'ces_interop_fromexchange_dropdown_callback';
+    // Place for the textfield nid field.
+    $form['fromcenexchange'] = array(
+      '#prefix' => '<div id="field-cenexchange-replace">',
+      '#suffix' => '</div>',
+      '#weight' => 11,
     );
-    $form['fromcenaccountname'] = array(
-      '#type' => 'textfield',
-      '#size' => 10,
-      '#maxlength' => 8,
-      '#title' => $form['fromaccountname']['#title'],
-      '#description' => $form['fromaccountname']['#description'],
-      '#prefix' => $form['fromaccountname']['#prefix'],
-      '#suffix' => $form['fromaccountname']['#suffix'],
-    );
+    // In case of editing -not creating- a transaction, setup the proper values.
+    if (isset($form_state['values']) && isset($form_state['values']['id'])) {
+      $transaction = ces_transaction_load($form_state['values']['id']);
+      if (ces_interop_is_cenip_transaction($transaction)) {
+        $form_state['values']['fromexchange'] = 'cenip';
+        $form_state['values']['fromcenexchange'] = $transaction['decoration'][0]['data']['nid'];
+        $form_state['values']['fromcenaccountname'] = $transaction['decoration'][0]['data']['buyer_id'];
+        $form['fromexchange']['#default_value'] = 'cenip';
+      }
+    }
+    if (isset($form_state['values']) && isset($form_state['values']['fromexchange']) 
+      && $form_state['values']['fromexchange'] == 'cenip') {
+      // Add a field for the remote exchange nid.
+      $url = variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_URL, CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT);
+      $url .= '/nidsearch.php';
+      $form['fromcenexchange'] += array(
+        '#title' => t('Netork ID'),
+        '#description' => t('Enter the identifier of the remote network, for example "cen1234". Click "Search" to find the network identifier you are looking for.'),
+        '#type' => 'textfield',
+        '#size' => 10,
+        '#maxlength' => 7,
+        '#field_suffix' => l(t('Search'), $url, array('attributes' => array('target' => '_blank'))),
+        '#required' => TRUE,
+        '#default_value' => isset($form_state['values']['fromcenexchange']) ? $form_state['values']['fromcenexchange'] : '',
+      );
+      // Remove buyer account and add a field for remote buyer ccount.
+      $form['fromcenaccountname'] = array(
+        '#type' => 'textfield',
+        '#size' => 10,
+        '#maxlength' => 8,
+        '#title' => $form['fromaccountname']['#title'],
+        '#description' => $form['fromaccountname']['#description'],
+        '#prefix' => $form['fromaccountname']['#prefix'],
+        '#suffix' => $form['fromaccountname']['#suffix'],
+        '#required' => TRUE,
+        '#default_value' => isset($form_state['values']['fromcenaccountname']) ? $form_state['values']['fromcenaccountname'] : '',
+        '#weight' => 12
+      );
+      $form['fromaccountname'] = array('#type' => 'value', '#value' => FALSE);
+      // Restrict elements subject to validation.
+      $form['submit']['#limit_validation_errors'] = array(
+        array('fromcenexchange'),
+        array('fromcenaccountname'),
+        array('toexchange'),
+        array('toaccountname'),
+        array('concept'),
+        array('amount'),
+        array('user'),
+      );
+      $form['submit']['#submit'] = array('ces_interop_transaction_form_submit');
+    }
+    array_unshift($form['#validate'], 'ces_interop_transaction_form_validate');
   }
-  array_unshift($form['#validate'], 'ces_interop_transaction_form_validate');
+  elseif ($form_state['values']['page'] == 'confirm_cenip') {
+    $form = ces_interop_transaction_confirm_form($form, $form_state);
+  }
+  return $form;
 }
 /**
  * AJAX callback for fromexchange field in transaction form.
@@ -723,13 +762,117 @@ function ces_interop_transaction_form_validate($form, &$form_state) {
     if(strlen($nid) != 7 || substr($nid, 0, 3) != 'cen' || !is_numeric(substr($nid, 3))) {
       form_set_error('fromcenexchange', t('The Network Id must be the three leters "cen" plus four numbers.'));
     }
-    // Set a virtual account as destination.
-    $bank = new CesInteropCENIPBank();
-    $toexchange = $bank->getExchange($form_state['values']['toexchange']);
-    $virtualaccountname = $toexchange['code'] + $nid;
-    
-    
-    $form_state['values']['fromaccountname'] = ;
-    
   }
+}
+/**
+ * Implements hook_form_submit().
+ */
+function ces_interop_transaction_form_submit($form, &$form_state) {
+  $form_state['values']['page'] = 'confirm_cenip';
+  $form_state['rebuild'] = TRUE;
+}
+/**
+ * Builds the remote transaction form confirm.
+ */
+function ces_interop_transaction_confirm_form($form, &$form_state) {
+  $values = $form_state['values'];
+  $form_state['edit_page'] = $values;
+  // The 'fromexchange' value has been removed from $form_state variable because
+  // we have restricted its validation beacuse it wouldn't pass the standard
+  // validation function. So we reset it here just in case the user clicks the
+  // back button the form will render properly.
+  $form_state['edit_page']['fromexchange'] = 'cenip';
+
+  $bank = new CesInteropCENIPBank();
+  // This value is used in ces_bank_transaction_form().
+  $form['page'] = array(
+    '#type' => 'value',
+    '#value' => 'confirm_cenip',
+  );
+  $form['message'] = array(
+    '#markup' => t('Check that all this data is correct before submit the extern transaction.')
+  );
+  $toaccount = $bank->getAccountByName($values['toaccountname']);
+  $toaccuser = reset($toaccount['users']);
+  $tousername = ces_user_get_name(user_load($toaccuser['id']));
+  $form['itemseller'] = array(
+    '#type' => 'item',
+    '#title' => t('Seller account'),
+    '#markup' => $values['toaccountname'] . ' - ' . $tousername,
+  );
+  $form['itembuyerexchange'] = array(
+    '#type' => 'item',
+    '#title' => t('Buyer Network ID'),
+    '#markup' => $values['fromcenexchange'],
+  );
+  $form['itembuyer'] = array(
+    '#type' => 'item',
+    '#title' => t('Buyer account'),
+    '#markup' => $values['fromcenaccountname'],
+  );
+  $form['itemconcept'] = array(
+    '#type' => 'item',
+    '#title' => t('Description'),
+    '#markup' => $values['concept'],
+  );
+  $exchange = $bank->getExchange($values['toexchange']);
+  $form['itemamount'] = array(
+    '#type' => 'item',
+    '#title' => t('Amount'),
+    '#markup' => $bank->formatAmount($values['amount'], $exchange, TRUE),
+  );
+  $form['back'] = array(
+    '#type' => 'submit',
+    '#value' => t('Back'),
+    '#submit' => array('ces_bank_transaction_confirm_form_back'),
+    '#limit_validation_errors' => array(),
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#submit' => array('ces_interop_transaction_confirm_form_submit'),
+    '#value' => t('Create transaction'),
+  );
+  // Disable input validation on confirm form. It has been already validated in 
+  // last step.
+  $form['#validate'] = array();
+  return $form;
+}
+/**
+ * Submit function for remote CENIP transactions.
+ */
+function ces_interop_transaction_confirm_form_submit($form, &$form_state) {
+  $record = $form_state['edit_page'];
+  $bank = new CesInteropCENIPBank();
+  try{
+    $transaction = array(
+      'toaccountname' => $record['toaccountname'],
+      'nid' => $record['fromcenexchange'],
+      'buyer_id' => $record['fromcenaccountname'],
+      'concept' => $record['concept'],
+      'amount' => $record['amount'],
+      'user' => $record['user'],
+      'cenip' => TRUE,
+    );
+    $bank->createTransaction($transaction);
+    $result = $bank->applyTransaction($transaction['id']);
+    _ces_bank_set_transaction_message($result, $transaction);
+  }
+  catch(Exception $e) {
+    drupal_set_message($e->getMessage(), 'error');
+  }
+  $form_state['redirect'] = 'ces/bank/account/transaction/' . $transaction['id'] . '/view';
+}
+
+/**
+ * Return whether the given transaction is a CENIP one.
+ * 
+ * @param array $transaction
+ *   The transaction record.
+ * @return bool
+ *   Whether the transaction is remote (true) or not (false).
+ */
+function ces_interop_is_cenip_transaction($transaction) {
+  return (isset($transaction['decoration']) 
+    && isset($transaction['decoration'][0])
+    && $transaction['decoration'][0]['classname'] == 'CesInteropCENIPTransaction');
 }

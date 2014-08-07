@@ -4,6 +4,7 @@ core = 7.x
 package = ices
 
 files[] = ces_interop.test
+files[] = ces_interop.cenip.logic.inc
 
 dependencies[] = ces_bank
 dependencies[] = oauth2_server
