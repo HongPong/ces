@@ -1036,12 +1036,13 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
   if ($account == NULL || $account === FALSE) {
     return array(
       'message' => array(
-      '#markup' => '<p>' . t('Invalid account.') . '</p>',
-      ),);
+        '#markup' => '<p>' . t('Invalid account.') . '</p>',
+      ),
+    );
   }
   $check = $bank->deleteAccountsCheck(array($account['id']));
   $checking = $check[0];
-  // display interexchange account information.
+  // Display interexchange account information.
   $textoutput = $checking['is_interexchange'] ?
     t('This account depends on other exchanges in the system, so the account will not be deleted, nor disabled.') .
     '<br /><br />' : '';
@@ -1050,12 +1051,12 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
     '#markup' => '<h3>' . t('Delete account') . ': <b>' . $checking['name'] . '</b></h3>' . $textoutput,
   );
   if (!$checking['is_interexchange']) {
-    // display transactions information.
+    // Display transactions information.
     $textoutput = '';
     $texttrans = '';
     if ($checking['num_transactions'] > 0) {
       foreach ($checking['transactions'] as $trans) {
-        $texttrans .= l($trans['concept'], 'ces/bank/account/transaction/' . $trans['id'] .'/view') . ' -- ';
+        $texttrans .= l($trans['concept'], 'ces/bank/account/transaction/' . $trans['id'] . '/view') . ' -- ';
       }
       $textoutput .= t('These transactions') . ' (<b>' . $checking['num_transactions'] . '</b>) ' .
       t('refer to this account, so the account can only be disabled.') . '<br />' . $texttrans;
@@ -1071,7 +1072,7 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
       '#type' => 'item',
       '#markup' => $textoutput,
     );
-    // display users information.
+    // Display users information.
     $textoutput = '';
     $textusers1 = '';
     $textusers2 = '';
@@ -1086,8 +1087,8 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
         $textusers2 .= '<br />' . t('User') . ' <b>' . $userloaded->name . '</b> ' .
           t('has other accounts and cannot be deleted nor disabled:') . '<br />';
         foreach ($accuser['accounts'] as $acc) {
-        $textusers2 .= l($acc['name'], 'ces/admin/account/' . $acc['aid'] . '/view') . ' ';
-        $userswithacc++;
+          $textusers2 .= l($acc['name'], 'ces/admin/account/' . $acc['aid'] . '/view') . ' ';
+          $userswithacc++;
         }
       }
     }
@@ -1106,35 +1107,43 @@ function ces_bank_account_delete_form($form, &$form_state, $account = NULL) {
       '#type' => 'item',
       '#markup' => $textoutput,
     );
-    // action options for users account.
+    // Action options for users account.
     foreach ($checking['account_users'] as $accuser) {
       if ($accuser['user_action'] != 'nothing') {
-        $options = ($accuser['user_action'] == 'delete') ?
-          array('delete' => t('Delete user'), 'disable' => t('Disable user'), 'nothing' => t('Do nothing')) :
-          array('disable' => t('Disable user'), 'nothing' => t('Do nothing'));
+        $options = ($accuser['user_action'] == 'delete') ? array(
+          'delete' => t('Delete user'),
+          'disable' => t('Disable user'),
+          'nothing' => t('Do nothing')) : array(
+            'disable' => t('Disable user'),
+            'nothing' => t('Do nothing'),
+          );
         $default_value = ($accuser['user_action'] == 'delete') ? 'delete' : 'disable';
         $form['user-' . $accuser['uid']] = array(
-          '#title' => t('Action with user') . ' ' . $accuser['name'],
+          '#title' => check_plain(t('Action with user') . ' ' . $accuser['name']),
           '#type' => 'radios',
           '#prefix' => '<br />',
           '#description' => t('Select the action you want to do with this user.'),
           '#options' => $options,
-          '#default_value' => $default_value, 
+          '#default_value' => $default_value,
           '#required' => TRUE,
-        );      
+        );
       }
     }
-    // submit action account.
+    // Submit action account.
     $submittext = '';
     switch ($checking['account_action']) {
       case 'delete':
         $submittext = t('Delete account');
         break;
+
       case 'disable':
         $submittext = t('Disable account');
         break;
+
       case 'nothing':
         $submittext = t('It is NOT possible delete nor disable the account.');
+        break;
+
     }
     if ($checking['account_action'] == 'nothing') {
       $form['not-possible'] = array(
@@ -1171,38 +1180,50 @@ function ces_bank_account_delete_form_validate($form, &$form_state) {
     }
   }
 }
+/**
+ * Submit form for deleting account.
+ */
 function ces_bank_account_delete_form_submit($form, &$form_state) {
   $form_state['values']['page'] = 'confirm';
   $form_state['rebuild'] = TRUE;
 }
+/**
+ * Confirm form for deleting account.
+ */
 function ces_bank_account_delete_confirm_form($form, &$form_state) {
   $textoutput = '';
   switch ($form_state['check_account_data']['account_action']) {
     case 'delete':
       $textoutput .= t('Delete account');
       break;
+
     case 'disable':
       $textoutput .= t('Disable account');
       break;
+
     case 'nothing':
       $textoutput .= t('Do nothing with account');
       break;
-  }  
+
+  }
   $textoutput .= ' <i>' . $form_state['check_account_data']['name'] . '</i><br />';
   foreach ($form_state['check_account_data']['account_users'] as $user) {
     switch ($user['user_action']) {
       case 'delete':
         $textoutput .= t('Delete user');
         break;
+
       case 'disable':
         $textoutput .= t('Disable user');
         break;
+
       case 'nothing':
         $textoutput .= t('Do nothing with user');
         break;
+
     }
-    $textoutput .= ' <i>' . $user['name'] . '</i><br />';  
-  }  
+    $textoutput .= ' <i>' . $user['name'] . '</i><br />';
+  }
   $form['confirm_fieldset'] = array(
     '#type' => 'fieldset',
     '#title' => t('Confirm actions for account') . ' <b>' . $form_state['check_account_data']['name'] . '</b>',
@@ -1216,45 +1237,53 @@ function ces_bank_account_delete_confirm_form($form, &$form_state) {
     '#prefix' => '<br />',
     '#value' => t('Confirm'),
     '#submit' => array('ces_bank_account_delete_confirm_form_submit'),
-      );
-  return $form; 
+  );
+  return $form;
 }
+/**
+ * Submit confirm form for deleting account.
+ */
 function ces_bank_account_delete_confirm_form_submit($form, &$form_state) {
   $bank = new CesBank();
   $check = $form_state['check_account_data'];
   switch ($check['account_action']) {
     case 'delete':
-//      $action = $bank->deleteAccount($form_state['check_account_data']['aid']);
+      // $action = $bank->deleteAccount($check['aid']);
       drupal_set_message(t('Delete account %account not possible. It is not implemented yet, sorry.',
         array('%account' => $check['name'])), 'status');
       break;
+
     case 'disable':
       drupal_set_message(t('Disable account %account not possible. It is not implemented yet, sorry.',
         array('%account' => $check['name'])), 'status');
       break;
+
     case 'nothing':
       drupal_set_message(t('Do nothing with account %account not possible. It is not implemented yet, sorry.',
         array('%account' => $check['name'])), 'status');
       break;
-  }  
+
+  }
   foreach ($check['account_users'] as $user) {
     switch ($user['user_action']) {
       case 'delete':
         drupal_set_message(t('Delete user %user not possible. It is not implemented yet, sorry.',
           array('%user' => $user['name'])), 'status');
         break;
+
       case 'disable':
         drupal_set_message(t('Disable user %user not possible. It is not implemented yet, sorry.',
           array('%user' => $user['name'])), 'status');
         break;
+
       case 'nothing':
         drupal_set_message(t('Do nothing with user %user not possible. It is not implemented yet, sorry.',
-
           array('%user' => $user['name'])), 'status');
         break;
+
     }
   }
-  $form_state['redirect'] = 'ces/admin/account';  
+  $form_state['redirect'] = 'ces/admin/account';
 }
 /**
  * Single transaction form.

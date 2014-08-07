@@ -99,7 +99,8 @@ function ces_bank_access($permission, $object, $objectid, $account = NULL) {
     $result = db_query($sql, array(':uid' => $user->uid, ':account' => $account));
     if ($result->rowCount() > 0) {
       return TRUE;
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
@@ -370,7 +371,7 @@ function ces_bank_menu() {
     'title' => 'Delete users of account',
     'description' => 'Delete users of account',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_account_user_delete_form',3),
+    'page arguments' => array('ces_bank_account_user_delete_form', 3),
     'file' => 'ces_bank.forms.account_users.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'type' => MENU_LOCAL_TASK,
@@ -382,7 +383,7 @@ function ces_bank_menu() {
     'title' => 'Edit user account',
     'description' => 'Edit user account',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_account_user_form',3),
+    'page arguments' => array('ces_bank_account_user_form', 3),
     'file' => 'ces_bank.forms.account_users.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'type' => MENU_LOCAL_TASK,

@@ -663,7 +663,7 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->drupalLogin($user);
     $xpath = $this->xpath("//div[contains(@class, 'ces_summaryblock_number')]/div[contains(text(), 'Balance')]/../div[contains(@class, 'ces_summaryblock_value')]/text()");
     $balance = (string) ($xpath[0]);
-    $this->assert(strpos($balance, $amount)!== FALSE, 'The amount balance is correct.');
+    $this->assert(strpos($balance, $amount) !== FALSE, 'The amount balance is correct.');
     $this->assertText($amount);
     $this->drupalLogout();
   }
