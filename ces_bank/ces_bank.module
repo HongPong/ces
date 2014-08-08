@@ -342,7 +342,7 @@ function ces_bank_menu() {
     'title' => 'Account users',
     'description' => 'Admin account users',
     'page callback' => 'ces_bank_account_users_admin',
-    'page arguments' => array(TRUE),
+    'page arguments' => array(),
     'file' => 'ces_bank.pages.account_users.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'access callback' => 'ces_bank_access',
@@ -612,6 +612,55 @@ function ces_bank_menu() {
     'access arguments' => array('edit', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
+  );
+  // Managing Users Account from exchange administrator.
+  $menu['ces/admin/account/%ces_account/listusers'] = array(
+    'title' => 'List users',
+    'description' => 'List account users',
+    'page callback' => 'ces_bank_account_users_admin',
+    'page arguments' => array('administrator',3),
+    'file' => 'ces_bank.pages.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 100,
+  );
+  $menu['ces/admin/account/%ces_account/adduser'] = array(
+    'title' => 'Add account users',
+    'description' => 'Add user in account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_user_form', NULL, 3, TRUE),
+    'file' => 'ces_bank.forms.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
+    'weight' => 110,
+  );
+  $menu['ces/admin/account/users/%ces_account/users_account/%user/delete'] = array(
+    'title' => 'Delete users account',
+    'description' => 'Delete users account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_user_delete_form', 6, 4, TRUE),
+    'file' => 'ces_bank.forms.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_CALLBACK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
+    'weight' => 150,
+  );
+  $menu['ces/admin/account/users/%ces_account/users_account/%user/edit'] = array(
+    'title' => 'Edit user account',
+    'description' => 'Edit user account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_user_form', 6, 4, TRUE),
+    'file' => 'ces_bank.forms.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_CALLBACK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
+    'weight' => 140,
   );
   return $menu;
 }

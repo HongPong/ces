@@ -14,10 +14,11 @@
 /**
  * Admin users of account.
  */
-function ces_bank_account_users_admin($current_account, $account = NULL) {
+function ces_bank_account_users_admin($administrator = NULL, $account = NULL) {
   if ($account == NULL) {
     $account = ces_bank_get_current_account();
   }
+  drupal_set_title(t('List users account') . ' ' . $account['name']);
   $s = new IcesSerializer('CesBankLocalAccount');
   $account = $s->loadFromUniqueKey('name', $account['name']);
   // @todo Comprobar permisos con cuenta.
@@ -51,19 +52,19 @@ function ces_bank_account_users_admin($current_account, $account = NULL) {
   $rows = array();
   foreach ($account_users as $account_user) {
     $user_drupal = user_load($account_user->user);
-    if ($current_account) {
-      $link_delete = 'ces/bank/account/' . $account_user->user . '/users_account/delete';
-      $link_edit   = 'ces/bank/account/' . $account_user->user . '/users_account/edit';
+    if ($administrator) {
+      $link_delete = 'ces/admin/account/users/' . $account->id . '/users_account/' . $account_user->user . '/delete';
+      $link_edit   = 'ces/admin/account/users/' . $account->id . '/users_account/' . $account_user->user . '/edit';
     }
     else {
-      $link_delete = 'ces/admin/account/' . $account->id . '/users/' . $account_user->user . '/delete';
-      $link_edit   = 'ces/admin/account/' . $account->id . '/users/' . $account_user->user . '/edit';
+      $link_delete = 'ces/bank/account/' . $account_user->user . '/users_account/delete';
+      $link_edit   = 'ces/bank/account/' . $account_user->user . '/users_account/edit';
     }
     $row = array(
       $user_drupal->name,
       $user_drupal->mail,
       ($account_user->privilege == 0) ? t('yes') : t('No'),
-      l(t('Edit'), $link_edit). ' ' . l(t('Delete'), $link_delete),
+      l(t('Edit'), $link_edit) . ' ' . l(t('Delete'), $link_delete),
     );
     $rows[] = $row;
   }

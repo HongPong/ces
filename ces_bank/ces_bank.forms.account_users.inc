@@ -1,7 +1,8 @@
 <?php
 /**
  * @file
- * Forms definition, submit and validation functions for account users in ces_bank module.
+ * Forms definition, submit and validation functions for account users in
+ * ces_bank module.
  */
 
 /**
@@ -13,8 +14,19 @@
 
 /**
  * Form for add an user account.
+ *
+ * @param array  $form
+ *   Form.
+ * @param array  $form_state
+ *   State form.
+ * @param string $user
+ *   Usuer.
+ * @param string $account
+ *   Account.
+ * @param bool $administrator
+ *   Exchange administrator or user account.
  */
-function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account = NULL) {
+function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account = NULL, $administrator = FALSE) {
   $bank = new CesBank();
   if ($account == NULL) {
     $account = ces_bank_get_current_account();
@@ -23,7 +35,6 @@ function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account 
   if (!is_array($account)) {
     $account = $bank->getAccount($account);
   }
- 
   // $user puede venir como objeto o solo el id.
   if (is_numeric($user)) {
     $user = user_load($user);
@@ -32,6 +43,8 @@ function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account 
     $user = user_load($user['username']);
   }
 
+  drupal_set_title(t('Account') . ' ' . $account['name']);
+
   $admin = ces_bank_access('admin', 'account', $account['id']);
 
   if (!$admin) {
@@ -39,15 +52,30 @@ function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account 
     return FALSE;
   }
 
-  if ($user 
-    && isset($account['users'][$user->uid]['privilege']) 
-    && $account['users'][$user->uid]['privilege'] == 0 ) {
+  if ($user && isset($account['users'][$user->uid]['privilege'])
+    && $account['users'][$user->uid]['privilege'] == 0) {
     $privilege_default = 1;
   }
   else {
     $privilege_default = 0;
   }
   $form['bankaccount'] = array();
+  if ($user) {
+    $form['titular'] = array(
+      '#markup' => '<h2>' . t('Edit user in account') . ' ' . $account['name'] . '</h2>',
+      '#weight' => -10,
+    );
+  }
+  else {
+    $form['titular'] = array(
+      '#markup' => '<h2>' . t('Add user in account') . ' ' . $account['name'] . '</h2>',
+      '#weight' => -10,
+    );
+  }
+  $form['bankaccount']['administrator'] = array(
+    '#type' => 'value',
+    '#value' => ($administrator) ? 1 : 0,
+  );
   if (isset($account['id'])) {
     $form['bankaccount']['id'] = array(
       '#type' => 'value',
@@ -89,20 +117,21 @@ function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account 
     '#value' => t('Save'),
     '#weight' => 200,
   );
-  // $form['bankaccount'] = array();
-  // $form['bankaccount']['title'] = array(
-  //   '#type' => 'item',
-  //   '#title' => t('Add User Account'),
-  //   '#markup' => t('Add user of account ' . $account['id'] . ' is not implemented yet.'),
-  // ); 
   return $form;
 }
 /**
  * Submit add account user form.
+ *
+ * @param array $form
+ *   Form.
+ * @param array $form_state
+ *   State form.
  */
 function ces_bank_account_user_form_submit($form, &$form_state) {
   $record = &$form_state['values'];
   $record_account = array();
+  $administrator = (isset($record['administrator'])
+   && $record['administrator'] == 1) ? TRUE : FALSE;
   foreach ($record['users'] as $accuser) {
     $user = user_load_by_name($accuser['username']);
     if (isset($record['id'])) {
@@ -120,22 +149,29 @@ function ces_bank_account_user_form_submit($form, &$form_state) {
   $bank = new CesBank();
   try {
     $previous = $bank->getAccount($record['id']);
-    // Add or Update
-    if ( isset($record['account_user_id']) ) {
+    // Add or Update.
+    if (isset($record['account_user_id'])) {
       foreach ($record_account['users'][$record['account_user_id']] as $key => $val) {
         $previous['users'][$record['account_user_id']][$key] = $val;
       }
-    } else {
-        $previous['users'] = array_merge($previous['users'],$record_account['users']);
+    }
+    else {
+      $previous['users'] = array_merge($previous['users'], $record_account['users']);
     }
     $bank->updateAccount($previous);
     drupal_set_message(t('Users account successfully update.'));
-    drupal_goto('ces/bank/account/users_account');
+    if ($administrator) {
+      drupal_goto('ces/admin/account/' . $record['id'] . '/listusers');
+    }
+    else {
+      drupal_goto('ces/bank/account/users_account');
+    }
   }
   catch (Exception $e) {
     if ($e->errorInfo[1] == 1062) {
       drupal_set_message(t('Duplicate entry'));
-    } else {
+    }
+    else {
       drupal_set_message(t('An error occurred while saving the user account record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
     }
   }
@@ -143,9 +179,21 @@ function ces_bank_account_user_form_submit($form, &$form_state) {
 /**
  * Form for deleting an user account.
  *
+ * @param array $form
+ *   Form.
+ * @param array $form_state
+ *   State form.
+ * @param array $user
+ *   Usuer.
+ * @param array $account
+ *   Account.
+ * @param bool $administrator
+ *   Exchange administrator or user account.
+ *
  * @todo Prevent deleting the last user.
  */
-function ces_bank_account_user_delete_form($form, &$form_state, $user = NULL, $account = NULL) {
+function ces_bank_account_user_delete_form($form, &$form_state, $user = NULL, $account = NULL, $administrator = FALSE) {
+  drupal_set_title(t('Delete user Account') . ' ' . $account['name']);
   $bank = new CesBank();
   if ($account == NULL) {
     $account = ces_bank_get_current_account();
@@ -154,7 +202,6 @@ function ces_bank_account_user_delete_form($form, &$form_state, $user = NULL, $a
   if (!is_array($account)) {
     $account = $bank->getAccount($account);
   }
- 
   // $user puede venir como objeto o solo el id.
   if (is_numeric($user)) {
     $user = user_load($user);
@@ -166,6 +213,10 @@ function ces_bank_account_user_delete_form($form, &$form_state, $user = NULL, $a
   $form['bankaccount']['account_id'] = array(
     '#type' => 'value',
     '#value' => $account['id'],
+  );
+  $form['bankaccount']['administrator'] = array(
+    '#type' => 'value',
+    '#value' => ($administrator) ? 1 : 0,
   );
   $form['bankaccount']['account_user_id'] = array(
     '#type' => 'value',
@@ -185,17 +236,29 @@ function ces_bank_account_user_delete_form($form, &$form_state, $user = NULL, $a
 
 /**
  * Submit bank account form.
+ *
+ * @param array $form
+ *   Form.
+ * @param array $form_state
+ *   State form.
  */
 function ces_bank_account_user_delete_form_submit($form, &$form_state) {
 
   $record = &$form_state['values'];
+  $administrator = (isset($record['administrator'])
+   && $record['administrator'] == 1) ? TRUE : FALSE;
   $bank = new CesBank();
   try {
     $previous = $bank->getAccount($record['account_id']);
     $account = new CesBankLocalAccount($previous);
     $account->deleteUserAccount($record['account_user_id']);
     drupal_set_message(t('Users account successfully delete.'));
-    drupal_goto('ces/bank/account/users_account');
+    if ($administrator) {
+      drupal_goto('ces/admin/account/' . $record['account_id'] . '/listusers');
+    }
+    else {
+      drupal_goto('ces/bank/account/users_account');
+    }
   }
   catch (Exception $e) {
     drupal_set_message(t('An error occurred while saving the user account record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
