@@ -44,7 +44,7 @@ function ces_summaryblock_block_view($delta = '') {
     $balance = $bank->formatAmount($account['balance'], $exchange);
     $currency = $exchange['currenciesname'];
 
-    $transactions = $bank->getTransactions(array('limit' => 1, 'account' => $account['id']));
+    $transactions = $bank->getTransactions(array('limit' => 1, 'account' => $account['id']), 'created', 'DESC');
     if (!empty($transactions)) {
       $transaction = end($transactions);
       $lasttradedesc = l(_ces_summaryblock_shorten_text($transaction['concept'], 25), 'ces/bank/account/transaction');

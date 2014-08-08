@@ -405,6 +405,10 @@ class CesBank {
    *   - createduntil: time. Get transactions created before this timestamp in
    *   seconds.
    *   - limit: int. Get only n transactions.
+   * @param string $order_field
+   *   A field to order by.
+   * @param string $order_type
+   *   DESC: Descending, ASC Ascending.
    *
    * @return array
    *   Transaction records meeting all conditions specified by $conditions
@@ -414,7 +418,7 @@ class CesBank {
    *   fromaccount's currency is used. Otherwise the currency is the seller's
    *   account one for each exchenge.
    */
-  public function getTransactions(array $conditions) {
+  public function getTransactions(array $conditions, $order_field = 'created', $order_type = 'ASC') {
     $s = new IcesSerializer('CesBankBasicTransaction');
     // Choose currency.
     $currencyaccount = NULL;
@@ -437,10 +441,10 @@ class CesBank {
       $account = $conditions['account'];
       unset($conditions['account']);
       $conditions['fromaccount'] = $account;
-      $transactions1 = $s->loadCollection($conditions, 'created');
+      $transactions1 = $s->loadCollection($conditions, $order_field, $order_type);
       unset($conditions['fromaccount']);
       $conditions['toaccount'] = $account;
-      $transactions2 = $s->loadCollection($conditions, 'created');
+      $transactions2 = $s->loadCollection($conditions, $order_field, $order_type);
       // Merge the arrays taking the created field in count.
       $transactions = $this->mergeSortedTransactionCollections($transactions1, $transactions2);
     }
@@ -457,7 +461,7 @@ class CesBank {
           ),
         );
       }
-      $transactions = $s->loadCollection($conditions, 'created');
+      $transactions = $s->loadCollection($conditions, $order_field, $order_type);
     }
     $records = array();
     foreach ($transactions as $t) {
