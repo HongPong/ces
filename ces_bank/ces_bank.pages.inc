@@ -222,17 +222,6 @@ function ces_bank_exchange_accounts_page() {
   $bank = new CesBank();
   $exchange = ces_bank_get_current_exchange();
   $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id']));
-  // Accounts per user.
-  $useraccounts = array();
-  foreach ($accounts as $account) {
-    foreach ($account['users'] as $user) {
-      $uid = $user['user'];
-      if (!isset($useraccounts[$uid])) {
-        $useraccounts[$uid] = array();
-      }
-      $useraccounts[$uid][] = $account;
-    }
-  }
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
@@ -257,25 +246,35 @@ function ces_bank_exchange_accounts_page() {
       ),
     ),
   );
-
   $rows = array();
-  foreach ($useraccounts as $uid => $accounts) {
-    $user = user_load($uid);
-
-    $accountsperuser = "";
-    $balancesperuser = "";
-    foreach ($accounts as $account) {
-      $accountsperuser .= $account['name'] . '<br/>';
-      $balancesperuser .= $bank->formatAmount($account['balance'], $exchange, TRUE) . '<br/>';
-    }
-    // First cell begins with 8 chars of the name user in capital letters
-    // only for sort case insensitive proposals.
-    $row = array(
-      strtoupper(sprintf("%8.8s", ces_user_get_name($user))) .
+  foreach ($accounts as $account) {
+    $accountsperuser = $account['name'];
+    $balancesperuser = number_format($account['balance'], 2);
+    $users_out = '';
+    $count = 0;
+    foreach ($account['users'] as $user) {
+      $count++;
+      $user = user_load($user['user']);
+      if (isset($user->ces_surname['und'])) {
+        $uo = $user->ces_surname['und'][0]['value'];
+      }
+      else {
+        $uo = $user->name;
+      }
+      if ($count > 1) {
+        $users_out .= '<br/>';
+      }
+      // First cell begins with 8 chars of the name user in capital letters
+      // only for sort case insensitive proposals.
+      $users_out .= '            <p style="display: none;">' .
+      strtoupper(sprintf("%8.8s", $uo)) . '</p>' .
       '<div class="ces-user-column"> <div class="user-picture">' .
       theme('user_picture', array('account' => $user)) . '</div>' .
-      l(ces_user_get_name($user), 'user/' . $uid) .
-      '</div>',
+      l(ucfirst($uo), 'user/' . $user->uid) .
+      '</div>';
+    }
+    $row = array(
+      $users_out,
       $accountsperuser,
       $balancesperuser,
     );
