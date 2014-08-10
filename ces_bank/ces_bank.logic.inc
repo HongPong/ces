@@ -698,7 +698,7 @@ class CesBank {
    *     'aid' = account id.
    *     'name' = account name.
    *     'account_action' = string, recommended action for the account.
-   *       'delete', 'disable', 'nothing'(do nothing).
+   *       'delete', 'close', 'nothing'(do nothing).
    *     'is_interexchange' = TRUE if it's an interexchange account and
    *       refers to an existing exchange in the system.
    *     'num_transactions' = number of transactions that refers to the account.
@@ -708,7 +708,6 @@ class CesBank {
    *       'user_action'(recomended action for this user).
    */
   public function deleteAccountsCheck($arrayaids) {
-    $exchanges = $this->getAllExchanges();
     $arrayreturn = array();
     foreach ($arrayaids as $singleaid) {
       $account = $this->getAccount($singleaid);
@@ -723,12 +722,7 @@ class CesBank {
       );
       // Checking if it's an interexchange account.
       if (!is_numeric(substr($account['name'], 4, 4))) {
-        $fourfirstdigits = substr($account['name'], 0, 4);
-        foreach ($exchanges as $ex) {
-          if ($ex['code'] == $fourfirstdigits && $ex['id'] != $account['exchange']) {
-            $return['is_interexchange'] = TRUE;
-          }
-        }
+        $return['is_interexchange'] = TRUE;
       }
       // Checking if the account has transactions.
       $transactions = $this->getTransactions(array('account' => $account['id']));
@@ -741,7 +735,7 @@ class CesBank {
         $return['account_users'][$u['user']] = array(
           'uid' => $u['user'],
           'accounts' => array(),
-          'user_action' => ($return['num_transactions'] == 0) ? 'delete' : 'disable',
+          'user_action' => ($return['num_transactions'] == 0) ? 'delete' : 'cancel',
         );
         $useraccounts = $this->getUserAccounts($u['user']);
         foreach ($useraccounts as $accs) {
@@ -762,7 +756,7 @@ class CesBank {
           $return['account_action'] = 'delete';
         }
         else {
-          $return['account_action'] = 'disable';
+          $return['account_action'] = 'close';
         }
       }
       $arrayreturn[] = $return;
