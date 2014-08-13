@@ -876,3 +876,41 @@ function ces_interop_is_cenip_transaction($transaction) {
     && isset($transaction['decoration'][0])
     && $transaction['decoration'][0]['classname'] == 'CesInteropCENIPTransaction');
 }
+/**
+ * Implements hook_menu_alter().
+ */
+function ces_interop_menu_alter(&$items) {
+  $items['ces/bank/account/transaction/%ces_transaction/view']['page callback'] = 'ces_interop_transaction_view';
+}
+/**
+ * Alters view page for CENIP transactions.
+ */
+function ces_interop_transaction_view($transaction) {
+  $page = ces_bank_transaction_view($transaction);
+  if (ces_interop_is_cenip_transaction($transaction)) {
+    $cenipfields = $transaction['decoration'][0]['data'];
+    $fromaccountname = $cenipfields['buyer_id'];
+    if (!empty($cenipfields['buyer_name'])) {
+      $fromaccountname .= ' - ' . $cenipfields['buyer_name'];
+    }
+    if (!empty($cenipfields['buyer_email'])) {
+      $fromaccountname .= ' <' . $cenipfields['buyer_email'] . '>';
+    }
+    $page['fromaccount'] = array(
+      'name' => $fromaccountname,
+      'users' => array(),
+    );
+    $fromexchangename = $cenipfields['nid'];
+    if (!empty($cenipfields['buyer_xname'])) {
+      $fromexchangename .= ' - ' . $cenipfields['buyer_xname'];
+    }
+    if (!empty($cenipfields['buyer_country'])) {
+      $fromexchangename .= ' (' . $cenipfields['buyer_country'] . ')';
+    }
+    $page['fromexchange'] = array(
+      'name' => $fromexchangename,
+      'id' => $cenipfields['nid'],
+    );
+  }
+  return $page;
+}

@@ -29,6 +29,8 @@ class CesInteropCENIPBank extends CesBank{
         'toaccount' => $toaccount->id,
         'amount' => $record['amount'],
         'concept' => $record['concept'],
+        'user' => $record['user'],
+        'state' => CesBankTransactionInterface::STATE_NEW,
         'data' => array(),
       );
       $cenip = array(
@@ -117,6 +119,9 @@ class CesInteropCENIPTransaction extends CesBankDecoratedTransaction {
     $response = drupal_http_request($url, array(
       'data' => drupal_http_build_query($data),
       'method' => 'POST',
+      'headers' => array(
+        'Content-Type' => 'application/x-www-form-urlencoded',
+      ),
     ));
     if (!empty($response->data)) {
       // The response is url-encoded.

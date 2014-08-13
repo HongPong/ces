@@ -78,12 +78,10 @@ function theme_ces_bank_transaction_view($variables) {
     $out .= '<dd>' . $fex['name'] . '</dd>';
   }
   $out .= '<dt>' . t('Buyer') . '</dt>';
-  $out .= '<dd>' . $from['name'] . ' - ';
+  $out .= '<dd>' . $from['name'];
   $i = 0;
   foreach ($from['users'] as $accuser) {
-    if ($i > 0) {
-      $out .= ', ';
-    }
+    $out .= ($i > 0) ? ', ' : ' - ';
     $out .= l(ces_user_get_name(user_load($accuser['user'])), 'user/' . $accuser['user']);
     $i++;
   }
@@ -93,12 +91,10 @@ function theme_ces_bank_transaction_view($variables) {
     $out .= '<dd>' . $tex['name'] . '</dd>';
   }
   $out .= '<dt>' . t('Seller') . '</dt>';
-  $out .= '<dd>' . ($to['name']) . ' - ';
+  $out .= '<dd>' . $to['name'];
   $i = 0;
   foreach ($to['users'] as $accuser) {
-    if ($i > 0) {
-      $out .= ', ';
-    }
+    $out .= ($i > 0) ? ', ' : ' - ';
     $out .= l(ces_user_get_name(user_load($accuser['user'])), 'user/' . $accuser['user']);
     $i++;
   }
