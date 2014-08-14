@@ -255,12 +255,7 @@ function ces_bank_exchange_accounts_page() {
     foreach ($account['users'] as $user) {
       $count++;
       $user = user_load($user['user']);
-      if (isset($user->ces_surname['und'])) {
-        $uo = $user->ces_surname['und'][0]['value'];
-      }
-      else {
-        $uo = $user->name;
-      }
+      $uo = ces_bank_get_full_username($user);
       if ($count > 1) {
         $users_out .= '<br/>';
       }
