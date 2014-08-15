@@ -688,27 +688,43 @@ class CesBank {
     }
   }
   /**
-   * Check if it's possible to delete accounts.
+   * Check if it's possible to delete accounts or exchange.
    *
    * @param array $arrayaids 
    *   array of account identifiers.
    * 
+   * @param string $context 
+   *   'account': checking for delete one or more accounts of an exchange.
+   *   exchange id: checking for delete all accounts of an entire exchange.
+   * 
    * @return array
    *   array of accounts:
-   *     'aid' = account id.
-   *     'name' = account name.
-   *     'account_action' = string, recommended action for the account.
+   *     'aid': account id, 'name': account name.
+   *     'account_action': recommended action for the account.
    *       'delete', 'close', 'nothing'(do nothing).
-   *     'is_interexchange' = TRUE if it's an interexchange account and
+   *     'is_interexchange': TRUE if it's an interexchange account and
    *       refers to an existing exchange in the system.
-   *     'num_transactions' = number of transactions that refers to the account.
-   *     'transactions' = array of transactions that refer to the account.
-   *     'account_users' = array of account users.
+   *     'num_transactions': number of transactions that refers to the account.
+   *     'transactions': array of transactions that refer to the account.
+   *     'account_users': array of account users.
    *       'uid', 'accounts'(array of other accounts if any),
    *       'user_action'(recomended action for this user).
+   *   array of users: (only is $context != 'account')
+   *     All users, recommended action and other accounts if there are any.
+   *   array of transactions: (only is $context != 'account')
+   *     Total number of transactions and array of transactions 
+   *     that refers from or to another exchange (inter-exchange).
    */
-  public function deleteAccountsCheck($arrayaids) {
-    $arrayreturn = array();
+  public function deleteAccountsCheck($arrayaids, $context = 'account') {
+    $arrayreturn = array(
+      'accounts' => array(),
+      'users' => array(),
+      'transactions' => array(
+        'totaltrans' => 0,
+        'transout' => array(),
+      ),
+    );
+    $joinusers = array();
     foreach ($arrayaids as $singleaid) {
       $account = $this->getAccount($singleaid);
       $return = array(
@@ -724,11 +740,13 @@ class CesBank {
       if (!is_numeric(substr($account['name'], 4, 4))) {
         $return['is_interexchange'] = TRUE;
       }
-      // Checking if the account has transactions.
-      $transactions = $this->getTransactions(array('account' => $account['id']));
-      foreach ($transactions as $trans) {
-        $return['transactions'][] = $trans;
-        $return['num_transactions']++;
+      // Checking if account has transactions, only if $context == 'account'.
+      if ($context == 'account') {
+        $transactions = $this->getTransactions(array('account' => $account['id']));
+        foreach ($transactions as $trans) {
+          $return['transactions'][] = $trans;
+          $return['num_transactions']++;
+        }
       }
       // Checking if users has any other accounts in the system.
       foreach ($account['users'] as $u) {
@@ -737,6 +755,11 @@ class CesBank {
           'accounts' => array(),
           'user_action' => ($return['num_transactions'] == 0) ? 'delete' : 'cancel',
         );
+        if ($context != 'account') {
+          if (!array_key_exists($u['user'], $joinusers)) {
+            $joinusers[$u['user']]['raw_user_action'] = array('delete');
+          }
+        }
         $useraccounts = $this->getUserAccounts($u['user']);
         foreach ($useraccounts as $accs) {
           if ($accs['id'] != $account['id']) {
@@ -745,6 +768,9 @@ class CesBank {
               'name' => $accs['name'],
             );
             $return['account_users'][$u['user']]['user_action'] = 'nothing';
+            if ($context != 'account') {
+              $joinusers[$u['user']]['raw_user_action'][] = 'nothing';
+            }
           }
         }
       }
@@ -759,7 +785,55 @@ class CesBank {
           $return['account_action'] = 'close';
         }
       }
-      $arrayreturn[] = $return;
+      $arrayreturn['accounts'][] = $return;
+    }
+    if ($context != 'account') {
+      // Select priority action if there are several actions for one user.
+      foreach ($joinusers as $u => $ra) {
+        if (count($ra['raw_user_action']) == 1) {
+          $arrayreturn['users'][$u]['user_action'] = $ra['raw_user_action']['0'];
+        }
+        else {
+          if (in_array('nothing', $ra['raw_user_action'])) {
+            $priority_action = 'nothing';
+          }
+          else {
+            $priority_action = 'delete';
+          }
+          $arrayreturn['users'][$u]['user_action'] = $priority_action;
+        }
+        // Look into users with severals accounts if the accounts:
+        // - belong to another exchange.
+        // - are inter-exchange accounts.
+        if ($arrayreturn['users'][$u]['user_action'] == 'nothing') {
+          $useraccounts = $this->getUserAccounts($u);
+          foreach ($useraccounts as $uacc) {
+            if ($uacc['exchange'] != $context || !is_numeric(substr($uacc['name'], 4, 4))) {
+              $arrayreturn['users'][$u]['accounts'][] = array(
+                'aid' => $uacc['id'],
+                'name' => $uacc['name'],
+              );
+            }
+          }
+          if (empty($arrayreturn['users'][$u]['accounts'])) {
+            $arrayreturn['users'][$u]['user_action'] = 'delete';
+          }
+        }
+      }
+      // Number of all transactions of the exchange.
+      $querytrans = db_query("
+        SELECT COUNT(*) AS totaltrans
+        FROM {ces_transaction} t
+        INNER JOIN {ces_account} a
+        ON (a.exchange = :exchange
+        AND a.id = t.fromaccount)",
+        array(
+          ':exchange' => $context,
+        ));
+      foreach ($querytrans as $record) {
+        $totaltrans = $record->totaltrans;
+      }
+      $arrayreturn['transactions']['totaltrans'] = $totaltrans;
     }
     return $arrayreturn;
   }
