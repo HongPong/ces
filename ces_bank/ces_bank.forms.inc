@@ -369,11 +369,9 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
 /**
  * Form for deleting exchange.
  *
- * - Inter-exchange accounts cannot be deleted.
+ * - Inter-exchange accounts (kind=5) cannot be deleted.
  * - Users with another account in other exchange or with 
  *   inter-exchange accounts cannot be deleted.
- * - Transactions from or to an account of any other exchange
- *   cannot be deleted.
  *
  * If any of these conditions are true, the exchange cannot be deleted.
  * The admin must prepare the exchange to delete it. A little more secure?.
@@ -405,7 +403,6 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
       '#type' => 'item',
       '#markup' => '<p>' . t('Exchange') . ': <b>' . $exchange['code'] . ' - ' . $exchange['name'] . '</b></p><br />',
     );
-    // Accounts information.
     $accountscheck = array();
     $queryaccounts = db_query("SELECT id FROM {ces_account} WHERE exchange = :exchange",
       array(
@@ -414,12 +411,12 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
     foreach ($queryaccounts as $acc) {
       $accountscheck[] = $acc->id;
     }
+    $check = $bank->deleteAccountsCheck($accountscheck, $exchange['id']);
     $actions = array(
       'exchange' => array(
         'id' => $exchange['id'],
         'code' => $exchange['code'],
         'name' => $exchange['name'],
-        'transactions' => 0,
       ),
       'accounts' => array(
         'delete' => array(
@@ -441,9 +438,12 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
           'uids' => array(),
         ),
       ),
+      'transactions' => array(
+        'totaltrans' => 0,
+        'tids' => array(),
+      ),
     );
-    $check = $bank->deleteAccountsCheck($accountscheck, $exchange['id']);
-    $joinusers = array();
+    // Accounts information.
     $numacc = 0;
     $numusers = 0;
     foreach ($check['accounts'] as $acc) {
@@ -521,7 +521,8 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
     );
     // Transactions information.
     $totaltrans = $check['transactions']['totaltrans'];
-    $actions['exchange']['transactions'] = $totaltrans;
+    $actions['transactions']['totaltrans'] = $totaltrans;
+    $actions['transactions']['tids'] = $check['transactions']['tids'];
     $textoutput = t('Number of transactions:') . ' <b>' . $totaltrans . '</b><br />';
     $form['trans_fieldset'] = array(
       '#type' => 'fieldset',
@@ -566,7 +567,7 @@ function ces_bank_exchange_delete_confirm_form($form, &$form_state) {
   $textoutput .= t('Delete users:') . ' <b>' .
     $form_state['check_exchange_data']['users']['delete']['num'] . '</b><br />';
   $textoutput .= t('Delete transactions:') . ' <b>' .
-    $form_state['check_exchange_data']['exchange']['transactions'] . '</b><br />';
+    $form_state['check_exchange_data']['transactions']['totaltrans'] . '</b><br />';
 
   $form['confirm_fieldset'] = array(
     '#type' => 'fieldset',
@@ -580,10 +581,13 @@ function ces_bank_exchange_delete_confirm_form($form, &$form_state) {
   );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#prefix' => '<br />',
     '#value' => t('Confirm'),
-    '#prefix' => '<h3>' . t('These actions cannot be undone.') . '</h3>',
+    '#prefix' => '<h3>' . t('Do you really want to delete the exchange?') . '</h3>' .
+    '<h4>' . t('This action cannot be undone.') . '</h4>',
     '#submit' => array('ces_bank_exchange_delete_confirm_form_submit'),
+  );
+  $form['cancel'] = array(
+    '#markup' => l(t('Cancel'), 'ces/admin/ces'),
   );
   return $form;
 }
@@ -591,13 +595,51 @@ function ces_bank_exchange_delete_confirm_form($form, &$form_state) {
  * Submit confirm form for deleting exchange.
  */
 function ces_bank_exchange_delete_confirm_form_submit($form, &$form_state) {
-  drupal_set_message(t('Delete %accounts accounts, delete %users users, delete %trans transactions and delete exchange %exchange, was not possible. It is not implemented yet, sorry.',
-    array(
-      '%accounts' => $form_state['check_exchange_data']['accounts']['delete']['num'],
-      '%users' => $form_state['check_exchange_data']['users']['delete']['num'],
-      '%trans' => $form_state['check_exchange_data']['exchange']['transactions'],
-      '%exchange' => $form_state['check_exchange_data']['exchange']['name'],
-    )), 'status');
+  $info = $form_state['check_exchange_data'];
+  $bank = new CesBank();
+  // Delete transactions.
+  if (!empty($info['transactions']['tids'])) {
+    $transactions = db_delete('ces_transaction')
+      ->condition('id', $info['transactions']['tids'])
+      ->execute();
+    drupal_set_message(t('%trans transactions have been deleted.',
+        array('%trans' => $transactions)), 'status');
+  }
+  // Delete accounts.
+  foreach ($info['accounts']['delete']['aids'] as $acc) {
+    try {
+      $action = $bank->deleteAccount($acc['aid']);
+      drupal_set_message(t('The account %account has been deleted.',
+        array('%account' => $acc['name'])), 'status');
+    }
+    catch (Exception $e) {
+      drupal_set_message(t('An error occurred while deleting the account %account. Details: %msg',
+        array('%account' => $acc['name'], '%msg' => $e->getMessage())), 'error');
+    }
+  }
+  // Delete users and content.
+  $users_cancel = array();
+  foreach ($info['users']['delete']['uids'] as $usr) {
+    if ($usr != 1) {
+      $users_cancel[] = array(
+        'uid' => $usr,
+        'action' => 'delete',
+      );
+    }
+  }
+  if (!empty($users_cancel)) {
+    $bank->deleteUsers($users_cancel);
+  }
+  // Delete exchange.
+  try {
+    $action = $bank->deleteExchange($info['exchange']['id']);
+    drupal_set_message(t('The exchange %exchg has been deleted.',
+      array('%exchg' => $info['exchange']['code'] . ' ' . $info['exchange']['name'])), 'status');
+  }
+  catch (Exception $e) {
+    drupal_set_message(t('An error occurred while deleting the exchange %exchg. Details: %msg',
+      array('%exchg' => $info['code'], '%msg' => $e->getMessage())), 'error');
+  }
   $form_state['redirect'] = 'ces/admin/ces';
 }
 /**
@@ -1268,11 +1310,16 @@ function ces_bank_account_delete_confirm_form($form, &$form_state) {
     '#type' => 'item',
     '#markup' => $textoutput,
   );
+  $notice = ($form_state['check_account_data']['account_action'] == 'delete') ?
+    '<h3>' . t('This action cannot be undone.') . '</h3>' : '<br />';
   $form['submit'] = array(
     '#type' => 'submit',
-    '#prefix' => '<br />',
+    '#prefix' => $notice,
     '#value' => t('Confirm'),
     '#submit' => array('ces_bank_account_delete_confirm_form_submit'),
+  );
+  $form['actions']['cancel'] = array(
+    '#markup' => l(t('Cancel'), 'ces/admin/account'),
   );
   return $form;
 }
@@ -1315,39 +1362,21 @@ function ces_bank_account_delete_confirm_form_submit($form, &$form_state) {
       break;
 
   }
+  $users_cancel = array();
   foreach ($check['account_users'] as $user) {
-    switch ($user['user_action']) {
-      case 'delete':
-        // The third argument can be one of the following:
-        // - user_cancel_block: disable user, leave content.
-        // - user_cancel_block_unpublish: disable user, unpublish content.
-        // - user_cancel_reassign: delete user, reassign content to uid=0.
-        // - user_cancel_delete: delete user, delete content.
-        user_cancel(array(), $user['uid'], 'user_cancel_delete');
-        // user_cancel() initiates a batch process. Run it manually.
-        $batch =& batch_get();
-        $batch['progressive'] = FALSE;
-        batch_process();
-
-        drupal_set_message(t('The user %user and all his/her content has been deleted.',
-          array('%user' => $user['name'])), 'status');
-        break;
-
-      case 'cancel':
-        user_cancel(array(), $user['uid'], 'user_cancel_block');
-        $batch =& batch_get();
-        $batch['progressive'] = FALSE;
-        batch_process();
-        drupal_set_message(t('The user %user has been canceled, but his/her content remains.',
-          array('%user' => $user['name'])), 'status');
-        break;
-
-      case 'nothing':
-        drupal_set_message(t('The user %user remains as before. No action has done to this user.',
-          array('%user' => $user['name'])), 'status');
-        break;
-
+    if ($user['user_action'] == 'delete' || $user['user_action'] == 'cancel') {
+      $users_cancel[] = array(
+        'uid' => $user['uid'],
+        'action' => $user['user_action'],
+      );
     }
+    else {
+      drupal_set_message(t('The user %user remains as before. No action has done to this user.',
+        array('%user' => $user['name'])), 'status');
+    }
+  }
+  if (!empty($users_cancel)) {
+    $bank->deleteUsers($users_cancel);
   }
   $form_state['redirect'] = 'ces/admin/account';
 }

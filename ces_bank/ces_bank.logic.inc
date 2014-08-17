@@ -719,10 +719,7 @@ class CesBank {
     $arrayreturn = array(
       'accounts' => array(),
       'users' => array(),
-      'transactions' => array(
-        'totaltrans' => 0,
-        'transout' => array(),
-      ),
+      'transactions' => array(),
     );
     $joinusers = array();
     foreach ($arrayaids as $singleaid) {
@@ -737,7 +734,7 @@ class CesBank {
         'account_users' => array(),
       );
       // Checking if it's an interexchange account.
-      if (!is_numeric(substr($account['name'], 4, 4))) {
+      if ($account['kind'] == 5) {
         $return['is_interexchange'] = TRUE;
       }
       // Checking if account has transactions, only if $context == 'account'.
@@ -808,7 +805,7 @@ class CesBank {
         if ($arrayreturn['users'][$u]['user_action'] == 'nothing') {
           $useraccounts = $this->getUserAccounts($u);
           foreach ($useraccounts as $uacc) {
-            if ($uacc['exchange'] != $context || !is_numeric(substr($uacc['name'], 4, 4))) {
+            if ($uacc['exchange'] != $context || $account['kind'] != 5) {
               $arrayreturn['users'][$u]['accounts'][] = array(
                 'aid' => $uacc['id'],
                 'name' => $uacc['name'],
@@ -820,9 +817,9 @@ class CesBank {
           }
         }
       }
-      // Number of all transactions of the exchange.
+      // All transactions of the exchange.
       $querytrans = db_query("
-        SELECT COUNT(*) AS totaltrans
+        SELECT t.id
         FROM {ces_transaction} t
         INNER JOIN {ces_account} a
         ON (a.exchange = :exchange
@@ -830,12 +827,69 @@ class CesBank {
         array(
           ':exchange' => $context,
         ));
+      $arrayreturn['transactions']['tids'] = array();
+      $arrayreturn['transactions']['totaltrans'] = 0;
       foreach ($querytrans as $record) {
-        $totaltrans = $record->totaltrans;
+        $arrayreturn['transactions']['tids'][] = $record->id;
+        $arrayreturn['transactions']['totaltrans']++;
       }
-      $arrayreturn['transactions']['totaltrans'] = $totaltrans;
     }
     return $arrayreturn;
+  }
+  /**
+   * Delete or cancel drupal users and all content associated.
+   *
+   * @param array $users 
+   *   'uid': user id.
+   *   'action':
+   *     delete -> delete oferswants, comments and user.
+   *     cancel -> hide offerswants, delete comments, cancel user.
+   */
+  public function deleteUsers(array $users) {
+    $module_offerswants = module_exists('ces_offerswants');
+    $table_offerwant = db_table_exists('ces_offerwant');
+    $table_offercomment = db_table_exists('ces_offercomment');
+    foreach ($users as $user) {
+      if ($user['uid'] != 1) {
+        if ($module_offerswants && $table_offerwant) {
+          $userloaded = user_load($user['uid']);
+          $username = ces_bank_get_full_username($userloaded);
+          if ($user['action'] == 'delete') {
+            $offerswants = db_delete('ces_offerwant')
+              ->condition('user', $user['uid'])
+              ->execute();
+            if ($offerswants > 0) {
+              drupal_set_message(t('%offrs offers and wants of user %usr have been deleted.',
+                array('%offrs' => $offerswants, '%usr' => $username)), 'status');
+            }
+          }
+          if ($user['action'] == 'cancel') {
+            $offerswants = db_update('ces_offerwant')
+              ->condition('user', $user['uid'])
+              ->fields(array('state' => 0))
+              ->execute();
+            if ($offerswants > 0) {
+              drupal_set_message(t('%offrs offers and wants of user %usr have been hidden.',
+                array('%offrs' => $offerswants, '%usr' => $username)), 'status');
+            }
+          }
+          if ($table_offercomment) {
+            $offercomments = db_delete('ces_offercomment')
+              ->condition('uid', $user['uid'])
+              ->execute();
+            if ($offercomments > 0) {
+              drupal_set_message(t('%offrcomm offer comments and ratings of user %usr have been deleted.',
+                array('%offrcomm' => $offercomments, '%usr' => $username)), 'status');
+            }
+          }
+        }
+        $arg_cancel_user = ($user['action'] == 'delete') ? 'user_cancel_delete' : 'user_cancel_block_unpublish';
+        user_cancel(array(), $user['uid'], $arg_cancel_user);
+      }
+    }
+    $batch =& batch_get();
+    $batch['progressive'] = FALSE;
+    batch_process();
   }
   /**
    * Creates a limit chain object.
