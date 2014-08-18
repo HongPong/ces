@@ -323,6 +323,17 @@ function ces_bank_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
   );
+  $menu['ces/bank/account/sell/multiple/autocomplete'] = array(
+    'title' => 'Autocomplete for multiple transactions',
+    'description' => 'Autocomplete for multiple transactions.',
+    'page callback' => 'ces_bank_multipletransactions_form_autocomplete_callback',
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('use', 'account seller',
+      CES_BANK_CURRENT_ACCOUNT),
+    'type' => MENU_CALLBACK,
+  );
   $menu['ces/bank/account'] = array(
     'title' => 'My account',
     'description' => 'View account details.',
@@ -618,7 +629,7 @@ function ces_bank_menu() {
     'title' => 'List users',
     'description' => 'List account users',
     'page callback' => 'ces_bank_account_users_admin',
-    'page arguments' => array('administrator',3),
+    'page arguments' => array('administrator', 3),
     'file' => 'ces_bank.pages.account_users.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'access callback' => 'ces_bank_access',

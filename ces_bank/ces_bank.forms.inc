@@ -1972,12 +1972,7 @@ function ces_bank_multipletransactions_form($form, &$form_state) {
   $fromoptions = array();
   $fromoptions[0] = '';
   foreach ($accounts as $account) {
-    $useracc = reset($account['users']);
-    $name_user_account = ces_user_get_name(user_load($useracc['user']));
-    if (strlen($name_user_account) > 20) {
-      $name_user_account = substr($name_user_account, 0, 17) . '...';
-    }
-    $fromoptions[$account['name']] = $account['name'] . ' - ' . $name_user_account;
+    $fromoptions[$account['name']] = $account['name'];
   }
   $toaccount = $bank->getAccount($to_account_id);
   if (empty($toaccount)) {
@@ -1995,7 +1990,7 @@ function ces_bank_multipletransactions_form($form, &$form_state) {
     '#options' => array(10 => 10, 20 => 20, 30 => 30, 40 => 40, 50 => 50),
     '#default_value' => $default,
     '#ajax' => array(
-      'callback' => 'ces_bank_multipletransactions_form_callback',
+      'callback' => 'ces_bank_multipletransactions_form_numtrans_callback',
       'wrapper' => 'multiple-transactions-div',
       'method' => 'replace',
       'effect' => 'fade',
@@ -2024,8 +2019,9 @@ function ces_bank_multipletransactions_form($form, &$form_state) {
       '#description' => '',
       '#prefix' => '<tr style="border-top:1px dotted #ccc;"><td style="padding: 5px 0;">' . $i . '</td><td>',
       '#suffix' => '</td>',
-      '#type' => 'select',
-      '#options' => $fromoptions,
+      '#type' => 'textfield',
+      '#maxlength' => 32,
+      '#autocomplete_path' => 'ces/bank/account/sell/multiple/autocomplete',
       '#default_value' => isset($form_state['values']['fromaccountname-' . $i]) ? $form_state['values']['fromaccountname-' . $i] : '',
     );
     $form['transaction_fieldset']['concept-' . $i] = array(
@@ -2062,8 +2058,39 @@ function ces_bank_multipletransactions_form($form, &$form_state) {
 /**
  * AJAX callback for selector in multiple transactions form.
  */
-function ces_bank_multipletransactions_form_callback($form, $form_state) {
+function ces_bank_multipletransactions_form_numtrans_callback($form, $form_state) {
   return $form['transaction_fieldset'];
+}
+/**
+ * AJAX autocomplete callback.
+ * @return string
+ *   Accounts in current exchange.
+ */
+function ces_bank_multipletransactions_form_autocomplete_callback($string) {
+  $exchange = ces_bank_get_current_exchange();
+  $bank = new CesBank();
+  $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'state' => 1));
+  $string = strtoupper($string);
+  $matches = array();
+  $items = 0;
+  foreach ($accounts as $acc) {
+    $accname = strtoupper($acc['name']);
+    $name_user_account = '';
+    foreach ($acc['users'] as $u) {
+      $name_user_account .= ces_user_get_name(user_load($u['user'])) . ' ';
+    }
+    $accname .= ' ' . strtoupper($name_user_account);
+    $pos = strpos($accname, $string);
+    if ($pos !== FALSE) {
+      $matches[$acc['name']] = $acc['name'] . ' ' . $name_user_account;
+      $items++;
+    }
+    if ($items > 10) {
+      break;
+    }
+  }
+  // Return for JS.
+  drupal_json_output($matches);
 }
 /**
  * Validate multiple transactions form.
@@ -2083,7 +2110,7 @@ function ces_bank_multipletransactions_form_validate($form, &$form_state) {
     $amount = $record['amount-' . $i];
     $account2 = $record['fromaccountname-' . $i];
     $concept = trim($form_state['values']['concept-' . $i]);
-    if (!($amount == '' && $account2 == '0' && $concept == '')) {
+    if (!($amount == '' && $account2 == '' && $concept == '')) {
       if (!is_numeric($amount)) {
         form_set_error('amount-' . $i, t('The amount entered is not a numeric value. Use the dot "." character for the decimal point and do not use any thousands separator.'));
         if (!($amount > 0.0)) {
@@ -2135,6 +2162,7 @@ function ces_bank_multipletransactions_confirm_form($form, &$form_state) {
       '#value' => $values['id'],
     );
   }
+  $bank = new CesBank();
   // This value is used in ces_bank_multipletransactions_form().
   $form['page'] = array(
     '#type' => 'value',
@@ -2161,13 +2189,22 @@ function ces_bank_multipletransactions_confirm_form($form, &$form_state) {
   for ($i = 1; $i <= $numbertrans; $i++) {
     $amount = $values['amount-' . $i];
     $account2 = $values['fromaccountname-' . $i];
+    $account2data = $bank->getAccountByName($account2);
+    $name_user_account = '';
+    foreach ($account2data['users'] as $u) {
+      $name_user_account .= ces_user_get_name(user_load($u['user'])) . ', ';
+    }
+    $name_user_account = substr($name_user_account, 0, -2);
+    if (strlen($name_user_account) > 30) {
+      $name_user_account = substr($name_user_account, 0, 27) . '...';
+    }
     $concept = trim($form_state['values']['concept-' . $i]);
     if (($amount != '' && $account2 != '0' && $concept != '')) {
       $form['transaction_fieldset']['itemfromaccountname-' . $j] = array(
         '#type' => 'item',
         '#prefix' => '<tr style="border-top:1px dotted #ccc;"><td style="padding: 5px 0;">' . $i . '</td><td>',
         '#suffix' => '</td>',
-        '#markup' => $account2,
+        '#markup' => $account2 . ': ' . $name_user_account,
       );
       $form['transaction_fieldset']['itemconcept-' . $j] = array(
         '#type' => 'item',
