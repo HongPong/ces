@@ -2260,7 +2260,7 @@ function ces_bank_multipletransactions_confirm_form_submit($form, &$form_state) 
     $amount = $values['amount-' . $i];
     $account2 = $values['fromaccountname-' . $i];
     $concept = trim($values['concept-' . $i]);
-    if (($amount != '' && $account2 != '0' && $concept != '')) {
+    if (($amount != '' && $account2 != '' && $concept != '')) {
       $record = array();
       $record['toaccountname'] = $values['toaccountname'];
       $record['fromaccountname'] = $account2;
