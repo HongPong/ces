@@ -45,7 +45,6 @@ function ices_preprocess_page(&$variables, $hook) {
     return;
   }
   global $user;
-  $user = user_load($user->uid);
   require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.module';
   $variables['account'] = ces_bank_get_current_account();
   if ($variables['account'] !== FALSE) {
