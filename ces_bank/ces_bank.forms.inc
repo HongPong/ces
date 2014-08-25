@@ -389,7 +389,6 @@ function ces_bank_exchange_delete_form($form, &$form_state, $exchange_id = NULL)
     );
   }
   else {
-    global $user;
     $bank = new CesBank();
     $exchange = $bank->getExchange($exchange_id);
     if ($exchange === FALSE) {
@@ -609,8 +608,10 @@ function ces_bank_exchange_delete_confirm_form_submit($form, &$form_state) {
   foreach ($info['accounts']['delete']['aids'] as $acc) {
     try {
       $action = $bank->deleteAccount($acc['aid']);
-      drupal_set_message(t('The account %account has been deleted.',
-        array('%account' => $acc['name'])), 'status');
+      if ($action) {
+        drupal_set_message(t('The account %account has been deleted.',
+          array('%account' => $acc['name'])), 'status');
+      }
     }
     catch (Exception $e) {
       drupal_set_message(t('An error occurred while deleting the account %account. Details: %msg',
@@ -1333,8 +1334,10 @@ function ces_bank_account_delete_confirm_form_submit($form, &$form_state) {
     case 'delete':
       try {
         $action = $bank->deleteAccount($check['aid']);
-        drupal_set_message(t('The account %account has been deleted.',
-          array('%account' => $check['name'])), 'status');
+        if ($action) {
+          drupal_set_message(t('The account %account has been deleted.',
+            array('%account' => $check['name'])), 'status');
+        }
       }
       catch (Exception $e) {
         drupal_set_message(t('An error occurred while deleting the account. Details: %msg',
@@ -1958,25 +1961,9 @@ function ces_bank_multipletransactions_form($form, &$form_state) {
   }
   $exchangeid = $currentexchange['id'];
   $to_account_id = $currentaccount['id'];
-  $accountconditions = array(
-    'exchange' => $exchangeid,
-    'state' => 1,
-    'kind' => array(
-      CesBankLocalAccount::TYPE_INDIVIDUAL,
-      CesBankLocalAccount::TYPE_SHARED,
-      CesBankLocalAccount::TYPE_ORGANIZATION,
-      CesBankLocalAccount::TYPE_COMPANY,
-      CesBankLocalAccount::TYPE_PUBLIC,
-    ));
-  $accounts = $bank->getAllAccounts($accountconditions);
-  $fromoptions = array();
-  $fromoptions[0] = '';
-  foreach ($accounts as $account) {
-    $fromoptions[$account['name']] = $account['name'];
-  }
   $toaccount = $bank->getAccount($to_account_id);
   if (empty($toaccount)) {
-    drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $to_account_id, '%ex' => $toexchange['code'])), 'error');
+    drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $to_account_id, '%ex' => $currentexchange['code'])), 'error');
     return FALSE;
   };
   $default = !empty($form_state['values']['howmany_transactions']) ? $form_state['values']['howmany_transactions'] : 10;
@@ -2069,7 +2056,17 @@ function ces_bank_multipletransactions_form_numtrans_callback($form, $form_state
 function ces_bank_multipletransactions_form_autocomplete_callback($string) {
   $exchange = ces_bank_get_current_exchange();
   $bank = new CesBank();
-  $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'state' => 1));
+  $accountconditions = array(
+    'exchange' => $exchange['id'],
+    'state' => 1,
+    'kind' => array(
+      CesBankLocalAccount::TYPE_INDIVIDUAL,
+      CesBankLocalAccount::TYPE_SHARED,
+      CesBankLocalAccount::TYPE_ORGANIZATION,
+      CesBankLocalAccount::TYPE_COMPANY,
+      CesBankLocalAccount::TYPE_PUBLIC,
+    ));
+  $accounts = $bank->getAllAccounts($accountconditions);
   $string = strtoupper($string);
   $matches = array();
   $items = 0;
@@ -2187,19 +2184,19 @@ function ces_bank_multipletransactions_confirm_form($form, &$form_state) {
   $numbertrans = $values['howmany_transactions'];
   $j = 1;
   for ($i = 1; $i <= $numbertrans; $i++) {
-    $amount = $values['amount-' . $i];
-    $account2 = $values['fromaccountname-' . $i];
-    $account2data = $bank->getAccountByName($account2);
-    $name_user_account = '';
-    foreach ($account2data['users'] as $u) {
-      $name_user_account .= ces_user_get_name(user_load($u['user'])) . ', ';
-    }
-    $name_user_account = substr($name_user_account, 0, -2);
-    if (strlen($name_user_account) > 30) {
-      $name_user_account = substr($name_user_account, 0, 27) . '...';
-    }
-    $concept = trim($form_state['values']['concept-' . $i]);
-    if (($amount != '' && $account2 != '0' && $concept != '')) {
+    if (!empty($values['amount-' . $i]) && !empty($values['fromaccountname-' . $i]) && !empty($values['concept-' . $i])) {
+      $amount = $values['amount-' . $i];
+      $account2 = $values['fromaccountname-' . $i];
+      $account2data = $bank->getAccountByName($account2);
+      $name_user_account = '';
+      foreach ($account2data['users'] as $u) {
+        $name_user_account .= ces_user_get_name(user_load($u['user'])) . ', ';
+      }
+      $name_user_account = substr($name_user_account, 0, -2);
+      if (strlen($name_user_account) > 30) {
+        $name_user_account = substr($name_user_account, 0, 27) . '...';
+      }
+      $concept = trim($values['concept-' . $i]);
       $form['transaction_fieldset']['itemfromaccountname-' . $j] = array(
         '#type' => 'item',
         '#prefix' => '<tr style="border-top:1px dotted #ccc;"><td style="padding: 5px 0;">' . $i . '</td><td>',
