@@ -26,9 +26,9 @@
  * y listo!  
  *
  * Algunos componentes de IntegralCES:
- * - @link ces_dev_install.html Entorno de desarrollo @endlink
- *   - @link ces_dev_flow.html Flujo de desarrollo @endlink
- * - @link ices Módulo raíz @endlink
+ * - @subpage entorno_desarrollo
+ *   - @subpage flujo_trabajo
+ * - @subpage ices Módulo raíz
  *   - @link ces_common_db Base de datos @endlink
  * - @link ces_bank Módulo bancario @endlink
  *   - @link ces_bank_transactions Transacciones @endlink
