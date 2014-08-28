@@ -1,9 +1,7 @@
 /**
 
-@defgroup flujo_trabajo Flujo de trabajo
+@page flujo_trabajo Flujo de trabajo
 
-
-# Flujo de desarrollo
 
 A continuación se explica la forma de trabajar habitual del equipo de
 desarrollo de IntegralCES y los recursos que el equipo utiliza.

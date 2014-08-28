@@ -9,7 +9,7 @@
  * @defgroup ces_message Ces Message
  * @ingroup ices
  * @{
- * creating a core Entity API entity.
+ * Management application notifications.
  */
 
 include_once dirname(__FILE__) . '/includes/ces_message.templates.inc';

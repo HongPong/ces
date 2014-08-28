@@ -6,7 +6,7 @@
  */
 
 /**
- * @defgroup ces_common_db
+ * @defgroup ces_common_db Base de datos
  * @{
  */
 
