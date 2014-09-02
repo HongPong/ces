@@ -6,7 +6,7 @@ Bienvenido o bienvenida a la documentación para desarrolladores del proyecto
 IntegralCES. Ésta es una documentación permanentemente en construcción que
 vamos completando a medida que nos es necesario.
 
-## Dar de alta nuevo exchange
+@section alta_exchange Dar de alta nuevo exchange
 
 La forma que hay ahora para dar de alta un grupo de intercambio y su
 administrador es: Visitar el link 'New exchange'. Rellenar el formulario
@@ -21,7 +21,9 @@ pidiendo una cuenta en el exchange que acabamos de dar de alta. Esas
 peticiones de usuarios ya tendrían que llegar al administrador, Se activan
 y listo!  
 
-## Módulo raíz CES
+@endsection
+
+@section modulo_raiz Módulo raíz CES
 
 El módulo de la raíz se denomina ICES. Este módulo por sí solo no proporciona
 ninguna función para el usuario final. Tiene un par de objetivos:
@@ -49,36 +51,34 @@ casi trivial. Esta interfaz común se define en el archivo commons.db.logic.inc.
 
 Este archivo define varias clases:
 
-- DBOBJECT: La clase abstracta que cualquier objeto persistente debe
-  extenderse. Por ejemplo, la clase Exchange extiende DBOBJECT. Para cada clase
-  se extiende DBOBJECT hay una mesa en la base de datos. Esta clase tiene una
-  propiedad crucial llamada mesa. Una clase hija debe establecer esta variable
+- IcesDBObject: La clase abstracta que cualquier objeto persistente debe
+  extenderse. Por ejemplo, la clase Exchange extiende IcesDBObject. Para cada clase
+  se extiende DBOBJECT hay una tabla en la base de datos. Esta clase tiene una
+  propiedad crucial llamada table. Una clase hija debe establecer esta variable
   para el nombre de tabla asociado con él. También tienen implementaciones por
   defecto para los dos métodos que convierten las variables de objeto interno
-  en un array asociativo se salven y vice-versa. Por objeto predeterminado
+  en un array asociativo se salven y viceversa. Por objeto predeterminado
   propiedades públicas se convertirán en campos de la tabla.
 
-- Serializer: Esta clase tiene métodos para guardar, actualizar, cargar y
-  eliminar cualquier objeto de tipo DBOBJECT. Es el puente real con la capa de
-  base de datos de Drupal. Más allá de la CRUD básico interfaz, que ofrece
+- IcesSerializer: Esta clase tiene métodos para guardar, actualizar, cargar y
+  eliminar cualquier objeto de tipo IcesDBObject. Es el puente real con la capa de
+  base de datos de Drupal. Más allá de la interface CRUD básica, que ofrece
   algunos otros métodos de ayuda que también cuenta con una serialización
   especial estrategia para las jerarquías de clases que implementan el patrón
   decorador.
 
-- LockSerializer: Esta es una subclase de Serializador para aquellas
-  operaciones que son delicada debido a la concurrencia. Esta clase asegura que
+- IcesLockSerializer: Esta es una subclase de IcesSerializer para aquellas
+  operaciones que son delicadas debido a la concurrencia. Esta clase asegura que
   cuando se carga un objeto, que no será cargado por cualquier otro
   LockSerializer hasta que lo guarde.
 
-- DbTransaction: Un contenedor vacío para el módulo de banco transaction.CES
-  Drupal Enviado por esteve el Mié, 02/01/2012 - 18:45 Este es el módulo
-  bancario principal. Define y trabaja con todos los objetos de banca: grupos
-  de intercambio (exchnages a partir de ahora), cuentas, transacciones ... Este
-  módulo se divide en dos partes:
+- DbTransaction: Un contenedor vacío para el módulo CesBank transaction.
 
 ![Base de datos](/../img/database.png)
 
-## Módulo CES BANK
+@endsection
+
+@section modulo_ces_bank Módulo CES BANK
 
 Este es el módulo bancario principal. Define y trabaja con todos los objetos de
 banca: grupos de intercambio (exchnages a partir de ahora), cuentas,
@@ -244,12 +244,12 @@ correcta.
 
 ![Diagrama de clases](/../img/class_diagram.png)
 
+@endsection
 
 ### Algunos componentes de IntegralCES
 
 - @subpage install
 - @subpage flujo_trabajo
-- @link ces_migration_data Importación @endlink
-- @link ces_permissions Sistema de permisos en integral CES @endlink
+- @subpage ces_permissions_doc
 
 */

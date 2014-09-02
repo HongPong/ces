@@ -2098,6 +2098,8 @@ abstract class CesBankAccountLimit extends IcesDBObject {
   public $value;
   /**
    * @var boolean
+   *
+   * If so, blocks the transaction
    */
   public $block;
   /**

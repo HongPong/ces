@@ -9,6 +9,7 @@
  * @ingroup ces_bank
  * @{
  * Forms definition.
+ * @ref modulo_ces_bank
  */
 
 /**
@@ -644,6 +645,12 @@ function ces_bank_exchange_delete_confirm_form_submit($form, &$form_state) {
   $form_state['redirect'] = 'ces/admin/ces';
 }
 /**
+ * @defgroup forms_limitchain LimitChain forms
+ * @ingroup ces_bank_forms
+ *
+ * @{
+ */
+/**
  * Form for controlling limit chains.
  */
 function ces_bank_limitchain_form($form, &$form_state, $limitchain = NULL) {
@@ -754,6 +761,62 @@ function ces_bank_limitchain_form($form, &$form_state, $limitchain = NULL) {
   return $form;
 }
 /**
+ * Delete a limitchain.
+ */
+function ces_bank_limitchain_delete_form($form, &$form_state, $limitchain=FALSE) {
+  $id       = $limitchain['id'];
+  $name       = $limitchain['name'];
+  $limits       = $limitchain['limits'];
+  $limitnames = module_invoke_all('account_limit_classes');
+  $form['limitchain_id'] = array(
+    '#type' => 'value',
+    '#value' => $id,
+  );
+
+  $form[$name] = array(
+    '#type' => 'item',
+    '#title' => t('Delete Limit Chain'),
+    '#markup' => $name,
+  );
+  $out_text = '';
+  foreach ($limits as $limit) {
+    $limit_value = $limit['value'];
+    $limit_classname = $limit['classname'];
+    $out_text .= $limitnames[$limit_classname] . ' ' . $limit_value . '<br/>';
+  }
+  if ( ! empty($out_text) ) {
+    $form['limits'] = array(
+      '#type' => 'item',
+      '#title' => t('Limits'),
+      '#markup' => $out_text,
+    );
+  }
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Confirm'),
+  );
+  return $form;
+}
+/**
+ * Submit form for deleting limitchain.
+ */
+function ces_bank_limitchain_delete_form_submit($form, &$form_state) {
+  $limitchain_id = $form_state['values']['limitchain_id'];
+  if ($form_state['values']['op'] == t('Confirm')) {
+    // Delete limitchain.
+
+    $bank = new CesBank();
+    try {
+      $bank->deleteLimitChain($limitchain_id);
+    }
+    catch (Exception $e) {
+        drupal_set_message(t('An error occurred while delete the limitchain record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
+      }
+    }
+  $form_state['redirect'] = 'ces/admin/limitchain';
+}
+/**
  * Helper function.
  */
 function _ces_bank_limitchain_limit_fieldset($form, &$form_values) {
@@ -813,10 +876,11 @@ function ces_bank_limitchain_form_addlimit($form, &$form_state) {
   $value['limits'][] = $value['newlimit'];
 }
 /**
- * Delete a limit in the form and set flag to rebuild form.
+ * Delete a limit of limitchain in the form and set flag to rebuild form.
  */
 function ces_bank_limitchain_form_deletelimit($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
+  echo '<pre>form_state: ' ; print_r($form_state['clicked_button']) ; echo '</pre>'; // exit() ; // DEV  
   $parents = $form_state['clicked_button']['#parents'];
   // Go to the parent element of the clicked button and unset it!
   $value = &$form_state['values'];
@@ -824,7 +888,18 @@ function ces_bank_limitchain_form_deletelimit($form, &$form_state) {
     $value = &$value[$parents[$i]];
     $key = $parents[$i + 1];
   }
+  echo '<pre>parents: ' ; print_r($parents) ; echo '</pre>'; // exit() ; // DEV  
+  echo '<pre>value: ' ; print_r($value[$key]) ; echo '</pre>'; // exit() ; // DEV  
+  $limit_key = $value[$key]['id'];
+  echo '<pre>limit_key: ' ; print_r($limit_key) ; echo '</pre>'; exit() ; // DEV  
+  $bank = new CesBank();
+  $limitchain = $bank->getLimitChain($limit_key);
+  echo '<pre>limit: ' ; print_r($limitchain) ; echo '</pre>';  exit() ; // DEV  
+  $limitchain->delete();
+  echo '<pre>limit: ' ; print_r($limitchain) ; echo '</pre>';  exit() ; // DEV  
   unset($value[$key]);
+  // Delete limit
+
 }
 /**
  * Validate the limit chain form.
@@ -860,7 +935,7 @@ function ces_bank_limitchain_form_submit($form, &$form_state) {
     if ($op == 'new') {
       $bank->createLimitChain($form_state['values']);
       drupal_set_message(t('Limit chain %name successfully created.', array('%name' => $form_state['values']['name'])));
-      $form_state['redirect'] = 'ces/admin/limit';
+      $form_state['redirect'] = 'ces/admin/limitchain';
     }
     elseif ($op == 'edit') {
       $bank->updateLimitChain($form_state['values']);
@@ -871,6 +946,7 @@ function ces_bank_limitchain_form_submit($form, &$form_state) {
     drupal_set_message(t('An error occurred while saving the record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
   }
 }
+/** @} */
 /**
  * Main bank account form.
  *

@@ -1,8 +1,8 @@
 /**
 
-@defgroup ces_permissions Permisos en Integral CES
+@page ces_permissions_doc Permisos en Integral CES
 
-Permisos
+## Permisos
 
 El sistema de permisos es más complejo que el de drupal, ya que por ejemplo
 un usuario puede ver el balance de los accounts que están en la exchange de
@@ -65,3 +65,4 @@ Yo ahora mismo me decantría por no hacerlo o en todo caso hacer la segunda
 opción por ser más sencilla. Y siempre podemos ayudar un poco al 
 administrador con campos desplegables y tal en vez de campos de texto llano.
 
+*/

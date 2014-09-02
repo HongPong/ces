@@ -4,8 +4,6 @@
 
 @section entorno_desarrollo Entorno de desarrollo
 
-# Entorno de desarrollo
-
 A continuación se explica detalladamente como establecer el entorno adecuado
 para desarrollar el proyecto IntegralCES. Siguiendo estas instrucciones
 instalaremos la utilidad drush con la que a su vez instalaremos el Drupal con
