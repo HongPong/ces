@@ -525,57 +525,7 @@ function ces_bank_menu() {
     'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
     'weight' => 4,
   );
-  /* Begin limits */
-  $menu['ces/admin/limit/new'] = array(
-    'title' => 'New',
-    'description' => 'Create a new account limit.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_limit_form'),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 1,
-  );
-  $menu['ces/admin/limit/%ces_limit/view'] = array(
-    'title' => 'View',
-    'description' => 'View account limit details.',
-    'page callback' => 'ces_bank_limit_view',
-    'page arguments' => array(3),
-    'file' => 'ces_bank.pages.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('view', 'exchange limits',
-      CES_BANK_CURRENT_EXCHANGE),
-    'weight' => 2,
-  );
-  $menu['ces/admin/limit/%ces_limit/edit'] = array(
-    'title' => 'Edit',
-    'description' => 'Edit account limit',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_limit_form', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('edit', 'exchange', CES_BANK_CURRENT_EXCHANGE),
-    'weight' => 3,
-  );
-  $menu['ces/admin/limit/%ces_limit/delete'] = array(
-    'title' => 'Delete',
-    'description' => 'Delete account limit',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_limit_form_delete', 3),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'type' => MENU_LOCAL_TASK,
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
-    'weight' => 4,
-  );
-  /* End limits */
+  /* Begin limit chains */
   $menu['ces/admin/ces'] = array(
     'title' => 'Administer CES bank',
     'description' => 'Top administer interface for CES Bank',

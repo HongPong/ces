@@ -859,6 +859,7 @@ function _ces_bank_limitchain_limit_fieldset($form, &$form_values) {
   $limit['deletelimit'] = array(
     '#type' => 'submit',
     '#value' => t('Delete'),
+    '#name' => (isset($form_values['id'])) ? $form_values['id'] : 'op',
     '#submit' => array('ces_bank_limitchain_form_deletelimit'),
   );
   return $limit;
@@ -880,7 +881,6 @@ function ces_bank_limitchain_form_addlimit($form, &$form_state) {
  */
 function ces_bank_limitchain_form_deletelimit($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
-  echo '<pre>form_state: ' ; print_r($form_state['clicked_button']) ; echo '</pre>'; // exit() ; // DEV  
   $parents = $form_state['clicked_button']['#parents'];
   // Go to the parent element of the clicked button and unset it!
   $value = &$form_state['values'];
@@ -888,17 +888,13 @@ function ces_bank_limitchain_form_deletelimit($form, &$form_state) {
     $value = &$value[$parents[$i]];
     $key = $parents[$i + 1];
   }
-  echo '<pre>parents: ' ; print_r($parents) ; echo '</pre>'; // exit() ; // DEV  
-  echo '<pre>value: ' ; print_r($value[$key]) ; echo '</pre>'; // exit() ; // DEV  
   $limit_key = $value[$key]['id'];
-  echo '<pre>limit_key: ' ; print_r($limit_key) ; echo '</pre>'; exit() ; // DEV  
-  $bank = new CesBank();
-  $limitchain = $bank->getLimitChain($limit_key);
-  echo '<pre>limit: ' ; print_r($limitchain) ; echo '</pre>';  exit() ; // DEV  
-  $limitchain->delete();
-  echo '<pre>limit: ' ; print_r($limitchain) ; echo '</pre>';  exit() ; // DEV  
-  unset($value[$key]);
   // Delete limit
+
+  $s = new IcesSerializer('CesBankAccountLimit');
+  $limit = $s->loadFromUniqueKey('id',$limit_key);
+  $s->delete($limit);
+  unset($value[$key]);
 
 }
 /**

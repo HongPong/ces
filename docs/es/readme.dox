@@ -42,12 +42,13 @@ datos ubicada en el archivo commons.db.logic.inc.
 ### Base de datos
 
 Hay una forma común para acceder a la base de datos de Drupal en todos los
-sub-módulos CES. Se trata de un versión aproximada del patrón de registro
-activo. El objetivo de esta capa es concentrar toda la el trabajo de base de
-datos en un solo lugar estandarizada. Aísla a otro código de la capa de base de
-datos de Drupal y aquellos que facilita la detección de errores, permite un
-sistema de captura centralizada y hace que la adaptación a API Drupal cambia
-casi trivial. Esta interfaz común se define en el archivo commons.db.logic.inc.
+sub-módulos CES. Se trata de un versión aproximada del [patrón de registro
+activo](http://en.wikipedia.org/wiki/Active_record_pattern). El objetivo de
+esta capa es concentrar toda la el trabajo de base de datos en un solo lugar
+estandarizada. Aísla a otro código de la capa de base de datos de Drupal y
+aquellos que facilita la detección de errores, permite un sistema de captura
+centralizada y hace que la adaptación a API Drupal cambia casi trivial. Esta
+interfaz común se define en el archivo commons.db.logic.inc.
 
 Este archivo define varias clases:
 
@@ -64,8 +65,8 @@ Este archivo define varias clases:
   eliminar cualquier objeto de tipo IcesDBObject. Es el puente real con la capa de
   base de datos de Drupal. Más allá de la interface CRUD básica, que ofrece
   algunos otros métodos de ayuda que también cuenta con una serialización
-  especial estrategia para las jerarquías de clases que implementan el patrón
-  decorador.
+  especial estrategia para las jerarquías de clases que implementan el [patrón
+  decorador](https://es.wikipedia.org/wiki/Decorator_%28patr%C3%B3n_de_dise%C3%B1o%29).
 
 - IcesLockSerializer: Esta es una subclase de IcesSerializer para aquellas
   operaciones que son delicadas debido a la concurrencia. Esta clase asegura que
