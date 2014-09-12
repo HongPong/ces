@@ -4,7 +4,9 @@
 
 @section dev_environment Development environment
 
-An explanation of how to establish an adequate environement to develop the IntegralCES project. Following these instructions we will install the drush utility and install Drupal with the IntegralCES module and control it with git version control software.
+An explanation of how to establish an adequate environment to develop the IntegralCES project. Following these
+instructions we will install the drush utility and install Drupal with the IntegralCES module and control 
+it with git version control software.
 
 Contents
 
@@ -69,7 +71,8 @@ We clean:
     rm package.xml
     
 
-Check status again with drush: This shows it can determine the config files for PHP including command line PHP-CLI.
+Check status again with drush: This shows it can determine the config files for PHP including
+command line PHP-CLI.
 
     
     $drush status
@@ -120,7 +123,8 @@ Complete the installation with passwords and admin account name:
 
 It only creates the database and everything you need.
 
-You just need to add write permission for the server's UNIX user to `sites/default/files/` for correct file upload handling.
+You just need to add write permission for the server's UNIX user to `sites/default/files/` 
+for correct file upload handling.
 
 ### Installing ces module for development
 
@@ -179,8 +183,8 @@ Activate theme:
     $drush en greences
     
 
-You are missing part of the base theme. Note: It's necessary to have installed the ZEN theme (version 7.x-5.x) which is the parent theme of greences
-https://drupal.org/project/zen.
+You are missing part of the base theme. Note: It's necessary to have installed the ZEN theme 
+(version 7.x-5.x) which is the parent theme of greences: https://drupal.org/project/zen.
 
     
     $ drush dl zen
@@ -206,5 +210,6 @@ That completes development setup. Standard development modules are also handy, f
   * **devel_themer**: Shows which DOM elements are rendered by functions
   * **coder**: Provides code checks and linters to help with Drupal style coding
 
-Happy development! To see all issues filed, visit the issue queue at https://www.drupal.org/project/issues/1367140?status=All&categories=All
+Happy development! To see all issues filed, visit the issue queue at 
+https://www.drupal.org/project/issues/1367140?status=All&categories=All
 @} */
