@@ -97,6 +97,10 @@ class IcesSerializer {
   }
   /**
    * Saves an object to database.
+   *
+   * This function will create a new entry either if the object has a field
+   * named is_new and set to bool TRUE or if it hasn't the id field. Otherwise
+   * it will update the record matching the id field.
    */
   public function save(IcesDBObject $object) {
     $record = $object->getRecord();
@@ -112,7 +116,7 @@ class IcesSerializer {
     // Decide between insert and update, and automatically populate temporal
     // fields.
     $record['modified'] = REQUEST_TIME;
-    if (empty($record['id'])) {
+    if (empty($record['id']) || isset($object->is_new) && $object->is_new == TRUE) {
       // Sometimes, like in exchange import, we are creating new objects
       // with past dates.
       if (empty($record['created'])) {
@@ -170,7 +174,7 @@ class IcesSerializer {
    * Load many objects.
    *
    * @param array $conditions
-   *   Associative array with field names as keys. There are two special 
+   *   Associative array with field names as keys. There are two special
    *   conditions for those objects having the created [time] field:
    *   - createdsince: the smaller created time to return.
    *   - createduntil: the largest created time to return.
@@ -224,7 +228,7 @@ class IcesSerializer {
   }
   /**
    * Retrieves and loads an object from a unique key.
-   * 
+   *
    * @return IcesDBObject
    *   The initialized instance of IcesDBObject with $key = $value, or FALSE.
    */
@@ -418,7 +422,7 @@ abstract class IcesDBObject {
    * Delete object data.
    *
    * Called when this object is to be deleted. If the overrider has other
-   * IcesDBObject objects as class members override this function to delete 
+   * IcesDBObject objects as class members override this function to delete
    * them.
    */
   public function deleteExtraData() {

@@ -13,7 +13,17 @@ define('CES_INTEROP_OAUTH2_RESOURCES_SCOPE_NAME', 'resources');
 define('CES_INTEROP_CEN_CLEARING_CENTRAL_URL', 'ces_interop_cen_clearing_central_url');
 define('CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT', 'http://clearingcentral.net');
 define('CES_INTEROP_CEN_CLEARING_CENTRAL_TXINPUT', 'txinput.php');
-
+define('CES_INTEROP_CEN_CLEARING_CENTRAL_IP', 'ces_interop_cen_clearing_central_ip');
+define('CES_INTEROP_CEN_CLEARING_CENTRAL_IP_DEFAULT', '75.98.165.130');
+define('CES_INTEROP_CEN_INVALID_NID', -1);
+define('CES_INTEROP_CEN_ERR_INVALID_USER', 2);
+define('CES_INTEROP_CEN_ERR_INVALID_NID', 3);
+define('CES_INTEROP_CEN_ERR_TRANSACTION_DENIED', 4);
+define('CES_INTEROP_CEN_ERR_FAULTY_DATA', 5);
+define('CES_INTEROP_CEN_ERR_REPEATED_TXID', 6);
+define('CES_INTEROP_CEN_ERR_SERVER_ERROR', 9);
+define('CES_INTEROP_CEN_ERR_ACCESS_DENIED', 11);
+define('CES_INTEROP_DEBUG', 'ces_interop_debug');
 /**
  * Implements hook_menu().
  *
@@ -25,6 +35,11 @@ function ces_interop_menu() {
     'page callback' => 'ces_interop_opentransact',
     'page arguments' => array(3),
     'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['ces/interop/cenip'] = array(
+    'page callback' => 'ces_interop_cenip',
+    'access callback' => true,
     'type' => MENU_CALLBACK,
   );
   $items['admin/config/services/ces_interop'] = array(
@@ -322,6 +337,25 @@ function ces_interop_send_json($status, $object) {
   drupal_exit();
 }
 /**
+ * Send urlencoded query response to the user.
+ *
+ * The execution will end in this function.
+ *
+ * @param string $status
+ *   The HTTP status, ex: '200 OK'
+ * @param array $query
+ *   The associative array with key-vlue pairs.
+ */
+function ces_interop_send_httpquery($status, $query) {
+  drupal_add_http_header('Status', $status);
+  drupal_add_http_header('Content-Type', 'application/x-www-form-urlencoded');
+  drupal_add_http_header('Cache-Control', 'no-store');
+  $content = drupal_http_build_query($query);
+  drupal_add_http_header('Content-Length', strlen($content));
+  echo $content;
+  drupal_exit();
+}
+/**
  * Get Opentransact parameters.
  */
 function _ces_interop_get_query_parameters() {
@@ -531,11 +565,23 @@ function ces_interop_admin() {
     '#default_value' => variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_URL, CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT),
     '#description' => t('The URL of the Community Exchange Network Clearing Central server.'),
   );
+  $form[CES_INTEROP_CEN_CLEARING_CENTRAL_IP] = array(
+    '#type' => 'textfield',
+    '#title' => t('CEN Clearing Central IP'),
+    '#default_value' => variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_IP, CES_INTEROP_CEN_CLEARING_CENTRAL_IP_DEFAULT),
+    '#description' => t('Only requests from this IP will be allowed.'),
+  );
+  $form[CES_INTEROP_DEBUG] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Debug mode'),
+    '#default_value' => variable_get(CES_INTEROP_DEBUG, false),
+    '#description' => t('Do not check on production sites. Accept CEN messages from any address.'),
+  );
   return system_settings_form($form);
 }
 /**
  * Implements hook_form_FORM_ID_alter().
- * 
+ *
  * Add fields to exchange administer form to setup the Community Exchange
  * Network Intertrading Protocol for this exchange.
  */
@@ -610,7 +656,7 @@ function ces_interop_exchange_form_validate($form, &$form_state) {
       form_set_error('cenip_pass', t('Specify the password for this Community Exchange Network.'));
     }
     // Check whether the user and password are correct. Simulate a login to the
-    // clearing central web page and check the redirect URL. Check it only when 
+    // clearing central web page and check the redirect URL. Check it only when
     // it is changed.
     if ($cenip_user != $form_state['values']['cenip_user']
       || $cenip_pass != $form_state['values']['cenip_pass']) {
@@ -636,7 +682,7 @@ function ces_interop_exchange_form_validate($form, &$form_state) {
 }
 /**
  * Implements hook_form_submit().
- * 
+ *
  * Save exchange CEN user and password.
  */
 function ces_interop_exchange_form_submit($form, &$form_state) {
@@ -652,13 +698,12 @@ function ces_interop_exchange_form_submit($form, &$form_state) {
 
 /**
  * Implements hook_form_FORMID_alter().
- * 
+ *
  * Add the feature of CEN remote exchange transaction into transaction form.
  */
 function ces_interop_form_ces_bank_transaction_form_alter(&$form, &$form_state) {
   if (!isset($form_state['values']) || !isset($form_state['values']['page'])
     || $form_state['values']['page'] == 'edit') {
-
     // Get the seller's exchange computed in the main form function.
     $index = ($form['toexchange']['#type'] == 'value') ? '#value' : '#default_value';
     $toexchange = ces_bank_get_exchange($form['toexchange'][$index]);
@@ -682,14 +727,20 @@ function ces_interop_form_ces_bank_transaction_form_alter(&$form, &$form_state) 
     // In case of editing -not creating- a transaction, setup the proper values.
     if (isset($form_state['values']) && isset($form_state['values']['id'])) {
       $transaction = ces_transaction_load($form_state['values']['id']);
-      if (ces_interop_is_cenip_transaction($transaction)) {
+      if (ces_interop_is_cenip_outgoing_transaction($transaction)) {
         $form_state['values']['fromexchange'] = 'cenip';
         $form_state['values']['fromcenexchange'] = $transaction['decoration'][0]['data']['nid'];
         $form_state['values']['fromcenaccountname'] = $transaction['decoration'][0]['data']['buyer_id'];
         $form['fromexchange']['#default_value'] = 'cenip';
       }
+      // If this is incomming transaction, forbid edditing.
+      if (ces_interop_is_cenip_incoming_transaction($transaction)) {
+        foreach ($form as $element) {
+          $element['#disabled'] = TRUE;
+        }
+      }
     }
-    if (isset($form_state['values']) && isset($form_state['values']['fromexchange']) 
+    if (isset($form_state['values']) && isset($form_state['values']['fromexchange'])
       && $form_state['values']['fromexchange'] == 'cenip') {
       // Add a field for the remote exchange nid.
       $url = variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_URL, CES_INTEROP_CEN_CLEARING_CENTRAL_URL_DEFAULT);
@@ -832,7 +883,7 @@ function ces_interop_transaction_confirm_form($form, &$form_state) {
     '#submit' => array('ces_interop_transaction_confirm_form_submit'),
     '#value' => t('Create transaction'),
   );
-  // Disable input validation on confirm form. It has been already validated in 
+  // Disable input validation on confirm form. It has been already validated in
   // last step.
   $form['#validate'] = array();
   return $form;
@@ -864,17 +915,30 @@ function ces_interop_transaction_confirm_form_submit($form, &$form_state) {
 }
 
 /**
- * Return whether the given transaction is a CENIP one.
- * 
+ * Return whether the given transaction is a CENIP outgoing transaction.
+ *
  * @param array $transaction
  *   The transaction record.
  * @return bool
- *   Whether the transaction is remote (true) or not (false).
+ *   Whether the transaction is remote outgoing (true) or not (false).
  */
-function ces_interop_is_cenip_transaction($transaction) {
-  return (isset($transaction['decoration']) 
+function ces_interop_is_cenip_outgoing_transaction($transaction) {
+  return (isset($transaction['decoration'])
     && isset($transaction['decoration'][0])
-    && $transaction['decoration'][0]['classname'] == 'CesInteropCENIPTransaction');
+    && $transaction['decoration'][0]['classname'] == 'CesInteropCENIPOutgoingTransaction');
+}
+/**
+ * Return whether the given transaction is a CENIP outgoing transaction.
+ *
+ * @param array $transaction
+ *   The transaction record.
+ * @return bool
+ *   Whether the transaction is remote outgoing (true) or not (false).
+ */
+function ces_interop_is_cenip_incoming_transaction($transaction) {
+  return (isset($transaction['decoration'])
+    && isset($transaction['decoration'][0])
+    && $transaction['decoration'][0]['classname'] == 'CesInteropCENIPIncomingTransaction');
 }
 /**
  * Implements hook_menu_alter().
@@ -887,7 +951,7 @@ function ces_interop_menu_alter(&$items) {
  */
 function ces_interop_transaction_view($transaction) {
   $page = ces_bank_transaction_view($transaction);
-  if (ces_interop_is_cenip_transaction($transaction)) {
+  if (ces_interop_is_cenip_outgoing_transaction($transaction)) {
     $cenipfields = $transaction['decoration'][0]['data'];
     $fromaccountname = $cenipfields['buyer_id'];
     if (!empty($cenipfields['buyer_name'])) {
@@ -912,5 +976,184 @@ function ces_interop_transaction_view($transaction) {
       'id' => $cenipfields['nid'],
     );
   }
+  if (ces_interop_is_cenip_incoming_transaction($transaction)) {
+    $cenipfields = $transaction['decoration'][0]['data'];
+    $toaccountname = $cenipfields['seller_id'];
+    if (!empty($cenipfields['seller_name'])) {
+      $toaccountname .= ' - ' . $cenipfields['seller_name'];
+    }
+    if (!empty($cenipfields['seller_email'])) {
+      $toaccountname .= ' <' . $cenipfields['seller_email'] . '>';
+    }
+    $page['toaccount'] = array(
+      'name' => $toaccountname,
+      'users' => array(),
+    );
+    $toexchangename = $cenipfields['nid'];
+    if (!empty($cenipfields['seller_xname'])) {
+      $toexchangename .= ' - ' . $cenipfields['seller_xname'];
+    }
+    if (!empty($cenipfields['seller_country'])) {
+      $toexchangename .= ' (' . $cenipfields['seller_country'] . ')';
+    }
+    $page['toexchange'] = array(
+      'name' => $toexchangename,
+      'id' => $cenipfields['nid'],
+    );
+  }
   return $page;
+}
+
+/**
+ * Callback function for CENIP.
+ *
+ * The buyer is the local user and the seller is the remote one.
+ */
+function ces_interop_cenip() {
+  // Check incomming ip.
+  $ccip = variable_get(CES_INTEROP_CEN_CLEARING_CENTRAL_IP, CES_INTEROP_CEN_CLEARING_CENTRAL_IP_DEFAULT);
+  if((!variable_get(CES_INTEROP_DEBUG, false)) && (ip_address() != $ccip)) {
+    return ces_interop_cenip_error(CES_INTEROP_CEN_ERR_ACCESS_DENIED, null);
+  }
+  // Get mandatory parameters.
+  $txid = $_POST['txid'];
+  $buyer_nid = $_POST['buyer_nid'];
+  $seller_nid = $_POST['seller_nid'];
+  $description = $_POST['description'];
+  $amount = $_POST['amount'];
+  // Get optional parameters.
+  $seller_xname = $_POST['seller_xname'];
+	$seller_country = $_POST['seller_country'];
+  $seller_id = $_POST['seller_id'];
+	$seller_name = $_POST['seller_name'];
+	$seller_email = $_POST['seller_email'];
+	$buyer_id = $_POST['buyer_id'];
+  // Check seller id syntax.
+  if (!_ces_interop_check_nid($seller_nid)) {
+    return ces_interop_cenip_error(CES_INTEROP_CEN_ERR_INVALID_NID, $txid);
+  }
+  // Check buyer id syntax and that exists in local system.
+  if (!_ces_interop_check_nid($buyer_nid)) {
+    return ces_interop_cenip_error(CES_INTEROP_CEN_ERR_INVALID_NID, $txid);
+  }
+  $fromexchange = ces_interop_get_exchange_by_nid($buyer_nid);
+  if ($fromexchange === FALSE) {
+    return ces_interop_cenip_error(CES_INTEROP_CEN_ERR_INVALID_NID, $txid);
+  }
+  // Check whether this transaction already exists.
+  $bank = new CesInteropCENIPBank();
+  $transaction = $bank->getTransactionByTxid($txid);
+  if ($transaction !== FALSE) {
+    // Transaction already exists.
+    return ces_interop_cenip_error(CES_INTEROP_CEN_ERR_REPEATED_TXID, $txid);
+  }
+  // Check description and amount.
+  if (empty($description) || !is_numeric($amount)) {
+    return ces_interop_cenip_error(CES_INTEROP_CEN_ERR_FAULTY_DATA, $txid);
+  }
+  // Check buyer acount.
+  $fromaccount = $bank->getAccountByName($buyer_id);
+  if ($fromaccount === FALSE || $fromaccount['exchange'] != $fromexchange['id']) {
+    return ces_interop_cenip_error(CES_INTEROP_CEN_ERR_INVALID_USER, $txid);
+  }
+  // Create transaction.
+  $transaction = array(
+    'txid' => $txid,
+    'fromaccount' => $fromaccount['id'],
+    'nid' => $seller_nid,
+    'seller_id' => $seller_id,
+    'seller_xname' => $seller_xname,
+    'seller_country' => $seller_country,
+    'seller_email' => $seller_email,
+    'seller_name'=> $seller_name,
+    'concept' => $description,
+    'amount' => $amount,
+    'user' => 1,
+    'cenip' => TRUE,
+  );
+  try {
+    $bank->createTransaction($transaction);
+    $result = $bank->applyTransaction($transaction['id']);
+    if ($result === TRUE) {
+      $fromuseracc = reset($fromaccount['users']);
+      $fromuser = user_load($fromuseracc['user']);
+      $receipt = array(
+        'txid' => $transaction['txid'],
+        'response' => '1',
+        'buyer_nid' => $fromexchange['data']['cenip_user'],
+        'buyer_xname' => $fromexchange['name'],
+        'buyer_id' => $fromaccount['name'],
+        'buyer_name' => ces_user_get_name($fromuser),
+        'buyer_email' => $fromuser->mail,
+        'buyer_country' => $fromexchange['country'],
+        'seller_nid' => $transaction['nid'],
+        'seller_xname' => $transaction['seller_xname'],
+        'seller_id' => $transaction['seller_id'],
+        'seller_name' => $transaction['seller_name'],
+        'seller_email' => $transaction['seller_email'],
+        'seller_country' => $transaction['seller_country'],
+        'description' => $transaction['concept'],
+        'amount' => $transaction['amount'],
+      );
+      ces_interop_send_httpquery('201 Created', $receipt);
+    }
+    else {
+      $receipt = array(
+        'txid' => $transaction['txid'],
+        'result' => CES_INTEROP_CEN_ERR_TRANSACTION_DENIED,
+        'buyer_nid' => $fromexchange['data']['cenip_user'],
+        'buyer_xname' => $fromexchange['name'],
+        'buyer_id' => $fromaccount['name'],
+      );
+      ces_interop_send_httpquery('200 OK', $receipt);
+    }
+  }
+  catch (Exception $e) {
+    ces_interop_cenip_error(CES_INTEROP_CEN_ERR_SERVER_ERROR, $txid);
+  }
+}
+
+/**
+ * Get exchange record given its network id using drupal cache system.
+ */
+function ces_interop_get_exchange_by_nid($nid) {
+  $cid = 'ces_interop_nid_' . $nid;
+  $exchange_id = cache_get($cid);
+  $bank = new CesInteropCENIPBank();
+  if ($exchange_id !== FALSE) {
+    if ($exchange_id->data == CES_INTEROP_CEN_INVALID_NID) {
+      $exchange = FALSE;
+    }
+    else {
+      $exchange = $bank->getExchange($exchange_id->data);
+    }
+  }
+  else {
+    $exchange = $bank->getExchangeByNid($nid);
+    if ($exchange !== FALSE) {
+      cache_set($cid, $exchange['id']);
+    }
+    else {
+      cache_set($cid, CES_INTEROP_CEN_INVALID_NID);
+    }
+  }
+  return $exchange;
+}
+/**
+ * Syntactically check validity of a cen nid.
+ */
+function _ces_interop_check_nid($nid) {
+  return drupal_strlen($nid) == 7
+    && drupal_substr($nid, 0, 3) == 'cen'
+    && ctype_digit(drupal_substr($nid, 3));
+}
+/**
+ * Format error message for cenip.
+ */
+function ces_interop_cenip_error($number, $txid) {
+  $message = array(
+    'result' => $number,
+    'txid' => $txid,
+  );
+  ces_interop_send_httpquery('200 OK', $message);
 }

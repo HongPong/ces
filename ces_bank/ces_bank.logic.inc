@@ -830,7 +830,7 @@ class CesBank {
         && $transaction->getState() != CesBankTransactionInterface::STATE_REJECTED
         && $transaction->getState() != CesBankTransactionInterface::STATE_TRIGGERED
         && $transaction->getState() != CesBankTransactionInterface::STATE_COMMITTED) {
-        
+
         $errors = $transaction->getLog($transaction->getState());
         $message = t('There has been an error applying the transaction.');
         if (!empty($errors)) {
@@ -1017,7 +1017,7 @@ class CesBank {
   }
   /**
    * Formats the amount for an exchange.
-   * 
+   *
    * @param double $amount
    *   The amount to be formatted.
    * @param array $exchange
@@ -1026,7 +1026,7 @@ class CesBank {
    *   Include the currency symbol.
    * @param bool $sign
    *   Include the positive sign.
-   * 
+   *
    * @return string
    *   A string representation of $amount following $exchange preference
    *   and $format option.
@@ -2599,8 +2599,8 @@ abstract class CesBankDecoratedTransaction extends IcesDBObject implements CesBa
    * TODO: document.
    */
   public function __construct($parent, $record) {
-    parent::__construct($record);
     $this->parent = $parent;
+    parent::__construct($record);
   }
   /**
    * Implements CesBankTransactionInterface::acceptByAccount().

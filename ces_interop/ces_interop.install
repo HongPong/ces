@@ -148,3 +148,38 @@ function ces_interop_uninstall() {
   $endpoint = services_endpoint_load('ces_interop_resources');
   services_endpoint_delete($endpoint);
 }
+/**
+ * Implements hook_schema().
+ */
+function ces_interop_schema() {
+  $schema = array();
+  $schema['ces_transaction_centxid'] = array(
+    'description' => 'Community Exchange network transaction ids.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'centxid' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'centxid' => array('centxid'),
+    ),
+  );
+  return $schema;
+}
+/**
+ * Add CEN transaction id table.
+ */
+function ces_iterop_update_7100() {
+  $schema = ces_interop_schema();
+  db_create_table('ces_transaction_centxid', $schema['ces_transaction_centxid']);
+}
