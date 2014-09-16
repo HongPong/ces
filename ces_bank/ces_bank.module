@@ -1343,7 +1343,7 @@ function ces_bank_form_alter(&$form, &$form_state, $form_id) {
       $exchange = ces_bank_get_current_exchange();
       $form['language'] = array(
         '#type' => 'value',
-        '#value' => $exchange['data']['default_lang'],
+        '#value' => ( isset($exchange['data']['default_lang']) ) ? $exchange['data']['default_lang'] : FALSE,
       );
     }
     elseif ($form_state['page'] == 'bankaccount') {
