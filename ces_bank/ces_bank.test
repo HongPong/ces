@@ -729,7 +729,7 @@ class CesBankTestCase extends DrupalWebTestCase {
    */
   protected function createLimit($admin, $limitchain) {
     $this->drupalLogin($admin);
-    $this->drupalGet('ces/admin/limit/new');
+    $this->drupalGet('ces/admin/limitchain/new');
     // Create limits.
     foreach ($limitchain['limits'] as $limit) {
       $edit = array(
