@@ -68,7 +68,7 @@ function ces_statistics_help($path, $arg) {
       // return a TRUE value if this is not actually the help page.
       return TRUE;
     }
-    $library = libraries_detect('jqplot');
+    $library = libraries_detect('jquery.jqplot');
     $output  = '<dl>';
     $output .= '<dt>' . t('Installation of') . ' ' . $library['name'] . '</dt>';
     $output .= '<dd>';

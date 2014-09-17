@@ -3,10 +3,10 @@
 * Js script to produce the graphics in statistics page.
 */
 
-(function () {
-  "use strict";
+(function ($) {
+Drupal.behaviors.ces_statistics = {
+attach: function(context, settings) {
 
-jQuery(document).ready(function($) {
   var usersobject = Drupal.settings.ces_statistics.staticsusers;
   var activityobject = Drupal.settings.ces_statistics.staticsactivity;
   var transobject = Drupal.settings.ces_statistics.staticstrans;
@@ -21,7 +21,6 @@ jQuery(document).ready(function($) {
   $.each(usersobject, function (index, order) {
     usersarray.push([order.usersdate,parseInt(order.usersnumber)]);
   });
-console.log(usersarray);
 
   $.each(activityobject, function (index, order) {
     activityarray.push([order.activitylevel,parseInt(order.activitypercent)]);
@@ -161,6 +160,6 @@ console.log(usersarray);
 //    plot4.replot( { resetAxes: true } );
 //  });
 
-});
-
-})();
+}
+};
+})(jQuery);

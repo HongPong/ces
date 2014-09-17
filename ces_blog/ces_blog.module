@@ -113,7 +113,21 @@ function ces_blog_field_widget_info() {
     ),
   );
 }
-
+/**
+ * Implements hook_form_after().
+ */
+function ces_blog_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'ces_blog_node_form') {
+    $form['title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Title'),
+      '#default_value' => (isset($form_state['node']->title)) ? $form_state['node']->title : t('Title'),
+      '#size' => 80,
+      '#maxlength' => 255,
+      '#required' => TRUE,
+    );
+  }
+}
 /**
  * Implements hook_field_widget_form().
  */
@@ -170,12 +184,5 @@ function ces_blog_node_access($node, $op, $account) {
     }
   }
   return NULL;
-}
-/**
- * Implements hook_menu_alter().
- */
-function ces_blog_menu_alter(&$items) {
-  // Remove Add content from menu.
-  $items['node/add']['type'] = MENU_LOCAL_TASK;
 }
 /** @} */

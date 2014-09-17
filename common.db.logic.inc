@@ -6,7 +6,7 @@
  */
 
 /**
- * @defgroup ces_common_db
+ * @defgroup ces_common_db Base de datos
  * @{
  */
 
@@ -178,13 +178,16 @@ class IcesSerializer {
    *   conditions for those objects having the created [time] field:
    *   - createdsince: the smaller created time to return.
    *   - createduntil: the largest created time to return.
-   * @param string $order
+   * @param string $order_field
    *   A field to order by.
+   * @param string $order_type
+   *   DESC: Descending, ASC Ascending.
    *
    * @return array
    *   Objects with attribute $key = $value ordered by $order field.
    */
-  public function loadCollection(array $conditions, $order = NULL) {
+  public function loadCollection(array $conditions, $order_field = NULL, $order_type = 'ASC') {
+    $order = ($order_field != NULL) ? $order_field : NULL;
     if (!db_table_exists($this->table)) {
       // This prevents a fatal error in case CES table is gone.
       drupal_set_message(t('WARNING: CES table @table is missing. You probably need to reinstall CES.'), array('@table' => $this->table));
@@ -217,7 +220,7 @@ class IcesSerializer {
       $query->condition('t.' . $key, $value);
     }
     if ($order != NULL) {
-      $query->orderBy($order);
+      $query->orderBy($order, $order_type);
     }
     $result = $query->execute();
     $loads = array();
@@ -309,9 +312,22 @@ class IcesSerializer {
  */
 class IcesLockSerializer extends IcesSerializer {
   /**
-   * Not implemented.
+   * Load many objects.
+   *
+   * @param array $conditions
+   *   Associative array with field names as keys. There are two special 
+   *   conditions for those objects having the created [time] field:
+   *   - createdsince: the smaller created time to return.
+   *   - createduntil: the largest created time to return.
+   * @param string $order_field
+   *   A field to order by.
+   * @param string $order_type
+   *   DESC: Descending, ASC Ascending.
+   *
+   * @return array
+   *   Objects with attribute $key = $value ordered by $order field.
    */
-  public function loadCollection(array $conditions, $order = NULL) {
+  public function loadCollection(array $conditions, $order_field = NULL, $order_type = 'ASC') {
     throw new Exception('Not implemented');
   }
   /**

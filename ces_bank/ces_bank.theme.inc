@@ -127,9 +127,10 @@ function theme_ces_bank_limitchain_view($variables) {
   $classes = $variables['element']['limitclasses'];
   $out = '';
   $out .= '<h2>' . $limitchain['name'] . '</h2>';
-  $out .= '<div>';
-  $out .= filter_xss($limitchain['description']);
-  $out .= '</div>';
+  // @todo ¿description?
+  // $out .= '<div>';
+  // $out .= filter_xss($limitchain['description']);
+  // $out .= '</div>';
   $out .= '<div>';
   $out .= '<h3>' . t('Limits') . '</h3>';
   if (empty($limitchain['limits'])) {
@@ -149,17 +150,17 @@ function theme_ces_bank_limitchain_view($variables) {
     );
     $count = 1;
     foreach ($limitchain['limits'] as $limit) {
-      // @todo TODO debug !! this line must be removed!
+      // @todo debug !! this line must be removed!
       $limit['weight'] = $count;
       $type = array(
-        '#type' => 'select',
-        '#options' => $classes,
-        '#default_value' => $limit['classname'],
+        '#type' => 'textfield',
+        '#value' => $limit['classname'],
+        '#size' => 15,
       );
       $value = array(
         '#type' => 'textfield',
-        '#default_value' => $limit['value'],
-        '#size' => 3,
+        '#value' => $limit['value'],
+        '#size' => 15,
       );
       $weight = array(
         '#type' => 'textfield',
@@ -171,8 +172,10 @@ function theme_ces_bank_limitchain_view($variables) {
       );
       $table['#rows'][] = array(
         'data' => array(
-          drupal_render($type),
-          drupal_render($value),
+          //drupal_render($type),
+          $type['#value'],
+          //drupal_render($value),
+          $value['#value'],
           $limit['block'] ? t('Block') : t('Warn'),
           drupal_render($weight),
         ),

@@ -49,9 +49,14 @@ function ces_bank_exchange_admin() {
 /**
  * TODO: document.
  */
-function ces_bank_accounts_admin() {
+function ces_bank_accounts_admin($exchange_id) {
   $bank = new CesBank();
-  $exchange = ces_bank_get_current_exchange();
+  if (!isset($exchange_id) || empty($exchange_id) || $exchange_id == 'ces_current_exchange') {
+    $exchange = ces_bank_get_current_exchange();
+  }
+  else {
+    $exchange = $bank->getExchange($exchange_id);
+  }
   if ($exchange === FALSE) {
     return array(
       'message' => array(
@@ -124,7 +129,9 @@ function ces_bank_accounts_admin() {
       $kinds[$account['kind']],
       $states[$account['state']],
       $limits[$account['limitchain']],
-      $bank->formatAmount($account['balance'], $exchange, TRUE),
+      // Quitamos moneda de la cantidad para poder ser ordenado.
+      // $bank->formatAmount($account['balance'], $exchange, TRUE),
+      number_format($account['balance'], 2),
       l(t('View'), 'ces/admin/account/' . $account['id'] . '/view') . ' ' .
       l(t('Edit'), 'ces/admin/account/' . $account['id'] . '/edit') . ' ' .
       l(t('Delete'), 'ces/admin/account/' . $account['id'] . '/delete'),
@@ -215,17 +222,6 @@ function ces_bank_exchange_accounts_page() {
   $bank = new CesBank();
   $exchange = ces_bank_get_current_exchange();
   $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id']));
-  // Accounts per user.
-  $useraccounts = array();
-  foreach ($accounts as $account) {
-    foreach ($account['users'] as $user) {
-      $uid = $user['user'];
-      if (!isset($useraccounts[$uid])) {
-        $useraccounts[$uid] = array();
-      }
-      $useraccounts[$uid][] = $account;
-    }
-  }
   $page = array();
   $page['table'] = array(
     '#theme' => 'table',
@@ -250,25 +246,30 @@ function ces_bank_exchange_accounts_page() {
       ),
     ),
   );
-
   $rows = array();
-  foreach ($useraccounts as $uid => $accounts) {
-    $user = user_load($uid);
-
-    $accountsperuser = "";
-    $balancesperuser = "";
-    foreach ($accounts as $account) {
-      $accountsperuser .= $account['name'] . '<br/>';
-      $balancesperuser .= $bank->formatAmount($account['balance'], $exchange, TRUE) . '<br/>';
-    }
-    // First cell begins with 8 chars of the name user in capital letters
-    // only for sort case insensitive proposals.
-    $row = array(
-      strtoupper(sprintf("%8.8s", ces_user_get_name($user))) .
+  foreach ($accounts as $account) {
+    $accountsperuser = $account['name'];
+    $balancesperuser = number_format($account['balance'], 2);
+    $users_out = '';
+    $count = 0;
+    foreach ($account['users'] as $user) {
+      $count++;
+      $user = user_load($user['user']);
+      $uo = ces_bank_get_full_username($user);
+      if ($count > 1) {
+        $users_out .= '<br/>';
+      }
+      // First cell begins with 8 chars of the name user in capital letters
+      // only for sort case insensitive proposals.
+      $users_out .= '            <p style="display: none;">' .
+      strtoupper(sprintf("%8.8s", $uo)) . '</p>' .
       '<div class="ces-user-column"> <div class="user-picture">' .
       theme('user_picture', array('account' => $user)) . '</div>' .
-      l(ces_user_get_name($user), 'user/' . $uid) .
-      '</div>',
+      l(ucfirst($uo), 'user/' . $user->uid) .
+      '</div>';
+    }
+    $row = array(
+      $users_out,
       $accountsperuser,
       $balancesperuser,
     );
@@ -354,6 +355,46 @@ function ces_bank_admin_page() {
       '#type' => 'item',
       '#title' => t('No requests for new exchanges.'),
     );
+  }
+  $page['edit_exchanges'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Active exchanges'),
+  );
+  $page['edit_exchanges']['table'] = array(
+    '#theme' => 'table',
+    '#attributes' => array(
+      'class' => array('ces-table'),
+    ),
+    '#header' => array(
+      array(
+        'data' => t('Exchange'),
+        'sort' => 'asc',
+        'field' => 'name',
+      ),
+      array(
+        'data' => t('Actions'),
+      ),
+    ),
+    '#rows' => array(),
+  );
+  $exchanges = $bank->getAllExchanges(array('state' => 1));
+  if (!empty($exchanges)) {
+    $rows = array();
+    foreach ($exchanges as $exchange) {
+      $row = array(
+        $exchange['code'] . ' - ' . $exchange['name'],
+        l(t('Edit'), 'ces/admin/ces/' . $exchange['id'] . '/edit') . ' ' .
+        l(t('Delete'), 'ces/admin/ces/' . $exchange['id'] . '/delete') . ' -- ' .
+        l(t('Accounts'), 'ces/admin/ces/' . $exchange['id'] . '/accounts') . ' ' .
+        l(t('Transactions'), 'ces/admin/ces/' . $exchange['id'] . '/transactions'),
+      );
+      $rows[] = $row;
+    }
+    _ces_bank_sort_table($page['edit_exchanges']['table']['#header'], $rows);
+    $page['edit_exchanges']['table']['#rows'] = $rows;
+  }
+  else {
+    $page['edit_exchanges']['table']['#rows'] = array(array(t('No exchanges activated yet.'), ''));
   }
   return $page;
 }
@@ -467,13 +508,13 @@ function ces_bank_limitchain_list_page() {
     $row[] = implode('<br/>', $limits);
     $actions = array();
     if (ces_bank_access(CesBankPermission::PERMISSION_VIEW, 'exchange limitchains', CES_BANK_CURRENT_EXCHANGE)) {
-      $actions[] = l(t('View'), 'ces/admin/limit/' . $limitchain['id'] . '/view');
+      $actions[] = l(t('View'), 'ces/admin/limitchain/' . $limitchain['id'] . '/view');
     }
     if (ces_bank_access(CesBankPermission::PERMISSION_EDIT, 'exchange', CES_BANK_CURRENT_EXCHANGE)) {
-      $actions[] = l(t('Edit'), 'ces/admin/limit/' . $limitchain['id'] . '/edit');
+      $actions[] = l(t('Edit'), 'ces/admin/limitchain/' . $limitchain['id'] . '/edit');
     }
     if (ces_bank_access(CesBankPermission::PERMISSION_ADMIN, 'exchange', CES_BANK_CURRENT_EXCHANGE)) {
-      $actions[] = l(t('Delete'), 'ces/admin/limit/' . $limitchain['id'] . '/delete');
+      $actions[] = l(t('Delete'), 'ces/admin/limitchain/' . $limitchain['id'] . '/delete');
     }
     $accounts = $bank->getAllAccounts(array('exchange' => $exchange['id'], 'limitchain' => $limitchain['id']));
     $row[] = count($accounts);
@@ -524,14 +565,16 @@ function ces_bank_exchange_view() {
 /**
  * TODO: document.
  */
-function ces_bank_account_view() {
-  $account = ces_bank_get_current_account();
+function ces_bank_account_view($account) {
+  if ($account == FALSE) {
+    $account = ces_bank_get_current_account();
+  }
   $page = array(
     'account' => $account,
     '#theme' => 'ces_bank_account_view',
   );
-  $bank = new CesBank();
   // Add and override some items.
+  $bank = new CesBank();
   $exchange = $bank->getExchange($account['exchange']);
   $page['account']['exchange'] = $exchange['name'];
   $users = reset($account['users']);
@@ -545,6 +588,7 @@ function ces_bank_account_view() {
     2 => t('Organization'),
     3 => t('Company'),
     4 => t('Public'),
+    5 => t('Virtual'),
   );
   $states = array(
     0 => t('Hidden'),
@@ -627,7 +671,12 @@ function _ces_bank_sort_table_cmp($a, $b) {
   global $_ces_bank_sort_table_column;
   $ca = $a[$_ces_bank_sort_table_column];
   $cb = $b[$_ces_bank_sort_table_column];
-  return strcmp($ca, $cb);
+  if (is_numeric($ca) && is_numeric($cb)) {
+    return ($ca > $cb);
+  }
+  else {
+    return strcmp($ca, $cb);
+  }
 }
 
 /**
@@ -637,20 +686,30 @@ function _ces_bank_sort_table_cmpr($a, $b) {
   global $_ces_bank_sort_table_column;
   $ca = $a[$_ces_bank_sort_table_column];
   $cb = $b[$_ces_bank_sort_table_column];
-  return strcmp($cb, $ca);
+  if (is_numeric($ca) && is_numeric($cb)) {
+    return ($cb > $ca);
+  }
+  else {
+    return strcmp($cb, $ca);
+  }
 }
 /**
  * Lastest transactions admin page.
  */
-function ces_bank_transactions_admin_page() {
+function ces_bank_transactions_admin_page($exchange_id) {
   $bank = new CesBank();
-  $exchange = ces_bank_get_current_exchange();
+  if (!isset($exchange_id) || empty($exchange_id) || $exchange_id == 'ces_current_exchange') {
+    $exchange = ces_bank_get_current_exchange();
+  }
+  else {
+    $exchange = $bank->getExchange($exchange_id);
+  }
   if ($exchange === FALSE) {
-    $page = array();
-    $page['message'] = array(
-      '#markup' => '<p>' . t("You don't administer any exchange yet.") . '<p>',
+    return array(
+      'message' => array(
+        '#markup' => '<p>' . t('Invalid exchange') . '</p>',
+      ),
     );
-    return $page;
   }
   // Use the account statement filter form.
   $form_state = array('method' => 'get');
@@ -819,6 +878,11 @@ function ces_bank_account_statement_page() {
     'createdsince' => $timefrom,
     'createduntil' => $timeto,
   ));
+
+  if (!$transactions) {
+    drupal_set_message(t('No Transaction'));
+  }
+
   $inibalance = $bank->getAccountHistoricBalance($account['id'], $timefrom);
   $dateformat = $format = variable_get('date_format_short', 'm/d/Y');
   $space = strpos($format, ' ');

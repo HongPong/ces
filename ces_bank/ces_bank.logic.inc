@@ -405,6 +405,10 @@ class CesBank {
    *   - createduntil: time. Get transactions created before this timestamp in
    *   seconds.
    *   - limit: int. Get only n transactions.
+   * @param string $order_field
+   *   A field to order by.
+   * @param string $order_type
+   *   DESC: Descending, ASC Ascending.
    *
    * @return array
    *   Transaction records meeting all conditions specified by $conditions
@@ -414,7 +418,7 @@ class CesBank {
    *   fromaccount's currency is used. Otherwise the currency is the seller's
    *   account one for each exchenge.
    */
-  public function getTransactions(array $conditions) {
+  public function getTransactions(array $conditions, $order_field = 'created', $order_type = 'ASC') {
     $s = new IcesSerializer('CesBankBasicTransaction');
     // Choose currency.
     $currencyaccount = NULL;
@@ -437,10 +441,10 @@ class CesBank {
       $account = $conditions['account'];
       unset($conditions['account']);
       $conditions['fromaccount'] = $account;
-      $transactions1 = $s->loadCollection($conditions, 'created');
+      $transactions1 = $s->loadCollection($conditions, $order_field, $order_type);
       unset($conditions['fromaccount']);
       $conditions['toaccount'] = $account;
-      $transactions2 = $s->loadCollection($conditions, 'created');
+      $transactions2 = $s->loadCollection($conditions, $order_field, $order_type);
       // Merge the arrays taking the created field in count.
       $transactions = $this->mergeSortedTransactionCollections($transactions1, $transactions2);
     }
@@ -457,7 +461,7 @@ class CesBank {
           ),
         );
       }
-      $transactions = $s->loadCollection($conditions, 'created');
+      $transactions = $s->loadCollection($conditions, $order_field, $order_type);
     }
     $records = array();
     foreach ($transactions as $t) {
@@ -682,6 +686,210 @@ class CesBank {
       $t->rollback();
       throw $e;
     }
+  }
+  /**
+   * Check if it's possible to delete accounts or exchange.
+   *
+   * @param array $arrayaids 
+   *   array of account identifiers.
+   * 
+   * @param string $context 
+   *   'account': checking for delete one or more accounts of an exchange.
+   *   exchange id: checking for delete all accounts of an entire exchange.
+   * 
+   * @return array
+   *   array of accounts:
+   *     'aid': account id, 'name': account name.
+   *     'account_action': recommended action for the account.
+   *       'delete', 'close', 'nothing'(do nothing).
+   *     'is_interexchange': TRUE if it's an interexchange account and
+   *       refers to an existing exchange in the system.
+   *     'num_transactions': number of transactions that refers to the account.
+   *     'transactions': array of transactions that refer to the account.
+   *     'account_users': array of account users.
+   *       'uid', 'accounts'(array of other accounts if any),
+   *       'user_action'(recomended action for this user).
+   *   array of users: (only is $context != 'account')
+   *     All users, recommended action and other accounts if there are any.
+   *   array of transactions: (only is $context != 'account')
+   *     Total number of transactions and array of transactions 
+   *     that refers from or to another exchange (inter-exchange).
+   */
+  public function deleteAccountsCheck($arrayaids, $context = 'account') {
+    $arrayreturn = array(
+      'accounts' => array(),
+      'users' => array(),
+      'transactions' => array(),
+    );
+    $joinusers = array();
+    foreach ($arrayaids as $singleaid) {
+      $account = $this->getAccount($singleaid);
+      $return = array(
+        'aid' => $account['id'],
+        'name' => $account['name'],
+        'account_action' => 'nothing',
+        'is_interexchange' => FALSE,
+        'num_transactions' => 0,
+        'transactions' => array(),
+        'account_users' => array(),
+      );
+      // Checking if it's an interexchange account.
+      if ($account['kind'] == 5) {
+        $return['is_interexchange'] = TRUE;
+      }
+      // Checking if account has transactions, only if $context == 'account'.
+      if ($context == 'account') {
+        $transactions = $this->getTransactions(array('account' => $account['id']));
+        foreach ($transactions as $trans) {
+          $return['transactions'][] = $trans;
+          $return['num_transactions']++;
+        }
+      }
+      // Checking if users has any other accounts in the system.
+      foreach ($account['users'] as $u) {
+        $return['account_users'][$u['user']] = array(
+          'uid' => $u['user'],
+          'accounts' => array(),
+          'user_action' => ($return['num_transactions'] == 0) ? 'delete' : 'cancel',
+        );
+        if ($context != 'account') {
+          if (!array_key_exists($u['user'], $joinusers)) {
+            $joinusers[$u['user']]['raw_user_action'] = array('delete');
+          }
+        }
+        $useraccounts = $this->getUserAccounts($u['user']);
+        foreach ($useraccounts as $accs) {
+          if ($accs['id'] != $account['id']) {
+            $return['account_users'][$u['user']]['accounts'][] = array(
+              'aid' => $accs['id'],
+              'name' => $accs['name'],
+            );
+            $return['account_users'][$u['user']]['user_action'] = 'nothing';
+            if ($context != 'account') {
+              $joinusers[$u['user']]['raw_user_action'][] = 'nothing';
+            }
+          }
+        }
+      }
+      if ($return['is_interexchange']) {
+        $return['account_action'] = 'nothing';
+      }
+      else {
+        if ($return['num_transactions'] == 0) {
+          $return['account_action'] = 'delete';
+        }
+        else {
+          $return['account_action'] = 'close';
+        }
+      }
+      $arrayreturn['accounts'][] = $return;
+    }
+    if ($context != 'account') {
+      // Select priority action if there are several actions for one user.
+      foreach ($joinusers as $u => $ra) {
+        if (count($ra['raw_user_action']) == 1) {
+          $arrayreturn['users'][$u]['user_action'] = $ra['raw_user_action']['0'];
+        }
+        else {
+          if (in_array('nothing', $ra['raw_user_action'])) {
+            $priority_action = 'nothing';
+          }
+          else {
+            $priority_action = 'delete';
+          }
+          $arrayreturn['users'][$u]['user_action'] = $priority_action;
+        }
+        // Look into users with severals accounts if the accounts:
+        // - belong to another exchange.
+        // - are inter-exchange accounts.
+        if ($arrayreturn['users'][$u]['user_action'] == 'nothing') {
+          $useraccounts = $this->getUserAccounts($u);
+          foreach ($useraccounts as $uacc) {
+            if ($uacc['exchange'] != $context || $account['kind'] != 5) {
+              $arrayreturn['users'][$u]['accounts'][] = array(
+                'aid' => $uacc['id'],
+                'name' => $uacc['name'],
+              );
+            }
+          }
+          if (empty($arrayreturn['users'][$u]['accounts'])) {
+            $arrayreturn['users'][$u]['user_action'] = 'delete';
+          }
+        }
+      }
+      // All transactions of the exchange.
+      $querytrans = db_query("
+        SELECT t.id
+        FROM {ces_transaction} t
+        INNER JOIN {ces_account} a
+        ON (a.exchange = :exchange
+        AND a.id = t.fromaccount)",
+        array(
+          ':exchange' => $context,
+        ));
+      $arrayreturn['transactions']['tids'] = array();
+      $arrayreturn['transactions']['totaltrans'] = 0;
+      foreach ($querytrans as $record) {
+        $arrayreturn['transactions']['tids'][] = $record->id;
+        $arrayreturn['transactions']['totaltrans']++;
+      }
+    }
+    return $arrayreturn;
+  }
+  /**
+   * Delete or cancel drupal users and all content associated.
+   *
+   * @param array $users 
+   *   'uid': user id.
+   *   'action':
+   *     delete -> delete oferswants, comments and user.
+   *     cancel -> hide offerswants, delete comments, cancel user.
+   */
+  public function deleteUsers(array $users) {
+    $module_offerswants = module_exists('ces_offerswants');
+    $table_offerwant = db_table_exists('ces_offerwant');
+    $table_offercomment = db_table_exists('ces_offercomment');
+    foreach ($users as $user) {
+      if ($user['uid'] != 1) {
+        if ($module_offerswants && $table_offerwant) {
+          $userloaded = user_load($user['uid']);
+          $username = ces_bank_get_full_username($userloaded);
+          if ($user['action'] == 'delete') {
+            $offerswants = db_delete('ces_offerwant')
+              ->condition('user', $user['uid'])
+              ->execute();
+            if ($offerswants > 0) {
+              drupal_set_message(t('%offrs offers and wants of user %usr have been deleted.',
+                array('%offrs' => $offerswants, '%usr' => $username)), 'status');
+            }
+          }
+          if ($user['action'] == 'cancel') {
+            $offerswants = db_update('ces_offerwant')
+              ->condition('user', $user['uid'])
+              ->fields(array('state' => 0))
+              ->execute();
+            if ($offerswants > 0) {
+              drupal_set_message(t('%offrs offers and wants of user %usr have been hidden.',
+                array('%offrs' => $offerswants, '%usr' => $username)), 'status');
+            }
+          }
+          if ($table_offercomment) {
+            $offercomments = db_delete('ces_offercomment')
+              ->condition('uid', $user['uid'])
+              ->execute();
+            if ($offercomments > 0) {
+              drupal_set_message(t('%offrcomm offer comments and ratings of user %usr have been deleted.',
+                array('%offrcomm' => $offercomments, '%usr' => $username)), 'status');
+            }
+          }
+        }
+        $arg_cancel_user = ($user['action'] == 'delete') ? 'user_cancel_delete' : 'user_cancel_block_unpublish';
+        user_cancel(array(), $user['uid'], $arg_cancel_user);
+      }
+    }
+    $batch =& batch_get();
+    $batch['progressive'] = FALSE;
+    batch_process();
   }
   /**
    * Creates a limit chain object.
@@ -1626,6 +1834,17 @@ class CesBankLocalAccount extends IcesDBObject implements CesBankAccountInterfac
     }
   }
   /**
+   * Delete user account.
+   */
+  public function deleteUserAccount($id) {
+    $s = new IcesSerializer('CesBankAccountUser');
+    foreach ($this->users as $accuser) {
+      if ($accuser->user == $id) {
+        $s->delete($accuser);
+      }
+    }
+  }
+  /**
    * Gets limit chain.
    * @return CesBankLimitChain
    *   The limit chain associated to this account.
@@ -1734,6 +1953,7 @@ class CesBankAccountUser extends IcesDBObject {
   public $id;
   public $user;
   public $account;
+  public $privilege;
   public $role;
   const ROLE_ACCOUNT_ADMINISTRATOR = 0;
 }
@@ -1891,6 +2111,8 @@ abstract class CesBankAccountLimit extends IcesDBObject {
   public $value;
   /**
    * @var boolean
+   *
+   * If so, blocks the transaction
    */
   public $block;
   /**

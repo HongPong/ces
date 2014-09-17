@@ -81,6 +81,23 @@ function ces_bank_access($permission, $object, $objectid, $account = NULL) {
   if ($objectid === FALSE) {
     return FALSE;
   }
+
+  // Check account permissions.
+  if ($permission == 'admin' && $object == 'account' && $objectid) {
+    if (empty($account)) {
+      $account = ces_bank_get_current_account();
+      $account = $account['id'];
+    }
+    $sql = 'SELECT id FROM {ces_accountuser} WHERE user = :uid AND account = :account AND privilege = 0';
+    $result = db_query($sql, array(':uid' => $user->uid, ':account' => $account));
+    if ($result->rowCount() > 0) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
   $bank = new CesBank();
   return $bank->access($args[0], $args[1], $args[2], $args[3]);
 }
@@ -98,6 +115,50 @@ function ces_bank_menu() {
     'access arguments' => array('admin', 'global', 0),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 990,
+  );
+  $menu['ces/admin/ces/%/edit'] = array(
+    'title' => 'Edit exchange',
+    'description' => 'Top administer interface for CES Bank - Edit exchange',
+    'page callback' => '_ces_bank_get_form',
+    'page arguments' => array('ces_bank_exchange_form', 'edit', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'global', 0),
+    'type' => MENU_CALLBACK,
+  );
+  $menu['ces/admin/ces/%/delete'] = array(
+    'title' => 'Delete exchange',
+    'description' => 'Top administer interface for CES Bank - Delete exchange',
+    'page callback' => '_ces_bank_get_form',
+    'page arguments' => array('ces_bank_exchange_delete_form', 3),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'global', 0),
+    'type' => MENU_CALLBACK,
+  );
+  $menu['ces/admin/ces/%/accounts'] = array(
+    'title' => 'Edit accounts',
+    'description' => 'Top administer interface for CES Bank - Edit accounts',
+    'page callback' => 'ces_bank_accounts_admin',
+    'page arguments' => array(3),
+    'file' => 'ces_bank.pages.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'global', 0),
+    'type' => MENU_CALLBACK,
+  );
+  $menu['ces/admin/ces/%/transactions'] = array(
+    'title' => 'Edit transactions',
+    'description' => 'Top administer interface for CES Bank - Edit transactions',
+    'page callback' => 'ces_bank_transactions_admin_page',
+    'page arguments' => array(3),
+    'file' => 'ces_bank.pages.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'global', 0),
+    'type' => MENU_CALLBACK,
   );
   // Superglobal menu (before login). Creating new exchange.
   $menu['ces/bank/exchange/new'] = array(
@@ -129,6 +190,7 @@ function ces_bank_menu() {
     'title' => 'Accounts',
     'description' => 'Administer accounts',
     'page callback' => 'ces_bank_accounts_admin',
+    'page arguments' => array(CES_BANK_CURRENT_EXCHANGE),
     'file' => 'ces_bank.pages.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'type' => MENU_NORMAL_ITEM,
@@ -194,6 +256,7 @@ function ces_bank_menu() {
     'title' => 'Transactions',
     'description' => 'Administer transactions',
     'page callback' => 'ces_bank_transactions_admin_page',
+    'page arguments' => array(CES_BANK_CURRENT_EXCHANGE),
     'file' => 'ces_bank.pages.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'type' => MENU_NORMAL_ITEM,
@@ -235,6 +298,35 @@ function ces_bank_menu() {
       CES_BANK_CURRENT_ACCOUNT),
     'weight' => 130,
   );
+  $menu['ces/bank/account/sell/simple'] = array(
+    'title' => 'One transaction',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $menu['ces/bank/account/sell/multiple'] = array(
+    'title' => 'Multiple transactions',
+    'description' => 'Charge many sales to many accounts.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_multipletransactions_form'),
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('use', 'account seller',
+      CES_BANK_CURRENT_ACCOUNT),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  );
+  $menu['ces/bank/account/sell/multiple/autocomplete'] = array(
+    'title' => 'Autocomplete for multiple transactions',
+    'description' => 'Autocomplete for multiple transactions.',
+    'page callback' => 'ces_bank_multipletransactions_form_autocomplete_callback',
+    'file' => 'ces_bank.forms.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('use', 'account seller',
+      CES_BANK_CURRENT_ACCOUNT),
+    'type' => MENU_CALLBACK,
+  );
   $menu['ces/bank/account'] = array(
     'title' => 'My account',
     'description' => 'View account details.',
@@ -248,6 +340,60 @@ function ces_bank_menu() {
       CES_BANK_CURRENT_ACCOUNT),
     'expanded' => TRUE,
     'weight' => 100,
+  );
+  // Managing Users Account.
+  $menu['ces/bank/account/users_account'] = array(
+    'title' => 'Account users',
+    'description' => 'Admin account users',
+    'page callback' => 'ces_bank_account_users_admin',
+    'page arguments' => array(),
+    'file' => 'ces_bank.pages.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'account', 3),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 990,
+  );
+  $menu['ces/bank/account/users_account/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $menu['ces/bank/account/users_account/add'] = array(
+    'title' => 'Add account users',
+    'description' => 'Add user in account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_user_form'),
+    'file' => 'ces_bank.forms.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'account', 3),
+    'weight' => 4,
+  );
+  $menu['ces/bank/account/%user/users_account/delete'] = array(
+    'title' => 'Delete users of account',
+    'description' => 'Delete users of account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_user_delete_form', 3),
+    'file' => 'ces_bank.forms.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'account', 4),
+    'weight' => 4,
+  );
+  $menu['ces/bank/account/%user/users_account/edit'] = array(
+    'title' => 'Edit user account',
+    'description' => 'Edit user account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_user_form', 3),
+    'file' => 'ces_bank.forms.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'account', 4),
+    'weight' => 4,
   );
   $menu['ces/bank/exchange'] = array(
     'title' => 'Exchange',
@@ -307,7 +453,7 @@ function ces_bank_menu() {
     'weight' => 910,
   );
   /* Begin limit chains */
-  $menu['ces/admin/limit'] = array(
+  $menu['ces/admin/limitchain'] = array(
     'title' => 'Limits',
     'description' => 'Types of debit and credit limits for accounts.',
     'page callback' => 'ces_bank_limitchain_list_page',
@@ -318,12 +464,12 @@ function ces_bank_menu() {
     'access arguments' => array('view', 'exchange limitchains',
       CES_BANK_CURRENT_EXCHANGE),
   );
-  $menu['ces/admin/limit/list'] = array(
+  $menu['ces/admin/limitchain/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 0,
   );
-  $menu['ces/admin/limit/new'] = array(
+  $menu['ces/admin/limitchain/new'] = array(
     'title' => 'New',
     'description' => 'Create a new account limit.',
     'page callback' => 'drupal_get_form',
@@ -335,7 +481,7 @@ function ces_bank_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
   );
-  $menu['ces/admin/limit/%ces_limitchain/view'] = array(
+  $menu['ces/admin/limitchain/%ces_limitchain/view'] = array(
     'title' => 'View',
     'description' => 'View account limit details.',
     'page callback' => 'ces_bank_limitchain_view',
@@ -348,7 +494,7 @@ function ces_bank_menu() {
       CES_BANK_CURRENT_EXCHANGE),
     'weight' => 2,
   );
-  $menu['ces/admin/limit/%ces_limitchain/edit'] = array(
+  $menu['ces/admin/limitchain/%ces_limitchain/edit'] = array(
     'title' => 'Edit',
     'description' => 'Edit account limit',
     'page callback' => 'drupal_get_form',
@@ -360,7 +506,7 @@ function ces_bank_menu() {
     'access arguments' => array('edit', 'exchange', CES_BANK_CURRENT_EXCHANGE),
     'weight' => 3,
   );
-  $menu['ces/admin/limit/%ces_limitchain/delete'] = array(
+  $menu['ces/admin/limitchain/%ces_limitchain/delete'] = array(
     'title' => 'Delete',
     'description' => 'Delete account limit',
     'page callback' => 'drupal_get_form',
@@ -372,7 +518,7 @@ function ces_bank_menu() {
     'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
     'weight' => 4,
   );
-  /* End limit chains */
+  /* Begin limit chains */
   $menu['ces/admin/ces'] = array(
     'title' => 'Administer CES bank',
     'description' => 'Top administer interface for CES Bank',
@@ -470,6 +616,55 @@ function ces_bank_menu() {
     'access arguments' => array('edit', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
+  );
+  // Managing Users Account from exchange administrator.
+  $menu['ces/admin/account/%ces_account/listusers'] = array(
+    'title' => 'List users',
+    'description' => 'List account users',
+    'page callback' => 'ces_bank_account_users_admin',
+    'page arguments' => array('administrator', 3),
+    'file' => 'ces_bank.pages.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 100,
+  );
+  $menu['ces/admin/account/%ces_account/adduser'] = array(
+    'title' => 'Add account users',
+    'description' => 'Add user in account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_user_form', NULL, 3, TRUE),
+    'file' => 'ces_bank.forms.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
+    'weight' => 110,
+  );
+  $menu['ces/admin/account/users/%ces_account/users_account/%user/delete'] = array(
+    'title' => 'Delete users account',
+    'description' => 'Delete users account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_user_delete_form', 6, 4, TRUE),
+    'file' => 'ces_bank.forms.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_CALLBACK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
+    'weight' => 150,
+  );
+  $menu['ces/admin/account/users/%ces_account/users_account/%user/edit'] = array(
+    'title' => 'Edit user account',
+    'description' => 'Edit user account',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_bank_account_user_form', 6, 4, TRUE),
+    'file' => 'ces_bank.forms.account_users.inc',
+    'file path' => drupal_get_path('module', 'ces_bank'),
+    'type' => MENU_CALLBACK,
+    'access callback' => 'ces_bank_access',
+    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
+    'weight' => 140,
   );
   return $menu;
 }
@@ -897,7 +1092,7 @@ function ces_bank_get_current_exchange($account = NULL) {
   $bankaccount = ces_bank_get_current_account($account);
   if ($bankaccount === FALSE) {
     $path = arg();
-    if ($path[0] == 'user' && $path[1] == 'register') {
+    if ($path[0] == 'user' && $path[1] == 'register' && isset($path[2])) {
       $exchange = ces_bank_get_exchange_by_name($path[2]);
     }
     else {
@@ -1141,7 +1336,7 @@ function ces_bank_form_alter(&$form, &$form_state, $form_id) {
       $exchange = ces_bank_get_current_exchange();
       $form['language'] = array(
         '#type' => 'value',
-        '#value' => $exchange['data']['default_lang'],
+        '#value' => ( isset($exchange['data']['default_lang']) ) ? $exchange['data']['default_lang'] : FALSE,
       );
     }
     elseif ($form_state['page'] == 'bankaccount') {
