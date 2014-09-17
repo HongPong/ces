@@ -240,15 +240,9 @@ function ces_message_update_7102() {
   ces_message_install_default_templates();
 }
 /**
- * Fourth update 10/7/2014.
+ * Quirt update 10/7/2014.
  */
 function ces_message_update_7103() {
-  ces_message_install_default_templates();
-}
-/**
- * Fifth update 28/7/2014.
- */
-function ces_message_update_7104() {
   ces_message_install_default_templates();
 }
 /**

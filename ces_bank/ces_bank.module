@@ -25,12 +25,6 @@ function ces_bank_help($path, $arg) {
       $msg .= '</p>';
       return $msg;
 
-    case 'ces/bank/account/sell/multiple':
-      $msg  = '<p>';
-      $msg .= t('Charge sales to several accounts of your current exchange.');
-      $msg .= '</p>';
-      return $msg;
-
     case 'ces/bank/exchange/accounts':
       $msg  = '<p>';
       $msg .= t('All users and banking accounts of your exchange.');
@@ -41,7 +35,6 @@ function ces_bank_help($path, $arg) {
       $msg  = '<p>';
       $msg .= t('Showing your transactions. Set the "From" and "To" dates to see a specific time range.');
       $msg .= '</p>';
-      return $msg;
 
     case 'ces/register/%':
       return '<p>' . t('Click on the exchange you want to join.') . '</p>';
@@ -241,24 +234,6 @@ function ces_bank_menu() {
     'access arguments' => array('use', 'account seller',
       CES_BANK_CURRENT_ACCOUNT),
     'weight' => 130,
-  );
-  $menu['ces/bank/account/sell/simple'] = array(
-    'title' => 'One transaction',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 0,
-  );
-  $menu['ces/bank/account/sell/multiple'] = array(
-    'title' => 'Multiple transactions',
-    'description' => 'Charge many sales to many accounts.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_multipletransactions_form'),
-    'file' => 'ces_bank.forms.inc',
-    'file path' => drupal_get_path('module', 'ces_bank'),
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('use', 'account seller',
-      CES_BANK_CURRENT_ACCOUNT),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 1,
   );
   $menu['ces/bank/account'] = array(
     'title' => 'My account',
@@ -841,11 +816,11 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
         case 'concept':
           $replacements[$original] = $sanitize ? check_plain($transaction['concept']) : $transaction['concept'];
           break;
-
+        
         case 'id':
           $replacements[$original] = $transaction['id'];
           break;
-
+      
       }
       if ($fromaccount_tokens = token_find_with_prefix($tokens, 'fromaccount')) {
         $bank = new CesBank();

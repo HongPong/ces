@@ -14,7 +14,7 @@ S\'ha creat una transacció cap a [transaction:toaccount:name] ([transaction:toa
 
 Por favor acepta (o rechaza) esta transacción siguiendo el enlace:
 
-[site:url]/user/login?destination=ces/bank/account/transaction/[transaction:id]/accept
+[site:url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept
 
 Es muy importante que autorizes tus pagos pendientes inmediatamente por el buen funcionamiento del sistema de moneda social. También puedes añadir esta cuenta a la lista blanca de cuentas de confianza que no requieren autorización.
 

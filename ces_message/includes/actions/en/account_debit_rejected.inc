@@ -22,7 +22,7 @@ Ordered by: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
 If this rejection is an error please log in to your account and accept the transaction following this link: 
 
-[site:url]/user/login?destination=ces/bank/account/transaction/[transaction:id]/accept
+[site:url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept
 
 --
 [exchange:shortname] administrator:

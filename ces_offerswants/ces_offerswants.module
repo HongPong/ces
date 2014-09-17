@@ -696,8 +696,7 @@ function ces_offerwant_form_validate($form, &$form_state) {
 function ces_offerwant_form_submit($form, &$form_state) {
   $offerwant = (object) $form_state['values'];
   $offerwant->state = $form_state['values']['hide'] ? 0 : 1;
-  //$offerwant->expire = mktime(24, 0, 0, $form_state['values']['expire']['month'], $form_state['values']['expire']['day'], $form_state['values']['expire']['year']);
-  $offerwant->expire = $form_state['values']['expire'];
+  $offerwant->expire = mktime(24, 0, 0, $form_state['values']['expire']['month'], $form_state['values']['expire']['day'], $form_state['values']['expire']['year']);
   $offerwant->modified = REQUEST_TIME;
   field_attach_submit('ces_offerwant', $offerwant, $form, $form_state);
   // Load original $offerwant.

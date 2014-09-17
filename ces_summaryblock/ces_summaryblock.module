@@ -46,7 +46,7 @@ function ces_summaryblock_block_view($delta = '') {
 
     $transactions = $bank->getTransactions(array('limit' => 1, 'account' => $account['id']));
     if (!empty($transactions)) {
-      $transaction = end($transactions);
+      $transaction = reset($transactions);
       $lasttradedesc = l(_ces_summaryblock_shorten_text($transaction['concept'], 25), 'ces/bank/account/transaction');
       if ($account['id'] == $transaction['fromaccount']) {
         $otheraccountid = $transaction['toaccount'];
