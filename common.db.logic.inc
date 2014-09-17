@@ -194,6 +194,7 @@ class IcesSerializer {
       return FALSE;
     }
     $query = db_select($this->table, 't')->fields('t');
+    // Handle special conditions.
     if (isset($conditions['createdsince'])) {
       $query->condition('t.created', $conditions['createdsince'], '>=');
       unset($conditions['createdsince']);
@@ -217,7 +218,16 @@ class IcesSerializer {
       unset($conditions['limit']);
     }
     foreach ($conditions as $key => $value) {
-      $query->condition('t.' . $key, $value);
+      if (is_array($value)) {
+        $orcondition = db_or();
+        foreach ($value as $orkey => $orvalue) {
+          $orcondition = $orcondition->condition('t.' . $orkey, $orvalue);
+        }
+        $query->condition($orcondition);
+      }
+      else {
+        $query->condition('t.' . $key, $value);
+      }
     }
     if ($order != NULL) {
       $query->orderBy($order, $order_type);

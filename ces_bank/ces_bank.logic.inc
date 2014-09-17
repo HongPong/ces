@@ -436,17 +436,13 @@ class CesBank {
     }
     // Load collection.
     if (isset($conditions['account'])) {
-      // Shall we improve IcesSerializer so it can directly handle 'or'
-      // conditions?
+      // An array condition is an OR of its contents.
       $account = $conditions['account'];
-      unset($conditions['account']);
-      $conditions['fromaccount'] = $account;
-      $transactions1 = $s->loadCollection($conditions, $order_field, $order_type);
-      unset($conditions['fromaccount']);
-      $conditions['toaccount'] = $account;
-      $transactions2 = $s->loadCollection($conditions, $order_field, $order_type);
-      // Merge the arrays taking the created field in count.
-      $transactions = $this->mergeSortedTransactionCollections($transactions1, $transactions2);
+      $conditions['account'] = array(
+        'fromaccount' => $account,
+        'toaccount' => $account,
+      );
+      $transactions = $s->loadCollection($conditions, $order_field, $order_type);
     }
     else {
       if (isset($conditions['exchange'])) {
