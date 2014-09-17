@@ -1402,6 +1402,313 @@ function _ces_bank_set_transaction_message($result, $record, $op = 'trigger') {
   }
 }
 /**
+ * Multiple transaction form.
+ */
+function ces_bank_multipletransactions_form($form, &$form_state) {
+  if (!empty($form_state['values']) && !empty($form_state['values']['page'])
+      && $form_state['values']['page'] == 'confirm') {
+    return ces_bank_multipletransactions_confirm_form($form, $form_state);
+  }
+  global  $user;
+  $bank = new CesBank();
+  $currentexchange = ces_bank_get_current_exchange();
+  $currentaccount = ces_bank_get_current_account();
+  if (empty($currentexchange) || empty($currentaccount)) {
+    return array(
+      'message' => array(
+        '#markup' => '<p>' . t('Invalid exchange or account.') . '</p>',
+      ),
+    );
+  }
+  $exchangeid = $currentexchange['id'];
+  $to_account_id = $currentaccount['id'];
+  $accountconditions = array(
+    'exchange' => $exchangeid,
+    'state' => 1,
+    'kind' => array(
+      CesBankLocalAccount::TYPE_INDIVIDUAL,
+      CesBankLocalAccount::TYPE_SHARED,
+      CesBankLocalAccount::TYPE_ORGANIZATION,
+      CesBankLocalAccount::TYPE_COMPANY,
+      CesBankLocalAccount::TYPE_PUBLIC,
+    ));
+  $accounts = $bank->getAllAccounts($accountconditions);
+  $fromoptions = array();
+  $fromoptions[0] = '';
+  foreach ($accounts as $account) {
+    $useracc = reset($account['users']);
+    $name_user_account = ces_user_get_name(user_load($useracc['user']));
+    if (strlen($name_user_account) > 20) {
+      $name_user_account = substr($name_user_account, 0, 17) . '...';
+    }
+    $fromoptions[$account['name']] = $account['name'] . ' - ' . $name_user_account;
+  }
+  $toaccount = $bank->getAccount($to_account_id);
+  if (empty($toaccount)) {
+    drupal_set_message(t('Account id %id does not exist, is not active yet, or does not belong to exchange %ex', array('%id' => $to_account_id, '%ex' => $toexchange['code'])), 'error');
+    return FALSE;
+  };
+  $default = !empty($form_state['values']['howmany_transactions']) ? $form_state['values']['howmany_transactions'] : 10;
+  $form['howmany_transactions'] = array(
+    '#attributes' => array('class' => array('container-inline')),
+    '#type' => 'select',
+    '#options' => array(10 => 10, 20 => 20, 30 => 30, 40 => 40, 50 => 50),
+    '#default_value' => $default,
+    '#ajax' => array(
+      'callback' => 'ces_bank_multipletransactions_form_callback',
+      'wrapper' => 'multiple-transactions-div',
+      'method' => 'replace',
+      'effect' => 'fade',
+    ),
+  );
+  $form['toexchange'] = array(
+    '#type' => 'value',
+    '#value' => $exchangeid,
+  );
+  $form['toaccountname'] = array(
+    '#type' => 'value',
+    '#value' => $toaccount['name'],
+    '#suffix' => '',
+  );
+
+  $form['transaction_fieldset'] = array(
+    '#prefix' => '<div id="multiple-transactions-div"><table class="ces-table" style="margin:20px 0;"><thead><tr><th></th><th>' . t('Account') . '</th><th>' . t('Concept') . '</th><th>' . $currentexchange['currenciesname'] . '</th></tr></thead><tbody>',
+    '#suffix' => '</tbody></table></div>',
+    '#type' => 'fieldset',
+    '#attributes' => array('class' => array('element-invisible')),
+  );
+
+  for ($i = 1; $i <= $default; $i++) {
+    $form['transaction_fieldset']['fromaccountname-' . $i] = array(
+      '#title' => '',
+      '#description' => '',
+      '#prefix' => '<tr style="border-top:1px dotted #ccc;"><td style="padding: 5px 0;">' . $i . '</td><td>',
+      '#suffix' => '</td>',
+      '#type' => 'select',
+      '#options' => $fromoptions,
+      '#default_value' => isset($form_state['values']['fromaccountname-' . $i]) ? $form_state['values']['fromaccountname-' . $i] : '',
+    );
+    $form['transaction_fieldset']['concept-' . $i] = array(
+      '#type'  => 'textfield',
+      '#title' => '',
+      '#description' => '',
+      '#prefix' => '<td>',
+      '#suffix' => '</td>',
+      '#size' => 25,
+      '#default_value' => !empty($form_state['values']['concept-' . $i]) ? $form_state['values']['concept-' . $i] : '',
+    );
+    $form['transaction_fieldset']['amount-' . $i] = array(
+      '#type' => 'textfield',
+      '#size' => '5',
+      '#title' => '',
+      '#description' => '',
+      '#prefix' => '<td>',
+      '#suffix' => '</td></tr>',
+      '#default_value' => !empty($form_state['values']['amount-' . $i]) ? $form_state['values']['amount-' . $i] : '',
+    );
+  }
+  $form['user'] = array(
+    '#type' => 'value',
+    '#prefix' => '',
+    '#value' => $user->uid,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Create transactions'),
+    '#weight' => 100,
+  );
+  return $form;
+}
+/**
+ * AJAX callback for selector in multiple transactions form.
+ */
+function ces_bank_multipletransactions_form_callback($form, $form_state) {
+  return $form['transaction_fieldset'];
+}
+/**
+ * Validate multiple transactions form.
+ */
+function ces_bank_multipletransactions_form_validate($form, &$form_state) {
+  if (!empty($form_state['values']['page']) && $form_state['values']['page'] == 'confirm') {
+    return;
+  }
+  $bank = new CesBank();
+  $record = $form_state['values'];
+  $account1 = $bank->getAccountByName($record['toaccountname']);
+  if ($account1 === FALSE) {
+    form_set_error('toaccountname', t('Seller account %acc is incorrect.', array('%acc' => $account1)));
+  }
+  $numbertrans = $record['howmany_transactions'];
+  for ($i = 1; $i <= $numbertrans; $i++) {
+    $amount = $record['amount-' . $i];
+    $account2 = $record['fromaccountname-' . $i];
+    $concept = trim($form_state['values']['concept-' . $i]);
+    if (!($amount == '' && $account2 == '0' && $concept == '')) {
+      if (!is_numeric($amount)) {
+        form_set_error('amount-' . $i, t('The amount entered is not a numeric value. Use the dot "." character for the decimal point and do not use any thousands separator.'));
+        if (!($amount > 0.0)) {
+          form_set_error('amount-' . $i, t('The amount must be positive.'));
+        }
+      }
+      $account2 = $bank->getAccountByName($account2);
+      if ($account2 === FALSE) {
+        form_set_error('fromaccountname-' . $i, t('Buyer account %acc is incorrect.', array('%acc' => $account2)));
+      }
+      if ($account1['id'] == $account2['id']) {
+        form_set_error('fromaccountname-' . $i, t('Buyer account cannot be the same as seller account.'));
+      }
+      if (empty($concept)) {
+        form_set_error('concept-' . $i, t('You must specify the concept of this transaction.'));
+      }
+      $transaction = array(
+        'toaccount' => $account1['id'],
+        'fromaccount' => $account2['id'],
+        'amount' => $amount,
+        'concept' => $concept,
+        'user' => $form_state['values']['user'],
+      );
+      if (!ces_transaction_access('use', $transaction)) {
+        form_set_error('toaccountname', t("You don't have permission to apply this transaction."));
+      }
+    }
+  }
+}
+/**
+ * Multiple transactions submit.
+ */
+function ces_bank_multipletransactions_form_submit($form, &$form_state) {
+  $form_state['values']['page'] = 'confirm';
+  $form_state['rebuild'] = TRUE;
+}
+/**
+ * Confirm multiple transactions form.
+ */
+function ces_bank_multipletransactions_confirm_form($form, &$form_state) {
+  $values = $form_state['values'];
+  // Copy values from previous form in a safe place.
+  $form_state['edit_page'] = $values;
+  $toexchange = ces_bank_get_exchange($values['toexchange']);
+  $whichuser = ces_user_get_name(user_load($values['user']));
+  if (isset($values['id'])) {
+    $form['id'] = array(
+      '#type' => 'value',
+      '#value' => $values['id'],
+    );
+  }
+  // This value is used in ces_bank_multipletransactions_form().
+  $form['page'] = array(
+    '#type' => 'value',
+    '#value' => 'confirm',
+  );
+  $form['itemtoexchange'] = array(
+    '#type' => 'item',
+    '#title' => t('Exchange'),
+    '#markup' => $toexchange['name'],
+  );
+  $form['itemtoaccountname'] = array(
+    '#type' => 'item',
+    '#title' => t('Seller account and user'),
+    '#markup' => $values['toaccountname'] . ' - ' . $whichuser,
+  );
+  $form['transaction_fieldset'] = array(
+    '#prefix' => '<table class="ces-table" style="margin:20px 0;"><thead><tr><th></th><th>' . t('Account') . '</th><th>' . t('Concept') . '</th><th>' . $toexchange['currenciesname'] . '</th></tr></thead><tbody>',
+    '#suffix' => '</tbody></table>',
+    '#type' => 'fieldset',
+    '#attributes' => array('class' => array('element-invisible')),
+  );
+  $numbertrans = $values['howmany_transactions'];
+  $j = 1;
+  for ($i = 1; $i <= $numbertrans; $i++) {
+    $amount = $values['amount-' . $i];
+    $account2 = $values['fromaccountname-' . $i];
+    $concept = trim($form_state['values']['concept-' . $i]);
+    if (($amount != '' && $account2 != '0' && $concept != '')) {
+      $form['transaction_fieldset']['itemfromaccountname-' . $j] = array(
+        '#type' => 'item',
+        '#prefix' => '<tr style="border-top:1px dotted #ccc;"><td style="padding: 5px 0;">' . $i . '</td><td>',
+        '#suffix' => '</td>',
+        '#markup' => $account2,
+      );
+      $form['transaction_fieldset']['itemconcept-' . $j] = array(
+        '#type' => 'item',
+        '#prefix' => '<td>',
+        '#suffix' => '</td>',
+        '#markup' => $concept,
+      );
+      $form['transaction_fieldset']['itemamount-' . $j] = array(
+        '#type' => 'item',
+        '#prefix' => '<td>',
+        '#suffix' => '</td></tr>',
+        '#markup' => $amount,
+      );
+      $j++;
+    }
+  }
+  $form['back'] = array(
+    '#type' => 'submit',
+    '#value' => t('Back'),
+    '#submit' => array('ces_bank_multipletransactions_confirm_form_back'),
+    '#limit_validation_errors' => array(),
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#submit' => array('ces_bank_multipletransactions_confirm_form_submit'),
+  );
+  $form['submit']['#value'] = t('Confirm all transactions');
+  return $form;
+}
+/**
+ * Back action in confirm multiple transactions form.
+ */
+function ces_bank_multipletransactions_confirm_form_back($form, &$form_state) {
+  if (isset($form_state['edit_page'])) {
+    $form_state['values'] = $form_state['edit_page'];
+    $form_state['values']['page'] = 'edit';
+    $form_state['rebuild'] = TRUE;
+  }
+  else {
+    drupal_goto('ces/bank');
+  }
+}
+/**
+ * Submit confirmed multiple transactions form.
+ */
+function ces_bank_multipletransactions_confirm_form_submit($form, &$form_state) {
+  $bank = new CesBank();
+  $result = TRUE;
+  $id = '';
+  $values = $form_state['edit_page'];
+  $numbertrans = $values['howmany_transactions'];
+  for ($i = 1; $i <= $numbertrans; $i++) {
+    $amount = $values['amount-' . $i];
+    $account2 = $values['fromaccountname-' . $i];
+    $concept = trim($values['concept-' . $i]);
+    if (($amount != '' && $account2 != '0' && $concept != '')) {
+      $record = array();
+      $record['toaccountname'] = $values['toaccountname'];
+      $record['fromaccountname'] = $account2;
+      $record['concept'] = $concept;
+      $record['amount'] = $amount;
+      $record['user'] = $values['user'];
+      $op = $values['op'];
+      try {
+        $bank->createTransaction($record);
+        $id = $record['id'];
+        $result = $bank->applyTransaction($id);
+        $record = $bank->getTransaction($record['id']);
+        _ces_bank_set_transaction_message($result, $record, $op);
+      }
+      catch (Exception $e) {
+        drupal_set_message($e->getMessage(), 'error');
+        return;
+      }
+    }
+  }
+  drupal_set_message(t('All transactions have been properly registered. For more information, see') . ' '
+   . l(t('your account statement'), 'ces/bank/account/transaction') . '.');
+  $form_state['redirect'] = 'ces/bank/account/sell';
+}
+/**
  * Form to delete a transaction permanently.
  */
 function ces_bank_transaction_delete_form($form, &$form_state, $transaction) {
@@ -1426,7 +1733,6 @@ function ces_bank_transaction_delete_form_submit($form, &$form_state) {
   drupal_set_message(t('Transaction %concept has been deleted.', array('%concept' => $transaction['concept'])));
   $form_state['redirect'] = 'ces/bank/account/transaction';
 }
-
 /**
  * CesBank account statement form.
  *

@@ -22,7 +22,7 @@ Entrada por: [transaction:orderedby:fullname] < [transaction:orderedby:mail] >
 
 Si este rechazo es un error, entra a tu cuenta y acepta la transacción siguiendo este enlace: 
 
-[site:url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept
+[site:url]/user/login?destination=ces/bank/account/transaction/[transaction:id]/accept
 
 --
 Administrador/a de [exchange:shortname]:

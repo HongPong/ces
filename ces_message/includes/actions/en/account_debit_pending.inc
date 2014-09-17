@@ -12,7 +12,7 @@ $body = 'A new transaction to [transaction:toaccount:name] ([transaction:toaccou
 
 Please accept (or reject) this transaction following this link:
 
-[site:url]/user/login?destination=ces/bank/transaction/[transaction:id]/accept
+[site:url]/user/login?destination=ces/bank/account/transaction/[transaction:id]/accept
 
 It is very important to authorize your pending payments very quickly for the good work of the social economic system.
 
