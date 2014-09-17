@@ -623,12 +623,12 @@ class CesBankTestCase extends DrupalWebTestCase {
       if (drupal_substr($record['seller'], 0, 4) != drupal_substr($record['buyer'], 0, 4)) {
         // Interexchange transaction.
         $name = drupal_substr($record['buyer'], 0, 4);
-        $edit['fromexchange'] = 2;
         $element = current($this->xpath($this->constructFieldXpath('name', 'fromexchange')));
         $options = $this->getAllOptions($element);
         foreach ($options as $option) {
           if (((string) $option) == $name) {
-            $this->drupalPostAJAX(NULL, array('fromexchange' => ((string) $option['value'])), 'fromexchange');
+            $edit['fromexchange'] = ((string) $option['value']);
+            $this->drupalPostAJAX(NULL, array('fromexchange' => $edit['fromexchange']), 'fromexchange');
             break;
           }
         }
