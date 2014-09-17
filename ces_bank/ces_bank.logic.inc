@@ -438,7 +438,8 @@ class CesBank {
     if (isset($conditions['account'])) {
       // An array condition is an OR of its contents.
       $account = $conditions['account'];
-      $conditions['account'] = array(
+      unset($conditions['account']);
+      $conditions['or'] = array(
         'fromaccount' => $account,
         'toaccount' => $account,
       );

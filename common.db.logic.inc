@@ -217,17 +217,16 @@ class IcesSerializer {
       $query->range(0, $conditions['limit']);
       unset($conditions['limit']);
     }
+    if (isset($conditions['or'])) {
+      $orcondition = db_or();
+      foreach ($conditions['or'] as $orkey => $orvalue) {
+        $orcondition = $orcondition->condition('t.' . $orkey, $orvalue);
+      }
+      $query->condition($orcondition);
+      unset($conditions['or']);
+    }
     foreach ($conditions as $key => $value) {
-      if (is_array($value)) {
-        $orcondition = db_or();
-        foreach ($value as $orkey => $orvalue) {
-          $orcondition = $orcondition->condition('t.' . $orkey, $orvalue);
-        }
-        $query->condition($orcondition);
-      }
-      else {
-        $query->condition('t.' . $key, $value);
-      }
+      $query->condition('t.' . $key, $value);
     }
     if ($order != NULL) {
       $query->orderBy($order, $order_type);
