@@ -117,6 +117,10 @@ function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account 
     '#value' => t('Save'),
     '#weight' => 200,
   );
+  $form['bankaccount']['cancel'] = array(
+    '#markup' => l(t('Cancel'), 'ces/bank/account/' . $account['id'] . '/users'),
+    '#weight' => 201,
+  );
   return $form;
 }
 /**
@@ -164,7 +168,7 @@ function ces_bank_account_user_form_submit($form, &$form_state) {
       drupal_goto('ces/admin/account/' . $record['id'] . '/listusers');
     }
     else {
-      drupal_goto('ces/bank/account/users_account');
+      drupal_goto('ces/bank/account/' . $record['id'] . '/users');
     }
   }
   catch (Exception $e) {
@@ -193,7 +197,7 @@ function ces_bank_account_user_form_submit($form, &$form_state) {
  * @todo Prevent deleting the last user.
  */
 function ces_bank_account_user_delete_form($form, &$form_state, $user = NULL, $account = NULL, $administrator = FALSE) {
-  drupal_set_title(t('Delete user Account') . ' ' . $account['name']);
+  drupal_set_title(t('Delete account user') . ' ' . $account['name']);
   $bank = new CesBank();
   if ($account == NULL) {
     $account = ces_bank_get_current_account();
@@ -231,6 +235,9 @@ function ces_bank_account_user_delete_form($form, &$form_state, $user = NULL, $a
     '#type' => 'submit',
     '#value' => t('Confirm'),
   );
+  $form['cancel'] = array(
+    '#markup' => l(t('Cancel'), 'ces/bank/account/' . $account['id'] . '/users'),
+  );
   return $form;
 }
 
@@ -257,7 +264,7 @@ function ces_bank_account_user_delete_form_submit($form, &$form_state) {
       drupal_goto('ces/admin/account/' . $record['account_id'] . '/listusers');
     }
     else {
-      drupal_goto('ces/bank/account/users_account');
+      drupal_goto('ces/bank/account/' . $record['account_id'] . '/users');
     }
   }
   catch (Exception $e) {

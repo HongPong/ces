@@ -342,11 +342,11 @@ function ces_bank_menu() {
     'weight' => 100,
   );
   // Managing Users Account.
-  $menu['ces/bank/account/users_account'] = array(
+  $menu['ces/bank/account/%ces_account/users'] = array(
     'title' => 'Account users',
     'description' => 'Admin account users',
     'page callback' => 'ces_bank_account_users_admin',
-    'page arguments' => array(),
+    'page arguments' => array(NULL, 3),
     'file' => 'ces_bank.pages.account_users.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'access callback' => 'ces_bank_access',
@@ -354,16 +354,16 @@ function ces_bank_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => 990,
   );
-  $menu['ces/bank/account/users_account/list'] = array(
+  $menu['ces/bank/account/%ces_account/users/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 0,
   );
-  $menu['ces/bank/account/users_account/add'] = array(
+  $menu['ces/bank/account/%ces_account/users/add'] = array(
     'title' => 'Add account users',
     'description' => 'Add user in account',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ces_bank_account_user_form'),
+    'page arguments' => array('ces_bank_account_user_form', NULL, 3),
     'file' => 'ces_bank.forms.account_users.inc',
     'file path' => drupal_get_path('module', 'ces_bank'),
     'type' => MENU_LOCAL_TASK,
@@ -372,8 +372,8 @@ function ces_bank_menu() {
     'weight' => 4,
   );
   $menu['ces/bank/account/%user/users_account/delete'] = array(
-    'title' => 'Delete users of account',
-    'description' => 'Delete users of account',
+    'title' => 'Delete account user',
+    'description' => 'Delete account user',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_bank_account_user_delete_form', 3),
     'file' => 'ces_bank.forms.account_users.inc',
@@ -384,8 +384,8 @@ function ces_bank_menu() {
     'weight' => 4,
   );
   $menu['ces/bank/account/%user/users_account/edit'] = array(
-    'title' => 'Edit user account',
-    'description' => 'Edit user account',
+    'title' => 'Edit account user',
+    'description' => 'Edit account user',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_bank_account_user_form', 3),
     'file' => 'ces_bank.forms.account_users.inc',
@@ -643,8 +643,8 @@ function ces_bank_menu() {
     'weight' => 110,
   );
   $menu['ces/admin/account/users/%ces_account/users_account/%user/delete'] = array(
-    'title' => 'Delete users account',
-    'description' => 'Delete users account',
+    'title' => 'Delete account user',
+    'description' => 'Delete account user',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_bank_account_user_delete_form', 6, 4, TRUE),
     'file' => 'ces_bank.forms.account_users.inc',
@@ -655,8 +655,8 @@ function ces_bank_menu() {
     'weight' => 150,
   );
   $menu['ces/admin/account/users/%ces_account/users_account/%user/edit'] = array(
-    'title' => 'Edit user account',
-    'description' => 'Edit user account',
+    'title' => 'Edit account user',
+    'description' => 'Edit account user',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_bank_account_user_form', 6, 4, TRUE),
     'file' => 'ces_bank.forms.account_users.inc',
@@ -1245,6 +1245,12 @@ function ces_bank_form_user_profile_form_alter(&$form, &$form_state) {
         '#description' => t('Write one account per line. The payments from these accounts will be automatically accepted.'),
         '#default_value' => implode("\n", $account['data']['accept']['whitelist']),
       );
+      if (ces_bank_access('admin', 'account', $account)) {
+        $fieldset['account_users'] = array(
+          '#type' => 'item',
+          '#markup' => l(t('Manage account users'),'ces/bank/account/' . $account['id'] . '/users', array('attributes' => array('class' => array('button')))),
+        );
+      }
       $form['ces_account'][$account['id']] = $fieldset;
     }
     $form['#submit'][] = 'ces_bank_form_user_profile_submit';
