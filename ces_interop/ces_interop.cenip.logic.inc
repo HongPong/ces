@@ -3,7 +3,11 @@
  * @file
  * Classes for Community Exchange Network Intertrading Protocol.
  */
-class CesInteropCENIPBank extends CesBank{
+
+/**
+ * Extension of CesBank for CEN protocol.
+ */
+class CesInteropCENIPBank extends CesBank {
   /**
    * Creates a transaction object.
    *
@@ -12,6 +16,7 @@ class CesInteropCENIPBank extends CesBank{
    * returns a regular transaction.
    *
    * @return CesBankTransactionInterface
+   *   The new transaction.
    */
   protected function newTransaction(array &$record) {
     if (!empty($record['cenip'])) {
@@ -57,7 +62,7 @@ class CesInteropCENIPBank extends CesBank{
   /**
    * Create remote incoming transaction.
    */
-  function newIncomingTransaction(array &$record) {
+  protected function newIncomingTransaction(array &$record) {
     $fromaccount = $this->getObject('CesBankLocalAccount', $record['fromaccount']);
     $fromexchange = $fromaccount->getExchange();
     $remoteexchange = new CesInteropCENIPRemoteExchange($record['nid']);
@@ -218,6 +223,8 @@ class CesInteropCENIPTransactionId extends IcesDBObject {
  * Class for CENIP remote transactions where the local account is the seller.
  */
 class CesInteropCENIPOutgoingTransaction extends CesInteropCENIPTransaction {
+  // We are breaking the drupal naming conventions to match the variable names
+  // to the protocol argument names.
   /**
    * @var string
    *   The remote account id.
@@ -381,7 +388,7 @@ class CesInteropCENIPOutgoingTransaction extends CesInteropCENIPTransaction {
    * Implements revoke().
    */
   public function revoke() {
-    //TODO: remotely revoke.
+    // TODO: remotely revoke.
     parent::revoke();
   }
 

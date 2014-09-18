@@ -763,7 +763,7 @@ function ces_bank_limitchain_form($form, &$form_state, $limitchain = NULL) {
 /**
  * Delete a limitchain.
  */
-function ces_bank_limitchain_delete_form($form, &$form_state, $limitchain=FALSE) {
+function ces_bank_limitchain_delete_form($form, &$form_state, $limitchain = FALSE) {
   $id       = $limitchain['id'];
   $name       = $limitchain['name'];
   $limits       = $limitchain['limits'];
@@ -784,7 +784,7 @@ function ces_bank_limitchain_delete_form($form, &$form_state, $limitchain=FALSE)
     $limit_classname = $limit['classname'];
     $out_text .= $limitnames[$limit_classname] . ' ' . $limit_value . '<br/>';
   }
-  if ( ! empty($out_text) ) {
+  if (!empty($out_text)) {
     $form['limits'] = array(
       '#type' => 'item',
       '#title' => t('Limits'),
@@ -811,9 +811,9 @@ function ces_bank_limitchain_delete_form_submit($form, &$form_state) {
       $bank->deleteLimitChain($limitchain_id);
     }
     catch (Exception $e) {
-        drupal_set_message(t('An error occurred while delete the limitchain record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
-      }
+      drupal_set_message(t('An error occurred while delete the limitchain record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
     }
+  }
   $form_state['redirect'] = 'ces/admin/limitchain';
 }
 /**
@@ -889,10 +889,10 @@ function ces_bank_limitchain_form_deletelimit($form, &$form_state) {
     $key = $parents[$i + 1];
   }
   $limit_key = $value[$key]['id'];
-  // Delete limit
+  // Delete limit.
 
   $s = new IcesSerializer('CesBankAccountLimit');
-  $limit = $s->loadFromUniqueKey('id',$limit_key);
+  $limit = $s->loadFromUniqueKey('id', $limit_key);
   $s->delete($limit);
   unset($value[$key]);
 
@@ -1677,7 +1677,7 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
       '#weight' => 100,
     );
   }
-  else if ($form_state['values']['page'] == 'confirm') {
+  elseif ($form_state['values']['page'] == 'confirm') {
     $form = ces_bank_transaction_confirm_form($form, $form_state, $form_state['values']['operation']);
   }
   return $form;

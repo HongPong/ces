@@ -1011,11 +1011,11 @@ function ces_bank_tokens($type, $tokens, array $data = array(), array $options =
         case 'concept':
           $replacements[$original] = $sanitize ? check_plain($transaction['concept']) : $transaction['concept'];
           break;
-        
+
         case 'id':
           $replacements[$original] = $transaction['id'];
           break;
-      
+
       }
       if ($fromaccount_tokens = token_find_with_prefix($tokens, 'fromaccount')) {
         $bank = new CesBank();
@@ -1248,7 +1248,7 @@ function ces_bank_form_user_profile_form_alter(&$form, &$form_state) {
       if (ces_bank_access('admin', 'account', $account)) {
         $fieldset['account_users'] = array(
           '#type' => 'item',
-          '#markup' => l(t('Manage account users'),'ces/bank/account/' . $account['id'] . '/users', array('attributes' => array('class' => array('button')))),
+          '#markup' => l(t('Manage account users'), 'ces/bank/account/' . $account['id'] . '/users', array('attributes' => array('class' => array('button')))),
         );
       }
       $form['ces_account'][$account['id']] = $fieldset;
@@ -1342,7 +1342,7 @@ function ces_bank_form_alter(&$form, &$form_state, $form_id) {
       $exchange = ces_bank_get_current_exchange();
       $form['language'] = array(
         '#type' => 'value',
-        '#value' => ( isset($exchange['data']['default_lang']) ) ? $exchange['data']['default_lang'] : FALSE,
+        '#value' => (isset($exchange['data']['default_lang'])) ? $exchange['data']['default_lang'] : FALSE,
       );
     }
     elseif ($form_state['page'] == 'bankaccount') {

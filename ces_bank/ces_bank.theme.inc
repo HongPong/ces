@@ -172,9 +172,7 @@ function theme_ces_bank_limitchain_view($variables) {
       );
       $table['#rows'][] = array(
         'data' => array(
-          //drupal_render($type),
           $type['#value'],
-          //drupal_render($value),
           $value['#value'],
           $limit['block'] ? t('Block') : t('Warn'),
           drupal_render($weight),
