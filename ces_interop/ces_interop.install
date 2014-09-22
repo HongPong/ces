@@ -179,7 +179,7 @@ function ces_interop_schema() {
 /**
  * Add CEN transaction id table.
  */
-function ces_iterop_update_7100() {
+function ces_interop_update_7100() {
   $schema = ces_interop_schema();
   db_create_table('ces_transaction_centxid', $schema['ces_transaction_centxid']);
 }
