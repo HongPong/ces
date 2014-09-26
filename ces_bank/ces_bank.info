@@ -5,5 +5,6 @@ files[] = ces_bank.test
 dependencies[] = ices
 dependencies[] = ces_message
 dependencies[] = ces_offerswants
+configure = ces/admin/ces
 core = 7.x
 package = ices
