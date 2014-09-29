@@ -20,6 +20,7 @@ function ces_import4ces_parse_setting($import_id, $setting, $row, &$context) {
   }
   $tx = db_transaction();
   try {
+    ob_start();
     // Crear bank.
     $bank = new CesBank();
 
@@ -156,8 +157,10 @@ function ces_import4ces_parse_setting($import_id, $setting, $row, &$context) {
     ces_import4ces_update_row($import_id, $row);
     $context['message'] = check_plain($exchange['name']);
     $context['results']['import_id'] = $import_id;
+    ob_end_clean();
   }
   catch (Exception $e) {
+    ob_end_clean();
     $tx->rollback();
     ces_import4ces_batch_fail_row(NULL, array_keys($setting), array_values($setting), $row, $context);
     $context['results']['error'] = check_plain($e->getMessage());

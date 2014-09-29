@@ -21,6 +21,7 @@ function ces_import4ces_parse_trades($import_id, $data, $row, &$context) {
   }
   $tx = db_transaction();
   try {
+    ob_start();
     $context['results']['import_id'] = $import_id;
     $bank = new CesBank();
     $account_seller = _ces_import4ces_trades_get_account($import_id, $data['Seller'], $data);
@@ -70,8 +71,10 @@ function ces_import4ces_parse_trades($import_id, $data, $row, &$context) {
         'data' => serialize($extra_info),
       ))->execute();
     ces_import4ces_update_row($import_id, $row);
+    ob_end_clean();
   }
   catch (Exception $e) {
+    ob_end_clean();
     $tx->rollback();
     ces_import4ces_batch_fail_row($import_id, array_keys($data), array_values($data), $row, $context);
     $context['results']['error'] = check_plain($e->getMessage());
