@@ -8,5 +8,8 @@ dependencies[] = ces_bank
 dependencies[] = token
 dependencies[] = "views"
 features[ctools][] = "views:views_default:3.0"
-features[message_type][] = "ces_message"
-features[views_view][] = "ces_message"
+;features[message_type][] = "ces_message"
+;features[views_view][] = "ces_message"
+
+; Views include
+files[] = views/ces_message_view_message.php

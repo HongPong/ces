@@ -27,8 +27,9 @@ include_once dirname(__FILE__) . '/includes/ces_message.actions.inc';
 function ces_message_entity_info() {
   $info['ces_message'] = array(
     'label' => t('Ces Message'),
+    'module' => 'ces_message',
     'controller class' => 'CesMessageEntityController',
-    'views controller class' => 'EntityDefaultViewsController',
+    'views controller class' => 'CesMessageViewsController',
     'base table' => 'ces_message',
     'static cache' => TRUE,
     'field cache' => TRUE,
@@ -458,7 +459,12 @@ function ces_message_template_test($action = 'account_activated', $recipient = 1
 
   return $salida;
 }
-
+function ces_message_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module','ces_message') . '/views',
+  );
+}
 /**
  * @} End of "defgroup ces_message".
  */

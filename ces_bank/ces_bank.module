@@ -1438,4 +1438,10 @@ function ces_bank_user_autocomplete($string) {
   // Return for JS.
   drupal_json_output($matches);
 }
+function ces_bank_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module','ces_bank') . '/views',
+  );
+}
 /** @} */

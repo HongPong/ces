@@ -300,86 +300,12 @@ function ces_message_list_page($all = FALSE) {
   global $user;
 
   if ($all) {
-    $header = array(
-      array('data' => t('Created'), 'field' => 'c.created'),
-      array('data' => t('User'), 'field' => 'u.name'),
-      array('data' => t('Exc.'), 'field' => 'c.exchange'),
-      array('data' => t('Subject')),
-      array('data' => t('Type'),  'field' => 'c.type_message'),
-    );
+    return views_embed_view('ces_message_list_all','default');
   }
   else {
-    $header = array(
-      array('data' => t('Created'),  'field' => 'c.created'),
-      array('data' => t('Exc.'), 'field' => 'c.exchange'),
-      array('data' => t('Subject')),
-      array('data' => t('Type'),  'field' => 'c.type_message'),
-    );
+    return views_embed_view('ces_message','default');
   }
 
-  // We are extending the PagerDefault class here.
-  // It has a default of 10 rows per page.
-  // The extend('PagerDefault') part here does all the magic.
-  $query = db_select('ces_message', 'c')
-    ->extend('TableSort')
-    ->extend('PagerDefault');
-
-  $query->join('users', 'u', 'c.user = u.uid');
-  $query->fields('c', array('mid',
-    'user',
-    'exchange',
-    'created',
-    'subject',
-    'type_message'))
-  ->fields('u', array('name'));
-
-  // Condition.
-  if (!$all || !ces_bank_access('admin', 'global', 0)) {
-    $query->condition('u.uid', $user->uid, '=');
-  }
-
-  // Change the number of rows with the limit() call.
-  $result = $query
-    ->limit(50)
-    ->orderByHeader($header)
-    ->execute();
-
-  $rows = array();
-  foreach ($result as $data) {
-    $exchange = ($data->exchange) ? ces_bank_get_exchange($data->exchange) : FALSE;
-    if ($all) {
-      $rows[] = array(
-        'data' => array(
-          'created' => format_date($data->created, 'custom', 'd \d\e F \d\e\l Y | G:i'),
-          'user' => $data->name,
-          'exchange' => $exchange['shortname'],
-          'subject' => l($data->subject, 'ces/bank/account/message/' . $data->mid . '/view'),
-          'type_message' => $data->type_message,
-        ),
-      );
-    }
-    else {
-      $rows[] = array(
-        'data' => array(
-          'created' => format_date($data->created, 'custom', 'd \d\e F \d\e\l Y | G:i'),
-          'exchange' => $exchange['shortname'],
-          'subject' => l($data->subject, 'ces/bank/account/message/' . $data->mid . '/view'),
-          'type_message' => $data->type_message,
-        ),
-      );
-    }
-  }
-
-  $build['pager_table'] = array(
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows,
-    '#empty' => t('There are no date formats found in the db'),
-  );
-
-  $build['pager_pager'] = array('#theme' => 'pager');
-
-  return $build;
 }
 /**
  * @} End of "defgroup ces_message".
