@@ -276,7 +276,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['fields']['subject']['field'] = 'subject';
   $handler->display->display_options['fields']['subject']['label'] = 'Subject';
   $handler->display->display_options['fields']['subject']['alter']['make_link'] = TRUE;
-  $handler->display->display_options['fields']['subject']['alter']['path'] = 'ces/message/[mid]';
+  $handler->display->display_options['fields']['subject']['alter']['path'] = 'ces/bank/account/message/[mid]/view';
   /* Camp: Ces Message: Tipus */
   $handler->display->display_options['fields']['type_message']['id'] = 'type_message';
   $handler->display->display_options['fields']['type_message']['table'] = 'ces_message';
