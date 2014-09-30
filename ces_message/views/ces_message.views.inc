@@ -1,22 +1,21 @@
 <?php
-
 /**
  * @file
  * Implements the ces_message view message.
- */
-
-/**
- * @defgroup ces_message_view Ces Message View
+ *
+ * @defgroup ces_message_view_data Ces Message View
  * @ingroup ces_message
  * @{
  * View from message.
  */
 
+/**
+ * Implements hook_views_data().
+ */
 function ces_message_views_data() {
   $data['ces_message']['table']['group'] = t('Ces Message');
-
   $data['ces_message']['table']['base'] = array(
-    'field' => 'mid', // This is the identifier field for the view.
+    'field' => 'mid',
     'title' => t('Ces Message table'),
     'help' => t('Ces Message view.'),
     'weight' => -10,
@@ -32,7 +31,6 @@ function ces_message_views_data() {
       'field' => 'exchange',
     ),
   );
-  // Node ID table field.
   $data['ces_message']['mid'] = array(
     'title' => t('Ces Message Id'),
     'help' => t('Ces Message id.'),
@@ -43,10 +41,9 @@ function ces_message_views_data() {
     'filter' => array(
       'handler' => 'views_handler_filter_numeric',
     ),
-    
     'relationship' => array(
-      'base' => 'users', // The name of the table to join with.
-      'base field' => 'uid', // The name of the field on the joined table.
+      'base' => 'users',
+      'base field' => 'uid',
       // 'field' => 'nid' -- see hook_views_data_alter(); not needed here.
       'handler' => 'views_handler_relationship',
       'label' => t('Ces message users relationship'),
@@ -54,14 +51,12 @@ function ces_message_views_data() {
       'help' => t('More information on this relationship'),
     ),
   );
-
-  // Example plain text field.
   $data['ces_message']['subject'] = array(
     'title' => t('Subject'),
     'help' => t('Subject of message.'),
     'field' => array(
       'handler' => 'views_handler_field',
-      'click sortable' => TRUE, // This is use by the table display plugin.
+      'click sortable' => TRUE,
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -73,14 +68,12 @@ function ces_message_views_data() {
       'handler' => 'views_handler_argument_string',
     ),
   );
-
-  // Example plain text field.
   $data['ces_message']['body'] = array(
     'title' => t('Body'),
     'help' => t('Body of message.'),
     'field' => array(
       'handler' => 'views_handler_field',
-      'click sortable' => TRUE, // This is use by the table display plugin.
+      'click sortable' => TRUE,
     ),
     'filter' => array(
       'handler' => 'views_handler_filter_string',
@@ -95,7 +88,7 @@ function ces_message_views_data() {
     'help' => t('Type of message.'),
     'field' => array(
       'handler' => 'views_handler_field',
-      'click sortable' => TRUE, // This is use by the table display plugin.
+      'click sortable' => TRUE,
     ),
     'filter' => array(
       'handler' => 'views_handler_filter_string',

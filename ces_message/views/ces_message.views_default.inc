@@ -2,8 +2,13 @@
 /**
  * @file
  * @brief Views to ces message
+ *
+ * @defgroup ces_message_views Ces Message View
+ * @ingroup ces_message
+ * @{
+ * View from message.
  */
- 
+
 /**
  * Implements hook_views_default_views().
  */
@@ -161,7 +166,7 @@ function ces_message_views_default_views() {
   );
 
   $export['messages'] = $view;
- 
+
   $view = new view();
   $view->name = 'ces_message_list_all';
   $view->description = 'List of all user\'s message';
@@ -414,23 +419,13 @@ function ces_message_views_default_views() {
     t('Exchange'),
     t('Tot'),
     t('Assumpte'),
-    t('List all user\'s message'),
+    t("List all user's message"),
   );
-  
+
   $export['messages_all'] = $view;
 
   return $export;
 }
-
 /**
- * Implements hook_views_pre_render().
+ * @} End of "defgroup ces_message_view".
  */
-// function ces_message_views_pre_render($view) {
-//   if ($view->name == 'ces_message' ) {
-//     foreach ($view->result as &$result) {
-//       if($result->ces_message_state == 0) {
-//         $result->ces_message_subject = "<b>" . $result->ces_message_subject . "</b>";
-//       }
-//     }
-//   } 
-// }

@@ -300,10 +300,10 @@ function ces_message_list_page($all = FALSE) {
   global $user;
 
   if ($all) {
-    return views_embed_view('ces_message_list_all','default');
+    return views_embed_view('ces_message_list_all', 'default');
   }
   else {
-    return views_embed_view('ces_message','default');
+    return views_embed_view('ces_message', 'default');
   }
 
 }

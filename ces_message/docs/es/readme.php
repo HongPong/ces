@@ -74,7 +74,7 @@
  *       - la opción de borrarlos.
  *       - Leido no leido.
  * 
- *       Al mostrar detalle de mensaje marcarlo automaticamente como leido.
+ *       Al mostrar detalle de mensaje marcarlo automáticamente como leído.
  *       Al borrar el mensaje el usuario marcar como borrado, pero mantener en 
  *       la base de datos para que el administrador del exchange pueda tener 
  *       una referencia de la actividad.
