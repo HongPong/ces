@@ -185,4 +185,11 @@ function ces_blog_node_access($node, $op, $account) {
   }
   return NULL;
 }
+/**
+ * Implements hook_menu_alter().
+ */
+function ces_blog_menu_alter(&$items) {
+  // Remove Add content from menu.
+  $items['node/add']['type'] = MENU_CALLBACK;
+}
 /** @} */
