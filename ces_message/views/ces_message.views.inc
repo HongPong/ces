@@ -41,15 +41,6 @@ function ces_message_views_data() {
     'filter' => array(
       'handler' => 'views_handler_filter_numeric',
     ),
-    'relationship' => array(
-      'base' => 'users',
-      'base field' => 'uid',
-      // 'field' => 'nid' -- see hook_views_data_alter(); not needed here.
-      'handler' => 'views_handler_relationship',
-      'label' => t('Ces message users relationship'),
-      'title' => t('Ces message users relationship'),
-      'help' => t('More information on this relationship'),
-    ),
   );
   $data['ces_message']['subject'] = array(
     'title' => t('Subject'),
@@ -130,6 +121,29 @@ function ces_message_views_data() {
     ),
   );
 
+  $data['ces_message']['user'] = array(
+    'title' => t('User Id'),
+    'help' => t('Id of user.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+    'relationship' => array(
+      'base' => 'users',
+      'base field' => 'uid',
+      // 'field' => 'nid' -- see hook_views_data_alter(); not needed here.
+      'handler' => 'views_handler_relationship',
+      'label' => t('Ces message users relationship'),
+      'title' => t('Ces message users relationship'),
+      'help' => t('More information on this relationship'),
+    ),
+  );
   $data['ces_message']['exchange'] = array(
     'title' => t('Exchange'),
     'help' => t('Exchange.'),
@@ -142,6 +156,15 @@ function ces_message_views_data() {
     ),
     'argument' => array(
       'handler' => 'views_handler_argument_string',
+    ),
+    'relationship' => array(
+      'base' => 'ces_exchange',
+      'base field' => 'id',
+      // 'field' => 'nid' -- see hook_views_data_alter(); not needed here.
+      'handler' => 'views_handler_relationship',
+      'label' => t('Ces message Exchange relationship'),
+      'title' => t('Ces message Exchange relationship'),
+      'help' => t('More information on this relationship'),
     ),
   );
   return $data;
