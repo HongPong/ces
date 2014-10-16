@@ -4,6 +4,20 @@
  * Drupal hooks for this module.
  */
 
+define('CES_USER_NEW_EXCHANGE_URL', 'ces_user_new_exchange_url');
+define('CES_USER_DOCUMENTATION_URL', 'ces_user_documentation_url');
+define('CES_USER_DEVELOPERS_URL', 'ces_user_developers_url');
+define('CES_USER_DONATE_URL', 'ces_user_donate_url');
+define('CES_USER_TERMS_OF_SERVICE_URL', 'ces_user_terms_of_service_url');
+define('CES_USER_ABOUT_URL', 'ces_user_about_url');
+
+define('CES_USER_NEW_EXCHANGE_URL_DEF', 'ces/bank/exchange/new?lang=@langcode');
+define('CES_USER_DOCUMENTATION_URL_DEF', 'http://docs.integrales.net');
+define('CES_USER_DEVELOPERS_URL_DEF', 'http://drupal.org/sandbox/esteve/1367140');
+define('CES_USER_DONATE_URL_DEF', 'https://www.coopfunding.net/campaigns/integralces');
+define('CES_USER_TERMS_OF_SERVICE_URL_DEF', '');
+define('CES_USER_ABOUT_URL_DEF', '');
+
 /**
  * @defgroup ces_user Ces User
  * @ingroup ices
@@ -28,6 +42,14 @@ function ces_user_menu() {
     'page callback' => 'ces_user_registered',
     'page arguments' => array(3),
     'type' => MENU_CALLBACK,
+  );
+  $menu['admin/config/user-interface/ces_user'] = array(
+    'title' => 'ICES user settings',
+    'description' => 'Change global settings related to IntegralCES user module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ces_user_admin'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
   );
   return $menu;
 }
@@ -284,21 +306,33 @@ function ces_user_block_view($delta = '') {
   }
   elseif ($delta == 'ces_user_links') {
     if (!$user->uid) {
+      $items = array();
+      _ces_user_add_user_link($items, t('New exchange'), variable_get(CES_USER_NEW_EXCHANGE_URL, CES_USER_NEW_EXCHANGE_URL_DEF));
+      _ces_user_add_user_link($items, t('Documentation'), variable_get(CES_USER_DOCUMENTATION_URL, CES_USER_DOCUMENTATION_URL_DEF));
+      _ces_user_add_user_link($items, t('Developers'), variable_get(CES_USER_DEVELOPERS_URL, CES_USER_DEVELOPERS_URL_DEF));
+      _ces_user_add_user_link($items, t('Donate'),  variable_get(CES_USER_DONATE_URL, CES_USER_DONATE_URL_DEF));
+      _ces_user_add_user_link($items, t('Terms of service'), variable_get(CES_USER_TERMS_OF_SERVICE_URL, CES_USER_TERMS_OF_SERVICE_URL_DEF));
+      _ces_user_add_user_link($items, t('About'), variable_get(CES_USER_ABOUT_URL, CES_USER_ABOUT_URL_DEF));
       $content = array(
         '#theme' => 'item_list',
         '#attributes' => array('class' => array('front-links')),
-        '#items' => array(
-          l(t('New exchange'), 'ces/bank/exchange/new'),
-          l(t('Documentation'), 'http://www.integralces.net'),
-          l(t('Developers'), 'http://drupal.org/sandbox/esteve/1367140'),
-          l(t('Donate'), 'ces/donate'),
-          l(t('About'), 'ces/about'),
-        ),
+        '#items' => $items,
       );
     }
   }
   $block['content'] = $content;
   return $block;
+}
+/**
+ * Helper.
+ */
+function _ces_user_add_user_link(&$items, $text, $url) {
+  if ($url) {
+    global $language;
+    $url = format_string($url, array('@langcode' => $language->language));
+    $url = drupal_parse_url($url);
+    $items[] = l($text, $url['path'], $url);
+  }
 }
 /**
  * Form for choosing country on registering.
@@ -439,5 +473,49 @@ function ces_user_registered($exchange_id) {
       '#markup' => t('See you soon!'),
     ),
   );
+}
+
+/**
+ * Implements hook_admin().
+ */
+function ces_user_admin() {
+  $form = array();
+  $form[CES_USER_NEW_EXCHANGE_URL] = array(
+    '#type' => 'textfield',
+    '#title' => t('New exchange URL'),
+    '#default_value' => variable_get(CES_USER_NEW_EXCHANGE_URL, CES_USER_NEW_EXCHANGE_URL_DEF),
+    '#description' => t('The URL of the new exchange form or intermediate custom page. You can use the placeholder @langcode for the current language ISO code. If you let it empty the link will be hidden.'),
+  );
+  $form[CES_USER_DOCUMENTATION_URL] = array(
+    '#type' => 'textfield',
+    '#title' => t('Documentation URL'),
+    '#default_value' => variable_get(CES_USER_DOCUMENTATION_URL, CES_USER_DOCUMENTATION_URL_DEF),
+    '#description' => t('The url of the general documentation page.'),
+  );
+  $form[CES_USER_DEVELOPERS_URL] = array(
+    '#type' => 'textfield',
+    '#title' => t('Developers URL'),
+    '#default_value' => variable_get(CES_USER_DEVELOPERS_URL, CES_USER_DEVELOPERS_URL_DEF),
+    '#description' => t('The url of the IntegralCES develop site.'),
+  );
+  $form[CES_USER_DONATE_URL] = array(
+    '#type' => 'textfield',
+    '#title' => t('Donate URL'),
+    '#default_value' => variable_get(CES_USER_DONATE_URL, CES_USER_DONATE_URL_DEF),
+    '#description' => t('The url of the donations page.'),
+  );
+  $form[CES_USER_TERMS_OF_SERVICE_URL] = array(
+    '#type' => 'textfield',
+    '#title' => t('Terms of service URL'),
+    '#default_value' => variable_get(CES_USER_TERMS_OF_SERVICE_URL, CES_USER_TERMS_OF_SERVICE_URL_DEF),
+    '#description' => t('The terms of service page.'),
+  );
+  $form[CES_USER_ABOUT_URL] = array(
+    '#type' => 'textfield',
+    '#title' => t('About URL'),
+    '#default_value' => variable_get(CES_USER_ABOUT_URL, CES_USER_ABOUT_URL_DEF),
+    '#description' => t('The about page.'),
+  );
+  return system_settings_form($form);
 }
 /** @} */
