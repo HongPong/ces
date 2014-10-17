@@ -65,6 +65,7 @@ class CesMessageTestCase extends DrupalWebTestCase {
       'administer blocks',
       'access administration pages',
       'administer users',
+      'access user profiles',
     ));
     $this->drupalLogin($this->globalAdminUser);
     $edit = array();
@@ -91,9 +92,7 @@ class CesMessageTestCase extends DrupalWebTestCase {
     //   'pass' => 'integralces',
     // );
     // $this->drupalPost('user/', $edit, 'Log in');
-    $actions = array(
-      'new_exchange' => 'New exchange',
-      'exchange_activated' => 'Exchange activated',
+    $actions_page1 = array(
       'new_account' => 'New account',
       'account_activated' => 'Account activated',
       'account_debited' => 'Account debited',
@@ -103,6 +102,12 @@ class CesMessageTestCase extends DrupalWebTestCase {
       // @todo 'account_debit_pending' => 'Account debit pending',
       'account_debit_rejected' => 'Account debit rejected',
       'account_credit_rejected' => 'Account credit rejected',
+    );
+    $actions_page2 = array(
+      'exchange_activated' => 'Exchange activated',
+    );
+    $actions_page3 = array(
+      'new_exchange' => 'New exchange',
     );
     // Send message to author of offer.
     $notify = array('body' => 'Test body notification', 'user' => 2);
@@ -118,7 +123,15 @@ class CesMessageTestCase extends DrupalWebTestCase {
     );
 
     $this->drupalGet('ces/bank/account/message/all');
-    foreach ($actions as $action => $tit_action) {
+    foreach ($actions_page1 as $action => $tit_action) {
+      $this->assertRaw(t($tit_action));
+    }
+    $this->drupalGet('ces/bank/account/message/all', array('query' => array('page' => 1)));
+    foreach ($actions_page2 as $action => $tit_action) {
+      $this->assertRaw(t($tit_action));
+    }
+    $this->drupalGet('ces/bank/account/message/all', array('query' => array('page' => 2)));
+    foreach ($actions_page3 as $action => $tit_action) {
       $this->assertRaw(t($tit_action));
     }
     $this->drupalLogout();
