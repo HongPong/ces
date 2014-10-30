@@ -16,12 +16,7 @@
     <div class="ces-offerwant-send_notify"><?php echo $ces_offerwant_send_notify_link; ?></div>
     <div class="ces-offerwant-title"><?php echo $ces_offerwant_title; ?></div>
     <div class="ces-offerwant-content">
-      <div class="ces-offerwant-image"><?php 
-      if (!empty($ces_offerwant_image)):
-        $ces_offerwant_image['width'] = '200px';
-        echo theme('image', $ces_offerwant_image);
-      endif;
-      ?></div>
+      <div class="ces-offerwant-image"><?php echo $ces_offerwant_image; ?></div>
       <div class="ces-offerwant-body"><?php echo $ces_offerwant_body; ?></div>
       <?php if (isset($ces_offer_rate)): ?>
       <div class="ces-offerwant-rate"><?php echo $ces_offer_rate ?></div>

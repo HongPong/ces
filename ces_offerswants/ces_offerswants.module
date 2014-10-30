@@ -794,14 +794,45 @@ function ces_offerswants_theme() {
       'render element' => 'element',
       'template' => 'ces_offerwant',
     ),
+    'ces_offerswants_image' => array(
+      'variables' => array('image' => NULL, 'title' => NULL),
+    ),
   );
 }
+
 /**
  * Implements hook_file_download().
  */
 function ces_offerswants_file_download($uri) {
   // TODO.
   return array('Content-type' => 'image/png');
+}
+/**
+ * Impements theme hook for images.
+ */
+function theme_ces_offerswants_image($variables) {
+  $image = $variables['image'];
+  $title = $variables['title'];
+  $img = theme('image_style', array(
+    'style_name' => variable_get('ces_offerswants_image_style_name', 'ces_offerswants_image_style'),
+    'path' => $image->uri,
+    'alt' => '',
+    'title' => '',
+  ));
+  $classes = array();
+  if (module_exists('colorbox')) {
+    $classes[] = 'colorbox';
+  }
+  $output = l($img, file_create_url($image->uri), array(
+    'html' => TRUE,
+    'attributes' => array(
+      'title' => $title,
+      'class' => $classes,
+      'target' => '_blank',
+      'rel' => 'ces_offerswants',
+    ),
+  ));
+  return $output;
 }
 /**
  * Process variables for ces_offerwant.tpl.php.
@@ -817,15 +848,11 @@ function template_preprocess_ces_offerwant(&$variables) {
   // Body.
   $variables['ces_offerwant_body'] = filter_xss($offerwant->body);
   // Image.
+  $variables['ces_offerwant_image'] = '';
   if (!empty($offerwant->image)) {
     $image = file_load($offerwant->image);
-    $variables['ces_offerwant_image'] = array(
-      'path' => file_create_url($image->uri),
-      'title' => $image->filename,
-    );
-  }
-  else {
-    $variables['ces_offerwant_image'] = '';
+    $variables['ces_offerwant_image'] = theme('ces_offerswants_image',
+      array('image' => $image, 'title' => $variables['ces_offerwant_title']));
   }
   // Category.
   if (!empty($offerwant->category)) {
@@ -2161,5 +2188,46 @@ function ces_offerswants_tokens($type, $tokens, array $data = array(), array $op
     }
   }
   return $replacements;
+}
+
+/**
+ * Implements hook_image_default_styles().
+ */
+function ces_offerswants_image_default_styles() {
+  $styles = array();
+  $styles['ces_offerswants_image_style'] = array();
+  $styles['ces_offerswants_image_style']['effects'] = array(
+    array(
+      'name' => 'image_scale',
+      'data' => array(
+        'width' => 280,
+        'upscale' => 0,
+      ),
+      'weight' => 0,
+    ),
+  );
+  return $styles;
+}
+/**
+ * Implements hook_image_style_save().
+ *
+ * Just in case the user changes the name of the image style provided.
+ */
+function ces_offerswants_image_style_save($style) {
+  if (isset($style['old_name']) && $style['old_name'] == variable_get('ces_offerswants_image_style_name', 'ces_offerswants_image_style')) {
+    variable_set('ces_offerswants_image_style_name', $style['name']);
+  }
+}
+/**
+ * Implements hook_image_style_delete().
+ *
+ * Just in case the user deletes image style provided.
+ *
+ * @see image_example_style_save()
+ */
+function ces_offerswants_image_style_delete($style) {
+  if (isset($style['old_name']) && $style['old_name'] == variable_get('ces_offerswants_image_style_name', 'ces_offerswants_image_style')) {
+    variable_set('ces_offerswants_image_style_name', $style['name']);
+  }
 }
 /** @} */
