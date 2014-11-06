@@ -182,7 +182,8 @@ function ces_user_form_alter(&$form, &$form_state, $form_id) {
       // Move all ces fields to account fieldset.
       foreach ($form as $key => $field) {
         if (strlen($key) > 4 && substr($key, 0, 4) == 'ces_') {
-          $form['account'][$key] = $form[$key];
+          _ces_user_translate_field($field);
+          $form['account'][$key] = $field;
           unset($form[$key]);
         }
       }
@@ -217,6 +218,29 @@ function ces_user_form_alter(&$form, &$form_state, $form_id) {
   }
 }
 /**
+ * Helper function. Translates label and description of attached fields.
+ */
+function _ces_user_translate_field(&$field) {
+  // This function is a hack to translate the label and description of attached
+  // fields to the user entity by this module. The "best practice" way to do it
+  // would be to use the i18n_field module, but I think it isn't worth to depend
+  // on i18n just to translate labels and descriptions of programmatically added
+  // fields.
+  if (isset($field['#title'])) {
+    // Yes, I know that only string literals should be passed to t()...
+    $field['#title'] = t($field['#title']);
+  }
+  if (isset($field['#description'])) {
+    $field['#description'] = t($field['#description']);
+  }
+  $children = element_children($field);
+  if (is_array($children)) {
+    foreach ($children as $child) {
+      _ces_user_translate_field($field[$child]);
+    }
+  }
+}
+/**
  * Helper function. Sets default values to form elements.
  */
 function _ces_user_set_form_values(&$elements, $values) {
@@ -247,11 +271,12 @@ function ces_user_user_view($account, $view_mode, $langcode) {
   );
   foreach ($account->content as $key => $item) {
     if (substr($key, 0, 4) == 'ces_') {
-      $account->content[$key]['#theme'] = 'user_profile_item';
-      if (isset($account->content[$key][0])) {
-        $account->content[$key]['#markup'] = $account->content[$key][0]['#markup'];
+      $item['#theme'] = 'user_profile_item';
+      if (isset($item[0])) {
+        $item['#markup'] = $item[0]['#markup'];
       }
-      $account->content['account'][$key] = $account->content[$key];
+      _ces_user_translate_field($item);
+      $account->content['account'][$key] = $item;
       unset($account->content[$key]);
     }
   }
@@ -310,7 +335,7 @@ function ces_user_block_view($delta = '') {
       _ces_user_add_user_link($items, t('New exchange'), variable_get(CES_USER_NEW_EXCHANGE_URL, CES_USER_NEW_EXCHANGE_URL_DEF));
       _ces_user_add_user_link($items, t('Documentation'), variable_get(CES_USER_DOCUMENTATION_URL, CES_USER_DOCUMENTATION_URL_DEF));
       _ces_user_add_user_link($items, t('Developers'), variable_get(CES_USER_DEVELOPERS_URL, CES_USER_DEVELOPERS_URL_DEF));
-      _ces_user_add_user_link($items, t('Donate'),  variable_get(CES_USER_DONATE_URL, CES_USER_DONATE_URL_DEF));
+      _ces_user_add_user_link($items, t('Donate'), variable_get(CES_USER_DONATE_URL, CES_USER_DONATE_URL_DEF));
       _ces_user_add_user_link($items, t('Terms of service'), variable_get(CES_USER_TERMS_OF_SERVICE_URL, CES_USER_TERMS_OF_SERVICE_URL_DEF));
       _ces_user_add_user_link($items, t('About'), variable_get(CES_USER_ABOUT_URL, CES_USER_ABOUT_URL_DEF));
       $content = array(
