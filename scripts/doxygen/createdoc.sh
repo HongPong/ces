@@ -1,8 +1,14 @@
 #!/bin/bash
 
+## @todo Una vez en producción cambiar directorio final de /tmp/ a /web/dox/
+
 possible_languages=(en es)
 
 dir_ices="$(dirname "$0")/../../"
+doxygen_conf="scripts/doxygen/doxygen.conf"
+doxygen_css="scripts/doxygen/doxygen.css"
+doxygen_header="scripts/doxygen/header.html"
+doxygen_footer="scripts/doxygen/footer.html"
 dir_actual="$(pwd)"
 
 cd "$dir_ices"
@@ -10,21 +16,18 @@ cd "$dir_ices"
 if [ "$?" != 0 ]
 then
   echo
-  echo Error::ailed to get the directory of the module
+  echo Error::Failed to get the directory module
   echo
   exit
 fi
 
-doxygen="/usr/bin/doxygen"
-doxygen_conf="scripts/doxygen/doxygen.conf"
+doxygen="/bin/doxygen"
 log_file=/tmp/doxygen.log
 tmp_conf=/tmp/doxygen.conf
 debug=0
 
 ## List of errors with vim format
 errors_log=/tmp/doxygen.errors
-
-
 
 function cd_help() {
 
@@ -34,6 +37,10 @@ function cd_help() {
   echo 'This script uses the configuration file doxygen.conf to generate documentation.'
   echo
   echo Supported languages are: ${possible_languages[*]}
+  echo
+  echo To see debug messages add "debug" as the first parameter.
+  echo
+  echo If we find doxygen.css, header.html or footer.html were applied to run the script
   echo
 
 }
@@ -154,6 +161,31 @@ if [ -n "$version" ] ; then
   echo -e "\n\nPROJECT_NUMBER=$version" >> $tmp_conf
 fi
 
+if [ -f "$doxygen_css" ] ; then
+  echo -e "\n\nHTML_STYLESHEER=$doxygen_css" >> $tmp_conf
+fi
+
+if [ -f "$doxygen_header" ] ; then
+  echo -e "\n\nHTML_HEADER=$doxygen_header" >> $tmp_conf
+fi
+
+if [ -f "$doxygen_footer" ] ; then
+  echo -e "\n\nHTML_FOOTER=$doxygen_footer" >> $tmp_conf
+fi
+
+
+# Delete final dir 
+if [ -d "${dir_final}${lang}" ]
+then
+  if [ $debug == 1 ]
+  then
+    echo
+    echo Delete ${dir_final}${lang} first.
+    echo
+  fi
+  rm -fr "${dir_final}${lang}"
+fi
+
 cat $tmp_conf | $doxygen - > /tmp/salida.dox 2> $errors_log
 
 if [ $debug == 1 ] ; then
@@ -167,7 +199,7 @@ fi
 
 cd "$dir_actual"
 
-## @todo Delete temporal files
+## Delete temporal files
 f="docs/tmp" ; [[ -d "$f" ]] && rm -fr "$f"
 f="$tmp_conf" ; [[ -d "$f" ]] && rm -fr "$f"
 
