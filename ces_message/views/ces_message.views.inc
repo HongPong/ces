@@ -13,11 +13,11 @@
  * Implements hook_views_data().
  */
 function ces_message_views_data() {
-  $data['ces_message']['table']['group'] = t('Ces Message');
+  $data['ces_message']['table']['group'] = t('Message');
   $data['ces_message']['table']['base'] = array(
     'field' => 'mid',
-    'title' => t('Ces Message table'),
-    'help' => t('Ces Message view.'),
+    'title' => t('Messages table'),
+    'help' => t('Messages view.'),
     'weight' => -10,
   );
 
@@ -32,8 +32,8 @@ function ces_message_views_data() {
     ),
   );
   $data['ces_message']['mid'] = array(
-    'title' => t('Ces Message Id'),
-    'help' => t('Ces Message id.'),
+    'title' => t('Message Id'),
+    'help' => t('Message identifier.'),
     'field' => array(
       'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
@@ -44,7 +44,7 @@ function ces_message_views_data() {
   );
   $data['ces_message']['subject'] = array(
     'title' => t('Subject'),
-    'help' => t('Subject of message.'),
+    'help' => t('Subject of the message.'),
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
@@ -61,7 +61,7 @@ function ces_message_views_data() {
   );
   $data['ces_message']['body'] = array(
     'title' => t('Body'),
-    'help' => t('Body of message.'),
+    'help' => t('Body of the message.'),
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
@@ -107,8 +107,8 @@ function ces_message_views_data() {
   );
 
   $data['ces_message']['created'] = array(
-    'title' => t('Date message'),
-    'help' => t('Date message.'),
+    'title' => t('Created'),
+    'help' => t('Creation date.'),
     'field' => array(
       'handler' => 'views_handler_field_date',
       'click sortable' => TRUE,
@@ -122,7 +122,7 @@ function ces_message_views_data() {
   );
 
   $data['ces_message']['user'] = array(
-    'title' => t('User Id'),
+    'title' => t('User'),
     'help' => t('Id of user.'),
     'field' => array(
       'handler' => 'views_handler_field',
@@ -139,8 +139,8 @@ function ces_message_views_data() {
       'base field' => 'uid',
       // 'field' => 'nid' -- see hook_views_data_alter(); not needed here.
       'handler' => 'views_handler_relationship',
-      'label' => t('Ces message users relationship'),
-      'title' => t('Ces message users relationship'),
+      'label' => t('Message users relationship'),
+      'title' => t('Message users relationship'),
       'help' => t('More information on this relationship'),
     ),
   );
@@ -162,8 +162,8 @@ function ces_message_views_data() {
       'base field' => 'id',
       // 'field' => 'nid' -- see hook_views_data_alter(); not needed here.
       'handler' => 'views_handler_relationship',
-      'label' => t('Ces message Exchange relationship'),
-      'title' => t('Ces message Exchange relationship'),
+      'label' => t('Message Exchange relationship'),
+      'title' => t('Message Exchange relationship'),
       'help' => t('More information on this relationship'),
     ),
   );

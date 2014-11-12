@@ -13,7 +13,7 @@
 function ces_message_schema() {
   $schema = array();
   $schema['ces_message'] = array(
-    'description' => 'Message from CES.',
+    'description' => 'ICES Message',
     'fields' => array(
       'mid' => array(
         'description' => 'Unique message id.',
@@ -88,10 +88,10 @@ function ces_message_schema() {
   // The name of the table can be any name we choose. However, namespacing the
   // table with the module name is best practice.
   $schema['ces_message_template'] = array(
-    'description' => 'The base table for our ces message.',
+    'description' => 'Message templates.',
     'fields' => array(
       'template_id' => array(
-        'description' => 'Primary key of the ces message.',
+        'description' => 'Message template identifier.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -165,10 +165,10 @@ function ces_message_schema() {
   );
 
   $schema['ces_action'] = array(
-    'description' => 'Table for ces actions.',
+    'description' => 'Table for actions.',
     'fields' => array(
       'id' => array(
-        'description' => 'ID of action',
+        'description' => 'Id of action',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -320,6 +320,7 @@ function ces_message_install_default_template($action, $language, $subject, $bod
     ces_message_template_save($template);
   }
   else {
-    trigger_error(check_plain('Action ' . $action . ' not found while installing template.'), E_USER_ERROR);
+    trigger_error(t('Action !action not found while installing template.',
+      array('!action' => $action)), E_USER_ERROR);
   }
 }
