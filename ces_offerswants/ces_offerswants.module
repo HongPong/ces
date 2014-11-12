@@ -1388,7 +1388,7 @@ class OfferCommentEntityController extends DrupalDefaultEntityController {
    */
   public function save($offercomment) {
     drupal_write_record('ces_offercomment', $offercomment);
-    module_invoke_all('entity_insert', 'ces_offercomment', $offercomment);
+    module_invoke_all('entity_insert', $offercomment, 'ces_offercomment');
     return $offercomment;
   }
   /**
