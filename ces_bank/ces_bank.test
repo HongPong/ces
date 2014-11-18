@@ -143,6 +143,7 @@ class CesBankTestCase extends DrupalWebTestCase {
     // Balance: HORA0001: 10.75, BCNA0001: -5
     $this->doAdminTransaction();
     // Balance: HORA0001: 11.25, HORA0002: -10.75
+    $this->checkVisibilityOptions();
   }
   /**
    * Creates two exchanges.
@@ -713,7 +714,44 @@ class CesBankTestCase extends DrupalWebTestCase {
 
     // TODO: check interexchenge KO.
   }
-
+  /**
+   * Check balance and sales visibility options.
+   * 
+   * @param object $admin
+   *   The exchange administrator user.
+   * @param object $user1
+   *   A standard exchange user.
+   * @param object $user1s
+   *   Another standard exchange user.
+   */
+  protected function checkVisibilityOptions() {
+    $user1 = $this->accountUser($this->account11);
+    $user1 = user_load_by_name($user1->name);
+    // Balance and sales are visible by default.
+    $this->drupalLogin($this->accountUser($this->account12));
+    $this->drupalGet('user/' . $user1->uid);
+    // We use assertRaw with dt tag not to confuse these entries with the ones
+    // present in summary block.
+    $this->assertRaw('<dt>' . t('Balance') . '</dt>');
+    $this->assertRaw('<dt>' . t('Sales') . '</dt>');
+    // Change options.
+    $this->drupalLogin($this->admin1);
+    $this->drupalGet('ces/admin/exchange');
+    $edit = array(
+      'hide_balance' => TRUE,
+      'hide_sales' => TRUE,
+    );
+    $this->drupalPost(NULL, $edit, t('Update exchange'));
+    $this->drupalGet('user/' . $user1->uid);
+    // Admin can anyway see the data.
+    $this->assertRaw('<dt>' . t('Balance') . '</dt>');
+    $this->assertRaw('<dt>' . t('Sales') . '</dt>');
+    // But regular users can't.
+    $this->drupalLogin($this->accountUser($this->account12));
+    $this->drupalGet('user/' . $user1->uid);
+    $this->assertNoRaw('<dt>' . t('Balance') . '</dt>');
+    $this->assertNoRaw('<dt>' . t('Sales') . '</dt>');
+  }
   /**
    * Create limit chain from administrative interface.
    *

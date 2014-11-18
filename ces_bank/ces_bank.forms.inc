@@ -256,6 +256,24 @@ function ces_bank_exchange_form($form, &$form_state, $op, $exchange_id = NULL) {
     '#title' => t('Members'),
     '#description' => t('Settings for users registering with exchange. Sub-modules add settings here.'),
   );
+  if (!isset($exchange['data']['hide_balance'])) {
+    $exchange['data']['hide_balance'] = FALSE;
+  }
+  $form['exchange']['users']['hide_balance'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide balance'),
+    '#description' => t('If checked the balance is shown only to account owners. Otherwise it is public to any exchange user.'),
+    '#default_value' => $exchange['data']['hide_balance'],
+  );
+  if (!isset($exchange['data']['hide_sales'])) {
+    $exchange['data']['hide_sales'] = FALSE;
+  }
+  $form['exchange']['users']['hide_sales'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide sales and purchases'),
+    '#description' => t('If checked, the total amount purchased and sold is shown only to to account owners. Otherwise it is public to any exchange user.'),
+    '#default_value' => $exchange['data']['hide_sales'],
+  );
   if (!empty($exchange['state'])) {
     // Exchange has been activated.
     $limitchains = $bank->getAllLimitChains($exchange['id']);
@@ -344,6 +362,8 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
       $form_state['values']['data'] = array();
     }
     $form_state['values']['data']['default_lang'] = $form_state['values']['default_lang'];
+    $form_state['values']['data']['hide_balance'] = $form_state['values']['hide_balance'];
+    $form_state['values']['data']['hide_sales'] = $form_state['values']['hide_sales'];
     if ($op == 'new') {
       $bank->createExchange($form_state['values']);
       drupal_set_message(t('Exchange %code successfully created. You must wait for the system administrator to set up the exchange before it is operative. You will receive an e-mail notification within the next few days.', array('%code' => $form_state['values']['code'])));

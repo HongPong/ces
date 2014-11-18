@@ -1154,6 +1154,7 @@ function ces_bank_user_view($user, $view_mode, $langcode) {
     }
     $exchange = $bank->getExchange($account['exchange']);
     $limitchain = $bank->getLimitChain($account['limitchain']);
+    $admin = ces_bank_access('admin', 'exchange', $exchange['id']);
     $accounting = array(
       '#type' => 'container',
       '#attributes' => array(),
@@ -1166,26 +1167,30 @@ function ces_bank_user_view($user, $view_mode, $langcode) {
       '#markup' => $account['name'],
       '#weight' => 0,
     );
-    $accounting['balance'] = array(
-      '#theme' => 'user_profile_item',
-      '#title' => t('Balance'),
-      '#markup' => $bank->formatAmount($account['balance'], $exchange),
-      '#weight' => 10,
-    );
-    $sales = $bank->getAccountHistoricSales($account['id'], 0);
-    $accounting['sales'] = array(
-      '#theme' => 'user_profile_item',
-      '#title' => t('Sales'),
-      '#markup' => $bank->formatAmount($sales, $exchange),
-      '#weight' => 20,
-    );
-    $purchases = $bank->getAccountHistoricPurchases($account['id'], 0);
-    $accounting['purchases'] = array(
-      '#theme' => 'user_profile_item',
-      '#title' => t('Purchases'),
-      '#markup' => $bank->formatAmount($purchases, $exchange),
-      '#weight' => 30,
-    );
+    if ($admin || empty($exchange['data']['hide_balance'])) {
+      $accounting['balance'] = array(
+        '#theme' => 'user_profile_item',
+        '#title' => t('Balance'),
+        '#markup' => $bank->formatAmount($account['balance'], $exchange, TRUE, TRUE),
+        '#weight' => 10,
+      );
+    }
+    if ($admin || empty($exchange['data']['hide_sales'])) {
+      $sales = $bank->getAccountHistoricSales($account['id'], 0);
+      $accounting['sales'] = array(
+        '#theme' => 'user_profile_item',
+        '#title' => t('Sales'),
+        '#markup' => $bank->formatAmount($sales, $exchange, TRUE, FALSE),
+        '#weight' => 20,
+      );
+      $purchases = $bank->getAccountHistoricPurchases($account['id'], 0);
+      $accounting['purchases'] = array(
+        '#theme' => 'user_profile_item',
+        '#title' => t('Purchases'),
+        '#markup' => $bank->formatAmount($purchases, $exchange, TRUE, FALSE),
+        '#weight' => 30,
+      );
+    }
     $accounting['limit'] = array(
       '#theme' => 'user_profile_item',
       '#title' => t('Limit'),
