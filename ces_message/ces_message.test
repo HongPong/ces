@@ -88,8 +88,8 @@ class CesMessageTestCase extends DrupalWebTestCase {
   protected function testCesMessage() {
     $this->drupalLogin($this->globalAdminUser);
     // $edit = array(
-    //   'name' => 'Riemann',
-    //   'pass' => 'integralces',
+    // 'name' => 'Riemann',
+    // 'pass' => 'integralces',
     // );
     // $this->drupalPost('user/', $edit, 'Log in');
     $actions_page1 = array(
@@ -124,15 +124,15 @@ class CesMessageTestCase extends DrupalWebTestCase {
 
     $this->drupalGet('ces/bank/account/message/all');
     foreach ($actions_page1 as $action => $tit_action) {
-      $this->assertRaw(t($tit_action));
+      $this->assertRaw($tit_action);
     }
     $this->drupalGet('ces/bank/account/message/all', array('query' => array('page' => 1)));
     foreach ($actions_page2 as $action => $tit_action) {
-      $this->assertRaw(t($tit_action));
+      $this->assertRaw($tit_action);
     }
     $this->drupalGet('ces/bank/account/message/all', array('query' => array('page' => 2)));
     foreach ($actions_page3 as $action => $tit_action) {
-      $this->assertRaw(t($tit_action));
+      $this->assertRaw($tit_action);
     }
     $this->drupalLogout();
   }

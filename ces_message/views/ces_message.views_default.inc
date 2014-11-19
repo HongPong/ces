@@ -33,13 +33,13 @@ function ces_message_views_default_views() {
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['exposed_form']['type'] = 'basic';
-  $handler->display->display_options['exposed_form']['options']['reset_button_label'] = 'Reinicialitza';
+  $handler->display->display_options['exposed_form']['options']['reset_button_label'] = t('Reset');
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '10';
-  $handler->display->display_options['pager']['options']['tags']['first'] = '« primer';
-  $handler->display->display_options['pager']['options']['tags']['previous'] = '‹ anterior';
-  $handler->display->display_options['pager']['options']['tags']['next'] = 'següent ›';
-  $handler->display->display_options['pager']['options']['tags']['last'] = 'últim »';
+  $handler->display->display_options['pager']['options']['tags']['first'] = '« ' . t('first');
+  $handler->display->display_options['pager']['options']['tags']['previous'] = '‹ ' . t('previous');
+  $handler->display->display_options['pager']['options']['tags']['next'] = t('next') . ' ›';
+  $handler->display->display_options['pager']['options']['tags']['last'] = t('last') . ' »';
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
     'mid_1' => 'mid_1',
@@ -99,7 +99,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['fields']['created']['id'] = 'created';
   $handler->display->display_options['fields']['created']['table'] = 'ces_message';
   $handler->display->display_options['fields']['created']['field'] = 'created';
-  $handler->display->display_options['fields']['created']['label'] = 'Data';
+  $handler->display->display_options['fields']['created']['label'] = t('Data');
   $handler->display->display_options['fields']['created']['date_format'] = 'medium';
   $handler->display->display_options['fields']['created']['second_date_format'] = 'long';
   /* Camp: Ces Message: Assumpte */
@@ -113,7 +113,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['fields']['shortname']['table'] = 'ces_exchange';
   $handler->display->display_options['fields']['shortname']['field'] = 'shortname';
   $handler->display->display_options['fields']['shortname']['relationship'] = 'exchange';
-  $handler->display->display_options['fields']['shortname']['label'] = 'Exchange';
+  $handler->display->display_options['fields']['shortname']['label'] = t('Exchange');
   /* Contextual filter: Ces Message: User Id */
   $handler->display->display_options['arguments']['user']['id'] = 'user';
   $handler->display->display_options['arguments']['user']['table'] = 'ces_message';
@@ -132,7 +132,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['filters']['subject']['operator'] = 'contains';
   $handler->display->display_options['filters']['subject']['exposed'] = TRUE;
   $handler->display->display_options['filters']['subject']['expose']['operator_id'] = 'subject_op';
-  $handler->display->display_options['filters']['subject']['expose']['label'] = 'Assumpte';
+  $handler->display->display_options['filters']['subject']['expose']['label'] = t('Subject');
   $handler->display->display_options['filters']['subject']['expose']['operator'] = 'subject_op';
   $handler->display->display_options['filters']['subject']['expose']['identifier'] = 'subject';
   $handler->display->display_options['filters']['subject']['expose']['remember_roles'] = array(
@@ -147,7 +147,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['filters']['created']['operator'] = '<';
   $handler->display->display_options['filters']['created']['exposed'] = TRUE;
   $handler->display->display_options['filters']['created']['expose']['operator_id'] = 'created_op';
-  $handler->display->display_options['filters']['created']['expose']['label'] = 'Date';
+  $handler->display->display_options['filters']['created']['expose']['label'] = t('Date');
   $handler->display->display_options['filters']['created']['expose']['description'] = 'A date in any machine readable format. CCYY-MM-DD HH:MM:SS is preferred.';
   $handler->display->display_options['filters']['created']['expose']['use_operator'] = TRUE;
   $handler->display->display_options['filters']['created']['expose']['operator'] = 'created_op';
@@ -165,7 +165,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['filters']['shortname']['operator'] = 'contains';
   $handler->display->display_options['filters']['shortname']['exposed'] = TRUE;
   $handler->display->display_options['filters']['shortname']['expose']['operator_id'] = 'shortname_op';
-  $handler->display->display_options['filters']['shortname']['expose']['label'] = 'Exchange';
+  $handler->display->display_options['filters']['shortname']['expose']['label'] = t('Exchange');
   $handler->display->display_options['filters']['shortname']['expose']['operator'] = 'shortname_op';
   $handler->display->display_options['filters']['shortname']['expose']['identifier'] = 'shortname';
   $handler->display->display_options['filters']['shortname']['expose']['remember_roles'] = array(
@@ -182,17 +182,17 @@ function ces_message_views_default_views() {
     t('Ces Message'),
     t('more'),
     t('Apply'),
-    t('Reinicialitza'),
+    t('Reset'),
     t('Sort by'),
     t('Asc'),
     t('Desc'),
     t('Items per page'),
     t('- All -'),
     t('Offset'),
-    t('« primer'),
-    t('‹ anterior'),
-    t('següent ›'),
-    t('últim »'),
+    '« ' . t('first'),
+    '‹ ' . t('previous'),
+    t('next') . ' ›',
+    t('last') . ' »',
     t('Ces message Exchange relationship'),
     t('Ces message users relationship'),
     t('Id'),
@@ -227,13 +227,13 @@ function ces_message_views_default_views() {
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['exposed_form']['type'] = 'basic';
-  $handler->display->display_options['exposed_form']['options']['reset_button_label'] = 'Reinicialitza';
+  $handler->display->display_options['exposed_form']['options']['reset_button_label'] = t('Reset');
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '20';
-  $handler->display->display_options['pager']['options']['tags']['first'] = '« primer';
-  $handler->display->display_options['pager']['options']['tags']['previous'] = '‹ anterior';
-  $handler->display->display_options['pager']['options']['tags']['next'] = 'següent ›';
-  $handler->display->display_options['pager']['options']['tags']['last'] = 'últim »';
+  $handler->display->display_options['pager']['options']['tags']['first'] = '« ' . t('first');
+  $handler->display->display_options['pager']['options']['tags']['previous'] = '‹ ' . t('previous');
+  $handler->display->display_options['pager']['options']['tags']['next'] = t('next') . ' ›';
+  $handler->display->display_options['pager']['options']['tags']['last'] = t('last') . ' »';
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
     'mid' => 'mid',
@@ -316,14 +316,14 @@ function ces_message_views_default_views() {
   $handler->display->display_options['fields']['created']['id'] = 'created';
   $handler->display->display_options['fields']['created']['table'] = 'ces_message';
   $handler->display->display_options['fields']['created']['field'] = 'created';
-  $handler->display->display_options['fields']['created']['label'] = 'Data';
+  $handler->display->display_options['fields']['created']['label'] = t('Data');
   $handler->display->display_options['fields']['created']['date_format'] = 'short';
   $handler->display->display_options['fields']['created']['second_date_format'] = 'long';
   /* Camp: Ces Message: Assumpte */
   $handler->display->display_options['fields']['subject']['id'] = 'subject';
   $handler->display->display_options['fields']['subject']['table'] = 'ces_message';
   $handler->display->display_options['fields']['subject']['field'] = 'subject';
-  $handler->display->display_options['fields']['subject']['label'] = 'Subject';
+  $handler->display->display_options['fields']['subject']['label'] = t('Subject');
   $handler->display->display_options['fields']['subject']['alter']['make_link'] = TRUE;
   $handler->display->display_options['fields']['subject']['alter']['path'] = 'ces/bank/account/message/[mid]/view';
   $handler->display->display_options['fields']['subject']['element_label_colon'] = FALSE;
@@ -331,7 +331,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['fields']['type_message']['id'] = 'type_message';
   $handler->display->display_options['fields']['type_message']['table'] = 'ces_message';
   $handler->display->display_options['fields']['type_message']['field'] = 'type_message';
-  $handler->display->display_options['fields']['type_message']['label'] = 'Type';
+  $handler->display->display_options['fields']['type_message']['label'] = t('Type');
   $handler->display->display_options['fields']['type_message']['element_label_colon'] = FALSE;
   /* Camp: Ces Message: Exchange */
   $handler->display->display_options['fields']['exchange']['id'] = 'exchange';
@@ -343,13 +343,13 @@ function ces_message_views_default_views() {
   $handler->display->display_options['fields']['shortname']['table'] = 'ces_exchange';
   $handler->display->display_options['fields']['shortname']['field'] = 'shortname';
   $handler->display->display_options['fields']['shortname']['relationship'] = 'exchange';
-  $handler->display->display_options['fields']['shortname']['label'] = 'Exchange';
-  /* Camp: Usuari: Nom */
+  $handler->display->display_options['fields']['shortname']['label'] = t('Exchange');
+  /* Camp: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
   $handler->display->display_options['fields']['name']['field'] = 'name';
   $handler->display->display_options['fields']['name']['relationship'] = 'user';
-  $handler->display->display_options['fields']['name']['label'] = 'User';
+  $handler->display->display_options['fields']['name']['label'] = t('User');
   /* Filter criterion: Ces Exchange: Exchange Shortname */
   $handler->display->display_options['filters']['shortname']['id'] = 'shortname';
   $handler->display->display_options['filters']['shortname']['table'] = 'ces_exchange';
@@ -358,7 +358,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['filters']['shortname']['operator'] = 'contains';
   $handler->display->display_options['filters']['shortname']['exposed'] = TRUE;
   $handler->display->display_options['filters']['shortname']['expose']['operator_id'] = 'shortname_op';
-  $handler->display->display_options['filters']['shortname']['expose']['label'] = 'Exchange';
+  $handler->display->display_options['filters']['shortname']['expose']['label'] = t('Exchange');
   $handler->display->display_options['filters']['shortname']['expose']['operator'] = 'shortname_op';
   $handler->display->display_options['filters']['shortname']['expose']['identifier'] = 'shortname';
   $handler->display->display_options['filters']['shortname']['expose']['remember_roles'] = array(
@@ -373,7 +373,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['filters']['subject']['operator'] = 'contains';
   $handler->display->display_options['filters']['subject']['exposed'] = TRUE;
   $handler->display->display_options['filters']['subject']['expose']['operator_id'] = 'subject_op';
-  $handler->display->display_options['filters']['subject']['expose']['label'] = 'Assumpte';
+  $handler->display->display_options['filters']['subject']['expose']['label'] = t('Subject');
   $handler->display->display_options['filters']['subject']['expose']['operator'] = 'subject_op';
   $handler->display->display_options['filters']['subject']['expose']['identifier'] = 'subject';
   $handler->display->display_options['filters']['subject']['expose']['remember_roles'] = array(
@@ -381,14 +381,14 @@ function ces_message_views_default_views() {
     1 => 0,
     3 => 0,
   );
-  /* Filter criterion: Ces Message: Tipus */
+  /* Filter criterion: Ces Message: Type */
   $handler->display->display_options['filters']['type_message']['id'] = 'type_message';
   $handler->display->display_options['filters']['type_message']['table'] = 'ces_message';
   $handler->display->display_options['filters']['type_message']['field'] = 'type_message';
   $handler->display->display_options['filters']['type_message']['operator'] = 'contains';
   $handler->display->display_options['filters']['type_message']['exposed'] = TRUE;
   $handler->display->display_options['filters']['type_message']['expose']['operator_id'] = 'type_message_op';
-  $handler->display->display_options['filters']['type_message']['expose']['label'] = 'Tipus';
+  $handler->display->display_options['filters']['type_message']['expose']['label'] = t('Type');
   $handler->display->display_options['filters']['type_message']['expose']['operator'] = 'type_message_op';
   $handler->display->display_options['filters']['type_message']['expose']['identifier'] = 'type_message';
   $handler->display->display_options['filters']['type_message']['expose']['remember_roles'] = array(
@@ -396,7 +396,7 @@ function ces_message_views_default_views() {
     1 => 0,
     3 => 0,
   );
-  /* Filter criterion: Usuari: Nom */
+  /* Filter criterion: User: Name */
   $handler->display->display_options['filters']['uid']['id'] = 'uid';
   $handler->display->display_options['filters']['uid']['table'] = 'users';
   $handler->display->display_options['filters']['uid']['field'] = 'uid';
@@ -404,7 +404,7 @@ function ces_message_views_default_views() {
   $handler->display->display_options['filters']['uid']['value'] = '';
   $handler->display->display_options['filters']['uid']['exposed'] = TRUE;
   $handler->display->display_options['filters']['uid']['expose']['operator_id'] = 'uid_op';
-  $handler->display->display_options['filters']['uid']['expose']['label'] = 'Nom';
+  $handler->display->display_options['filters']['uid']['expose']['label'] = t('Name');
   $handler->display->display_options['filters']['uid']['expose']['operator'] = 'uid_op';
   $handler->display->display_options['filters']['uid']['expose']['identifier'] = 'uid';
   $handler->display->display_options['filters']['uid']['expose']['remember_roles'] = array(
@@ -421,17 +421,17 @@ function ces_message_views_default_views() {
     t('Ces Messages Admin'),
     t('more'),
     t('Apply'),
-    t('Reinicialitza'),
+    t('Reset'),
     t('Sort by'),
     t('Asc'),
     t('Desc'),
     t('Items per page'),
     t('- All -'),
     t('Offset'),
-    t('« primer'),
-    t('‹ anterior'),
-    t('següent ›'),
-    t('últim »'),
+    '« ' . t('first'),
+    '‹ ' . t('previous'),
+    t('next') . ' ›',
+    t('last') . ' »',
     t('Ces message users relationship'),
     t('Id'),
     t('.'),
@@ -440,9 +440,9 @@ function ces_message_views_default_views() {
     t('Type'),
     t('Exchange'),
     t('User'),
-    t('Assumpte'),
-    t('Tipus'),
-    t('Nom'),
+    t('Subject'),
+    t('Type'),
+    t('Name'),
     t('Page'),
   );
 

@@ -320,7 +320,8 @@ function ces_message_install_default_template($action, $language, $subject, $bod
     ces_message_template_save($template);
   }
   else {
-    trigger_error(t('Action !action not found while installing template.',
-      array('!action' => $action)), E_USER_ERROR);
+    $msg = t('Action !action not found while installing template.',
+      array('!action' => $action));
+    trigger_error(check_plain($msg), E_USER_ERROR);
   }
 }
