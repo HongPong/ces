@@ -716,7 +716,7 @@ class CesBankTestCase extends DrupalWebTestCase {
   }
   /**
    * Check balance and sales visibility options.
-   * 
+   *
    * @param object $admin
    *   The exchange administrator user.
    * @param object $user1

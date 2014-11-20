@@ -610,9 +610,15 @@ function ces_bank_account_view($account) {
  */
 function ces_bank_transaction_view($transaction) {
   $bank = new CesBank();
-
-  $fromaccount = $bank->getTransactionFromAccount($transaction);
-  $toaccount = $bank->getTransactionToAccount($transaction);
+  if (isset($transaction['fromaccountname']) && isset($transaction['toaccountname'])) {
+    // Transaction is comming from new/edit form.
+    $fromaccount = $bank->getAccountByName($transaction['fromaccountname']);
+    $toaccount = $bank->getAccountByName($transaction['toaccountname']);
+  }
+  else {
+    $fromaccount = $bank->getTransactionFromAccount($transaction);
+    $toaccount = $bank->getTransactionToAccount($transaction);
+  }
   $page = array(
     '#theme' => 'ces_bank_transaction_view',
   );

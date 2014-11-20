@@ -67,7 +67,7 @@ function theme_ces_bank_transaction_view($variables) {
   $fex = $variables['element']['fromexchange'];
   $tex = $variables['element']['toexchange'];
 
-  $out = '<dl>';
+  $out = '<dl class="ces-transaction-view">';
 
   if ($fex['id'] == $tex['id']) {
     $out .= '<dt>' . t('Exchange') . '</dt>';

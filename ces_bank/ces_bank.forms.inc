@@ -391,7 +391,7 @@ function ces_bank_exchange_form_submit($form, &$form_state) {
  * Form for deleting exchange.
  *
  * - Inter-exchange accounts (kind=5) cannot be deleted.
- * - Users with another account in other exchange or with 
+ * - Users with another account in other exchange or with
  *   inter-exchange accounts cannot be deleted.
  *
  * If any of these conditions are true, the exchange cannot be deleted.
@@ -1527,6 +1527,10 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
       }
     }
     elseif ($op == 'edit') {
+      if (!isset($form_state['values'])) {
+        $form_state['values'] = array();
+      }
+      $form_state['values'] += $arg;
       $from = $bank->getTransactionFromAccount($arg);
       $to = $bank->getTransactionToAccount($arg);
       $toexchange = $exchanges[$to['exchange']];
@@ -1534,10 +1538,6 @@ function ces_bank_transaction_form($form, &$form_state, $op, $arg, $to_account_i
       $form_state['values']['toaccountname'] = $to['name'];
       $form_state['values']['fromexchange'] = $from['exchange'];
       $form_state['values']['fromaccountname'] = $from['name'];
-      $form_state['values']['concept'] = $arg['concept'];
-      $form_state['values']['amount'] = $bank->formatAmount($bank->getTransactionAmount($arg, $toexchange), $toexchange, FALSE, FALSE);
-      $form_state['values']['id'] = $arg['id'];
-      $form_state['values']['user'] = $arg['user'];
     }
     $form['operation'] = array(
       '#type' => 'value',
@@ -1813,39 +1813,34 @@ function ces_bank_transaction_form_submit($form, &$form_state) {
  *   in favor of $form_state values coming from ces_bank_transaction_form.
  */
 function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL) {
-  if ($op == 'new' || $op == 'edit') {
-    $values = $form_state['values'];
-    // Copy values from previous form in a safe place.
-    $form_state['edit_page'] = $values;
+  $bank = new CesBank();
+  $transaction = $form_state['values'];
+  // Copy values from previous form in a safe place.
+  $form_state['edit_page'] = $transaction;
+  if (!empty($transaction['id'])) {
+    $id = $transaction['id'];
   }
-  else {
-    $bank = new CesBank();
+  if (!empty($id)) {
     try {
-      $transaction = $bank->getTransaction($id);
-      $fromaccount = $bank->getAccount($transaction['fromaccount']);
-      $toaccount = $bank->getAccount($transaction['toaccount']);
-      $values = array(
-        'toaccountname' => $toaccount['name'],
-        'fromaccountname' => $fromaccount['name'],
-        'amount' => $transaction['amount'],
-        'concept' => $transaction['concept'],
-        'id' => $transaction['id'],
-        'user' => $transaction['user'],
-      );
+      $transaction += $bank->getTransaction($id);
     }
     catch (Exception $e) {
       drupal_set_message($e->getMessage(), 'error');
       return array();
     }
   }
+  if (empty($transaction)) {
+    drupal_set_message(t('No transaction provided.'), 'error');
+    return array();
+  }
   if ($op != 'new' && $op != 'trigger' && $op != 'edit') {
     drupal_set_message(t('Operation not permitted or not implemented yet.'), 'error');
     return array();
   }
-  if (isset($values['id'])) {
+  if (isset($transaction['id'])) {
     $form['id'] = array(
       '#type' => 'value',
-      '#value' => $values['id'],
+      '#value' => $transaction['id'],
     );
   }
   $form['operation'] = array(
@@ -1857,26 +1852,20 @@ function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL)
     '#type' => 'value',
     '#value' => 'confirm',
   );
-  $form['itemtoaccountname'] = array(
-    '#type' => 'item',
-    '#title' => t('Seller account'),
-    '#markup' => $values['toaccountname'],
+  $html = '<p>' . t('Are you sure you want to delete the transaction?') . '</p>';
+  $html = '<p>' . t('Transaction details:') . '</p>';
+  require_once drupal_get_path('module', 'ces_bank') . '/ces_bank.pages.inc';
+  if ($op == 'new') {
+    $transaction['state'] = 0;
+    $transaction['created'] = REQUEST_TIME;
+    $transaction['modified'] = REQUEST_TIME;
+  }
+  $view = ces_bank_transaction_view($transaction);
+  $html .= '<p>' . drupal_render($view) . '</p>';
+  $form['transaction'] = array(
+    '#markup' => $html,
   );
-  $form['itemfromaccountname'] = array(
-    '#type' => 'item',
-    '#title' => t('Buyer account'),
-    '#markup' => $values['fromaccountname'],
-  );
-  $form['itemamount'] = array(
-    '#type' => 'item',
-    '#title' => t('Amount'),
-    '#markup' => $values['amount'],
-  );
-  $form['itemconcept'] = array(
-    '#type' => 'item',
-    '#title' => t('Description'),
-    '#markup' => $values['concept'],
-  );
+
   $form['back'] = array(
     '#type' => 'submit',
     '#value' => t('Back'),
