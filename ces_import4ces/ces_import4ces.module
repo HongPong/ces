@@ -573,7 +573,9 @@ function ces_import4ces_batch_fail_row($import_id, $heads, $cols, $row,
     'columns' => $cols,
     'row' => $row,
   );
-  $context['results']['error'] = t('The row @row could not be parsed.',
+  $ma = ( isset($context['results']['error']) ) ? $context['results']['error']
+    : '';
+  $context['results']['error'] = $ma . t('The row @row could not be parsed.',
     array('@row' => $row));
 }
 

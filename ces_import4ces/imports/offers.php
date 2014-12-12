@@ -25,7 +25,7 @@ function ces_import4ces_parse_offers($import_id, $data, $row, &$context) {
     $import = ces_import4ces_import_load($import_id);
     $import->row = $row;
 
-    // Having no category wants, create one for which indicates the lack of it.
+    // Having no category offers, create one for which indicates the lack of it.
     $category = !empty($data['Category']) ? $data['Category'] : 'unclassified';
 
     $category_id = ces_import4ces_get_category($category, $import);
@@ -57,7 +57,7 @@ function ces_import4ces_parse_offers($import_id, $data, $row, &$context) {
     $offer_user_id = $query->fetchColumn(0);
 
     if (empty($offer_user_id)) {
-      $m = t('The user @user was not found in want import row @row. It may be a
+      $m = t('The user @user was not found in offer import row @row. It may be a
       user from another exchange not yet imported.', array('@user' => $data['UID'], '@row' => $row));
 
       throw new Exception($m);
