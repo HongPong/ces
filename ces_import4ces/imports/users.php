@@ -95,7 +95,8 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context) {
     );
 
     $extra_data = array(
-      'OrgName' => $data['OrgName'],
+      'OrgNameShort' => $data['OrgNameShort'],
+      'OrgNameLong' => $data['OrgNameLong'],
       'SubArea' => $data['SubArea'],
       'DefaultSub' => $data['DefaultSub'],
       'PhoneF' => $data['PhoneF'],
