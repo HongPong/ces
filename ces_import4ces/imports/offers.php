@@ -14,7 +14,9 @@
 /**
  * Parse setting.
  */
-function ces_import4ces_parse_offers($import_id, $data, $row, &$context) {
+function ces_import4ces_parse_offers($import_id, $data, $row, &$context, 
+  $width_ajax = TRUE) {
+
   if (isset($context['results']['error'])) {
     return;
   }
@@ -31,7 +33,7 @@ function ces_import4ces_parse_offers($import_id, $data, $row, &$context) {
     $category_id = ces_import4ces_get_category($category, $import);
     $offer = array(
       'type' => 'offer',
-      'user' => $data['UID'],
+      'user' => $data['Advertiser'],
       'title' => $data['Title'],
       'body' => $data['Description'],
       'category' => $category_id,
@@ -45,21 +47,19 @@ function ces_import4ces_parse_offers($import_id, $data, $row, &$context) {
     );
 
     $extra_info = array(
-      'ID' => $data['ID'],
-      'UID' => $data['UID'],
-      'Remote' => $data['Remote'],
-      'Subcat' => $data['Subcat'],
+      'UID' => $offer['user'],
+      'Subcat' => $data['Keys'],
       'ConRate' => $data['ConRate'],
     );
 
     // Find uid from user.
-    $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['UID']));
+    $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $offer['user']));
     $offer_user_id = $query->fetchColumn(0);
 
-    if (empty($offer_user_id)) {
+    if (empty($offer_user_id) || ! $offer_user_id) {
       $m = t('The user @user was not found in offer import row @row. It may be a
-      user from another exchange not yet imported.', array('@user' => $data['UID'], '@row' => $row));
-
+      user from another exchange not yet imported.', array('@user' => $data['Advertiser'], '@row' => $row));
+      $context['results']['error'] = $m;
       throw new Exception($m);
     }
 
@@ -111,8 +111,17 @@ function ces_import4ces_parse_offers($import_id, $data, $row, &$context) {
   catch (Exception $e) {
     ob_end_clean();
     $tx->rollback();
-    ces_import4ces_batch_fail_row($import_id, array_keys($data), array_values($data), $row, $context);
     $context['results']['error'] = check_plain($e->getMessage());
+    $_SESSION['ces_import4ces_row_error']['row']  = $row;
+    $_SESSION['ces_import4ces_row_error']['m']    = $e->getMessage();
+    $_SESSION['ces_import4ces_row_error']['data'] = $data;
+    if ( $width_ajax ) {
+      $result = array('status' => FALSE, 'data' => check_plain($e->getMessage()));
+      die(json_encode($result));
+    }
+    else {
+      ces_import4ces_batch_fail_row($import_id, array_keys($data), array_values($data), $row, $context);
+    }
   }
 }
 /** @} */

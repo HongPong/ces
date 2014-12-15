@@ -14,7 +14,8 @@
 /**
  * Parse trades.
  */
-function ces_import4ces_parse_trades($import_id, $data, $row, &$context) {
+function ces_import4ces_parse_trades($import_id, $data, $row, &$context, 
+  $width_ajax = TRUE) {
   global $user;
   if (isset($context['results']['error'])) {
     return;
@@ -26,11 +27,11 @@ function ces_import4ces_parse_trades($import_id, $data, $row, &$context) {
     $bank = new CesBank();
     $account_seller = _ces_import4ces_trades_get_account($import_id, $data['Seller'], $data);
     if ($account_seller === FALSE) {
-      throw new Exception('Acount @account not found.', array('@account' => $data['Seller']));
+      throw new Exception(t('Acount @account not found.', array('@account' => $data['Seller'])));
     }
     $account_buyer = _ces_import4ces_trades_get_account($import_id, $data['Buyer'], $data);
     if ($account_buyer === FALSE) {
-      throw new Exception('Acount @account not found.', array('@account' => $data['Buyer']));
+      throw new Exception(t('Acount @account not found.', array('@account' => $data['Buyer'])));
     }
     // Find uid from user.
     $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $data['EnteredBy']));
@@ -76,8 +77,17 @@ function ces_import4ces_parse_trades($import_id, $data, $row, &$context) {
   catch (Exception $e) {
     ob_end_clean();
     $tx->rollback();
-    ces_import4ces_batch_fail_row($import_id, array_keys($data), array_values($data), $row, $context);
     $context['results']['error'] = check_plain($e->getMessage());
+    $_SESSION['ces_import4ces_row_error']['row']  = $row;
+    $_SESSION['ces_import4ces_row_error']['m']    = $e->getMessage();
+    $_SESSION['ces_import4ces_row_error']['data'] = $data;
+    if ( $width_ajax ) {
+      $result = array('status' => FALSE, 'data' => check_plain($e->getMessage()));
+      die(json_encode($result));
+    }
+    else {
+      ces_import4ces_batch_fail_row($import_id, array_keys($data), array_values($data), $row, $context);
+    }
   }
 }
 

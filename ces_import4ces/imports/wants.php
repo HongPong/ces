@@ -14,7 +14,8 @@
 /**
  * Parse wants.
  */
-function ces_import4ces_parse_wants($import_id, $data, $row, &$context) {
+function ces_import4ces_parse_wants($import_id, $data, $row, &$context, 
+  $width_ajax = TRUE) {
   if (isset($context['results']['error'])) {
     return;
   }
@@ -86,8 +87,17 @@ function ces_import4ces_parse_wants($import_id, $data, $row, &$context) {
   catch (Exception $e) {
     ob_end_clean();
     $tx->rollback();
-    ces_import4ces_batch_fail_row($import_id, array_keys($data), array_values($data), $row, $context);
     $context['results']['error'] = check_plain($e->getMessage());
+    $_SESSION['ces_import4ces_row_error']['row']  = $row;
+    $_SESSION['ces_import4ces_row_error']['m']    = $e->getMessage();
+    $_SESSION['ces_import4ces_row_error']['data'] = $data;
+    if ( $width_ajax ) {
+      $result = array('status' => FALSE, 'data' => check_plain($e->getMessage()));
+      die(json_encode($result));
+    }
+    else {
+      ces_import4ces_batch_fail_row($import_id, array_keys($data), array_values($data), $row, $context);
+    }
   }
 }
 /** @} */

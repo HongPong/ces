@@ -272,7 +272,10 @@ function ces_import4ces_row_form_submit($form, &$form_state) {
     $context = array();
     if (isset($form_state['values']['import_id'])) {
       $import_id = $form_state['values']['import_id'];
-      $parse_function($import_id, $data, $row, $context);
+      $parse_function($import_id, $data, $row, $context, FALSE);
+      if ( isset($_SESSION['ces_import4ces_row_error']) ) {
+        unset($_SESSION['ces_import4ces_row_error']);
+      }
     }
     else {
       $parse_function($data, $row, $context);
@@ -465,6 +468,12 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
 
   // Read CSV.
   $row = $record->row;
+
+  // If there was an error, first to produce the record.
+  $reapir_row = ( isset($_SESSION['ces_import4ces_row_error']) ) 
+    ? $_SESSION['ces_import4ces_row_error']['row']
+    : FALSE ;
+
   if (($gestor = fopen($file_csv, "r")) !== FALSE) {
     $heads = array();
     $fila = -1;
@@ -510,7 +519,7 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
         if (isset($record->id)) {
           $arguments[] = $record->id;
         }
-        if (count($heads) == count($cols)) {
+        if (count($heads) == count($cols) && ! $reapir_row) {
           $arguments[] = array_combine($heads, $cols);
           $arguments[] = $fila;
           $operations[] = array($parse_function, $arguments);
@@ -525,6 +534,7 @@ function _ces_import4ces_import_csv($file_csv, $file, $parse_function, $record) 
           // This row has an incorrect number of columns. Let the user the
           // opportunity to correct this row.
           $operations[] = array('ces_import4ces_batch_fail_row', $arguments);
+          break;
         }
       }
     }
@@ -585,6 +595,7 @@ function ces_import4ces_batch_fail_row($import_id, $heads, $cols, $row,
 function _ces_import4ces_batch_import_csv_finished($success, $results,
   $operations) {
   $batch = &batch_get();
+
   if ($success && empty($results['error'])) {
     $batch['form_state']['redirect'] = 'ces/admin/import/'
       . $results['import_id'] . '/continue';
@@ -604,6 +615,22 @@ function _ces_import4ces_batch_import_csv_finished($success, $results,
         'args' => array($results['import_id']),
       );
       $batch['form_state'] += form_state_defaults();
+    }
+    elseif ( isset($_SESSION['ces_import4ces_row_error']) ) {
+      // Manually fix the row.
+      $batch['form_state']['row']['row'] = 
+        $_SESSION['ces_import4ces_row_error']['row'];
+      $batch['form_state']['row']['heads'] = 
+        array_keys($_SESSION['ces_import4ces_row_error']['data']);
+      $batch['form_state']['row']['columns'] = 
+        array_values($_SESSION['ces_import4ces_row_error']['data']);
+      $batch['form_state']['manual_row'] = TRUE;
+      $batch['form_state']['rebuild'] = TRUE;
+      $batch['form_state']['build_info'] = array(
+        'args' => array($results['import_id']),
+      );
+      $batch['form_state'] += form_state_defaults();
+      unset($_SESSION['ces_import4ces_row_error']);
     }
     else {
       $batch['form_state']['redirect'] = 'ces/admin/import';
