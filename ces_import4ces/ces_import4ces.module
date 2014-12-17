@@ -606,6 +606,8 @@ function _ces_import4ces_batch_import_csv_finished($success, $results,
   }
   elseif (!empty($results['error'])) {
     drupal_set_message($results['error'], 'error');
+    // Save message to database, go to admin/reports/dblog to view.
+    watchdog('ces_import4ces', $results['error'], array(), WATCHDOG_WARNING);
     if (!empty($results['row'])) {
       // Manually fix the row.
       $batch['form_state']['row'] = $results['row'];
@@ -803,10 +805,17 @@ function ces_import4ces_update_row($import_id, $row) {
 
 /**
  * Create o return category.
+ *
+ * @param string $title 
+ *   Title of category.
+ * @param class $import 
+ *   Instance of Import.
+ * @param int $context 
+ *   Context of category. Whether this category is applicable to offers (1),
+ *   wants (2), both (3) or none (0)
  */
-function ces_import4ces_get_category($title, $import) {
+function ces_import4ces_get_category($title, $import, $context = 1) {
   $query = new EntityFieldQuery();
-
   $query->entityCondition('entity_type', 'ces_category')
     ->propertyCondition('exchange', $import->exchange_id)
     ->propertyCondition('title', $title);
@@ -822,7 +831,7 @@ function ces_import4ces_get_category($title, $import) {
       'title' => $title,
       'description' => $title,
       'exchange' => $import->exchange_id,
-      'context' => 1,
+      'context' => $context,
     );
 
     $category_object = ces_category_save($cat);

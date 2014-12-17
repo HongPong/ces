@@ -26,7 +26,7 @@ function ces_import4ces_parse_wants($import_id, $data, $row, &$context,
     $import = ces_import4ces_import_load($import_id);
     $import->row = $row;
 
-    $category_id = ces_import4ces_get_category('unclassified', $import);
+    $category_id = ces_import4ces_get_category('general', $import);
 
     /*
     [ID] => 2
