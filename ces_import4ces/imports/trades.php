@@ -113,7 +113,14 @@ function _ces_import4ces_trades_get_account($import_id, $name, $data) {
   if (substr($name, 4) == 'VIRT') {
     // This is an inter-exchange transaction. Use the corresponding virtual
     // account.
-    $name = substr($name, 0, 4) . $data['RemoteExchange'];
+    if ($data['RemoteExchange'] != '0000') {
+      $name = substr($name, 0, 4) . $data['RemoteExchange'];  
+    }
+    else {
+      // This is a remote transaction. The cen ID appears to be in the RecordID.
+      $offset = ($name == $data['Seller']) ? 0 : 4;
+      $name = substr($name, 0, 4) . 'cen' . substr($data['RecordID'], $offset, 4);
+    }
     $account_seller = $bank->getAccountByName($name);
     if ($account_seller === FALSE) {
       // The virtual account does not exist yet, so let's create it.
