@@ -237,13 +237,13 @@ function ces_message_menu() {
     'type' => MENU_LOCAL_TASK,
   );
   // Add example entities.
-  $items['ces/admin/message/test'] = array(
-    'title' => 'Test',
-    'page callback' => 'ces_message_template_test',
-    'access callback' => 'ces_bank_access',
-    'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
-    'type' => MENU_LOCAL_TASK,
-  );
+  // $items['ces/admin/message/test'] = array(
+  //   'title' => 'Test',
+  //   'page callback' => 'ces_message_template_test',
+  //   'access callback' => 'ces_bank_access',
+  //   'access arguments' => array('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE),
+  //   'type' => MENU_LOCAL_TASK,
+  // );
   // The page to view our entities - needs to follow what
   // is defined in template_uri and will use load_template to retrieve
   // the necessary entity info.
