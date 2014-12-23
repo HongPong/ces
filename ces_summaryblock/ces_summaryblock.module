@@ -331,7 +331,9 @@ function ces_summaryblock_form_submit($form, &$form_state) {
   $user->data['ces_summaryblock_period_from'] = $from;
   $user->data['ces_summaryblock_period_to'] = $to;
   $user->data['ces_summaryblock_period'] = $form_state['values']['period'];
-  $user->data['ces_current_account'] = $form_state['values']['account'];
+  $user->data['ces_current_account'] = ( isset($form_state['values']['account']) )
+    ? $form_state['values']['account']
+    : FALSE;
   user_save($user);
 }
 /**
