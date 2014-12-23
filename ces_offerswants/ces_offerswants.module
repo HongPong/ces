@@ -232,7 +232,6 @@ function ces_offerswants_menu() {
     'title' => 'Wants',
     'description' => 'View people\'s wants',
     'page callback' => 'ces_offerswants_list_page',
-    'access callback' => TRUE,
     'page arguments' => array('want', 4, 5, 6, 7, 8),
     'access callback' => 'ces_bank_access',
     'access arguments' => array('view', 'exchange details',
@@ -244,7 +243,8 @@ function ces_offerswants_menu() {
     'title' => 'My offers',
     'description' => 'View my current offers',
     'page callback' => 'ces_offerswants_myoffers_page',
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('add'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 110,
   );
@@ -257,7 +257,8 @@ function ces_offerswants_menu() {
     'title' => 'Add offer',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_offerwant_form', 'offer'),
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('add'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
   );
@@ -303,7 +304,8 @@ function ces_offerswants_menu() {
     'title' => 'My wants',
     'description' => 'View my current wants',
     'page callback' => 'ces_offerswants_mywants_page',
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('add'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 120,
   );
@@ -316,7 +318,8 @@ function ces_offerswants_menu() {
     'title' => 'Add want',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_offerwant_form', 'want'),
-    'access callback' => TRUE,
+    'access callback' => 'ces_offerwant_access',
+    'access arguments' => array('add'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
   );
@@ -915,10 +918,19 @@ function template_preprocess_ces_offerwant(&$variables) {
  * @param object $account
  *   The Drupal user.
  */
-function ces_offerwant_access($operation, $offerwant, $account = NULL) {
+function ces_offerwant_access($operation, $offerwant = NULL, $account = NULL) {
   if ($account == NULL) {
     global $user;
     $account = $user;
+  }
+  // Check that is user integralces
+  if ( $operation == 'add' ) {
+    if ( !ces_bank_get_current_account() ) {
+      return FALSE;
+    }
+    else {
+      return TRUE;
+    }
   }
   if ($offerwant->user == $account->uid) {
     return TRUE;
