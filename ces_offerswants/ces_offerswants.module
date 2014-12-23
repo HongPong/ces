@@ -923,7 +923,7 @@ function ces_offerwant_access($operation, $offerwant = NULL, $account = NULL) {
     global $user;
     $account = $user;
   }
-  // Check that is user integralces
+  // Check is user integralces
   if ( $operation == 'add' ) {
     if ( !ces_bank_get_current_account() ) {
       return FALSE;

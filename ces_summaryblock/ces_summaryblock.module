@@ -26,6 +26,10 @@ function ces_summaryblock_block_info() {
  * Implements hook_block_view().
  */
 function ces_summaryblock_block_view($delta = '') {
+  // Check is user integralces
+  if ( !ces_bank_get_current_account() ) {
+    return FALSE;
+  }
   // Minimal css format.
   drupal_add_css(drupal_get_path('module', 'ces_summaryblock') . '/css/ces_summaryblock.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
   // Get the relevant data.
