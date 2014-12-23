@@ -124,6 +124,15 @@ function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account 
   return $form;
 }
 /**
+ * Form validate function for ces_bank_account_user_form.
+ */
+function ces_bank_account_user_form_validate($form, &$form_state) {
+  $values = $form_state['values'];
+  if ( empty($values['users'][0]['username']) ) {
+    form_set_error('users[0][username]', t('The user is required'));
+  } 
+}
+/**
  * Submit add account user form.
  *
  * @param array $form
