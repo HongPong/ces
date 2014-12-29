@@ -1,8 +1,8 @@
 <?php
 /**
  * @file
- * Forms definition, submit and validation functions for account users in
- * ces_bank module.
+ * @brief Forms definition, submit and validation functions for account users 
+ *        in ces_bank module.
  */
 
 /**
@@ -128,9 +128,9 @@ function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account 
  */
 function ces_bank_account_user_form_validate($form, &$form_state) {
   $values = $form_state['values'];
-  if ( empty($values['users'][0]['username']) ) {
+  if (empty($values['users'][0]['username'])) {
     form_set_error('users[0][username]', t('The user is required'));
-  } 
+  }
 }
 /**
  * Submit add account user form.
@@ -237,7 +237,7 @@ function ces_bank_account_user_delete_form($form, &$form_state, $user = NULL, $a
   );
   $form['bankaccount']['title'] = array(
     '#type' => 'item',
-    '#title' => t('Delete user') . ' ' . $user->name . ' ' . t('of') . ' ' . t('account'),
+    '#title' => check_plain(t('Delete user') . ' ' . $user->name . ' ' . t('of') . ' ' . t('account')),
     '#markup' => t('Confirm delete user of account.'),
   );
   $form['bankaccount']['submit'] = array(

@@ -1129,10 +1129,38 @@ function ces_bank_account_form_validate($form, &$form_state) {
   }
   // Validate account number.
   $name = $record['name'];
-  $bank = new CesBank();
-  $account = $bank->getAccountByName($name);
-  if ($account != FALSE && (!isset($record['id']) || $account['id'] != $record['id'])) {
-    form_set_error('name', t('Account number %name already exists.', array('%name' => $name)));
+  if (isset($record['id']) && !empty($record['id'])) {
+    // Update account.
+    $id_account = $record['id'];
+    $bank = new CesBank();
+    $account = $bank->getAccount($id_account);
+    // Validate no change name of admin account (0000).
+    $number_original = drupal_substr($account['name'], 4);
+    $number_account  = drupal_substr($name, 4);
+    if ($number_original == '0000' && $number_original != $number_account) {
+      form_set_error('name', t('The name of the administrator account can not be changed'));
+    }
+  }
+  else {
+    // New account.
+    $bank = new CesBank();
+    $account = $bank->getAccountByName($name);
+    if ($account != FALSE) {
+      form_set_error('name', t('Account number %name already exists.', array('%name' => $name)));
+    }
+  }
+  // Validate code of exchange.
+  $current_exchange = ces_bank_get_current_exchange();
+  $code = $current_exchange['code'];
+  if (drupal_substr($name, 0, 4) != $code) {
+    form_set_error('name', t('The first four carecteres should be the network (%code).', array('%code' => $code)));
+  }
+  // Validate number of code, omly is not virtual account.
+  if ($record['kind'] != 5) {
+    $number = drupal_substr($name, 4);
+    if (!is_numeric($number)) {
+      form_set_error('name', t('The last four digits must be a number. (%number).', array('%number' => $number)));
+    }
   }
 }
 /**
@@ -1183,6 +1211,7 @@ function ces_bank_account_form_submit($form, &$form_state) {
   catch (Exception $e) {
     drupal_set_message(t('An error occurred while saving the account record. Details: %msg', array('%msg' => $e->getMessage())), 'error');
   }
+  drupal_set_message(t('Account successfully update.'));
 }
 /**
  * Form for deleting an account.

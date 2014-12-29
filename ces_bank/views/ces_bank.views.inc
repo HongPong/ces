@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Implements the ces_bank view bank.
+ * ces_bank view.
  */
 
 /**
@@ -13,10 +12,10 @@
  */
 
 function ces_bank_views_data() {
-  // Ces Exchange
+  // Ces Exchange.
   $data['ces_exchange']['table']['group'] = t('Ces Exchange');
   $data['ces_exchange']['table']['base'] = array(
-    'field' => 'id', // This is the identifier field for the view.
+    'field' => 'id',
     'title' => t('Ces Exchange table'),
     'help' => t('Ces Exchange view.'),
     'weight' => -10,
@@ -38,9 +37,8 @@ function ces_bank_views_data() {
       'handler' => 'views_handler_filter_numeric',
     ),
     'relationship' => array(
-      'base' => 'ces_message', // The name of the table to join with.
-      'base field' => 'exchange', // The name of the field on the joined table.
-      // 'field' => 'nid' -- see hook_views_data_alter(); not needed here.
+      'base' => 'ces_message',
+      'base field' => 'exchange',
       'handler' => 'views_handler_relationship',
       'label' => t('Ces exchange message relationship'),
       'title' => t('Ces exchange message relationship'),
@@ -53,7 +51,7 @@ function ces_bank_views_data() {
     'help' => t('Exchange Shortname.'),
     'field' => array(
       'handler' => 'views_handler_field',
-      'click sortable' => TRUE, // This is use by the table display plugin.
+      'click sortable' => TRUE,
     ),
     'filter' => array(
       'handler' => 'views_handler_filter_string',
@@ -67,4 +65,3 @@ function ces_bank_views_data() {
 /**
  * @} End of "defgroup ces_bank_view".
  */
-

@@ -144,6 +144,8 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->doAdminTransaction();
     // Balance: HORA0001: 11.25, HORA0002: -10.75
     $this->checkVisibilityOptions();
+    // Admin accounts.
+    $this->adminAccounts();
   }
   /**
    * Creates two exchanges.
@@ -320,6 +322,30 @@ class CesBankTestCase extends DrupalWebTestCase {
     );
     $this->createAccount($this->account21);
     $this->activateAccount($this->account21, $this->admin2, 1);
+    $this->account22 = array(
+      'exchange' => $this->exchange2,
+      'account' => array(
+        'name' => 'account22',
+        'mail' => 'account22@integralces.net',
+        'pass_raw' => 'integralces',
+        'firstname' => 'Account22',
+        'surname' => 'Noether',
+        'address' => 'Gran vía 25',
+        'town' => 'Barcelona',
+        'postcode' => '08015',
+        'phonemobile' => '333333333',
+        'phonework' => '444444444',
+        'phonehome' => '',
+        'website' => '',
+      ),
+      'bankaccount' => array(
+        'kind' => '0',
+      ),
+      'offer' => array(),
+      'want' => array(),
+    );
+    $this->createAccount($this->account22);
+    $this->activateAccount($this->account22, $this->admin2, 1);
   }
   /**
    * Do several transactions.
@@ -357,32 +383,6 @@ class CesBankTestCase extends DrupalWebTestCase {
    */
   protected function doTransactionsInterexchange() {
     // Create virtual accounts from interexchange.
-    // Exchange1.
-    $this->drupalLogin($this->admin1);
-    $this->drupalGet('ces/admin/account/new');
-    $edit = array(
-      'name' => 'HORABCNA',
-      'kind' => '0',
-      'users[0][username]' => $this->admin1->name,
-      'limitchain' => 1,
-      'state' => 1,
-    );
-    $op = t('Save');
-    $this->drupalPost(NULL, $edit, $op);
-    $this->drupalLogout();
-    // Exchange2.
-    $this->drupalLogin($this->admin2);
-    $this->drupalGet('ces/admin/account/new');
-    $edit = array(
-      'name' => 'BCNAHORA',
-      'kind' => '0',
-      'users[0][username]' => $this->admin2->name,
-      'limitchain' => 2,
-      'state' => 1,
-    );
-    $this->drupalPost(NULL, $edit, $op);
-    $this->drupalLogout();
-    // Users.
     $user1 = $this->accountUser($this->account11);
     $user2 = $this->accountUser($this->account21);
     // Interexchange.
@@ -392,7 +392,25 @@ class CesBankTestCase extends DrupalWebTestCase {
       'concept' => 'Third test transaction.',
       'amount' => '0.5',
     );
-    $this->doTransaction($user1, $record);
+    $this->doTransaction($user1, $record, TRUE, 'The transaction has NOT been applied');
+    // Activated virtual accounts from interexchange.
+    $this->drupalLogin($this->admin1);
+    $this->drupalGet('ces/admin/account');
+    $this->clickLink(t('Edit'), 3);
+    $this->drupalPost(NULL, array('state' => 1), t('Save'));
+    $this->drupalLogout();
+    $this->drupalLogin($this->admin2);
+    $this->drupalGet('ces/admin/account');
+    $this->clickLink(t('Edit'), 3);
+    $this->drupalPost(NULL, array('state' => 1), t('Save'));
+    $this->drupalLogout();
+    // Confirm transaction.
+    $this->drupalLogin($user1);
+    $this->drupalGet('ces/bank/account/transaction/8/edit');
+    $this->drupalPost(NULL, NULL, t('Update transaction'));
+    $this->drupalPost(NULL, NULL, t('Update transaction'));
+    $this->drupalLogout();
+    $this->drupalLogin($this->admin2);
     $this->assertBalance($user1, '10.75');
     $this->assertBalance($user2, '-5');
   }
@@ -716,13 +734,6 @@ class CesBankTestCase extends DrupalWebTestCase {
   }
   /**
    * Check balance and sales visibility options.
-   *
-   * @param object $admin
-   *   The exchange administrator user.
-   * @param object $user1
-   *   A standard exchange user.
-   * @param object $user1s
-   *   Another standard exchange user.
    */
   protected function checkVisibilityOptions() {
     $user1 = $this->accountUser($this->account11);
@@ -851,6 +862,48 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->clickLink(t('Accept'));
     $this->drupalPost(NULL, array(), t('Accept'));
     $this->assertText(t('Transaction successfully applied.'));
+  }
+  /**
+   * Admin accounts.
+   */
+  protected function adminAccounts() {
+    // CRUD accounts from admin.
+    $this->drupalLogin($this->admin2);
+    $this->drupalGet('ces/admin/account');
+    $this->assertText('BCNA000');
+    $this->clickLink(t('View'));
+    $this->assertText('adminbcna');
+    // Edited from admin.
+    $this->clickLink(t('Edit'));
+    // The administrator (0000) should not be able to change the code.
+    $this->drupalPost(NULL, array('name' => 'BCNA9001'), t('Save'));
+    $this->assertText(t('account can not be changed'));
+    // Have the four letters of the network.
+    $this->drupalPost(NULL, array('name' => 'HOLA0000'), t('Save'));
+    $this->assertText(t('The first four carecteres'));
+    // Validate number of code.
+    $this->drupalGet('ces/admin/account/5/edit');
+    $this->drupalPost(NULL, array('name' => 'BCNA000A'), t('Save'));
+    $this->assertText(t('The last four digits must be a number'));
+    // Edited from admin another account.
+    $this->drupalGet('ces/admin/account');
+    $this->clickLink(t('Edit'), 1);
+    $this->drupalPost(NULL, array('name' => 'BCNA9001'), t('Save'));
+    $this->assertText(t('Account successfully update'));
+    // Add account users.
+    $this->drupalGet('ces/admin/account');
+    $this->clickLink(t('Edit'), 2);
+    $this->clickLink(t('List users'));
+    $this->assertText(t('account21@integralces.net'));
+    $this->clickLink(t('Add account users'));
+    $this->drupalPost(NULL, array('users[0][username]' => 'account22', 'privilege' => 1), t('Save'));
+    // Delete.
+    $this->drupalGet('ces/admin/account');
+    $this->clickLink(t('Delete'), 2);
+    $this->drupalPost(NULL, NULL, t('Close account'));
+    $this->drupalPost(NULL, NULL, t('Confirm'));
+    $this->assertText(t('The account BCNA9001 has been closed'));
+    $this->drupalLogout();
   }
 }
 /** @} */
