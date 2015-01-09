@@ -19,8 +19,10 @@ To get to the web site go to [site:url]. This will take you to the login page.
 
 Enter the following information:
 
-Username: [account:name]
+Username: [account:user:name]
 Password: *
+
+* Your password. If you do not already have one, you will receive another email with a link to generate it.
 
 The web interface is available in several languages. If you wish to select another language, click on the your name at the top right corner. In your personal profile select the language of your preference. Be sure also that your personal details are correct and complete.
 

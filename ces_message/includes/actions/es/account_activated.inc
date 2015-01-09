@@ -19,8 +19,10 @@ Para ir al sitio web sigue el enlace [site:url]. Te llevará a la página de ent
 
 Entra tu nombre de usuario/a y contraseña:
 
-Nombre de usuario/a: [account:name]
+Nombre de usuario/a: [account:user:name]
 Contraseña: *
+
+* Tu contraseña. Si aun no tienes una, recibiras otro email con el enlace para generarla. 
 
 La interfaz de la web está traducida a varias lenguas. Si quieres seleccionar otro idioma, clica en tu nombre en la esquina superior derecha. En tu perfil personal, selecciona tu idioma preferido. Assegurate también de que tus datos son correctos y completos.
 

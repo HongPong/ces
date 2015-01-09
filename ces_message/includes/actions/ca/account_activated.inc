@@ -19,8 +19,10 @@ Per anar al lloc web segueix l\'enllaç [site:url]. Et portarà a la pàgina d\'
 
 Entra el teu nom d\'usuari i password:
 
-Nom d\'usuari: [account:name]
+Nom d\'usuari: [account:user:name]
 Password: *
+
+* La contrasenya. Si encara no tens una, rebràs un altre email amb l\'enllaç per generar-la.
 
 La interfície de la web està traduïda a varis idiomes. Si vols seleccionar un altre idioma, clica el teu nom a la cantonada de dalt a la dreta. En el teu perfil personal, selecciona el teu idioma preferit. Assegura\'t també de que les teves dades personals són correctes i completes.
 
