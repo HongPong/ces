@@ -10,9 +10,9 @@ desarrollo de IntegralCES y los recursos que el equipo utiliza.
 
 Disponemos y utilizamos los siguientes canales de comunicación:
 
-* **Canal `#integralces`** en Freenode, servidor de IRC. Éste es el canal más immediato y más informal, entra y prueba suerte.
+* **Canal #integralces** en Freenode, servidor de IRC. Éste es el canal más immediato y más informal, entra y prueba suerte.
 
-* **Lista de correo `integralces@llistes.cooperativa.cat`**. Lista de distribución dónde se comenta y coordina el desarrollo del proyecto, principalmente a nivel de desarrollo pero también a nivel de comunicación, etc. La lista es pública y te puedes inscribir en http://llistes.cooperativa.cat:8081/mailman/subscribe/integralces. El idioma habitual de la lista es catalan y español, aunque si escribes en inglés también responderemos.
+* **Lista de correo**. `integralces@llistes.cooperativa.cat` Lista de distribución dónde se comenta y coordina el desarrollo del proyecto, principalmente a nivel de desarrollo pero también a nivel de comunicación, etc. La lista es pública y te puedes inscribir en http://llistes.cooperativa.cat:8081/mailman/subscribe/integralces. El idioma habitual de la lista es catalan y español, aunque si escribes en inglés también responderemos.
 
 * **Issue queue de drupal.org**. Utilizamos la lista de _issues_ de drupal.org para mantener organizadas las tareas pendientes, quien es responsable de efectuarlas, etc. Este contenido es en inglés. Hay listas separada para los módulos (https://drupal.org/project/issues/1367140) y para el tema (https://drupal.org/project/issues/1866046). Cualquier desarrollo mínimamente relevante tiene que tener su _issue_ associada.
 

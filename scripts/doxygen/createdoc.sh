@@ -2,7 +2,7 @@
 
 ## @todo Una vez en producción cambiar directorio final de /tmp/ a /web/dox/
 
-possible_languages=(en es)
+possible_languages=(en es ca)
 
 dir_ices="$(dirname "$0")/../../"
 doxygen_conf="scripts/doxygen/doxygen.conf"
@@ -198,6 +198,17 @@ if [ $debug == 1 ] ; then
 fi
 
 cd "$dir_actual"
+
+if [ $debug == 1 ] ; then
+  echo
+  read -p "Abrir gvim con errores de doxygen (s/n): " OPCION
+  echo
+  if [ "$OPCION" == 's' ] ; then
+    gvim -c "cfile $log_file" 
+    read
+  fi
+fi
+
 
 ## Delete temporal files
 f="docs/tmp" ; [[ -d "$f" ]] && rm -fr "$f"

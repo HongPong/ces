@@ -21,8 +21,6 @@ pidiendo una cuenta en el exchange que acabamos de dar de alta. Esas
 peticiones de usuarios ya tendrían que llegar al administrador, Se activan
 y listo!  
 
-@endsection
-
 @section modulo_raiz Módulo raíz CES
 
 El módulo de la raíz se denomina ICES. Este módulo por sí solo no proporciona
@@ -75,9 +73,7 @@ Este archivo define varias clases:
 
 - DbTransaction: Un contenedor vacío para el módulo CesBank transaction.
 
-![Base de datos](/../img/database.png)
-
-@endsection
+![Base de datos]('/../img/database.png')
 
 @section modulo_ces_bank Módulo CES BANK
 
@@ -160,13 +156,8 @@ director clases y sus atribuciones.
     puede heredar añadir funciones a una transacción.
 
   - CesBankInterExchangeTransaction: Hijo de DecoratedTransaction para permitir el
-    comercio entre cuentas de distintos intercambios. Aún en desarrollo.
-    Consulte la página siguiente para un diagrama de clases UML de todas estas
-    cosas.  El módulo de banco El módulo de banco Drupal consiste principalmente
-    en la interfaz de usuario para acceder a las características de la API de
-    banco y también tiene las funciones necesarias para la notificación de correo
-    electrónico utilizando el módulo ces_notify y la base de datos esquema. El
-    módulo está dividido en varios archivos:
+    comercio entre cuentas de distintos intercambios.
+    
 
 ### ciclo de vida de una transacción.
   
@@ -233,7 +224,7 @@ interfaz de transacción. Este función también desencadena las acciones
 apropiadas. Por ejemplo, cuando el estado se cambia de TRIGGERED a ACCEPTED,
 que inicia la aplicación efectiva de la transacción.
 
-![Estados de las transacciones](/../img/states_transaction.png)
+![Estados de las transacciones]('/../img/states_transaction.png')
 
 
 #### CES Banco diagrama de clases del módulo
@@ -245,12 +236,11 @@ correcta.
 
 ![Diagrama de clases](/../img/class_diagram.png)
 
-@endsection
-
 ### Algunos componentes de IntegralCES
 
 - @subpage install
 - @subpage flujo_trabajo
 - @subpage ces_permissions_doc
+- @subpage external_transactions_doc
 
 */
