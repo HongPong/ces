@@ -67,7 +67,7 @@ the file commons.db.logic.inc. This file defines several classes:
 - IcesDBTransaction: An empty wrapper for Drupal transaction.
 
 
-![Base de datos]('/../img/database.png')
+![Base de datos](/../img/database.png)
 
 @section modulo_ces_bank Módulo CES BANK
 
@@ -218,7 +218,7 @@ instance, when the state is changed from TRIGGERED to ACCEPTED, it starts the
 effective application of the transaction.
 
 
-![Estados de las transacciones]('/../img/states_transaction.png')
+![Estados de las transacciones](/../img/states_transaction.png)
 
 
 #### CES Bank module class diagram

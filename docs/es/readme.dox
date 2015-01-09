@@ -73,7 +73,7 @@ Este archivo define varias clases:
 
 - DbTransaction: Un contenedor vacío para el módulo CesBank transaction.
 
-![Base de datos]('/../img/database.png')
+![Base de datos](/../img/database.png)
 
 @section modulo_ces_bank Módulo CES BANK
 
@@ -224,7 +224,7 @@ interfaz de transacción. Este función también desencadena las acciones
 apropiadas. Por ejemplo, cuando el estado se cambia de TRIGGERED a ACCEPTED,
 que inicia la aplicación efectiva de la transacción.
 
-![Estados de las transacciones]('/../img/states_transaction.png')
+![Estados de las transacciones](/../img/states_transaction.png)
 
 
 #### CES Banco diagrama de clases del módulo
