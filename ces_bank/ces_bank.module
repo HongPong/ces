@@ -39,6 +39,13 @@ function ces_bank_help($path, $arg) {
     case 'ces/register/%':
       return '<p>' . t('Click on the exchange you want to join.') . '</p>';
 
+    case 'ces/admin/account/%/adduser':
+      return '<p>' .
+        t('You can add users to this account.') .
+        '<br />' .
+        t('If you give them privileges, they can manage the account in addition to making transactions.') .
+        '</p>';
+
   }
 }
 /**
