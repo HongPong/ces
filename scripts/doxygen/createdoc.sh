@@ -6,9 +6,10 @@ possible_languages=(en es ca)
 
 dir_ices="$(dirname "$0")/../../"
 doxygen_conf="scripts/doxygen/doxygen.conf"
-doxygen_css="scripts/doxygen/doxygen.css"
+extra_css="scripts/doxygen/extra.css"
 doxygen_header="scripts/doxygen/header.html"
 doxygen_footer="scripts/doxygen/footer.html"
+doxygen_logo="scripts/doxygen/logo.png"
 dir_actual="$(pwd)"
 
 cd "$dir_ices"
@@ -158,21 +159,30 @@ echo -e "\n\nOUTPUT_LANGUAGE=$lang_long" >> $tmp_conf
 echo -e "\n\nHTML_OUTPUT=$lang" >> $tmp_conf
 
 if [ -n "$version" ] ; then
+  [[ $debug == 1 ]] && echo -e "\nAdd version: $version"
   echo -e "\n\nPROJECT_NUMBER=$version" >> $tmp_conf
 fi
 
-if [ -f "$doxygen_css" ] ; then
-  echo -e "\n\nHTML_STYLESHEER=$doxygen_css" >> $tmp_conf
+if [ -f "$extra_css" ] ; then
+  [[ $debug == 1 ]] && echo -e "\nAdd extra css: `pwd`/$extra_css ."
+  echo -e "\n\nHTML_EXTRA_STYLESHEET=`pwd`/$extra_css" >> $tmp_conf
 fi
 
 if [ -f "$doxygen_header" ] ; then
+  [[ $debug == 1 ]] && echo -e "\nAdd header: $doxygen_header"
   echo -e "\n\nHTML_HEADER=$doxygen_header" >> $tmp_conf
 fi
 
 if [ -f "$doxygen_footer" ] ; then
+  [[ $debug == 1 ]] && echo -e "\nAdd footer: $doxygen_footer"
   echo -e "\n\nHTML_FOOTER=$doxygen_footer" >> $tmp_conf
 fi
 
+if [ -f "$doxygen_logo" ] ; then
+  [[ $debug == 1 ]] && echo -e "\nAdd logo: $doxygen_logo"
+  echo -e "\n\nPROJECT_LOGO=`pwd`/$doxygen_logo" >> $tmp_conf
+  echo -e "\n\nPROJECT_NAME=" >> $tmp_conf
+fi
 
 # Delete final dir 
 if [ -d "${dir_final}${lang}" ]

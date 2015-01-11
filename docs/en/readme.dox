@@ -1,27 +1,38 @@
 /**
 
-@mainpage Documentación para desarrolladores
+@mainpage Developer documentation
 
-Bienvenido o bienvenida a la documentación para desarrolladores del proyecto
-IntegralCES. Ésta es una documentación permanentemente en construcción que
-vamos completando a medida que nos es necesario.
+Welcome to the developer documentation project
+IntegralCES. This is a documentation permanently under construction
+we will complete as is necessary to us.
 
-@section alta_exchange Dar de alta nuevo exchange
+@section about About
 
-La forma que hay ahora para dar de alta un grupo de intercambio y su
-administrador es: Visitar el link 'New exchange'. Rellenar el formulario
-múltiple y enviarlo. El administrador lo activará, con lo que daremos de 
-alta el grupo de intercambio y el usuario drupal que necesitas, con una 
-cuenta vinculada al grupo de intercambio.
+Integral CES is a suite of Drupal modules featuring social currencies
+management for communities. See integralces.net
+<http://www.integralces.net> for more documentation and
+demo.integralces.net <http://demo.integralces.net> for a demonstration site.
 
-A partir de que demos de alta el exchange y tu usuario administrador, los 
-otros usuarios de la eco-xarxa se tendrán que dar de alta usando el 
-selector de la home (New to IntegralCES?), seleccionando el pais, i 
-pidiendo una cuenta en el exchange que acabamos de dar de alta. Esas 
-peticiones de usuarios ya tendrían que llegar al administrador, Se activan
-y listo!  
 
-@section modulo_raiz Módulo raíz CES
+@section alta_exchange Initializing an exchange group
+
+Visit new exchange form <https://www.integralces.net/ces/bank/exchange/new>
+and initialize the first exchange group. You must fill in the Administrator
+section with the user that will be the exchange administrator (It cannot be
+the current drupal admin).  Visit admin exchanges page
+<https://www.integralces.net/ces/admin/ces>, click on the new exchange and
+activate it.  Login as exchange administrator and write some welcome blog
+posts.
+
+Invite the users to create an account
+
+Users can sing up and create a new account visiting
+/user/register/exchange_name/, where exchange_name is the short name of the
+new exchange group (Four numbers or uppercase letters)
+
+Publish some offers and wants, blog entries... And have fun!
+
+@section modulo_raiz Base module CES
 
 The root module is called ices. This module alone does not provide any feature
 to the final user. It has a pair of objectives:
@@ -69,7 +80,7 @@ the file commons.db.logic.inc. This file defines several classes:
 
 ![Base de datos](/../img/database.png)
 
-@section modulo_ces_bank Módulo CES BANK
+@section modulo_ces_bank Module CES BANK
 
 This is the main banking module. It defines and works with all banking objects:
 exchange groups (exchages from now), accounts, transactions... This module is

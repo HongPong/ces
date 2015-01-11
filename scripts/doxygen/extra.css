@@ -1,0 +1,7 @@
+/** customize for integralces */
+
+.tabs, .tabs2, .tabs3, 
+.tablist a, .tablist li, 
+.tablist li.current a  {
+    /* background-image: none; */
+  }

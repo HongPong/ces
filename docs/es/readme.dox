@@ -6,13 +6,20 @@ Bienvenido o bienvenida a la documentación para desarrolladores del proyecto
 IntegralCES. Ésta es una documentación permanentemente en construcción que
 vamos completando a medida que nos es necesario.
 
+@section about Acerca de
+
+Integral CES es un conjunto de módulos de Drupal para la gestión de monedas sociales
+y sus comunidades. 
+
+ver integralces.net <http://www.integralces.net> para obtener más documentación y
+demo.integralces.net <http://demo.integralces.net> para un sitio de demostración.
+
 @section alta_exchange Dar de alta nuevo exchange
 
-La forma que hay ahora para dar de alta un grupo de intercambio y su
-administrador es: Visitar el link 'New exchange'. Rellenar el formulario
-múltiple y enviarlo. El administrador lo activará, con lo que daremos de 
-alta el grupo de intercambio y el usuario drupal que necesitas, con una 
-cuenta vinculada al grupo de intercambio.
+Visitar el link 'New exchange'. Rellenar el formulario múltiple y enviarlo. El
+administrador lo activará, con lo que daremos de alta el grupo de intercambio y
+el usuario drupal que necesitas, con una cuenta vinculada al grupo de
+intercambio.
 
 A partir de que demos de alta el exchange y tu usuario administrador, los 
 otros usuarios de la eco-xarxa se tendrán que dar de alta usando el 
