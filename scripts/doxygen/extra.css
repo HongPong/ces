@@ -1,7 +1,3 @@
 /** customize for integralces */
 
-.tabs, .tabs2, .tabs3, 
-.tablist a, .tablist li, 
-.tablist li.current a  {
-    /* background-image: none; */
-  }
+.title, h1, h2, h3 {color: #8a2;}
