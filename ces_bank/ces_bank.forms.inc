@@ -1908,6 +1908,7 @@ function ces_bank_transaction_confirm_form($form, &$form_state, $op, $id = NULL)
   switch ($op) {
     case 'new':
       $form['submit']['#value'] = t('Confirm transaction');
+      drupal_set_message(t('Confirm the transaction to end the process'), 'warning');
       break;
 
     case 'trigger':

@@ -10,6 +10,27 @@ pueden hacer este tipo de transacciones las cuentas de redes de
 el integralces que estén dadas de alta en la CC y correctamente
 configuradas.
 
+Para registrar una nueva red se debe ir a
+http://clearingcentral.net/register.php y rellenar el formulario. 
+
+- Exchange name: 	
+- Password: 	
+- System Name: 	
+- Location: 	
+- Country: 	
+- Currency name: 	
+- Currency symbol: 	
+- Currency type: 	
+- Incoming data URL: 	
+- Server IP address: 	
+- Request data format: 	
+- Response data format: 	
+- Administrator details
+- Name: 	
+- Email: 	
+- Telephone: 	
+
+
 Esto lo debe configurar el administrador de la red.
 
 Una vez está la red configurada, un usuario tiene que ir al formulario
@@ -21,7 +42,7 @@ de texto. Uno para poner el "ID de la red" o NID (cenXXXX) (con un link al
 lado para buscar este NID que nos interesa), y el otro para poner el
 número de cuenta del comprador (p.ej. BCNAXXXX).
 
-Los otros campos son como es habitual: descripcion y cantidad.
+Los otros campos son como es habitual: descripción y cantidad.
 
 Al crear y confirmar la transacción, se hace un llamamiento a la CC que a su vez
 informa el sistema CES. Desde el punto de vista de la red, esta
