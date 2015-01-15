@@ -2558,22 +2558,24 @@ class CesBankBasicTransaction extends IcesDBObject implements CesBankTransaction
    * Changes the transaction state.
    */
   public function setState($state) {
-    $flow = array(
-      CesBankTransactionInterface::STATE_NEW => array(CesBankTransactionInterface::STATE_TRIGGERED, CesBankTransactionInterface::STATE_DISCARDED),
-      CesBankTransactionInterface::STATE_TRIGGERED => array(CesBankTransactionInterface::STATE_ACCEPTED, CesBankTransactionInterface::STATE_REJECTED),
-      CesBankTransactionInterface::STATE_ACCEPTED => array(CesBankTransactionInterface::STATE_COMMITTED, CesBankTransactionInterface::STATE_ERROR),
-      CesBankTransactionInterface::STATE_REJECTED => array(CesBankTransactionInterface::STATE_TRIGGERED, CesBankTransactionInterface::STATE_DISCARDED),
-      CesBankTransactionInterface::STATE_COMMITTED => array(CesBankTransactionInterface::STATE_ARCHIVED, CesBankTransactionInterface::STATE_REVOKE_TRIGGERED),
-      CesBankTransactionInterface::STATE_REVOKE_TRIGGERED => array(CesBankTransactionInterface::STATE_REVOKE_ACCEPTED, CesBankTransactionInterface::STATE_REVOKE_REJECTED),
-      CesBankTransactionInterface::STATE_REVOKE_ACCEPTED => array(CesBankTransactionInterface::STATE_REVOKED, CesBankTransactionInterface::STATE_ERROR),
-      CesBankTransactionInterface::STATE_REVOKE_REJECTED => array(CesBankTransactionInterface::STATE_REVOKE_TRIGGERED),
-      CesBankTransactionInterface::STATE_REVOKED => array(CesBankTransactionInterface::STATE_DISCARDED, CesBankTransactionInterface::STATE_TRIGGERED),
-    );
-    $candidates = $flow[$this->state];
-    if (!in_array($state, $candidates)) {
-      throw new Exception(t('Invalid state transition for transaction %trans.', array('%trans' => $this->id)));
+    if ($this->state != $state) {
+      $flow = array(
+        CesBankTransactionInterface::STATE_NEW => array(CesBankTransactionInterface::STATE_TRIGGERED, CesBankTransactionInterface::STATE_DISCARDED),
+        CesBankTransactionInterface::STATE_TRIGGERED => array(CesBankTransactionInterface::STATE_ACCEPTED, CesBankTransactionInterface::STATE_REJECTED),
+        CesBankTransactionInterface::STATE_ACCEPTED => array(CesBankTransactionInterface::STATE_COMMITTED, CesBankTransactionInterface::STATE_ERROR),
+        CesBankTransactionInterface::STATE_REJECTED => array(CesBankTransactionInterface::STATE_TRIGGERED, CesBankTransactionInterface::STATE_DISCARDED),
+        CesBankTransactionInterface::STATE_COMMITTED => array(CesBankTransactionInterface::STATE_ARCHIVED, CesBankTransactionInterface::STATE_REVOKE_TRIGGERED),
+        CesBankTransactionInterface::STATE_REVOKE_TRIGGERED => array(CesBankTransactionInterface::STATE_REVOKE_ACCEPTED, CesBankTransactionInterface::STATE_REVOKE_REJECTED),
+        CesBankTransactionInterface::STATE_REVOKE_ACCEPTED => array(CesBankTransactionInterface::STATE_REVOKED, CesBankTransactionInterface::STATE_ERROR),
+        CesBankTransactionInterface::STATE_REVOKE_REJECTED => array(CesBankTransactionInterface::STATE_REVOKE_TRIGGERED),
+        CesBankTransactionInterface::STATE_REVOKED => array(CesBankTransactionInterface::STATE_DISCARDED, CesBankTransactionInterface::STATE_TRIGGERED),
+      );
+      $candidates = $flow[$this->state];
+      if (!in_array($state, $candidates)) {
+        throw new Exception(t('Invalid state transition for transaction %trans.', array('%trans' => $this->id)));
+      }
+      $this->state = $state;
     }
-    $this->state = $state;
   }
   /**
    * TODO: document.
@@ -2949,12 +2951,22 @@ class CesBankInterExchangeTransaction extends CesBankDecoratedTransaction {
   }
   /**
    * Implements getState().
+   * 
+   * Only works for states from 0 to 5.
    */
   public function getState() {
     $state1 = $this->getParent()->getState();
     $state2 = $this->getPair()->getParent()->getState();
-    // TODO: Check if this formula is actually the good AND of these two states.
-    return min($state1, $state2);
+    $statemin = min($state1, $state2);
+    $statemax = max($state1, $state2);
+    if ($statemax < 4) {
+    // NEW, TRIGGERED, ACCEPTED, COMMITED.
+      return $statemin;
+    }
+    else {
+    // ARCHIVED, REJECTED.
+      return $statemax;
+    }
   }
   /**
    * The virtual transaction in buyer's exchange.
