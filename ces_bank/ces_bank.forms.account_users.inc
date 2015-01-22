@@ -128,6 +128,10 @@ function ces_bank_account_user_form($form, &$form_state, $user = NULL, $account 
  */
 function ces_bank_account_user_form_validate($form, &$form_state) {
   $values = $form_state['values'];
+  $name_user = $values['users'][0]['username'];
+  if ( !user_load_by_name($name_user) ) {
+    form_set_error('users[0][username]', t('The user not exist'));
+  }
   if (empty($values['users'][0]['username'])) {
     form_set_error('users[0][username]', t('The user is required'));
   }
