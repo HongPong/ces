@@ -1,6 +1,6 @@
 /**
 
-@page createdoc Automate doxygen
+@defgroup createdoc Automate doxygen
 
 Script to automate the generation of documentation with doxygen.
 
@@ -35,6 +35,8 @@ In the header of the script you can set:
 - doxygen_logo: Logo. "scripts/doxygen/logo.png" replaces the project name for the logo.
 
 If can not find the specified files not used.
+
+@}
 
 */
 

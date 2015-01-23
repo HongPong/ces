@@ -26,6 +26,29 @@ define('CES_USER_ABOUT_URL_DEF', '');
  */
 
 /**
+ * Special permissions access callback for CES user.
+ */
+function ces_user_access($user_edit) {
+  global $user;
+
+  if ( user_edit_access($user_edit) ) return TRUE;
+
+  // Check actual user is admin of actual exchange.
+  if (! ces_bank_access('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE)) return FALSE;
+
+  // Check user to edit is from actual exchange.
+  $bank = new CesBank();
+  $accounts = $bank->getUserAccounts($user_edit->uid);
+  $current_exchange = ces_bank_get_current_exchange()['id'];
+  foreach( $accounts as $account ) {
+    if ( $account['exchange'] == $current_exchange ) return TRUE;
+    }
+
+  return FALSE;
+
+}
+
+/**
  * Implements hook_menu().
  */
 function ces_user_menu() {
@@ -59,6 +82,10 @@ function ces_user_menu() {
 function ces_user_menu_alter(&$menu) {
   // Gain control over registration page.
   $menu['user/register']['page arguments'] = array('ces_user_register_form');
+
+  // Admin exchange can edit user profile.
+  $menu['user/%user/edit']['access callback'] = 'ces_user_access';
+
 }
 /**
  * Returns the full name for given account, or the current one if NULL.

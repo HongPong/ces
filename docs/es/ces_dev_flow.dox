@@ -1,7 +1,7 @@
 /**
 
-@page flujo_trabajo Flujo de trabajo
-
+@file
+@page flujo_trabajo Flujo de trabajo 
 
 A continuación se explica la forma de trabajar habitual del equipo de
 desarrollo de IntegralCES y los recursos que el equipo utiliza.
@@ -81,4 +81,4 @@ Subimos cambios al servidor:
 
 Cerramos incidencia (issue) en drupal.org
 
-@} */
+*/

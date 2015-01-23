@@ -22,6 +22,7 @@
    - @ref limit
 
 @section spec Especificació dels arxius d'entrada
+
 Els arxius següents són informació que tenim disponible del CES i que és
 bastant exhaustiva. De fet, hi ha més aviat moltes més coses de les que
 actualment tenen lloc a l'IntegralCES.
@@ -29,6 +30,7 @@ actualment tenen lloc a l'IntegralCES.
 Compte: La codificació dels arxius és: Windows1252/WinLatin 1.
 
 @subsection users_file Arxiu users.csv
+
  - UID: El número de compte corrent.
  - Password: El password de l'usuari.
  - UserType: El tipus de compte. adm per administrador, org per organització

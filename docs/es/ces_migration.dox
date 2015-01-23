@@ -2,8 +2,6 @@
 
 @page ces_migration Migración de una red del CES
 
-## Migración de una red del CES
-
 # Introducción
 
 IntegralCES dispone de un sistema semi-automático de migración de los datos de
@@ -144,7 +142,7 @@ Seguidamente, hay que entrar con el usuario administrativo en nuestra red de
 IntegralCES y configurar la red para aceptar transacciones externas. Se indica 
 el identificdor de la red y el password de la Clearing Central.
 
-Ver @ref external_transactions para una breve explicación sobre las trasacciones
+Ver @ref external_transactions_doc para una breve explicación sobre las trasacciones
 externas sobre el protocolo CEN.
 
 */

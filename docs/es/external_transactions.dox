@@ -2,8 +2,6 @@
 
 @page external_transactions_doc Transacciones externas
 
-## Transacciones externas
-
 Las transacciones ICES <=> CES funcionan a través de un servidor intermedio, la
 Clearing Central (CC). Así pues es realmente ICES <=> CC <=> CES. sólo
 pueden hacer este tipo de transacciones las cuentas de redes de
@@ -12,24 +10,6 @@ configuradas.
 
 Para registrar una nueva red se debe ir a
 http://clearingcentral.net/register.php y rellenar el formulario. 
-
-- Exchange name: 	
-- Password: 	
-- System Name: 	
-- Location: 	
-- Country: 	
-- Currency name: 	
-- Currency symbol: 	
-- Currency type: 	
-- Incoming data URL: 	
-- Server IP address: 	
-- Request data format: 	
-- Response data format: 	
-- Administrator details
-- Name: 	
-- Email: 	
-- Telephone: 	
-
 
 Esto lo debe configurar el administrador de la red.
 
