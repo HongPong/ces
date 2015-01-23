@@ -36,6 +36,9 @@ function ces_user_access($user_edit) {
   // Check actual user is admin of actual exchange.
   if (! ces_bank_access('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE)) return FALSE;
 
+  // Check user to edit is not admin of drupal.
+  if ( user_access('administer users', $user_edit) ) return FALSE;
+
   // Check user to edit is from actual exchange.
   $bank = new CesBank();
   $accounts = $bank->getUserAccounts($user_edit->uid);
