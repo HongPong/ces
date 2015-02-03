@@ -1590,6 +1590,7 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'ces_offerwant');
     $query->entityCondition('bundle', $offerwant_type);
+    $query->propertyCondition('state', 1);
 
     if ($arg2 != NULL && $arg2 != 'all') {
       $query->propertyCondition('category', $arg2);
@@ -1624,7 +1625,7 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
     }
   }
   elseif ($action == 'search') {
-    $page += search_data($arg2, 'ces_offerswants', array('exchange' => $arg1, 'orderby' => $arg3));
+    $page += search_data($arg2, 'ces_offerswants', array('exchange' => $arg1, 'orderby' => $arg3, 'state' => 1));
   }
   else {
     drupal_set_message(t('Action not known'), 'error');
