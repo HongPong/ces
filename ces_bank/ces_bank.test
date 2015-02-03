@@ -143,6 +143,8 @@ class CesBankTestCase extends DrupalWebTestCase {
     // Balance: HORA0001: 10.75, BCNA0001: -5
     $this->doAdminTransaction();
     // Balance: HORA0001: 11.25, HORA0002: -10.75
+    $this->checkInterexchangeManualAccept();
+    // Balance: HORA0001: 11.15, BCNA0001: -4
     $this->checkVisibilityOptions();
     // Admin accounts.
     $this->adminAccounts();
@@ -413,6 +415,23 @@ class CesBankTestCase extends DrupalWebTestCase {
     $this->drupalLogin($this->admin2);
     $this->assertBalance($user1, '10.75');
     $this->assertBalance($user2, '-5');
+  }
+  /**
+   * Do an interexchange transaction with manual accept payment.
+   */
+  protected function checkInterexchangeManualAccept() {
+    $user1 = $this->accountUser($this->account11);
+    $user2 = $this->accountUser($this->account21);
+    $transaction = array(
+      'seller' => 'BCNA0001',
+      'buyer' => 'HORA0001',
+      'concept' => 'Test manual authorization with interexchange transaction.',
+      'amount' => '1',
+    );
+    $this->doTransaction($user2, $transaction, FALSE, t('The transaction must be manually authorized.'));
+    $this->acceptTransaction($user1, $transaction);
+    $this->assertBalance($user2, '-4');
+    $this->assertBalance($user1, '11.15');
   }
   /**
    * Check administrative interface.

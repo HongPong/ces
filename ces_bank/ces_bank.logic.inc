@@ -390,6 +390,21 @@ class CesBank {
     return $trans->getAmount($excha->getCurrency());
   }
   /**
+   * Return the array of transaction messages for the current transaction state.
+   * 
+   * @param array $transaction
+   *   transaction object record.
+   * 
+   * @return array $log
+   *   array of strings with log messages for this transaction and current
+   *   state.
+   */
+  public function getTransactionLog(array $transaction) {
+    $st = new IcesSerializer('CesBankBasicTransaction');
+    $trans = $st->loadFromRecord($transaction);
+    return $trans->getLog($trans->getState());
+  }
+  /**
    * Gets transaction object records based on conditions.
    *
    * @param array $conditions
@@ -2967,6 +2982,14 @@ class CesBankInterExchangeTransaction extends CesBankDecoratedTransaction {
     // ARCHIVED, REJECTED.
       return $statemax;
     }
+  }
+  /**
+   * Implements getLog().
+   */
+  public function getLog($state) {
+    $log1 = $this->getParent()->getLog($state);
+    $log2 = $this->getPair()->getParent()->getLog($state);
+    return array_merge($log1, $log2);
   }
   /**
    * The virtual transaction in buyer's exchange.

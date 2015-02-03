@@ -2046,8 +2046,9 @@ function _ces_bank_set_transaction_message($result, $record, $op = 'trigger') {
   }
   else {
     $text = t('The transaction has NOT been applied.');
-    if (!empty($record['data']['log'][$record['state']])) {
-      $messages = $record['data']['log'][$record['state']];
+    $bank = new CesBank();
+    $messages = $bank->getTransactionLog($record);
+    if (!empty($messages)) {
       $text .= '<br/>' . t('Details:') . '<br/>';
       $text .= '<ul>';
       foreach ($messages as $message) {
