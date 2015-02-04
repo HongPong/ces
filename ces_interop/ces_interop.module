@@ -62,9 +62,11 @@ function ces_interop_opentransact($exchange_name) {
   // Verify url.
   if ($exchange_name == 'token') {
     // This is a code to token exchange call. Save the authorization code to be
-    // able later to link the created token with the transaction.
-    global $_ces_interop_authorization_code;
-    $_ces_interop_authorization_code = $_POST['code'];
+    // able later to link the created token with the transaction. We are not 
+    // sanitizing this user input because in the case the code is invalid, 
+    // oauth2 module will abort the request with the proper error message.
+    $authorization_code = &drupal_static('ces_interop_authorization_code');
+    $authorization_code = $_POST['code'];
     // Delegate the authorization to the oauth2_server module.
     require_once drupal_get_path('module', 'oauth2_server') . '/oauth2_server.pages.inc';
     return oauth2_server_token_page();
@@ -100,7 +102,7 @@ function ces_interop_opentransact($exchange_name) {
 }
 
 /**
- * Implements hook_form_alter().
+ * Implements hook_form_oauth2_server_authorize_alter().
  *
  * Alter the oauth2_server authorization form adding the transaction-related
  * information. It also validates the transaction data.
@@ -211,8 +213,8 @@ function ces_interop_oauth2_server_authorize_form_submit($form, &$form_state) {
   // Since this is an opentransact authorised authorisation request, it will
   // trigger the creation of an authorisation code. We will handle then our
   // main logic, but now we keep the data into global variable to be used later.
-  global $_ces_interop_transaction;
-  $_ces_interop_transaction = $form_state['values']['transaction'];
+  $transaction = &drupal_static('ces_interop_transaction');
+  $transaction = $form_state['values']['transaction'];
 }
 /**
  * Implements hook_entity_presave().
@@ -223,33 +225,32 @@ function ces_interop_oauth2_server_authorize_form_submit($form, &$form_state) {
  * authorization code to the token.
  */
 function ces_interop_entity_presave($entity, $type) {
-  global $_ces_interop_transaction;
-  global $_ces_interop_authorization_code;
-
   switch ($type) {
     case 'oauth2_server_authorization_code':
       // Get transaction from form submit function.
-      if (!empty($_ces_interop_transaction)) {
+      $transaction = &drupal_static('ces_interop_transaction');
+      if (!empty($transaction)) {
         // Create transaction.
         $bank = new CesBank();
-        $bank->createTransaction($_ces_interop_transaction);
+        $bank->createTransaction($transaction);
         // Link transaction to authorisation code.
         $entity->ces_interop_transaction = array();
-        $entity->ces_interop_transaction[LANGUAGE_NONE][0]['value'] = $_ces_interop_transaction['id'];
+        $entity->ces_interop_transaction[LANGUAGE_NONE][0]['value'] = $transaction['id'];
         // No longer needed.
-        unset($_ces_interop_transaction);
+        drupal_static_reset('ces_interop_transaction');
       }
       break;
 
     case 'oauth2_server_token':
       // Get code from page callback.
-      if (!empty($_ces_interop_authorization_code)) {
+      $authorization_code = &drupal_static('ces_interop_authorization_code');
+      if (!empty($authorization_code)) {
         // Save transaction id from authorization code to access token.
-        $code = oauth2_server_authorization_code_load($_ces_interop_authorization_code);
+        $code = oauth2_server_authorization_code_load($authorization_code);
         $transaction_id = $code->ces_interop_transaction[LANGUAGE_NONE][0]['value'];
         $entity->ces_interop_transaction[LANGUAGE_NONE][0]['value'] = $transaction_id;
         // No longer needed.
-        unset($_ces_interop_authorization_code);
+        drupal_static_reset('ces_interop_authorization_code');
       }
       break;
 
@@ -555,7 +556,7 @@ function _ces_interop_transaction_retrieve($id) {
   return $transaction_return;
 }
 /**
- * Implements hook_admin().
+ * Module settings form.
  */
 function ces_interop_admin() {
   $form = array();
