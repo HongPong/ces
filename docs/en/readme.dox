@@ -2,9 +2,9 @@
 
 @mainpage Developer documentation
 
-Welcome to the developer documentation project
-IntegralCES. This is a documentation permanently under construction
-we will complete as is necessary to us.
+Welcome to the developer documentation for the IntegralCES project.
+This documentation is permanently under construction and we will
+complete as is necessary to us.
 
 @section about About
 
@@ -19,15 +19,16 @@ demo.integralces.net <http://demo.integralces.net> for a demonstration site.
 Visit new exchange form <https://www.integralces.net/ces/bank/exchange/new>
 and initialize the first exchange group. You must fill in the Administrator
 section with the user that will be the exchange administrator (It cannot be
-the current drupal admin).  Visit admin exchanges page
-<https://www.integralces.net/ces/admin/ces>, click on the new exchange and
-activate it.  Login as exchange administrator and write some welcome blog
-posts.
+the current Drupal admin).
 
-Invite the users to create an account
+Visit admin exchanges page /ces/admin/ces , click
+on the new exchange and activate it.  Login as exchange administrator and
+write some welcoming blog posts.
 
-Users can sing up and create a new account visiting
-/user/register/exchange_name/, where exchange_name is the short name of the
+#### Invite the users to create an account
+
+Users can sign up and create a new account visiting
+/user/register/exchange_name/ , where exchange_name is the short name of the
 new exchange group (Four numbers or uppercase letters)
 
 Publish some offers and wants, blog entries... And have fun!
@@ -80,14 +81,15 @@ the file commons.db.logic.inc. This file defines several classes:
 
 ![Base de datos](/../img/database.png)
 
-@section modulo_ces_bank Module CES BANK
+@section modulo_ces_bank Module CES Bank
 
-This is the main banking module. It defines and works with all banking objects:
-exchange groups (exchages from now), accounts, transactions... This module is
-divided in two parts:
+CES Bank is the main banking module. It defines and works with all
+banking objects: exchange groups (exchages from now), accounts, transactions...
+
+This module is divided in two parts:
 
 - The bank API is the responsible of doing all the banking logic. It is
-  located at the filebank.logic.inc. It has a public interface to create
+  located at the ces_bank.logic.inc. It has a public interface to create
   accounts, do transactions etc.  
   
 - The bank module is properly the Drupal
@@ -95,35 +97,32 @@ divided in two parts:
   forms. It uses the bank API to perform the actions ordered from the web
   user interface.
 
-#### The bank API
+#### IntegralCES Bank API
 
-The bank API contains all the logic of account management. It is organized in a
+The Bank API contains all the logic of account management. It is organized in a
 set of classes. There is only one public class that acts at the same time as a
 controller for the whole set and as the public interface. All other classes are
 private and should not be used from outside the file. Even the public
-parameters of Bank class aren't of any of the other those class types. bank API
-should be thought as an external library. In particular, it is independent of
-Drupal. By the way it could be used in integrations within other platforms. It
-uses the database access functions from the CES root module and it uses the
-messaging features from the CES notify module. Below is discussed the principal
-classes and their attributions.
+parameters of Bank class aren't of any of the other those class types. 
+
+Bank API should be thought as an external library. In particular, it is independent of Drupal. By the way it could be used in integrations within other platforms. It uses the database access functions from the CES root module and it uses the messaging features from the CES notify module. Below is discussed the principal classes and their properties.
 
 - CesBank: Public interface for all features provided for this API. The
   parameters and the return values of this class are, when structured data is
   needed, associative arrays. The work is deferred to the concrete private
-  objects. A typical function implementation in this class is to recieve and
+  objects. A typical function implementation in this class is to receive and
   (minimally) parse the input, create the appropiate private object, call
-  this object's adequate function, (minimally) parse the result, and return
-  it to the caller.  
+  this object's correct function, (minimally) parse the result, and return
+  it to the caller.
     
 - CesBankExchange: Represents an exchange group of trade. It has a name, a
-  4-letter code, and dome configurable options.
+  4-letter code, and some configurable options.
 
 - CesBankAccount: It is an interface representing a banking account. Currently
   there is only one implementation of this interface. It is expected for the
   future to use this interface also for remote hosted accounts.  
     
-- CesBankLocalAccount: Implementation of Account for accounts stored in the local
+- CesBankLocalAccount: Implementation of Account for accounts stored in local
   database. An account belongs to a particular exchange. Every one has a
   unique identifier, started with the 4-letter code of its exchange followed
   by 4 numbers. Special accounts can end with 4 letters instead of numbers.
@@ -133,11 +132,11 @@ classes and their attributions.
   this particular account.
     
 - CesBankAccountLimit: Atomic abstract limit for an account. It is the
-  building block for LimitChains.  
+  building block for LimitChains.
     
-    - AbsoluteDebitLimit: Limits the total debit of an account.  
+    - AbsoluteDebitLimit: Limits the total debit of an account.
     
-    - AbsoluteCreditLimit: Limits the total credit of an account.  
+    - AbsoluteCreditLimit: Limits the total credit of an account.
     
 - CesBankLimitChain: An ordered set of AccountLimit, identified with a name.
   Every account has a link to an object of this type. An account satisfies a
@@ -149,8 +148,8 @@ classes and their attributions.
   
 - CesBankTransactionInterface: Interface for the transaction between two
   accounts. It has methods for accessing both account codes, the amount and the
-  description or concept of the transaction. Several implementations exist using
-  a decorator pattern scheme.  
+  description or concept of the transaction. Several implementations exist
+  using a decorator pattern scheme.  
     
 - CesBankBasicTransaction: Transaction between two accounts of the same
   exchange.  
@@ -160,16 +159,14 @@ classes and their attributions.
   can be inherited to add functions to a transaction.
   
 - CesBankInterexchangeTransaction: Child of DecoratedTransaction to allow
-  trading between accounts of distinct exchanges. Still in development.
-
-
+  trading between accounts of distinct exchanges. (Still in development)
 
 ### Transaction lifecycle  
 
 Transactions have only two operations: apply a new transaction and revoke a
 previously applied one. However, a transaction will go through several states
 between the creation and the effective and irreversible application. This
-lifecycle is summarized in the diagram below that will now be commented state
+lifecycle is summarized in the diagram below that will now be described state
 by state.
 
 - NEW: Initial state. The transaction has been created but hasn't already
@@ -209,17 +206,16 @@ starting state of the revoke operation is the COMMITTED state.
 
 - REVOKE TRIGGERED: The transaction has been triggered to be revoked. Waiting
   for acceptance of this operation by all authorities.  
-    
+
 - REVOKE ACCEPTED: The revoke operation has been accepted by all
   authorities. The system is effectively revoking the transaction. This
   state is very short-lived state in local transactions. The following
   state will be REVOKED or ERROR if system fails to revoke the transaction.  
-      
+
 - REVOKE REJECTED: Some authorities did not accept the revoke operation.
   The transaction will remain applied and it will be ARCHIVED after a
   prudential time.
-    
-        
+
 - REVOKED: The transaction has been successfully revoked. It will become
   DISCARDED after a prudential time.
 
@@ -228,9 +224,7 @@ Transaction interface. This function also triggers the appropriate actions. For
 instance, when the state is changed from TRIGGERED to ACCEPTED, it starts the
 effective application of the transaction.
 
-
 ![Estados de las transacciones](/../img/states_transaction.png)
-
 
 #### CES Bank module class diagram
 
@@ -240,11 +234,12 @@ may have distinct names. However, the architectural essence is correct.
 
 ![Diagrama de clases](/../img/class_diagram.png)
 
-### Some components of IntegralCES
+### Other components of IntegralCES
 
 - @subpage install
 - @subpage flujo_trabajo
 - @subpage ces_permissions_doc
 - @subpage external_transactions_doc
+- @subpage traducciones_doc
 
 */

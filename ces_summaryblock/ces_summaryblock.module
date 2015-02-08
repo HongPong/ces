@@ -24,6 +24,7 @@ function ces_summaryblock_block_info() {
 }
 /**
  * Implements hook_block_view(). 
+ * 
  * Returns false if ces_bank_get_current_account is false.
  */
 function ces_summaryblock_block_view($delta = '') {

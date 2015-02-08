@@ -31,6 +31,8 @@ From ices there hang several modules:
  - ces_blog: A simple blog that is different for each exchange.
  - ces_develop: Developer utilities. Do not enable in a production site.
  - ces_import4ces: Features import data from CES .csv files.
+ - ces_interop: Interoperates with other CES servers, Uses OpenTransaction
+   OAuth2 servers - allowing credits to move between exchanges.
  - ces_message: Customize default messages depending on the exchange.
  - ces_offerswants: Features simple offers and wants within exchanges.
  - ces_statistics: Show statistical data about the community economy in the

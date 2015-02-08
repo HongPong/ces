@@ -4,7 +4,7 @@
 
 ## Permisos
 
-El sistema de permisos es más complejo que el de drupal, ya que por ejemplo
+El sistema de permisos es más complejo que el de Drupal, ya que por ejemplo
 un usuario puede ver el balance de los accounts que están en la exchange de
 sus accounts, pero no al revés. Para esto tendríamos que crear permisos 
 para cada nueva exchange e írselas asignando a cada usuario. Con el sistema

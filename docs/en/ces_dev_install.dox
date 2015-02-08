@@ -212,4 +212,13 @@ That completes development setup. Standard development modules are also handy, f
 
 Happy development! To see all issues filed, visit the issue queue at 
 https://www.drupal.org/project/issues/1367140?status=All&categories=All
+
+### Other components of IntegralCES
+
+- @subpage install
+- @subpage flujo_trabajo
+- @subpage ces_permissions_doc
+- @subpage external_transactions_doc
+- @subpage traducciones_doc
+
 @} */
