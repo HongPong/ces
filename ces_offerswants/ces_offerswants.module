@@ -771,16 +771,16 @@ function ces_offerwant_delete_form_submit($form, &$form_state) {
   if ($form_state['values']['offerwant_type'] == 'offer') {
     $message = t('Offer %offer has been deleted.', array('%offer' => $form_state['values']['offerwant_title']));
     $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'ces_offercomment');
-      $query->propertyCondition('oid', $form_state['values']['offerwant']);
-      $result = $query->execute();
-      if (isset($result['ces_offercomment']) && count($result['ces_offercomment']) > 0) {
-        $offercommentids = array_keys($result['ces_offercomment']);
-        foreach ($offercommentids as $ofcoid) {
-          ces_offercomment_delete($ofcoid);
-        }
-        $message = $message . t('- All offer comments have been deleted too.');
+    $query->entityCondition('entity_type', 'ces_offercomment');
+    $query->propertyCondition('oid', $form_state['values']['offerwant']);
+    $result = $query->execute();
+    if (isset($result['ces_offercomment']) && count($result['ces_offercomment']) > 0) {
+      $offercommentids = array_keys($result['ces_offercomment']);
+      foreach ($offercommentids as $ofcoid) {
+        ces_offercomment_delete($ofcoid);
       }
+      $message = $message . t('- All offer comments have been deleted too.');
+    }
   }
   else {
     $message = t('Want %want has been deleted.', array('%want' => $form_state['values']['offerwant_title']));
@@ -923,9 +923,9 @@ function ces_offerwant_access($operation, $offerwant = NULL, $account = NULL) {
     global $user;
     $account = $user;
   }
-  // Check is user integralces
-  if ( $operation == 'add' ) {
-    if ( !ces_bank_get_current_account() ) {
+  // Check is user integralces?
+  if ($operation == 'add') {
+    if (!ces_bank_get_current_account()) {
       return FALSE;
     }
     else {
@@ -935,7 +935,7 @@ function ces_offerwant_access($operation, $offerwant = NULL, $account = NULL) {
   if ($offerwant->user == $account->uid) {
     return TRUE;
   }
-  if ( $operation == 'view' && $offerwant->state == 1 ) {
+  if ($operation == 'view' && $offerwant->state == 1) {
     return TRUE;
   }
   $category = ces_category_load($offerwant->category);
@@ -1029,16 +1029,16 @@ function ces_category_form($form, &$form_state, $category = NULL) {
  */
 function ces_category_form_validate($form, &$form_state) {
   $category = (object) $form_state['values'];
-  if (!isset($category->title) || empty($category->title) ) {
+  if (!isset($category->title) || empty($category->title)) {
     form_set_error('title', t('A title from category is necessary.'));
   }
-  if (!isset($category->description) || empty($category->description) ) {
+  if (!isset($category->description) || empty($category->description)) {
     form_set_error('description', t('A description from category is necessary.'));
   }
-  if (!isset($category->exchange) || empty($category->exchange) ) {
+  if (!isset($category->exchange) || empty($category->exchange)) {
     form_set_error('exchange', t('A exchange from category is necessary.'));
   }
-  if (!isset($category->context) || empty($category->context) ) {
+  if (!isset($category->context) || empty($category->context)) {
     form_set_error('context', t('A context from category is necessary.'));
   }
 }
@@ -1625,7 +1625,9 @@ function ces_offerswants_list_page($offerwant_type = 'offer', $action = NULL, $a
     }
   }
   elseif ($action == 'search') {
-    $page += search_data($arg2, 'ces_offerswants', array('exchange' => $arg1, 'orderby' => $arg3, 'state' => 1));
+    $page += search_data($arg2,
+      'ces_offerswants',
+      array('exchange' => $arg1, 'orderby' => $arg3, 'state' => 1));
   }
   else {
     drupal_set_message(t('Action not known'), 'error');
@@ -2015,10 +2017,13 @@ function ces_offerswants_user_register_submit($form, &$form_state) {
   }
   $form_state['redirect'] = $redirect;
 }
+/**
+ * Implements hook_page().
+ */
 function ces_offercomment_page($offerid) {
   drupal_add_css(drupal_get_path('module', 'ces_offerswants') . '/css/ces_offerswants.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
   $page = array();
-// Build entity query.
+  // Build entity query.
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'ces_offerwant');
   $query->entityCondition('bundle', 'offer');
@@ -2071,6 +2076,9 @@ function ces_offercomment_page($offerid) {
   }
   return $page;
 }
+/**
+ * Implements comment_add_form. CES Offer Comment add form.
+ */
 function ces_offercomment_add_form($form, &$form_state, $offerid) {
   $form['offercomment'] = array(
     '#type' => 'fieldset',
@@ -2110,6 +2118,9 @@ function ces_offercomment_add_form($form, &$form_state, $offerid) {
   );
   return $form;
 }
+/**
+ * CES Offer Comment add form submit handler. Saves with uid, time created.
+ */
 function ces_offercomment_add_form_submit($form, &$form_state) {
   global $user;
   $form_state['values']['uid'] = $user->uid;
@@ -2148,7 +2159,7 @@ function ces_offerswants_token_info() {
       ),
       'notify' => array(
         'body' => array(
-          'name' => t('Bodu of User notify'),
+          'name' => t('Body of User notify'),
           'description' => t('Body of User notify.'),
         ),
         'user' => array(

@@ -14,8 +14,7 @@
 /**
  * Parse trades.
  */
-function ces_import4ces_parse_trades($import_id, $data, $row, &$context, 
-  $width_ajax = TRUE) {
+function ces_import4ces_parse_trades($import_id, $data, $row, &$context, $width_ajax = TRUE) {
   global $user;
   if (isset($context['results']['error'])) {
     return;
@@ -81,7 +80,7 @@ function ces_import4ces_parse_trades($import_id, $data, $row, &$context,
     $_SESSION['ces_import4ces_row_error']['row']  = $row;
     $_SESSION['ces_import4ces_row_error']['m']    = $e->getMessage();
     $_SESSION['ces_import4ces_row_error']['data'] = $data;
-    if ( $width_ajax ) {
+    if ($width_ajax) {
       $result = array('status' => FALSE, 'data' => check_plain($e->getMessage()));
       die(json_encode($result));
     }
@@ -114,7 +113,7 @@ function _ces_import4ces_trades_get_account($import_id, $name, $data) {
     // This is an inter-exchange transaction. Use the corresponding virtual
     // account.
     if ($data['RemoteExchange'] != '0000') {
-      $name = substr($name, 0, 4) . $data['RemoteExchange'];  
+      $name = substr($name, 0, 4) . $data['RemoteExchange'];
     }
     else {
       // This is a remote transaction. The cen ID appears to be in the RecordID.

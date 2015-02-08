@@ -62,8 +62,8 @@ function ces_interop_opentransact($exchange_name) {
   // Verify url.
   if ($exchange_name == 'token') {
     // This is a code to token exchange call. Save the authorization code to be
-    // able later to link the created token with the transaction. We are not 
-    // sanitizing this user input because in the case the code is invalid, 
+    // able later to link the created token with the transaction. We are not
+    // sanitizing this user input because in the case the code is invalid,
     // oauth2 module will abort the request with the proper error message.
     $authorization_code = &drupal_static('ces_interop_authorization_code');
     $authorization_code = $_POST['code'];

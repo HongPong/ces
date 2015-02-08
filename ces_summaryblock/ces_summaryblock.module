@@ -23,11 +23,12 @@ function ces_summaryblock_block_info() {
   return $block;
 }
 /**
- * Implements hook_block_view().
+ * Implements hook_block_view(). 
+ * Returns false if ces_bank_get_current_account is false.
  */
 function ces_summaryblock_block_view($delta = '') {
-  // Check is user integralces
-  if ( !ces_bank_get_current_account() ) {
+  // Check is user integralces?
+  if (!ces_bank_get_current_account()) {
     return FALSE;
   }
   // Minimal css format.
@@ -335,9 +336,9 @@ function ces_summaryblock_form_submit($form, &$form_state) {
   $user->data['ces_summaryblock_period_from'] = $from;
   $user->data['ces_summaryblock_period_to'] = $to;
   $user->data['ces_summaryblock_period'] = $form_state['values']['period'];
-  $user->data['ces_current_account'] = ( isset($form_state['values']['account']) )
-    ? $form_state['values']['account']
-    : FALSE;
+  $user->data['ces_current_account'] = (isset($form_state['values']['account']))
+  ? $form_state['values']['account']
+  : FALSE;
   user_save($user);
 }
 /**

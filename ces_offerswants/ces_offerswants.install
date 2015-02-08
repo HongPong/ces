@@ -245,7 +245,6 @@ function ces_offerswants_update_7100() {
 function ces_offerswants_install() {
   $t = get_t();
 
-
   // Create price field.
   $field = array(
     'field_name' => 'ces_offer_rate',

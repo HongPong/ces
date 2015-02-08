@@ -14,8 +14,7 @@
 /**
  * Parse setting.
  */
-function ces_import4ces_parse_announce($import_id, $data, $row, &$context, 
-  $width_ajax = TRUE) {
+function ces_import4ces_parse_announce($import_id, $data, $row, &$context, $width_ajax = TRUE) {
   global $user;
   if (isset($context['results']['error'])) {
     return;
@@ -80,7 +79,7 @@ function ces_import4ces_parse_announce($import_id, $data, $row, &$context,
     $_SESSION['ces_import4ces_row_error']['row']  = $row;
     $_SESSION['ces_import4ces_row_error']['m']    = $e->getMessage();
     $_SESSION['ces_import4ces_row_error']['data'] = $data;
-    if ( $width_ajax ) {
+    if ($width_ajax) {
       $result = array('status' => FALSE, 'data' => check_plain($e->getMessage()));
       die(json_encode($result));
     }

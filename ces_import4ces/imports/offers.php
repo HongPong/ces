@@ -14,8 +14,7 @@
 /**
  * Parse setting.
  */
-function ces_import4ces_parse_offers($import_id, $data, $row, &$context, 
-  $width_ajax = TRUE) {
+function ces_import4ces_parse_offers($import_id, $data, $row, &$context, $width_ajax = TRUE) {
 
   if (isset($context['results']['error'])) {
     return;
@@ -56,7 +55,7 @@ function ces_import4ces_parse_offers($import_id, $data, $row, &$context,
     $query = db_query('SELECT uid FROM {users} where name=:name', array(':name' => $offer['user']));
     $offer_user_id = $query->fetchColumn(0);
 
-    if (empty($offer_user_id) || ! $offer_user_id) {
+    if (empty($offer_user_id) || !$offer_user_id) {
       $m = t('The user @user was not found in offer import row @row. It may be a
       user from another exchange not yet imported.', array('@user' => $data['Advertiser'], '@row' => $row));
       $context['results']['error'] = $m;
@@ -115,7 +114,7 @@ function ces_import4ces_parse_offers($import_id, $data, $row, &$context,
     $_SESSION['ces_import4ces_row_error']['row']  = $row;
     $_SESSION['ces_import4ces_row_error']['m']    = $e->getMessage();
     $_SESSION['ces_import4ces_row_error']['data'] = $data;
-    if ( $width_ajax ) {
+    if ($width_ajax) {
       $result = array('status' => FALSE, 'data' => check_plain($e->getMessage()));
       die(json_encode($result));
     }

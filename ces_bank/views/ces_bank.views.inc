@@ -5,12 +5,12 @@
  */
 
 /**
+ * Views for CES Banks creates ces_exchange view. 
  * @defgroup ces_bank_view Ces Bank View
  * @ingroup ces_bank
  * @{
  * View from bank.
  */
-
 function ces_bank_views_data() {
   // Ces Exchange.
   $data['ces_exchange']['table']['group'] = t('Ces Exchange');

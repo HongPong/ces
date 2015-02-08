@@ -26,33 +26,43 @@ define('CES_USER_ABOUT_URL_DEF', '');
  */
 
 /**
- * Special permissions access callback for CES user.
+ * Special permissions access callback for CES user. 
+ * 
+ * True for exhange and user admins.
  */
 function ces_user_access($user_edit) {
   global $user;
 
-  if ( user_edit_access($user_edit) ) return TRUE;
+  if (user_edit_access($user_edit)) {
+    return TRUE;
+  }
 
   // Check actual user is admin of actual exchange.
-  if (! ces_bank_access('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE)) return FALSE;
+  if (!ces_bank_access('admin', 'exchange', CES_BANK_CURRENT_EXCHANGE)) {
+    return FALSE;
+  }
 
-  // Check user to edit is not admin of drupal.
-  if ( user_access('administer users', $user_edit) ) return FALSE;
+  // Check user to edit is not admin of Drupal.
+  if (user_access('administer users', $user_edit)) {
+    return FALSE;
+  }
 
   // Check user to edit is from actual exchange.
   $bank = new CesBank();
   $accounts = $bank->getUserAccounts($user_edit->uid);
   $current_exchange = ces_bank_get_current_exchange()['id'];
-  foreach( $accounts as $account ) {
-    if ( $account['exchange'] == $current_exchange ) return TRUE;
+  foreach ($accounts as $account) {
+    if ($account['exchange'] == $current_exchange) {
+      return TRUE;
     }
-
+  }
   return FALSE;
-
 }
 
 /**
- * Implements hook_menu().
+ * Implements hook_menu(). 
+ * 
+ * Access to config/user-interface/ces_user for site config admins.
  */
 function ces_user_menu() {
   $menu = array();
@@ -71,7 +81,7 @@ function ces_user_menu() {
   );
   $menu['admin/config/user-interface/ces_user'] = array(
     'title' => 'ICES user settings',
-    'description' => 'Change global settings related to IntegralCES user module.',
+    'description' => 'Change global settings related to IntegralCES user module',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ces_user_admin'),
     'access arguments' => array('administer site configuration'),
@@ -147,7 +157,7 @@ function ces_user_get_full_address($account = NULL) {
   return $address;
 }
 /**
- * Returns the main phone number for given account, or the curent one if NULL.
+ * Returns the main phone number for given account, or the current one if NULL.
  */
 function ces_user_get_main_phone($account = NULL) {
   if ($account == NULL) {
@@ -165,7 +175,7 @@ function ces_user_get_main_phone($account = NULL) {
   return '';
 }
 /**
- * Tweaked register form.
+ * Tweaked user register form.
  */
 function ces_user_register_form($form, &$form_state) {
   if (empty($form_state['page']) || $form_state['page'] == 'account') {
@@ -186,7 +196,7 @@ function ces_user_register_form($form, &$form_state) {
   return $form;
 }
 /**
- * Save values in register form account page.
+ * Save values in user register form account page.
  */
 function ces_user_register_save_values($form, &$form_state) {
   if (!isset($form_state['page']) || $form_state['page'] == 'account') {
@@ -194,7 +204,7 @@ function ces_user_register_save_values($form, &$form_state) {
   }
 }
 /**
- * Submit register form.
+ * Submit user register form.
  */
 function ces_user_register_submit($form, &$form_state) {
   module_load_include('module', 'user');
@@ -205,6 +215,8 @@ function ces_user_register_submit($form, &$form_state) {
 }
 /**
  * Implements hook_form_alter().
+ * 
+ * Applies to ces_user_register_form & user_profile_form forms.
  */
 function ces_user_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'ces_user_register_form' || $form_id == 'user_profile_form') {

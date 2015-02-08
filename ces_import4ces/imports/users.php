@@ -14,8 +14,7 @@
 /**
  * Parse users.
  */
-function ces_import4ces_parse_users($import_id, $data, $row, &$context, 
-  $width_ajax = TRUE) {
+function ces_import4ces_parse_users($import_id, $data, $row, &$context, $width_ajax = TRUE) {
   if (isset($context['results']['error'])) {
     return;
   }
@@ -137,7 +136,7 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context,
       'Buddy' => $data['Buddy'],
     );
 
-    // Administrative user hs already been created in the first step, but we now
+    // Admin user has already been created in the first step, but we now
     // are completing the record with the user info.
     if (substr($data['UID'], -4) == '0000') {
       $user_drupal = user_load_by_name($data['UID']);
@@ -196,7 +195,7 @@ function ces_import4ces_parse_users($import_id, $data, $row, &$context,
     $_SESSION['ces_import4ces_row_error']['row']  = $row;
     $_SESSION['ces_import4ces_row_error']['m']    = $e->getMessage();
     $_SESSION['ces_import4ces_row_error']['data'] = $data;
-    if ( $width_ajax ) {
+    if ($width_ajax) {
       $result = array('status' => FALSE, 'data' => check_plain($e->getMessage()));
       die(json_encode($result));
     }

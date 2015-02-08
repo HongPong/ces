@@ -395,8 +395,8 @@ class CesBank {
    * @param array $transaction
    *   transaction object record.
    * 
-   * @return array $log
-   *   array of strings with log messages for this transaction and current
+   * @return array 
+   *   $log array of strings with log messages for this transaction and current
    *   state.
    */
   public function getTransactionLog(array $transaction) {
@@ -2975,11 +2975,11 @@ class CesBankInterExchangeTransaction extends CesBankDecoratedTransaction {
     $statemin = min($state1, $state2);
     $statemax = max($state1, $state2);
     if ($statemax < 4) {
-    // NEW, TRIGGERED, ACCEPTED, COMMITED.
+      // NEW, TRIGGERED, ACCEPTED, COMMITED.
       return $statemin;
     }
     else {
-    // ARCHIVED, REJECTED.
+      // ARCHIVED, REJECTED.
       return $statemax;
     }
   }
